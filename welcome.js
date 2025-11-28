@@ -475,6 +475,154 @@ let selectedGridSize = null;
 let fullscreenTriggered = false;
 
 /**
+ * Handle room state updates from Convex subscription
+ * This function is called whenever the room state changes on the server
+ * @param {Object} roomState - Current room state from Convex
+ */
+function handleRoomUpdate(roomState) {
+    if (!roomState) {
+        // Room was deleted or doesn't exist
+        showToast('Room no longer exists', 'warning');
+        lobbyManager.leaveRoom();
+        showScreen('mainMenuScreen');
+        return;
+    }
+    
+    // Update local lobby manager state from server
+    lobbyManager.roomCode = roomState.roomCode;
+    lobbyManager.gridSize = roomState.gridSize;
+    lobbyManager.isHost = roomState.players.some(p => 
+        p.sessionId === window.ShapeKeeperConvex?.getSessionId() && p.isHost
+    );
+    
+    // Find my player ID
+    const myPlayer = roomState.players.find(p => 
+        p.sessionId === window.ShapeKeeperConvex?.getSessionId()
+    );
+    lobbyManager.myPlayerId = myPlayer?._id || null;
+    lobbyManager.isReady = myPlayer?.isReady || false;
+    
+    // Update players list with server data
+    lobbyManager.players = roomState.players.map((p, index) => ({
+        id: p._id,
+        name: p.name,
+        color: p.color,
+        isReady: p.isReady,
+        isHost: p.isHost,
+        playerNumber: p.playerNumber
+    }));
+    
+    // Update grid size selection UI
+    document.querySelectorAll('.lobby-grid-btn').forEach(btn => {
+        btn.classList.toggle('selected', parseInt(btn.dataset.size) === roomState.gridSize);
+    });
+    
+    // Update ready button state
+    const readyBtn = document.getElementById('readyBtn');
+    if (readyBtn) {
+        readyBtn.textContent = lobbyManager.isReady ? 'Ready ✓' : 'Ready';
+        readyBtn.classList.toggle('is-ready', lobbyManager.isReady);
+    }
+    
+    // Check if game has started
+    if (roomState.status === 'playing') {
+        // Transition to game screen
+        if (welcomeAnimation) {
+            welcomeAnimation.moveToGameScreen();
+        }
+        
+        showScreen('gameScreen');
+        requestFullscreen();
+        
+        // Get player colors from room state
+        const player1 = roomState.players.find(p => p.playerNumber === 1);
+        const player2 = roomState.players.find(p => p.playerNumber === 2);
+        const player1Color = player1?.color || '#FF0000';
+        const player2Color = player2?.color || '#0000FF';
+        
+        // Initialize game with room settings and multiplayer mode
+        game = new DotsAndBoxesGame(roomState.gridSize, player1Color, player2Color);
+        game.isMultiplayer = true;
+        game.myPlayerNumber = myPlayer?.playerNumber || 1;
+        
+        // Subscribe to game state updates
+        window.ShapeKeeperConvex.subscribeToGameState(handleGameStateUpdate);
+        
+        showToast('Game started!', 'success', 2000);
+        return;
+    }
+    
+    // Update UI if still in lobby
+    updateLobbyUI();
+}
+
+/**
+ * Handle game state updates from Convex subscription
+ * This function is called whenever the game state changes on the server
+ * @param {Object} gameState - Current game state from Convex
+ */
+function handleGameStateUpdate(gameState) {
+    if (!gameState || !game) return;
+    
+    // Update current player turn
+    game.currentPlayer = gameState.currentPlayer;
+    
+    // Sync lines from server
+    gameState.lines.forEach(line => {
+        if (!game.lines.has(line.lineKey)) {
+            game.lines.add(line.lineKey);
+            game.lineOwners.set(line.lineKey, line.player);
+            
+            // Add pulsating effect for new lines
+            game.pulsatingLines.push({
+                line: line.lineKey,
+                player: line.player,
+                time: Date.now()
+            });
+        }
+    });
+    
+    // Sync squares from server
+    gameState.squares.forEach(square => {
+        const key = square.squareKey;
+        if (!game.squares[key]) {
+            game.squares[key] = square.player;
+            
+            // Trigger the square animation (which handles particles and kiss emojis)
+            game.triggerSquareAnimation(key);
+        }
+        
+        // Update multiplier if revealed
+        if (square.multiplierRevealed && !game.revealedMultipliers.has(key)) {
+            game.revealedMultipliers.add(key);
+            game.squareMultipliers[key] = {
+                type: square.multiplierType,
+                value: square.multiplierValue
+            };
+            
+            // Trigger multiplier animation if it was just revealed
+            if (square.multiplierType === 'multiplier') {
+                game.triggerMultiplierAnimation(key, square.multiplierValue);
+            }
+        }
+    });
+    
+    // Update scores
+    game.scores[1] = gameState.scores[1] || 0;
+    game.scores[2] = gameState.scores[2] || 0;
+    
+    // Check for game over
+    if (gameState.status === 'finished' && !game.isGameOver) {
+        game.isGameOver = true;
+        game.showWinner();
+    }
+    
+    // Redraw and update UI
+    game.draw();
+    game.updateUI();
+}
+
+/**
  * Initialize all menu navigation and event listeners
  */
 function initializeMenuNavigation() {
@@ -483,9 +631,31 @@ function initializeMenuNavigation() {
     // ========================================
     
     // Create Game button
-    document.getElementById('createGameBtn').addEventListener('click', () => {
-        const playerName = 'Host';
-        lobbyManager.createRoom(playerName);
+    document.getElementById('createGameBtn').addEventListener('click', async () => {
+        const playerName = document.getElementById('playerName')?.value || 'Host';
+        const gridSize = lobbyManager.gridSize || 5;
+        
+        // Use Convex backend if available
+        if (window.ShapeKeeperConvex) {
+            showToast('Creating room...', 'info', 2000);
+            const result = await window.ShapeKeeperConvex.createRoom(playerName, gridSize);
+            
+            if (result.error) {
+                showToast('Error: ' + result.error, 'error');
+                return;
+            }
+            
+            // Subscribe to room updates
+            window.ShapeKeeperConvex.subscribeToRoom(handleRoomUpdate);
+            
+            lobbyManager.roomCode = result.roomCode;
+            lobbyManager.isHost = true;
+            showToast('Room created: ' + result.roomCode, 'success', 3000);
+        } else {
+            // Fallback to local lobby manager
+            lobbyManager.createRoom(playerName);
+        }
+        
         updateLobbyUI();
         showScreen('lobbyScreen');
     });
@@ -567,18 +737,31 @@ function initializeMenuNavigation() {
     });
     
     // Join room button
-    joinRoomBtn.addEventListener('click', () => {
+    joinRoomBtn.addEventListener('click', async () => {
         const roomCode = joinRoomCodeInput.value;
         const playerName = joinPlayerNameInput.value.trim();
         
-        // In a real implementation, this would validate with a server
-        // For now, show a message that multiplayer requires backend
-        showToast('Multiplayer mode requires backend integration. See MULTIPLAYER_PLANNING.md for details.', 'info', 5000);
-        
-        // For demo purposes, we could show the lobby
-        // lobbyManager.joinRoom(roomCode, playerName);
-        // updateLobbyUI();
-        // showScreen('lobbyScreen');
+        // Use Convex backend if available
+        if (window.ShapeKeeperConvex) {
+            showToast('Joining room...', 'info', 2000);
+            const result = await window.ShapeKeeperConvex.joinRoom(roomCode, playerName);
+            
+            if (result.error) {
+                showToast('Error: ' + result.error, 'error');
+                return;
+            }
+            
+            // Subscribe to room updates
+            window.ShapeKeeperConvex.subscribeToRoom(handleRoomUpdate);
+            
+            lobbyManager.roomCode = roomCode.toUpperCase();
+            lobbyManager.isHost = false;
+            showToast('Joined room: ' + roomCode.toUpperCase(), 'success', 3000);
+            updateLobbyUI();
+            showScreen('lobbyScreen');
+        } else {
+            showToast('Multiplayer mode requires backend integration.', 'info', 5000);
+        }
     });
     
     // ========================================
@@ -587,12 +770,24 @@ function initializeMenuNavigation() {
     
     // Lobby grid size selection
     document.querySelectorAll('.lobby-grid-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             if (!lobbyManager.isHost) return; // Only host can change
             
-            document.querySelectorAll('.lobby-grid-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            lobbyManager.setGridSize(parseInt(btn.dataset.size));
+            const newSize = parseInt(btn.dataset.size);
+            
+            // Use Convex backend if available
+            if (window.ShapeKeeperConvex) {
+                const result = await window.ShapeKeeperConvex.updateGridSize(newSize);
+                if (result.error) {
+                    showToast('Error: ' + result.error, 'error');
+                    return;
+                }
+                // UI will update via subscription
+            } else {
+                document.querySelectorAll('.lobby-grid-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                lobbyManager.setGridSize(newSize);
+            }
         });
     });
     
@@ -612,39 +807,74 @@ function initializeMenuNavigation() {
     });
     
     // Player name input
-    document.getElementById('playerName').addEventListener('input', (e) => {
-        lobbyManager.updateMyName(e.target.value.trim() || 'Player');
+    document.getElementById('playerName').addEventListener('input', async (e) => {
+        const newName = e.target.value.trim() || 'Player';
+        lobbyManager.updateMyName(newName);
+        
+        // Sync to Convex if available
+        if (window.ShapeKeeperConvex) {
+            await window.ShapeKeeperConvex.updatePlayer({ name: newName });
+        }
         updateLobbyUI();
     });
     
     // Player color input
-    document.getElementById('playerColor').addEventListener('input', (e) => {
-        lobbyManager.updateMyColor(e.target.value);
+    document.getElementById('playerColor').addEventListener('input', async (e) => {
+        const newColor = e.target.value;
+        lobbyManager.updateMyColor(newColor);
+        
+        // Sync to Convex if available
+        if (window.ShapeKeeperConvex) {
+            await window.ShapeKeeperConvex.updatePlayer({ color: newColor });
+        }
         updateLobbyUI();
     });
     
     // Ready button
-    document.getElementById('readyBtn').addEventListener('click', () => {
-        const isReady = lobbyManager.toggleReady();
-        const btn = document.getElementById('readyBtn');
-        btn.textContent = isReady ? 'Ready ✓' : 'Ready';
-        btn.classList.toggle('is-ready', isReady);
-        updateLobbyUI();
+    document.getElementById('readyBtn').addEventListener('click', async () => {
+        if (window.ShapeKeeperConvex) {
+            const result = await window.ShapeKeeperConvex.toggleReady();
+            if (result.error) {
+                showToast('Error: ' + result.error, 'error');
+                return;
+            }
+            const btn = document.getElementById('readyBtn');
+            btn.textContent = result.isReady ? 'Ready ✓' : 'Ready';
+            btn.classList.toggle('is-ready', result.isReady);
+        } else {
+            const isReady = lobbyManager.toggleReady();
+            const btn = document.getElementById('readyBtn');
+            btn.textContent = isReady ? 'Ready ✓' : 'Ready';
+            btn.classList.toggle('is-ready', isReady);
+            updateLobbyUI();
+        }
     });
     
     // Start multiplayer game
-    document.getElementById('startMultiplayerGame').addEventListener('click', () => {
-        if (!lobbyManager.canStartGame()) {
-            showToast('All players must be ready to start!', 'warning');
-            return;
+    document.getElementById('startMultiplayerGame').addEventListener('click', async () => {
+        if (window.ShapeKeeperConvex) {
+            const result = await window.ShapeKeeperConvex.startGame();
+            if (result.error) {
+                showToast('Error: ' + result.error, 'error');
+                return;
+            }
+            
+            // Game will start via subscription update
+            showToast('Starting game...', 'success', 2000);
+        } else {
+            if (!lobbyManager.canStartGame()) {
+                showToast('All players must be ready to start!', 'warning');
+                return;
+            }
+            showToast('Multiplayer game start requires backend integration.', 'info', 5000);
         }
-        
-        // In a real implementation, this would sync with server
-        showToast('Multiplayer game start requires backend integration. See MULTIPLAYER_PLANNING.md for details.', 'info', 5000);
     });
     
     // Leave lobby
-    document.getElementById('leaveLobby').addEventListener('click', () => {
+    document.getElementById('leaveLobby').addEventListener('click', async () => {
+        if (window.ShapeKeeperConvex) {
+            await window.ShapeKeeperConvex.leaveRoom();
+        }
         lobbyManager.leaveRoom();
         showScreen('mainMenuScreen');
     });

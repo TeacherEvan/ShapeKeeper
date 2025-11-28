@@ -61,6 +61,11 @@ class DotsAndBoxesGame {
         // Animated score counters
         this.displayedScores = { 1: 0, 2: 0 }; // Scores currently displayed (animated)
         this.scoreAnimationSpeed = 0.1; // How fast scores count up
+        
+        // Multiplayer mode properties
+        this.isMultiplayer = false; // Set to true when playing online
+        this.myPlayerNumber = 1; // Which player number I am (1 or 2)
+        this.isMyTurn = true; // Is it currently my turn to play
 
         this.setupCanvas();
         this.initializeMultipliers(); // Initialize multipliers AFTER grid dimensions are set
@@ -445,7 +450,28 @@ class DotsAndBoxesGame {
         return null;
     }
     
-    revealMultiplier(squareKey) {
+    async revealMultiplier(squareKey) {
+        // In multiplayer mode, only the square owner can reveal
+        if (this.isMultiplayer) {
+            const squareOwner = this.squares[squareKey];
+            if (squareOwner !== this.myPlayerNumber) {
+                // Not my square - can't reveal
+                return;
+            }
+            
+            // Send reveal to Convex backend
+            if (window.ShapeKeeperConvex) {
+                const result = await window.ShapeKeeperConvex.revealMultiplier(squareKey);
+                if (result.error) {
+                    console.error('[Game] Error revealing multiplier:', result.error);
+                    return;
+                }
+                // Server will broadcast the update via subscription
+                return;
+            }
+        }
+        
+        // Local game logic
         this.revealedMultipliers.add(squareKey);
         const multiplierData = this.squareMultipliers[squareKey];
         const player = this.squares[squareKey];
@@ -467,10 +493,35 @@ class DotsAndBoxesGame {
     /**
      * Consolidated method for drawing a line between two dots
      * Handles score updates, animations, and turn switching
+     * In multiplayer mode, sends the move to Convex backend
      */
-    drawLine(dot1, dot2) {
+    async drawLine(dot1, dot2) {
         const lineKey = this.getLineKey(dot1, dot2);
 
+        // In multiplayer mode, check if it's my turn
+        if (this.isMultiplayer) {
+            this.isMyTurn = this.currentPlayer === this.myPlayerNumber;
+            if (!this.isMyTurn) {
+                // Not my turn - ignore the click
+                return;
+            }
+            
+            // Send move to Convex backend
+            if (window.ShapeKeeperConvex) {
+                const result = await window.ShapeKeeperConvex.drawLine(lineKey);
+                if (result.error) {
+                    console.error('[Game] Error drawing line:', result.error);
+                    return;
+                }
+                // Server will broadcast the update via subscription
+                // Local state will be updated by handleGameStateUpdate
+                this.selectedDot = null;
+                this.selectionLocked = false;
+                return;
+            }
+        }
+
+        // Local game logic (single player or fallback)
         if (!this.lines.has(lineKey)) {
             this.lines.add(lineKey);
             this.lineOwners.set(lineKey, this.currentPlayer); // Store line ownership permanently
@@ -1127,8 +1178,19 @@ class DotsAndBoxesGame {
         document.getElementById('player1Info').style.color = this.player1Color;
         document.getElementById('player2Info').style.color = this.player2Color;
 
-        document.getElementById('turnIndicator').textContent = `Player ${this.currentPlayer}'s Turn`;
-        document.getElementById('turnIndicator').style.color = this.currentPlayer === 1 ? this.player1Color : this.player2Color;
+        // Update turn indicator with multiplayer awareness
+        const turnIndicator = document.getElementById('turnIndicator');
+        if (this.isMultiplayer) {
+            this.isMyTurn = this.currentPlayer === this.myPlayerNumber;
+            if (this.isMyTurn) {
+                turnIndicator.textContent = "Your Turn";
+            } else {
+                turnIndicator.textContent = "Opponent's Turn";
+            }
+        } else {
+            turnIndicator.textContent = `Player ${this.currentPlayer}'s Turn`;
+        }
+        turnIndicator.style.color = this.currentPlayer === 1 ? this.player1Color : this.player2Color;
     }
 
     checkGameOver() {
