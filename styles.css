@@ -306,23 +306,83 @@ input[type="color"] {
 }
 
 /* Winner Screen */
+#winnerScreen {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    justify-content: center;
+    align-items: center;
+}
+
 .winner-container {
     max-width: 600px;
     margin: auto;
     padding: 40px;
     text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 100px rgba(255, 215, 0, 0.2);
+    animation: winnerAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes winnerAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(30px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .winner-container h1 {
     font-size: 3rem;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     color: #333;
+    animation: bounceIn 0.8s ease-out 0.3s both;
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .winner-container h2 {
     font-size: 2rem;
-    margin-bottom: 40px;
-    color: #4CAF50;
+    margin-bottom: 30px;
+    animation: slideUp 0.6s ease-out 0.5s both;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.winner-container .start-btn {
+    animation: slideUp 0.6s ease-out 0.8s both;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.winner-container .start-btn:hover {
+    transform: scale(1.05) translateY(-2px);
+    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.5);
 }
 
 /* Mobile Landscape Detection */
@@ -925,55 +985,70 @@ canvas {
 .final-scores {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 30px;
     max-width: 400px;
     margin-left: auto;
     margin-right: auto;
+    animation: slideUp 0.6s ease-out 0.6s both;
 }
 
 .final-score-entry {
     display: flex;
     align-items: center;
     gap: 15px;
-    padding: 15px 20px;
-    background: #f5f5f5;
-    border-radius: 10px;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.final-score-entry:hover {
+    transform: translateX(5px);
 }
 
 .final-score-entry.winner {
-    background: rgba(76, 175, 80, 0.2);
-    border: 2px solid #4CAF50;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 193, 7, 0.15) 100%);
+    border: 2px solid #FFD700;
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+    animation: winnerGlow 2s ease-in-out infinite;
+}
+
+@keyframes winnerGlow {
+    0%, 100% {
+        box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 30px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.2);
+    }
 }
 
 .final-score-rank {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #666;
-    min-width: 40px;
-}
-
-.final-score-entry.winner .final-score-rank {
-    color: #4CAF50;
+    font-size: 2rem;
+    min-width: 50px;
+    text-align: center;
 }
 
 .final-score-color {
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    border: 2px solid rgba(0, 0, 0, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .final-score-name {
     flex: 1;
     font-weight: bold;
+    font-size: 1.1rem;
     color: #333;
 }
 
 .final-score-points {
-    font-size: 1.3rem;
+    font-size: 1.6rem;
     font-weight: bold;
-    color: #4CAF50;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* ========================================

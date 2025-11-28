@@ -491,25 +491,27 @@ function handleRoomUpdate(roomState) {
     // Update local lobby manager state from server
     lobbyManager.roomCode = roomState.roomCode;
     lobbyManager.gridSize = roomState.gridSize;
-    lobbyManager.isHost = roomState.players.some(p => 
-        p.sessionId === window.ShapeKeeperConvex?.getSessionId() && p.isHost
-    );
+    
+    // Get my session ID
+    const mySessionId = window.ShapeKeeperConvex?.getSessionId();
+    
+    // Check if I'm the host (hostPlayerId is on room, not player)
+    lobbyManager.isHost = roomState.hostPlayerId === mySessionId;
     
     // Find my player ID
-    const myPlayer = roomState.players.find(p => 
-        p.sessionId === window.ShapeKeeperConvex?.getSessionId()
-    );
+    const myPlayer = roomState.players.find(p => p.sessionId === mySessionId);
     lobbyManager.myPlayerId = myPlayer?._id || null;
     lobbyManager.isReady = myPlayer?.isReady || false;
     
     // Update players list with server data
+    // Add isHost by comparing sessionId with room's hostPlayerId
     lobbyManager.players = roomState.players.map((p, index) => ({
         id: p._id,
         name: p.name,
         color: p.color,
         isReady: p.isReady,
-        isHost: p.isHost,
-        playerNumber: p.playerNumber
+        isHost: p.sessionId === roomState.hostPlayerId,
+        playerNumber: p.playerNumber || (index + 1)
     }));
     
     // Update grid size selection UI

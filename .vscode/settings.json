@@ -13,6 +13,21 @@
     "**/node_modules": true
   },
   "cSpell.words": [
-    "Vercel"
-  ]
+    "Vercel",
+    "boids",
+    "shapekeeper",
+    "lerp",
+    "rgba",
+    "Perlin"
+  ],
+  "markdownlint.config": {
+    "MD009": false,
+    "MD022": false,
+    "MD026": false,
+    "MD031": false,
+    "MD032": false,
+    "MD034": false,
+    "MD036": false,
+    "MD040": false
+  }
 }

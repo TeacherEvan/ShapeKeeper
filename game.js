@@ -66,6 +66,20 @@ class DotsAndBoxesGame {
         this.isMultiplayer = false; // Set to true when playing online
         this.myPlayerNumber = 1; // Which player number I am (1 or 2)
         this.isMyTurn = true; // Is it currently my turn to play
+        
+        // DOM element cache for performance
+        this.domCache = {
+            player1Score: document.getElementById('player1Score'),
+            player2Score: document.getElementById('player2Score'),
+            player1Info: document.getElementById('player1Info'),
+            player2Info: document.getElementById('player2Info'),
+            turnIndicator: document.getElementById('turnIndicator'),
+            populateBtn: document.getElementById('populateBtn')
+        };
+        
+        // UI update throttling
+        this.lastUIUpdate = 0;
+        this.uiUpdateInterval = 16; // ~60fps max for UI updates
 
         this.setupCanvas();
         this.initializeMultipliers(); // Initialize multipliers AFTER grid dimensions are set
@@ -1157,6 +1171,9 @@ class DotsAndBoxesGame {
         const player1ScoreDiff = this.scores[1] - this.displayedScores[1];
         const player2ScoreDiff = this.scores[2] - this.displayedScores[2];
         
+        // Only update scores if animating
+        const scoresAnimating = Math.abs(player1ScoreDiff) > 0.1 || Math.abs(player2ScoreDiff) > 0.1;
+        
         if (Math.abs(player1ScoreDiff) > 0.1) {
             this.displayedScores[1] += player1ScoreDiff * this.scoreAnimationSpeed;
         } else {
@@ -1169,24 +1186,29 @@ class DotsAndBoxesGame {
             this.displayedScores[2] = this.scores[2];
         }
         
-        document.getElementById('player1Score').textContent = Math.floor(this.displayedScores[1]);
-        document.getElementById('player2Score').textContent = Math.floor(this.displayedScores[2]);
+        // Throttle DOM updates for performance
+        const now = Date.now();
+        if (now - this.lastUIUpdate < this.uiUpdateInterval && !scoresAnimating) {
+            return;
+        }
+        this.lastUIUpdate = now;
+        
+        // Use cached DOM elements
+        const { player1Score, player2Score, player1Info, player2Info, turnIndicator } = this.domCache;
+        
+        player1Score.textContent = Math.floor(this.displayedScores[1]);
+        player2Score.textContent = Math.floor(this.displayedScores[2]);
 
-        document.getElementById('player1Info').classList.toggle('active', this.currentPlayer === 1);
-        document.getElementById('player2Info').classList.toggle('active', this.currentPlayer === 2);
+        player1Info.classList.toggle('active', this.currentPlayer === 1);
+        player2Info.classList.toggle('active', this.currentPlayer === 2);
 
-        document.getElementById('player1Info').style.color = this.player1Color;
-        document.getElementById('player2Info').style.color = this.player2Color;
+        player1Info.style.color = this.player1Color;
+        player2Info.style.color = this.player2Color;
 
         // Update turn indicator with multiplayer awareness
-        const turnIndicator = document.getElementById('turnIndicator');
         if (this.isMultiplayer) {
             this.isMyTurn = this.currentPlayer === this.myPlayerNumber;
-            if (this.isMyTurn) {
-                turnIndicator.textContent = "Your Turn";
-            } else {
-                turnIndicator.textContent = "Opponent's Turn";
-            }
+            turnIndicator.textContent = this.isMyTurn ? "Your Turn" : "Opponent's Turn";
         } else {
             turnIndicator.textContent = `Player ${this.currentPlayer}'s Turn`;
         }
@@ -1357,7 +1379,7 @@ class DotsAndBoxesGame {
      * Update populate button visibility based on available safe lines
      */
     updatePopulateButtonVisibility() {
-        const populateBtn = document.getElementById('populateBtn');
+        const populateBtn = this.domCache.populateBtn;
         if (!populateBtn) return;
         
         const safeLines = this.getSafeLines();
@@ -1373,12 +1395,113 @@ class DotsAndBoxesGame {
         const winner = this.scores[1] > this.scores[2] ? 1 :
             this.scores[2] > this.scores[1] ? 2 : 0;
 
-        const winnerText = winner === 0 ? "It's a Tie!" :
-            `Player ${winner} Wins! (${this.scores[winner]} - ${this.scores[winner === 1 ? 2 : 1]})`;
-
-        document.getElementById('winnerText').textContent = winnerText;
+        const winnerColor = winner === 1 ? this.player1Color : 
+                           winner === 2 ? this.player2Color : '#FFD700';
+        
+        // Build winner display
+        const winnerScreen = document.getElementById('winnerScreen');
+        const winnerText = document.getElementById('winnerText');
+        const finalScores = document.getElementById('finalScores');
+        
+        // Set winner text with trophy
+        if (winner === 0) {
+            winnerText.innerHTML = `🤝 It's a Tie! 🤝`;
+            winnerText.style.color = '#FFD700';
+        } else {
+            winnerText.innerHTML = `🏆 Player ${winner} Wins! 🏆`;
+            winnerText.style.color = winnerColor;
+        }
+        
+        // Build final scores display
+        const players = [
+            { num: 1, score: this.scores[1], color: this.player1Color },
+            { num: 2, score: this.scores[2], color: this.player2Color }
+        ].sort((a, b) => b.score - a.score);
+        
+        finalScores.innerHTML = players.map((p, i) => `
+            <div class="final-score-entry ${p.num === winner ? 'winner' : ''}">
+                <span class="final-score-rank">${i === 0 ? '🥇' : '🥈'}</span>
+                <div class="final-score-color" style="background-color: ${p.color}"></div>
+                <span class="final-score-name">Player ${p.num}</span>
+                <span class="final-score-points" style="color: ${p.color}">${p.score}</span>
+            </div>
+        `).join('');
+        
+        // Transition screens
         document.getElementById('gameScreen').classList.remove('active');
-        document.getElementById('winnerScreen').classList.add('active');
+        winnerScreen.classList.add('active');
+        
+        // Launch confetti celebration
+        this.launchConfetti(winnerColor);
+    }
+    
+    /**
+     * Launch confetti celebration animation
+     * @param {string} accentColor - Primary color for confetti
+     */
+    launchConfetti(accentColor) {
+        const canvas = document.createElement('canvas');
+        canvas.id = 'confettiCanvas';
+        canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10001;';
+        document.body.appendChild(canvas);
+        
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const confetti = [];
+        const colors = [accentColor, '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96E6A1', '#DDA0DD', '#F7DC6F'];
+        
+        // Create confetti particles
+        for (let i = 0; i < 150; i++) {
+            confetti.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                w: Math.random() * 10 + 5,
+                h: Math.random() * 6 + 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                vx: Math.random() * 4 - 2,
+                vy: Math.random() * 3 + 2,
+                rotation: Math.random() * 360,
+                rotationSpeed: Math.random() * 10 - 5,
+                oscillationSpeed: Math.random() * 0.05 + 0.02,
+                oscillationDistance: Math.random() * 40 + 20,
+                startX: 0
+            });
+            confetti[i].startX = confetti[i].x;
+        }
+        
+        let frame = 0;
+        const animate = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            let activeCount = 0;
+            confetti.forEach(c => {
+                if (c.y < canvas.height + 50) {
+                    activeCount++;
+                    c.y += c.vy;
+                    c.x = c.startX + Math.sin(frame * c.oscillationSpeed) * c.oscillationDistance;
+                    c.rotation += c.rotationSpeed;
+                    
+                    ctx.save();
+                    ctx.translate(c.x + c.w / 2, c.y + c.h / 2);
+                    ctx.rotate(c.rotation * Math.PI / 180);
+                    ctx.fillStyle = c.color;
+                    ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+                    ctx.restore();
+                }
+            });
+            
+            frame++;
+            
+            if (activeCount > 0 && frame < 300) {
+                requestAnimationFrame(animate);
+            } else {
+                canvas.remove();
+            }
+        };
+        
+        animate();
     }
 }
 
