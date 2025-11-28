@@ -4,12 +4,14 @@
     "description": "ShapeKeeper - A modern browser-based territory capture game",
     "main": "index.html",
     "scripts": {
+        "dev": "convex dev",
+        "build": "echo 'No build step required'",
         "start": "npx http-server -p 8000 -o",
         "serve": "python -m http.server 8000"
     },
     "keywords": [
         "game",
-        "dots-and-boxes",
+        "ShapeKeeper",
         "canvas",
         "javascript",
         "html5",
