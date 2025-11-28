@@ -32,5 +32,6 @@ build/
 
 .env.local
 .env
+.env*
 .vercel
-.env*.local
+convex/.env*
