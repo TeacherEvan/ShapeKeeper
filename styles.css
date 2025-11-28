@@ -1,0 +1,1141 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #ffffff;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    /* Support for notched devices */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.screen {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+.screen.active {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Welcome Screen */
+#welcomeScreen {
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#welcomeCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.welcome-container {
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+    margin: auto;
+    padding: 40px;
+    text-align: center;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.welcome-container h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.credit {
+    font-style: italic;
+    color: #666;
+    margin-bottom: 40px;
+}
+
+.setup-section {
+    margin: 30px 0;
+}
+
+.setup-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.grid-options {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.grid-btn {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    border: 3px solid #ddd;
+    background: white;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.3s;
+}
+
+.grid-btn:hover {
+    border-color: #4CAF50;
+    transform: scale(1.05);
+}
+
+.grid-btn.selected {
+    border-color: #4CAF50;
+    background: #4CAF50;
+    color: white;
+}
+
+input[type="color"] {
+    width: 100px;
+    height: 50px;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+.start-btn {
+    margin-top: 30px;
+    padding: 20px 50px;
+    font-size: 1.5rem;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.start-btn:hover:not(:disabled) {
+    background: #45a049;
+    transform: scale(1.05);
+}
+
+.start-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Game Screen */
+#gameScreen {
+    background: white;
+    position: relative;
+}
+
+#gameBackgroundCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.game-header {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 20px;
+    background: rgba(245, 245, 245, 0.95);
+    border-bottom: 2px solid #ddd;
+}
+
+.player-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px;
+}
+
+.player-name {
+    font-size: 0.9rem;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.player-score {
+    font-size: 1.3rem;
+    font-weight: bold;
+    position: relative;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.player-info.active .player-score {
+    animation: scoreGlow 0.5s ease-in-out;
+}
+
+@keyframes scoreGlow {
+    0%, 100% {
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    }
+    50% {
+        text-shadow: 0 0 20px rgba(255, 215, 0, 0.8),
+                     0 0 30px rgba(255, 215, 0, 0.6),
+                     0 0 40px rgba(255, 215, 0, 0.4);
+    }
+}
+
+.player-info.active {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.exit-btn {
+    padding: 6px 20px;
+    font-size: 0.85rem;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.exit-btn:hover {
+    background: #da190b;
+}
+
+.populate-btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    background: #2196F3;
+    color: white;
+    border: 2px solid #1976D2;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.populate-btn:hover {
+    background: #1976D2;
+    transform: scale(1.05);
+}
+
+.populate-btn:active {
+    transform: scale(0.95);
+}
+
+.populate-btn.hidden {
+    display: none;
+}
+
+.game-container {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    overflow: hidden;
+}
+
+#gameCanvas {
+    border: 2px solid #333;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.game-footer {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    background: rgba(245, 245, 245, 0.95);
+    border-top: 2px solid #ddd;
+}
+
+/* Mobile-specific footer */
+@media screen and (max-width: 768px) {
+    .game-footer {
+        padding: 6px 8px;
+        gap: 8px;
+    }
+    
+    .turn-indicator {
+        font-size: 0.85rem;
+    }
+    
+    .game-header {
+        padding: 6px 15px;
+    }
+    
+    .player-name {
+        font-size: 0.85rem;
+    }
+    
+    .player-score {
+        font-size: 1.2rem;
+    }
+}
+
+.turn-indicator {
+    position: relative;
+    z-index: 1;
+    text-align: left;
+    padding: 0;
+    font-size: 0.9rem;
+    font-weight: bold;
+    background: transparent;
+    border-top: none;
+    flex: 1;
+}
+
+/* Winner Screen */
+.winner-container {
+    max-width: 600px;
+    margin: auto;
+    padding: 40px;
+    text-align: center;
+}
+
+.winner-container h1 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.winner-container h2 {
+    font-size: 2rem;
+    margin-bottom: 40px;
+    color: #4CAF50;
+}
+
+/* Mobile Landscape Detection */
+@media screen and (max-width: 768px) and (orientation: portrait) {
+    body::before {
+        content: 'Please rotate your device to landscape mode';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        text-align: center;
+        padding: 20px;
+        z-index: 9999;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .welcome-container {
+        padding: 20px;
+        min-height: auto;
+    }
+
+    .welcome-container h1 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .credit {
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+    }
+
+    .setup-section {
+        margin: 20px 0;
+    }
+
+    .setup-section h2 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    .grid-options {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .grid-btn {
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+
+    input[type="color"] {
+        width: 80px;
+        height: 40px;
+    }
+
+    .start-btn {
+        margin-top: 20px;
+        padding: 15px 40px;
+        font-size: 1.2rem;
+    }
+
+    .game-header {
+        padding: 6px 15px;
+    }
+
+    .player-name {
+        font-size: 0.85rem;
+    }
+
+    .player-score {
+        font-size: 1.2rem;
+    }
+
+    .game-container {
+        padding: 5px;
+    }
+}
+
+/* Landscape orientation on mobile - compact layout */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    .welcome-container {
+        padding: 10px 20px;
+        min-height: auto;
+    }
+
+    .welcome-container h1 {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+    }
+
+    .credit {
+        margin-bottom: 10px;
+        font-size: 0.8rem;
+    }
+
+    .setup-section {
+        margin: 10px 0;
+    }
+
+    .setup-section h2 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+
+    .grid-options {
+        gap: 8px;
+    }
+
+    .grid-btn {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+
+    input[type="color"] {
+        width: 60px;
+        height: 35px;
+    }
+
+    .start-btn {
+        margin-top: 10px;
+        padding: 10px 30px;
+        font-size: 1rem;
+    }
+}
+
+canvas {
+    display: block;
+    cursor: pointer;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Enhanced pulsing animation for active player */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0);
+    }
+}
+
+/* Add celebration animation class */
+@keyframes celebrate {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+    25% {
+        transform: scale(1.1) rotate(-5deg);
+    }
+    75% {
+        transform: scale(1.1) rotate(5deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+.player-info.active {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.player-info.scored {
+    animation: celebrate 0.6s ease-in-out;
+}
+
+/* ========================================
+   Main Menu & Navigation Styles
+   ======================================== */
+
+/* Shared canvas background for all menu screens */
+#localSetupCanvas,
+#lobbyCanvas,
+#joinCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+/* Main Menu Screen */
+#mainMenuScreen {
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.menu-options {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.menu-btn {
+    padding: 20px 50px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.menu-btn:hover {
+    background: #45a049;
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.menu-btn.secondary {
+    background: #2196F3;
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+}
+
+.menu-btn.secondary:hover {
+    background: #1976D2;
+    box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+}
+
+/* Back Button */
+.back-btn {
+    padding: 15px 30px;
+    font-size: 1rem;
+    background: #757575;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.back-btn:hover {
+    background: #616161;
+    transform: scale(1.05);
+}
+
+/* Button Row for Back + Action buttons */
+.button-row {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+/* ========================================
+   Lobby Screen Styles
+   ======================================== */
+
+#lobbyScreen {
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.lobby-container {
+    position: relative;
+    z-index: 1;
+    max-width: 700px;
+    margin: auto;
+    padding: 30px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.lobby-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.lobby-header h1 {
+    font-size: 2.5rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.room-code-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 15px 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.room-label {
+    font-size: 1rem;
+    color: #666;
+}
+
+.room-code {
+    font-size: 2rem;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 4px;
+    color: #4CAF50;
+}
+
+.copy-btn {
+    padding: 8px 12px;
+    font-size: 1.2rem;
+    background: transparent;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.copy-btn:hover {
+    background: #f5f5f5;
+    border-color: #4CAF50;
+}
+
+.copy-btn.copied {
+    background: #4CAF50;
+    border-color: #4CAF50;
+}
+
+/* Lobby Settings */
+.lobby-settings {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.lobby-settings h2 {
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.setting-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.setting-row label {
+    font-weight: bold;
+    color: #555;
+    min-width: 100px;
+}
+
+.grid-options.small {
+    gap: 8px;
+}
+
+.grid-options.small .grid-btn {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+}
+
+/* Players Section */
+.players-section {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    flex: 1;
+}
+
+.players-section h2 {
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.players-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.player-entry {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.player-entry.ready {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.player-entry.host {
+    border-color: #FF9800;
+}
+
+.player-color-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.player-entry-name {
+    flex: 1;
+    font-weight: bold;
+    color: #333;
+}
+
+.player-entry-status {
+    font-size: 0.9rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #eee;
+    color: #666;
+}
+
+.player-entry.ready .player-entry-status {
+    background: #4CAF50;
+    color: white;
+}
+
+.host-badge {
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #FF9800;
+    color: white;
+}
+
+/* Your Settings Section */
+.your-settings {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.your-settings h2 {
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.name-input {
+    padding: 10px 15px;
+    font-size: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s;
+    width: 200px;
+}
+
+.name-input:focus {
+    border-color: #4CAF50;
+}
+
+/* Lobby Actions */
+.lobby-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.ready-btn {
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: #FF9800;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.ready-btn:hover {
+    background: #F57C00;
+    transform: scale(1.05);
+}
+
+.ready-btn.is-ready {
+    background: #4CAF50;
+}
+
+.ready-btn.is-ready:hover {
+    background: #388E3C;
+}
+
+.leave-btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    background: transparent;
+    color: #f44336;
+    border: 2px solid #f44336;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.leave-btn:hover {
+    background: #f44336;
+    color: white;
+}
+
+/* ========================================
+   Join Screen Styles
+   ======================================== */
+
+#joinScreen {
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.room-code-input {
+    padding: 15px 25px;
+    font-size: 2rem;
+    font-family: 'Courier New', monospace;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 8px;
+    border: 3px solid #ddd;
+    border-radius: 12px;
+    outline: none;
+    width: 250px;
+    transition: border-color 0.3s;
+}
+
+.room-code-input:focus {
+    border-color: #4CAF50;
+}
+
+.room-code-input::placeholder {
+    letter-spacing: 2px;
+    font-size: 1rem;
+    color: #aaa;
+}
+
+/* ========================================
+   Local Setup Screen Styles
+   ======================================== */
+
+#localSetupScreen {
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* ========================================
+   Multi-player Game Header (2-6 players)
+   ======================================== */
+
+.game-header.multi-player {
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.game-header.multi-player .player-info {
+    min-width: 80px;
+    flex: 0 1 auto;
+}
+
+.game-header.multi-player .exit-btn {
+    order: -1;
+    margin-right: auto;
+}
+
+/* ========================================
+   Final Scores Section
+   ======================================== */
+
+.final-scores {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 30px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.final-score-entry {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: #f5f5f5;
+    border-radius: 10px;
+}
+
+.final-score-entry.winner {
+    background: rgba(76, 175, 80, 0.2);
+    border: 2px solid #4CAF50;
+}
+
+.final-score-rank {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #666;
+    min-width: 40px;
+}
+
+.final-score-entry.winner .final-score-rank {
+    color: #4CAF50;
+}
+
+.final-score-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.final-score-name {
+    flex: 1;
+    font-weight: bold;
+    color: #333;
+}
+
+.final-score-points {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+/* ========================================
+   Mobile Responsive for Lobby/Menu
+   ======================================== */
+
+@media screen and (max-width: 768px) {
+    .lobby-container {
+        padding: 15px;
+    }
+
+    .lobby-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .room-code {
+        font-size: 1.5rem;
+    }
+
+    .menu-btn {
+        padding: 15px 30px;
+        font-size: 1.1rem;
+    }
+
+    .name-input,
+    .room-code-input {
+        width: 100%;
+        max-width: 250px;
+    }
+
+    .button-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .lobby-actions {
+        flex-direction: column;
+    }
+
+    .setting-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .grid-options.small {
+        flex-wrap: wrap;
+    }
+}
+
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    .lobby-container {
+        padding: 10px 20px;
+        min-height: auto;
+    }
+
+    .lobby-header h1 {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+
+    .room-code-section {
+        padding: 10px 15px;
+    }
+
+    .room-code {
+        font-size: 1.2rem;
+    }
+
+    .menu-options {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 15px;
+    }
+
+    .menu-btn {
+        padding: 12px 25px;
+        font-size: 1rem;
+    }
+
+    .players-list {
+        max-height: 120px;
+    }
+}
+
+/* ========================================
+   Toast Notification Styles
+   ======================================== */
+
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    max-width: 90%;
+    min-width: 300px;
+    padding: 15px 20px;
+    background: #333;
+    color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.toast-notification.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.toast-message {
+    flex: 1;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.toast-close {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.toast-close:hover {
+    opacity: 1;
+}
+
+/* Toast types */
+.toast-info {
+    background: #2196F3;
+}
+
+.toast-success {
+    background: #4CAF50;
+}
+
+.toast-warning {
+    background: #FF9800;
+}
+
+.toast-error {
+    background: #f44336;
+}
+
+@media screen and (max-width: 768px) {
+    .toast-notification {
+        min-width: 250px;
+        top: 10px;
+        padding: 12px 15px;
+    }
+
+    .toast-message {
+        font-size: 0.85rem;
+    }
+}

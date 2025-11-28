@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ShapeKeeper</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Main Menu Screen -->
+    <div id="mainMenuScreen" class="screen active">
+        <canvas id="welcomeCanvas"></canvas>
+        <div class="welcome-container">
+            <h1>ShapeKeeper</h1>
+            <p class="credit">Created by Teacher Evan</p>
+
+            <div class="menu-options">
+                <button id="createGameBtn" class="menu-btn">Create Game</button>
+                <button id="joinGameBtn" class="menu-btn">Join Game</button>
+                <button id="localPlayBtn" class="menu-btn secondary">Local Play (2 Players)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Local Play Setup Screen (original welcome screen) -->
+    <div id="localSetupScreen" class="screen">
+        <canvas id="localSetupCanvas"></canvas>
+        <div class="welcome-container">
+            <h1>Local Play</h1>
+            <p class="credit">2 Player Mode</p>
+
+            <div class="setup-section">
+                <h2>Select Grid Size</h2>
+                <div class="grid-options">
+                    <button class="grid-btn local-grid-btn" data-size="5">5x5</button>
+                    <button class="grid-btn local-grid-btn" data-size="10">10x10</button>
+                    <button class="grid-btn local-grid-btn" data-size="20">20x20</button>
+                    <button class="grid-btn local-grid-btn" data-size="30">30x30</button>
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <h2>Player 1 Color</h2>
+                <input type="color" id="player1Color" value="#FF0000">
+            </div>
+
+            <div class="setup-section">
+                <h2>Player 2 Color</h2>
+                <input type="color" id="player2Color" value="#0000FF">
+            </div>
+
+            <div class="button-row">
+                <button id="backToMenuFromLocal" class="back-btn">← Back</button>
+                <button id="startLocalGame" class="start-btn" disabled>Start Game</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Game / Lobby Screen -->
+    <div id="lobbyScreen" class="screen">
+        <canvas id="lobbyCanvas"></canvas>
+        <div class="lobby-container">
+            <div class="lobby-header">
+                <h1>Game Lobby</h1>
+                <div class="room-code-section">
+                    <span class="room-label">Room Code:</span>
+                    <span class="room-code" id="roomCode">------</span>
+                    <button id="copyCodeBtn" class="copy-btn" title="Copy room code">📋</button>
+                </div>
+            </div>
+
+            <div class="lobby-settings">
+                <h2>Game Settings</h2>
+                <div class="setting-row">
+                    <label>Grid Size:</label>
+                    <div class="grid-options small">
+                        <button class="grid-btn lobby-grid-btn selected" data-size="5">5x5</button>
+                        <button class="grid-btn lobby-grid-btn" data-size="10">10x10</button>
+                        <button class="grid-btn lobby-grid-btn" data-size="20">20x20</button>
+                        <button class="grid-btn lobby-grid-btn" data-size="30">30x30</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="players-section">
+                <h2>Players (<span id="playerCount">1</span>/6)</h2>
+                <div class="players-list" id="playersList">
+                    <!-- Player entries will be added here dynamically -->
+                </div>
+            </div>
+
+            <div class="your-settings">
+                <h2>Your Settings</h2>
+                <div class="setting-row">
+                    <label>Your Name:</label>
+                    <input type="text" id="playerName" class="name-input" placeholder="Player" maxlength="15">
+                </div>
+                <div class="setting-row">
+                    <label>Your Color:</label>
+                    <input type="color" id="playerColor" value="#FF0000">
+                </div>
+            </div>
+
+            <div class="lobby-actions">
+                <button id="readyBtn" class="ready-btn">Ready</button>
+                <button id="startMultiplayerGame" class="start-btn" disabled>Start Game</button>
+            </div>
+
+            <button id="leaveLobby" class="leave-btn">Leave Room</button>
+        </div>
+    </div>
+
+    <!-- Join Game Screen -->
+    <div id="joinScreen" class="screen">
+        <canvas id="joinCanvas"></canvas>
+        <div class="welcome-container">
+            <h1>Join Game</h1>
+            <p class="credit">Enter the room code to join</p>
+
+            <div class="setup-section">
+                <h2>Room Code</h2>
+                <input type="text" id="joinRoomCode" class="room-code-input" placeholder="Enter code" maxlength="6">
+            </div>
+
+            <div class="setup-section">
+                <h2>Your Name</h2>
+                <input type="text" id="joinPlayerName" class="name-input" placeholder="Your name" maxlength="15">
+            </div>
+
+            <div class="button-row">
+                <button id="backToMenuFromJoin" class="back-btn">← Back</button>
+                <button id="joinRoomBtn" class="start-btn" disabled>Join Room</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="screen">
+        <canvas id="gameBackgroundCanvas"></canvas>
+        <div class="game-header" id="gameHeader">
+            <!-- Player info will be dynamically generated for 2-6 players -->
+            <div class="player-info" id="player1Info">
+                <span class="player-name">Player 1</span>
+                <span class="player-score" id="player1Score">0</span>
+            </div>
+            <button id="exitGame" class="exit-btn">Exit</button>
+            <div class="player-info" id="player2Info">
+                <span class="player-name">Player 2</span>
+                <span class="player-score" id="player2Score">0</span>
+            </div>
+        </div>
+
+        <div class="game-container">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+
+        <div class="game-footer">
+            <div class="turn-indicator" id="turnIndicator"></div>
+            <button id="populateBtn" class="populate-btn">Populate (10%)</button>
+        </div>
+    </div>
+
+    <!-- Winner Screen -->
+    <div id="winnerScreen" class="screen">
+        <div class="winner-container">
+            <h1>Game Over!</h1>
+            <h2 id="winnerText"></h2>
+            <div id="finalScores" class="final-scores">
+                <!-- Final scores will be dynamically generated -->
+            </div>
+            <button id="playAgain" class="start-btn">Play Again</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script src="welcome.js"></script>
+</body>
+
+</html>

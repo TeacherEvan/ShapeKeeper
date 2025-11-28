@@ -1,0 +1,15 @@
+{
+  "javascript.validate.enable": true,
+  "javascript.format.enable": true,
+  "files.eol": "\n",
+  "editor.formatOnSave": false,
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "files.exclude": {
+    "**/.git": true,
+    "**/node_modules": true
+  },
+  "search.exclude": {
+    "**/node_modules": true
+  }
+}

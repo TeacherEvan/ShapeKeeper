@@ -1,0 +1,21 @@
+{
+    "name": "shape-keeper",
+    "version": "1.0.0",
+    "description": "ShapeKeeper - A modern browser-based territory capture game",
+    "main": "index.html",
+    "scripts": {
+        "start": "npx http-server -p 8000 -o",
+        "serve": "python -m http.server 8000"
+    },
+    "keywords": [
+        "game",
+        "dots-and-boxes",
+        "canvas",
+        "javascript",
+        "html5",
+        "multiplayer",
+        "board-game"
+    ],
+    "author": "Teacher Evan",
+    "license": "MIT"
+}
