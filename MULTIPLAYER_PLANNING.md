@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document outlines the recommended approach for implementing real-time multiplayer functionality in the Dots and Boxes game, supporting 2-6 players with lobby systems, ready buttons, and seamless turn-based gameplay.
+This document outlines the recommended approach for implementing real-time multiplayer functionality in the ShapeKeeper game, supporting 2-6 players with lobby systems, ready buttons, and seamless turn-based gameplay.
 
 ---
 
@@ -14,7 +14,7 @@ After evaluating multiple backend solutions for turn-based browser games, **Conv
 
 #### Why Convex?
 
-| Feature | Benefit for Dots and Boxes |
+| Feature | Benefit for ShapeKeeper |
 |---------|---------------------------|
 | **Native Real-time Sync** | Game state updates propagate instantly to all connected players without extra setup |
 | **ACID Transactions** | Ensures move validity and prevents race conditions when players act simultaneously |
@@ -154,7 +154,7 @@ interface PlayerState {
 #### 1. Main Menu Screen
 ```
 ┌─────────────────────────────────┐
-│       Dots and Boxes            │
+│       ShapeKeeper               │
 │                                 │
 │   ┌─────────────────────────┐   │
 │   │     Create Game         │   │

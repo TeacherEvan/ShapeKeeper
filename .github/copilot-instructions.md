@@ -1,7 +1,7 @@
 # Copilot Instructions: ShapeKeeper
 
 ## Project Overview
-Browser-based implementation of the classic Dots and Boxes game with customizable grid sizes, player colors, score multipliers, and zoom controls. Pure vanilla JavaScript with HTML5 Canvas rendering—no frameworks or build tools.
+Browser-based implementation of ShapeKeeper (a classic Dots and Boxes style game) with customizable grid sizes, player colors, score multipliers, and zoom controls. Pure vanilla JavaScript with HTML5 Canvas rendering—no frameworks or build tools.
 
 ## Architecture Pattern
 

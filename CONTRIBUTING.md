@@ -1,4 +1,4 @@
-# Contributing to Dots and Boxes Game
+# Contributing to ShapeKeeper
 
 Thank you for your interest in contributing! This document provides guidelines and information for contributors.
 

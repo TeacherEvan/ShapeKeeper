@@ -1,4 +1,4 @@
-# Project Summary - Dots and Boxes Game v2.0
+# Project Summary - ShapeKeeper
 
 ## ✅ Completed Tasks
 
@@ -42,7 +42,7 @@
 ## 📁 Current File Structure
 
 ```
-Sqaure/
+ShapeKeeper/
 ├── .git/                    # Git repository
 ├── .github/
 │   └── copilot-instructions.md

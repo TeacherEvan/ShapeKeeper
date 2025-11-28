@@ -85,4 +85,4 @@ You're ready to play! The game is intuitive - just start connecting dots and you
 Need more help? Check out:
 - [README.md](README.md) - Full documentation
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Development guide
-- [GitHub Issues](https://github.com/TeacherEvan/Sqaure/issues) - Report problems
+- [GitHub Issues](https://github.com/TeacherEvan/ShapeKeeper/issues) - Report problems

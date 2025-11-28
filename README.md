@@ -1,6 +1,6 @@
-# Dots and Boxes Game
+# ShapeKeeper
 
-A modern, browser-based implementation of the classic Dots and Boxes game with adaptive landscape layouts, smooth animations, and touch support.
+A modern, browser-based implementation of the classic Dots and Boxes game (reimagined as ShapeKeeper) with adaptive landscape layouts, smooth animations, and touch support.
 
 ![Game Version](https://img.shields.io/badge/version-2.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -99,7 +99,7 @@ The game offers four preset grid sizes that automatically adapt to your display:
 ## 🏗️ Project Structure
 
 ```
-Sqaure/
+ShapeKeeper/
 ├── index.html              # Main HTML structure (3-screen layout)
 ├── styles.css              # Styling and responsive design
 ├── game.js                 # Core game logic and canvas rendering
