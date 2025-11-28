@@ -537,15 +537,16 @@ function handleRoomUpdate(roomState) {
         requestFullscreen();
         
         // Get player colors from room state
-        const player1 = roomState.players.find(p => p.playerNumber === 1);
-        const player2 = roomState.players.find(p => p.playerNumber === 2);
+        const player1 = roomState.players.find(p => p.playerIndex === 0);
+        const player2 = roomState.players.find(p => p.playerIndex === 1);
         const player1Color = player1?.color || '#FF0000';
         const player2Color = player2?.color || '#0000FF';
         
         // Initialize game with room settings and multiplayer mode
         game = new DotsAndBoxesGame(roomState.gridSize, player1Color, player2Color);
         game.isMultiplayer = true;
-        game.myPlayerNumber = myPlayer?.playerNumber || 1;
+        // playerIndex is 0-based, convert to 1-based player number
+        game.myPlayerNumber = (myPlayer?.playerIndex ?? 0) + 1;
         
         // Subscribe to game state updates
         window.ShapeKeeperConvex.subscribeToGameState(handleGameStateUpdate);
@@ -566,19 +567,21 @@ function handleRoomUpdate(roomState) {
 function handleGameStateUpdate(gameState) {
     if (!gameState || !game) return;
     
-    // Update current player turn
-    game.currentPlayer = gameState.currentPlayer;
+    // Update current player turn (server uses 0-based index, game uses 1-based player number)
+    // currentPlayerIndex 0 = Player 1, currentPlayerIndex 1 = Player 2
+    game.currentPlayer = (gameState.room?.currentPlayerIndex || 0) + 1;
     
     // Sync lines from server
     gameState.lines.forEach(line => {
         if (!game.lines.has(line.lineKey)) {
             game.lines.add(line.lineKey);
-            game.lineOwners.set(line.lineKey, line.player);
+            // playerIndex is 0-based, convert to 1-based player number
+            game.lineOwners.set(line.lineKey, line.playerIndex + 1);
             
             // Add pulsating effect for new lines
             game.pulsatingLines.push({
                 line: line.lineKey,
-                player: line.player,
+                player: line.playerIndex + 1,
                 time: Date.now()
             });
         }
@@ -588,7 +591,8 @@ function handleGameStateUpdate(gameState) {
     gameState.squares.forEach(square => {
         const key = square.squareKey;
         if (!game.squares[key]) {
-            game.squares[key] = square.player;
+            // playerIndex is 0-based, convert to 1-based player number
+            game.squares[key] = square.playerIndex + 1;
             
             // Trigger the square animation (which handles particles and kiss emojis)
             game.triggerSquareAnimation(key);
@@ -609,12 +613,14 @@ function handleGameStateUpdate(gameState) {
         }
     });
     
-    // Update scores
-    game.scores[1] = gameState.scores[1] || 0;
-    game.scores[2] = gameState.scores[2] || 0;
+    // Update scores from players array (playerIndex 0 = Player 1, playerIndex 1 = Player 2)
+    const p1 = gameState.players?.find(p => p.playerIndex === 0);
+    const p2 = gameState.players?.find(p => p.playerIndex === 1);
+    game.scores[1] = p1?.score || 0;
+    game.scores[2] = p2?.score || 0;
     
     // Check for game over
-    if (gameState.status === 'finished' && !game.isGameOver) {
+    if (gameState.room?.status === 'finished' && !game.isGameOver) {
         game.isGameOver = true;
         game.showWinner();
     }
