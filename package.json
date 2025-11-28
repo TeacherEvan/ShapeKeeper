@@ -17,5 +17,8 @@
         "board-game"
     ],
     "author": "Teacher Evan",
-    "license": "MIT"
+    "license": "MIT",
+    "dependencies": {
+        "convex": "^1.29.3"
+    }
 }

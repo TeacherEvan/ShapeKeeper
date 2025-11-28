@@ -29,3 +29,6 @@ build/
 # Temporary files
 *.tmp
 .cache/
+
+.env.local
+.env
