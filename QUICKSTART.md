@@ -1,26 +1,42 @@
 # 🚀 Quick Start Guide
 
-## Get Playing in 30 Seconds!
+## Play Online Now!
 
-### Fastest Way (No Installation)
-1. Open `index.html` in your browser
-2. Select a grid size (10×10, 20×20, or 30×30)
-3. Choose player colors (optional)
-4. Click "Start Game"
-5. **Play!** Click dots to connect them
+**🌐 [shape-keeper.vercel.app](https://shape-keeper.vercel.app)**
 
-### Slightly Fancier Way (Local Server)
+No installation required - just click and play!
+
+---
+
+## Local Development
+
+### Prerequisites
+
+- Node.js 18+
+- npm
+
+### Setup
+
 ```bash
-# If you have Node.js:
-npm start
+# Clone the repo
+git clone https://github.com/TeacherEvan/ShapeKeeper.git
+cd ShapeKeeper
 
-# If you have Python:
+# Install dependencies
+npm install
+
+# Start Convex dev server (for multiplayer)
+npx convex dev
+
+# In another terminal, serve the frontend
 python -m http.server 8000
 ```
 
-Then open `http://localhost:8000` in your browser.
+Then open `http://localhost:8000`
 
-## 🎮 Basic Controls
+---
+
+## 🎮 How to Play
 
 ### Mouse
 - **Click** a dot to select it (you'll see a colored ring)

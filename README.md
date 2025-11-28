@@ -2,8 +2,13 @@
 
 A modern, browser-based implementation of the classic Dots and Boxes game (reimagined as ShapeKeeper) with adaptive landscape layouts, smooth animations, and touch support.
 
-![Game Version](https://img.shields.io/badge/version-2.1.0-blue)
+![Game Version](https://img.shields.io/badge/version-3.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![Deployment](https://img.shields.io/badge/deployed-shape--keeper.vercel.app-brightgreen)
+
+## 🌐 Live Demo
+
+**Play Now:** [https://shape-keeper.vercel.app](https://shape-keeper.vercel.app)
 
 ## 🎮 Features
 
@@ -11,6 +16,8 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 
 - **Classic Dots and Boxes mechanics** - Connect dots to create boxes and score points
 - **Two-player turn-based gameplay** - Players alternate turns, with bonus turns for completing squares
+- **Online Multiplayer** - Real-time gameplay with Convex backend
+- **Lobby System** - Create/join rooms with unique codes
 - **Smart turn logic** - Complete a square, keep your turn!
 - **Real-time score tracking** - Live updates for both players
 - **Score Multipliers** - Reveal hidden multipliers when completing squares
@@ -26,7 +33,9 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 
 ### Technical Features
 
-- **Pure Vanilla JavaScript** - No frameworks or dependencies
+- **Convex Backend** - Real-time multiplayer with ACID transactions
+- **Vercel Deployment** - Edge network for low latency globally
+- **Pure Vanilla JavaScript** - No frontend frameworks
 - **HTML5 Canvas Rendering** - Smooth, hardware-accelerated graphics
 - **Multi-touch Support** - Native touch handling for tablets and phones
 - **Responsive Design** - Adapts to any screen size
@@ -103,8 +112,14 @@ ShapeKeeper/
 ├── index.html              # Main HTML structure (3-screen layout)
 ├── styles.css              # Styling and responsive design
 ├── game.js                 # Core game logic and canvas rendering
-├── welcome.js              # Screen navigation and game initialization
-├── MULTIPLAYER_PLANNING.md # Multiplayer feature planning document
+├── welcome.js              # Screen navigation and Convex integration
+├── convex-client.js        # Convex browser API wrapper
+├── convex/                 # Convex backend
+│   ├── schema.ts           # Database schema (rooms, games, players)
+│   ├── rooms.ts            # Room management functions
+│   └── games.ts            # Game state functions
+├── vercel.json             # Vercel deployment config
+├── CounterPlan.md          # Visual evolution roadmap
 ├── README.md               # This file
 └── .github/
     └── copilot-instructions.md  # Development guidelines
@@ -212,8 +227,8 @@ Default colors can be changed in `index.html`:
 ## 🔮 Future Enhancements
 
 - [x] Multiplayer mode planning (see MULTIPLAYER_PLANNING.md)
-- [ ] Online multiplayer with Convex + Vercel
-- [ ] Lobby system with 2-6 player support
+- [x] Online multiplayer with Convex + Vercel ✅
+- [x] Lobby system with room codes ✅
 - [ ] AI opponent with difficulty levels
 - [ ] Game replay and save/load functionality
 - [ ] Achievement system
@@ -250,7 +265,15 @@ Contributions welcome! Feel free to:
 
 ## 📝 Version History
 
-### v2.1.0 (Current)
+### v3.0.0 (Current)
+
+- **Online Multiplayer** with Convex backend
+- **Lobby System** with room codes for joining
+- **Vercel Deployment** at shape-keeper.vercel.app
+- **CounterPlan** visual evolution roadmap
+- Real-time game state synchronization
+
+### v2.1.0
 
 - Removed zoom controls for simplified UI
 - Added comprehensive multiplayer planning documentation
