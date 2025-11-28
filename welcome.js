@@ -536,22 +536,27 @@ function handleRoomUpdate(roomState) {
         showScreen('gameScreen');
         requestFullscreen();
         
-        // Get player colors from room state
-        const player1 = roomState.players.find(p => p.playerIndex === 0);
-        const player2 = roomState.players.find(p => p.playerIndex === 1);
-        const player1Color = player1?.color || '#FF0000';
-        const player2Color = player2?.color || '#0000FF';
+        // Get player colors from room state (sorted by playerIndex)
+        const sortedPlayers = roomState.players.sort((a, b) => a.playerIndex - b.playerIndex);
+        const player1Color = sortedPlayers[0]?.color || '#FF0000';
+        const player2Color = sortedPlayers[1]?.color || '#0000FF';
+        
+        // Find my player in the room
+        const mySessionId = window.ShapeKeeperConvex?.getSessionId();
+        const meInRoom = roomState.players.find(p => p.sessionId === mySessionId);
         
         // Initialize game with room settings and multiplayer mode
         game = new DotsAndBoxesGame(roomState.gridSize, player1Color, player2Color);
         game.isMultiplayer = true;
-        // playerIndex is 0-based, convert to 1-based player number
-        game.myPlayerNumber = (myPlayer?.playerIndex ?? 0) + 1;
+        // playerIndex is 0-based, convert to 1-based player number (1 or 2)
+        game.myPlayerNumber = (meInRoom?.playerIndex ?? 0) + 1;
+        
+        console.log('[Game] Started as Player', game.myPlayerNumber, 'sessionId:', mySessionId);
         
         // Subscribe to game state updates
         window.ShapeKeeperConvex.subscribeToGameState(handleGameStateUpdate);
         
-        showToast('Game started!', 'success', 2000);
+        showToast('Game started! You are Player ' + game.myPlayerNumber, 'success', 2000);
         return;
     }
     
@@ -569,7 +574,14 @@ function handleGameStateUpdate(gameState) {
     
     // Update current player turn (server uses 0-based index, game uses 1-based player number)
     // currentPlayerIndex 0 = Player 1, currentPlayerIndex 1 = Player 2
-    game.currentPlayer = (gameState.room?.currentPlayerIndex || 0) + 1;
+    // Use ?? instead of || because 0 is a valid value
+    const serverPlayerIndex = gameState.room?.currentPlayerIndex ?? 0;
+    game.currentPlayer = serverPlayerIndex + 1;
+    
+    console.log('[Game] State update - currentPlayerIndex:', serverPlayerIndex, 
+                'currentPlayer:', game.currentPlayer, 
+                'myPlayerNumber:', game.myPlayerNumber,
+                'isMyTurn:', game.currentPlayer === game.myPlayerNumber);
     
     // Sync lines from server
     gameState.lines.forEach(line => {
