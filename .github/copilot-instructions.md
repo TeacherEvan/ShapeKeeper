@@ -3,12 +3,15 @@
 ## Project Overview
 ShapeKeeper is a Dots and Boxes game with **local and online multiplayer** support. Vanilla JavaScript frontend with HTML5 Canvas, Convex backend for real-time multiplayer, deployed on Vercel at [shape-keeper.vercel.app](https://shape-keeper.vercel.app).
 
+**Version:** 4.0.0 | **Updated:** November 29, 2025
+
 ## Architecture
 
 ### Frontend (No Build Step)
-- `game.js` - `DotsAndBoxesGame` class: canvas rendering, game logic, animations
-- `welcome.js` - Screen navigation, lobby UI, Convex integration, boids background animation
+- `game.js` - `DotsAndBoxesGame` class: canvas rendering, game logic, animations, sound
+- `welcome.js` - Screen navigation, lobby UI, Convex integration, theme management
 - `convex-client.js` - Wrapper around Convex browser SDK exposing `window.ShapeKeeperConvex`
+- `styles.css` - CSS custom properties for dark/light theming
 
 ### Backend (Convex)
 - `convex/schema.ts` - Tables: `rooms`, `players`, `lines`, `squares`
@@ -93,9 +96,28 @@ When `aspectRatio > 1.5`, grid reshapes: 30×30 selection becomes ~50×18 grid (
 ## Animation System
 All in `animate()` requestAnimationFrame loop:
 - `squareAnimations[]` - 600ms scale-in on completion
-- `particles[]` - Colored bursts and golden multiplier sparks
+- `particles[]` - Colored bursts with trails and physics
 - `kissEmojis[]` - 5-8 💋 emojis per square with stagger
 - `pulsatingLines[]` - 2s glow on new lines
+- `ambientParticles[]` - Floating background particles
+- `comboCount` - Streak tracking for visual escalation
+- `screenShake` - Camera shake on multi-square completions
+
+## Sound System (Web Audio API)
+Procedural sounds via `SoundManager` class (no audio files):
+- `playLineSound()` - Ascending tone on line draw
+- `playSquareSound()` - Harmonic chord on square completion
+- `playComboSound(count)` - Arpeggio escalation for streaks
+- `playVictorySound()` - Fanfare on game end
+- `playInvalidSound()` - Error feedback
+- Sound toggle persists in localStorage (`shapekeeper-sound-enabled`)
+
+## Theme System
+CSS custom properties with localStorage persistence:
+- `:root` - Light theme defaults
+- `[data-theme="dark"]` - Dark theme overrides
+- `initializeTheme()` / `toggleTheme()` in welcome.js
+- Key variables: `--bg-primary`, `--bg-secondary`, `--text-primary`, `--border-color`
 
 ## Common Modifications
 
@@ -105,6 +127,8 @@ All in `animate()` requestAnimationFrame loop:
 | Change animations | `DotsAndBoxesGame.ANIMATION_*` static constants |
 | Modify multipliers | `initializeMultipliers()` in game.js, `generateMultiplier()` in games.ts |
 | Game rules | `checkForSquares()` + `handleClick()`/`handleTouchEnd()` |
+| Add sounds | `SoundManager` class methods in game.js |
+| Theme colors | CSS custom properties in `:root` and `[data-theme="dark"]` |
 
 ## Device Handling
 - **Landscape-only**: CSS overlay in portrait mode

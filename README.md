@@ -2,7 +2,7 @@
 
 A modern, browser-based implementation of the classic Dots and Boxes game (reimagined as ShapeKeeper) with adaptive landscape layouts, smooth animations, and touch support.
 
-![Game Version](https://img.shields.io/badge/version-3.0.0-blue)
+![Game Version](https://img.shields.io/badge/version-4.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Deployment](https://img.shields.io/badge/deployed-shape--keeper.vercel.app-brightgreen)
 
@@ -30,6 +30,22 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 - **Pulsating Lines** - Visual feedback for newly drawn lines
 - **Touch Visuals** - Ripple effects for touch interactions
 - **Color Customization** - Choose your own player colors
+- **Motion Trails** - Particles leave fading trails for persistence of vision
+- **Ambient Particles** - Floating background particles create atmosphere
+- **Dynamic Background** - Gradient shifts based on game state
+- **Screen Shake** - Feedback on multi-square completions
+- **Combo System** - Visual escalation for consecutive square completions
+- **Victory Fireworks** - Celebratory effects when game ends
+- **Dark Mode** - Toggle between light and dark themes
+
+### Audio Features
+
+- **Procedural Sound Effects** - Web Audio API generates all sounds (no audio files)
+- **Line Draw Sounds** - Ascending tones when connecting dots
+- **Square Completion Chords** - Harmonious feedback on scoring
+- **Combo Arpeggios** - Musical escalation for streaks
+- **Victory Fanfare** - Celebratory melody at game end
+- **Sound Toggle** - Enable/disable audio with persistent preference
 
 ### Technical Features
 
@@ -229,12 +245,13 @@ Default colors can be changed in `index.html`:
 - [x] Multiplayer mode planning (see MULTIPLAYER_PLANNING.md)
 - [x] Online multiplayer with Convex + Vercel ✅
 - [x] Lobby system with room codes ✅
+- [x] Sound effects (procedural Web Audio API) ✅
+- [x] Dark/light theme toggle ✅
+- [x] Visual effects overhaul (CounterPlan complete) ✅
 - [ ] AI opponent with difficulty levels
 - [ ] Game replay and save/load functionality
 - [ ] Achievement system
 - [ ] Custom grid size input
-- [ ] Sound effects and music
-- [ ] Dark/light theme toggle
 - [ ] Undo/redo moves
 - [ ] Tutorial mode for new players
 
@@ -265,7 +282,19 @@ Contributions welcome! Feel free to:
 
 ## 📝 Version History
 
-### v3.0.0 (Current)
+### v4.0.0 (Current)
+
+- **Complete Visual Overhaul** - All CounterPlan phases implemented
+- **Procedural Sound Design** - Web Audio API sounds (no audio files)
+- **Dark Mode** - Toggle theme with localStorage persistence
+- **Motion Trails** - Particle persistence of vision effects
+- **Ambient Atmosphere** - Floating particles, dynamic gradients
+- **Combo System** - Visual escalation for consecutive squares
+- **Victory Fireworks** - Celebratory particle effects
+- **Multiplayer Sync Fix** - Multipliers synced from server
+- **Accessibility** - ARIA labels, semantic improvements
+
+### v3.0.0
 
 - **Online Multiplayer** with Convex backend
 - **Lobby System** with room codes for joining

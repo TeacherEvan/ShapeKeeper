@@ -31,26 +31,55 @@
   - Data flow diagrams
   - Critical conventions (line key normalization)
 
+#### 5. Complete CounterPlan Implementation ✅ NEW
+- **Phase 2: Motion Trails** - Particle trails with history, selection ribbon
+- **Phase 3: Glow & Atmosphere** - Dynamic background gradient, ambient particles
+- **Phase 4: Enhanced Physics** - Air resistance (0.98 damping), bounce at boundaries
+- **Phase 5: Combo System** - Streak tracking, epic particles, screen shake, fireworks
+- **Phase 6: Sound Design** - Web Audio API procedural sounds (no audio files)
+- **Files**: `game.js` (major additions)
+
+#### 6. Multiplayer Sync Fix ✅ NEW
+- **Issue**: Multipliers generated client-side causing desync
+- **Fix**: `handleGameStateUpdate()` now syncs `square.multiplier` from server
+- **File**: `welcome.js`
+
+#### 7. Accessibility Improvements ✅ NEW
+- Added `aria-label` to form inputs
+- Added SVG favicon
+- **Files**: `index.html`
+
+#### 8. Dark Mode Toggle ✅ NEW
+- CSS custom properties for theming
+- Theme toggle button (🌙/☀️)
+- localStorage persistence
+- **Files**: `styles.css`, `index.html`, `welcome.js`
+
+#### 9. Sound Toggle ✅ NEW
+- Enable/disable audio with button
+- Persistent preference in localStorage
+- **Files**: `index.html`, `game.js`
+
 ---
 
 ### 📋 Recommendations & Future Work
 
 #### High Priority
+
 | Task | Description | Effort |
 |------|-------------|--------|
-| **Multiplayer state sync** | Sync `squareMultipliers` from server - currently only generated locally | Medium |
 | **Reconnection handling** | Handle player disconnect/reconnect during active game | Medium |
 | **Turn timeout** | Add optional timer for turns in multiplayer | Low |
 
 #### Medium Priority
+
 | Task | Description | Effort |
 |------|-------------|--------|
 | **Spectator mode** | Allow others to watch ongoing games | Medium |
 | **Game history** | Save completed games with replay functionality | High |
-| **Sound effects** | Add audio for line draws, square completions, winner | Low |
-| **Dark mode** | Toggle between light/dark themes | Low |
 
 #### Low Priority / Nice-to-Have
+
 | Task | Description | Effort |
 |------|-------------|--------|
 | **AI opponent** | Single-player mode with difficulty levels | High |
@@ -58,21 +87,31 @@
 | **Undo/redo** | Move history in local games | Medium |
 | **Mobile PWA** | Add manifest and service worker for installability | Low |
 
+#### ✅ Completed (This Session)
+
+| Task | Description | Status |
+|------|-------------|--------|
+| **Multiplayer state sync** | Multipliers now synced from server | ✅ Done |
+| **Sound effects** | Web Audio API procedural sounds | ✅ Done |
+| **Dark mode** | Theme toggle with persistence | ✅ Done |
+| **Favicon** | SVG favicon added | ✅ Done |
+| **Accessibility** | ARIA labels on inputs | ✅ Done |
+
 ---
 
 ### 🐛 Known Issues
 
-1. **Console errors on Vercel**: 
-   - `favicon.ico:1 Failed to load resource: 404` - Add a favicon
+1. ~~**Console errors on Vercel**~~:
+   - ~~`favicon.ico:1 Failed to load resource: 404`~~ ✅ Fixed - SVG favicon added
    - Viewport meta warnings in Edge - Consider removing `maximum-scale` and `user-scalable`
 
-2. **Accessibility warnings**:
-   - Form elements missing labels
-   - Add `aria-label` to color inputs and buttons
+2. ~~**Accessibility warnings**~~:
+   - ~~Form elements missing labels~~ ✅ Fixed - `aria-label` added
+   - ~~Add `aria-label` to color inputs and buttons~~ ✅ Fixed
 
-3. **Multiplier sync in multiplayer**:
-   - Multipliers are generated client-side; in multiplayer, each client generates different multipliers
-   - Should be generated server-side and stored in Convex
+3. ~~**Multiplier sync in multiplayer**~~:
+   - ~~Multipliers are generated client-side; in multiplayer, each client generates different multipliers~~ ✅ Fixed
+   - ~~Should be generated server-side and stored in Convex~~ ✅ Now synced from server
 
 ---
 
@@ -89,11 +128,15 @@
 ### 📁 Files Modified This Session
 
 ```
-welcome.js          - Fixed isHost detection in handleRoomUpdate()
-game.js             - Added winner celebration, DOM caching, UI throttling
-styles.css          - Enhanced winner screen styling
+welcome.js          - Fixed isHost detection, theme management, multiplier sync
+game.js             - CounterPlan phases 2-6, sound system, enhanced particles
+styles.css          - Dark mode CSS variables, theme toggle styling
+index.html          - Favicon, aria-labels, sound/theme toggle buttons
 .github/copilot-instructions.md - Rewrote for multiplayer architecture
-JOBCARD.md          - Created (this file)
+JOBCARD.md          - Updated with completed tasks
+CounterPlan.md      - Marked all phases complete
+README.md           - Updated to v4.0.0 with new features
+package.json        - Version bump to 4.0.0
 ```
 
 ---
