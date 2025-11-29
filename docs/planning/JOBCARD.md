@@ -1,195 +1,160 @@
 # ShapeKeeper Development Jobcard
 
-## Session: November 30, 2025
+## Session: November 30, 2025 (Evening)
 
-### 🔄 Current Work: ES6 Module Refactoring
-
-#### Overview
-Refactoring monolithic `game.js` (3524 lines) into modular ES6 components for better maintainability, testability, and code organization.
+### 🔄 Current Work: Triangle Feature + Dark Mode Fixes
 
 ---
 
 ### ✅ Completed This Session
 
-#### 1. Documentation Organization
-Moved all MD files from root to organized `docs/` structure:
+#### 1. Dark Mode Fix
+Canvas backgrounds were hardcoded white - now properly read `data-theme` attribute:
 
-| Folder | Contents |
+| File | Fix |
+|------|-----|
+| `welcome.js` | `draw()` method checks theme, uses `#1a1a2e` in dark mode |
+| `game.js` | `drawDynamicBackground()` uses dark gradients in dark mode |
+| `game.js` | Dot colors: `#CCC` (dark) / `#333` (light) |
+
+#### 2. Diagonal Lines (45°)
+Added support for diagonal line drawing between adjacent dots:
+
+| Change | Location |
 |--------|----------|
-| `docs/development/` | QUICKSTART.md, CODE_AUDIT.md, MERGE_CONFLICT_GUIDE.md |
-| `docs/planning/` | CounterPlan.md, JOBCARD.md, MULTIPLAYER_PLANNING.md, REFACTORING_PLAN.md |
-| `docs/history/` | BEFORE_AFTER.md, CLEANUP_SUMMARY.md, DEPLOYMENT_STATUS.md, SYNC_COMPLETE.md |
-| `docs/technical/` | BENQ_FIX.md, FEATURE_SUMMARY.md, PERFORMANCE_IMPROVEMENTS.md |
+| `areAdjacent()` | Now allows `rowDiff === 1 && colDiff === 1` |
+| `isDiagonalLine()` | New helper function |
+| Line rendering | Diagonal lines drawn at 50% width for visual distinction |
 
-#### 2. ES6 Module Structure Created
+#### 3. Triangle Detection System
+Complete triangle shape detection (3 lines: 2 orthogonal + 1 diagonal):
 
-```
-src/
-├── index.js              # Main entry point
-├── core/
-│   ├── index.js          # Core module barrel
-│   ├── constants.js      # All game constants (~200 lines)
-│   └── utils.js          # Utility functions (~100 lines)
-├── sound/
-│   ├── index.js          # Sound module barrel
-│   └── SoundManager.js   # Web Audio wrapper (~200 lines)
-├── effects/
-│   ├── index.js          # Effects module barrel
-│   ├── ParticleSystem.js # Particle effects (~350 lines)
-│   └── TileEffects.js    # Traps & powerups (~350 lines)
-├── animations/
-│   ├── index.js          # Animations module barrel
-│   ├── KissEmojiSystem.js # Emoji animations (~120 lines)
-│   └── SquareAnimations.js # Square & line animations (~220 lines)
-├── game/
-│   ├── index.js          # Game module barrel
-│   ├── InputHandler.js   # Touch/mouse input (~300 lines)
-│   ├── MultiplierSystem.js # Score multipliers (~180 lines)
-│   └── GameState.js      # State management (~350 lines)
-├── ui/
-│   ├── index.js          # UI module barrel
-│   └── ThemeManager.js   # Dark/light theme (~60 lines)
-└── multiplayer/          # (Placeholder for future)
-    └── index.js
+```javascript
+// New methods in game.js
+checkForTriangles(lineKey)           // Main detection entry
+getLineType(dot1, dot2)              // 'horizontal'|'vertical'|'diagonal'|'invalid'
+_checkTrianglesForDiagonal()         // Check when diagonal drawn
+_checkTrianglesForOrthogonal()       // Check when orthogonal drawn
+_checkSingleTriangle(v1, v2, v3)     // Verify 3 edges exist
+triggerTriangleAnimation()           // Visual feedback
+drawTrianglesWithAnimations()        // Render with striped pattern
 ```
 
-#### 3. Module Summary
+**Triangle Geometry:**
+- Each grid cell can contain 4 possible triangles (TL, TR, BL, BR corners)
+- Triangle = 2 orthogonal edges + 1 diagonal edge
+- Scoring: Triangles = 0.5 points (Squares = 1 point)
+- Visual: Striped pattern fill + ▲ symbol at center
 
-| Module | Purpose | Key Exports |
-|--------|---------|-------------|
-| `core/constants.js` | Static configuration | GAME, ANIMATION, PARTICLES, SOUND_FREQ, TILE_EFFECTS |
-| `core/utils.js` | Shared utilities | getLineKey, parseSquareKey, clamp, lerp, hexToRgba |
-| `sound/SoundManager.js` | Web Audio API | SoundManager class |
-| `effects/ParticleSystem.js` | Visual effects | ParticleSystem class |
-| `effects/TileEffects.js` | Game effects | TileEffectsManager class |
-| `animations/KissEmojiSystem.js` | Emoji bursts | KissEmojiSystem class |
-| `animations/SquareAnimations.js` | Completion animations | SquareAnimationSystem class |
-| `game/InputHandler.js` | Input management | InputHandler class |
-| `game/MultiplierSystem.js` | Multipliers | MultiplierSystem class |
-| `game/GameState.js` | Game state | GameState class |
-| `ui/ThemeManager.js` | Theme management | initializeTheme, toggleTheme |
+#### 4. State Management
+```javascript
+this.triangles = {}  // New state object parallel to this.squares
+```
+
+---
+
+### 📋 Git Commits This Session
+
+| Commit | Description |
+|--------|-------------|
+| `6d1a458` | Fix dark mode: canvas backgrounds now read theme state |
+| `d5013b1` | Add diagonal line support + dark mode dot colors |
+| `6d5c0bb` | Add triangle detection: 3-line shapes |
+
+---
+
+### 🧪 Testing Status
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Dark mode background | ✅ Works | Both canvases respond to theme toggle |
+| Diagonal lines | ✅ Works | 45° lines between adjacent dots |
+| Triangle detection | ⏳ Pending | Just deployed, needs live testing |
+| Multiplayer sync | ❓ Unknown | Triangles not yet synced to Convex |
 
 ---
 
 ### 📋 Next Steps
 
-#### Phase 2: Integration (Pending)
+#### Immediate (P0)
+| Task | Priority |
+|------|----------|
+| Test triangle detection on live site | High |
+| Verify triangle scoring works | High |
+| Check animation performance | Medium |
 
-| Task | Description | Priority |
-|------|-------------|----------|
-| **Create GameRenderer.js** | Extract canvas drawing logic | High |
-| **Update game.js** | Import modules, reduce to coordinator | High |
-| **Update index.html** | Add `type="module"` to scripts | High |
-| **Test integration** | Verify all features work | High |
+#### Short-term (P1)
+| Task | Priority |
+|------|----------|
+| Add triangles to Convex schema | High |
+| Sync triangles in multiplayer | High |
+| Update game-over logic for triangles | Medium |
 
-#### Phase 3: Optimization (Future)
-
-| Task | Description | Priority |
-|------|-------------|----------|
-| **Tree shaking** | Remove unused exports | Medium |
-| **Lazy loading** | Dynamic imports for effects | Low |
-| **TypeScript migration** | Add type safety | Medium |
+#### Future (P2)
+| Task | Priority |
+|------|----------|
+| Triangle-specific sound effects | Low |
+| Different colors for triangle types | Low |
+| Triangle achievements/badges | Low |
 
 ---
 
-### 📊 Previous Session Summary (Nov 29)
+### 🏗️ Architecture Changes
 
-- ✅ Fixed multiplayer "Start Game" bug
-- ✅ Added winner celebration (confetti, trophies)
-- ✅ Implemented CounterPlan phases 2-6
-- ✅ Added sound system (Web Audio API)
-- ✅ Dark mode toggle
-- ✅ Multiplayer state sync fix
-- ✅ Accessibility improvements
+**Before:**
+```
+Lines → checkForSquares() → squares{} → scoring
+```
+
+**After:**
+```
+Lines → checkForSquares() → squares{} ─┐
+      → checkForTriangles() → triangles{} ─┴→ combined scoring
+```
+
+---
+
+### 📊 Code Metrics
+
+| Metric | Before | After |
+|--------|--------|-------|
+| `game.js` lines | 3,558 | 3,940 (+382) |
+| New methods | - | 8 triangle-related |
+| New state | - | `this.triangles` |
 
 ---
 
 ### 🐛 Known Issues
 
-1. **Module loading**: Modules not yet integrated with main `game.js`
-2. **Backward compatibility**: Need to maintain global `DotsAndBoxesGame` for `welcome.js`
+1. **Triangles not in multiplayer** - Only local state, no Convex sync yet
+2. **Game-over unchanged** - Still based on squares only (triangles are bonus)
+3. **ES6 modules** - Still not integrated with main game.js
 
 ---
 
-### 🔧 Technical Debt
-
-- [x] Extract animation constants to separate config file → `src/core/constants.js`
-- [ ] Add TypeScript types for better IDE support
-- [ ] Add unit tests for game logic (`checkForSquares`, `getLineKey`)
-- [ ] Consider moving game state to a proper state machine
-- [ ] Add error boundaries for multiplayer failures
-
----
-
-### 📁 Files Created This Session
+### 📁 Files Modified This Session
 
 ```
-docs/                           # Reorganized documentation
-  development/QUICKSTART.md
-  development/CODE_AUDIT.md
-  development/MERGE_CONFLICT_GUIDE.md
-  planning/CounterPlan.md
-  planning/JOBCARD.md
-  planning/MULTIPLAYER_PLANNING.md
-  planning/REFACTORING_PLAN.md
-  history/BEFORE_AFTER.md
-  history/CLEANUP_SUMMARY.md
-  history/DEPLOYMENT_STATUS.md
-  history/SYNC_COMPLETE.md
-  technical/BENQ_FIX.md
-  technical/FEATURE_SUMMARY.md
-  technical/PERFORMANCE_IMPROVEMENTS.md
-
-src/                            # New ES6 module structure
-  index.js
-  core/index.js
-  core/constants.js
-  core/utils.js
-  sound/index.js
-  sound/SoundManager.js
-  effects/index.js
-  effects/ParticleSystem.js
-  effects/TileEffects.js
-  animations/index.js
-  animations/KissEmojiSystem.js
-  animations/SquareAnimations.js
-  game/index.js
-  game/InputHandler.js
-  game/MultiplierSystem.js
-  game/GameState.js
-  ui/index.js
-  ui/ThemeManager.js
+game.js        # +diagonal lines, +triangle detection, +dark mode fixes
+welcome.js     # +dark mode background fix
 ```
 
 ---
 
-### 🚀 Integration Plan
+### 🚀 Live Site
 
-To use the new modules in `game.js`:
-
-```javascript
-// At top of game.js (when type="module" is added to script tag)
-import { GAME, ANIMATION, PARTICLES } from './src/core/constants.js';
-import { getLineKey, parseSquareKey } from './src/core/utils.js';
-import { SoundManager } from './src/sound/SoundManager.js';
-import { ParticleSystem } from './src/effects/ParticleSystem.js';
-import { TileEffectsManager } from './src/effects/TileEffects.js';
-import { KissEmojiSystem } from './src/animations/KissEmojiSystem.js';
-import { SquareAnimationSystem } from './src/animations/SquareAnimations.js';
-import { InputHandler } from './src/game/InputHandler.js';
-import { MultiplierSystem } from './src/game/MultiplierSystem.js';
-```
+- **URL:** https://shape-keeper.vercel.app
+- **Status:** Deployed (latest: 6d5c0bb)
+- **Test:** Try drawing diagonal lines and completing triangles
 
 ---
 
-### 🚀 Deployment Notes
+### 📚 Related Docs
 
-- Frontend: Vercel at `shape-keeper.vercel.app`
-- Backend: Convex at `oceanic-antelope-781.convex.cloud`
-- No build step required for frontend changes
-- Run `npm run dev` to sync Convex schema changes
+- `Triangle/canvasBonusFeature.md` - Full triangle feature planning
+- `docs/planning/REFACTORING_PLAN.md` - ES6 module refactoring plan
+- `docs/planning/CounterPlan.md` - Original feature roadmap
 
 ---
 
-*Last updated: November 30, 2025*
-
+*Last updated: November 30, 2025 (evening)*
