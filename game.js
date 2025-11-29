@@ -894,7 +894,24 @@ class DotsAndBoxesGame {
     areAdjacent(dot1, dot2) {
         const rowDiff = Math.abs(dot1.row - dot2.row);
         const colDiff = Math.abs(dot1.col - dot2.col);
-        return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
+        // Orthogonal (horizontal/vertical) OR diagonal (45°)
+        return (rowDiff === 1 && colDiff === 0) || 
+               (rowDiff === 0 && colDiff === 1) || 
+               (rowDiff === 1 && colDiff === 1); // Diagonal!
+    }
+    
+    /**
+     * Get the type of line between two dots
+     * @returns {'horizontal' | 'vertical' | 'diagonal' | 'invalid'}
+     */
+    getLineType(dot1, dot2) {
+        const rowDiff = Math.abs(dot1.row - dot2.row);
+        const colDiff = Math.abs(dot1.col - dot2.col);
+        
+        if (rowDiff === 0 && colDiff === 1) return 'horizontal';
+        if (rowDiff === 1 && colDiff === 0) return 'vertical';
+        if (rowDiff === 1 && colDiff === 1) return 'diagonal';
+        return 'invalid';
     }
 
     getLineKey(dot1, dot2) {
@@ -2259,6 +2276,7 @@ class DotsAndBoxesGame {
             }
             
             const [start, end] = this.parseLineKey(lineKey);
+            const lineType = this.getLineType(start, end);
 
             const pulsating = this.pulsatingLines.find(p => p.line === lineKey);
             const player = pulsating?.player || this.getLinePlayer(lineKey);
@@ -2266,7 +2284,9 @@ class DotsAndBoxesGame {
             // Use populate color for player 3, otherwise use player 1 or 2 colors
             this.ctx.strokeStyle = player === DotsAndBoxesGame.POPULATE_PLAYER_ID ? this.populateColor : 
                                    (player === 1 ? this.player1Color : this.player2Color);
-            this.ctx.lineWidth = this.lineWidth;
+            
+            // Diagonal lines are thinner for visual distinction
+            this.ctx.lineWidth = lineType === 'diagonal' ? this.lineWidth * 0.5 : this.lineWidth;
             this.ctx.lineCap = 'round';
 
             this.ctx.beginPath();
@@ -2318,12 +2338,16 @@ class DotsAndBoxesGame {
         this.drawMultiplierAnimations();
 
         // Draw all dots AFTER lines so they appear on top
+        // Use theme-aware color for dark mode visibility
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const dotColor = isDark ? '#CCCCCC' : '#333333';
+        
         for (let row = 0; row < this.gridRows; row++) {
             for (let col = 0; col < this.gridCols; col++) {
                 const x = this.offsetX + col * this.cellSize;
                 const y = this.offsetY + row * this.cellSize;
 
-                this.ctx.fillStyle = '#333';
+                this.ctx.fillStyle = dotColor;
                 this.ctx.beginPath();
                 this.ctx.arc(x, y, this.dotRadius, 0, Math.PI * 2);
                 this.ctx.fill();

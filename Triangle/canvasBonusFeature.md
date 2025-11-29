@@ -14,7 +14,8 @@ This document outlines a comprehensive plan to add **triangular shapes** to Shap
 
 ### Key Features
 1. **Diagonal Lines** - Players can connect dots diagonally (half thickness for visual clarity)
-2. **Triangle Completion** - Triangles form from 3 lines (2 orthogonal + 1 diagonal)
+2. **Triangle Completion** - Triangles form from 4
+ lines (2 orthogonal/horizontal + 2 diagonal)
 3. **Shape Messages** - Completed shapes reveal custom messages when clicked
 4. **Visual Enhancements** - Improved UI with Tailwind CSS integration
 5. **Performance Optimization** - Layered canvas, object pooling, spatial indexing
