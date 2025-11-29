@@ -90,6 +90,14 @@ After each line draw, check 2-4 adjacent squares (horizontal lines check above/b
 ### Multiplier Distribution
 65% ×2, 20% ×3, 10% ×4, 4% ×5, 1% ×10. Revealed on tap—**multiplies total score**, not adds.
 
+### Tile Effects System
+~20% of squares have hidden traps or powerups:
+- **Traps (red)**: Landmine, Freeze, Score Swap, Chaos Storm, social effects (dares, secrets)
+- **Powerups (blue)**: Extra turns, Steal territory, Shield, Lightning, Oracle's Vision
+- Effects stored in `tileEffects` object, revealed via `revealTileEffect()`
+- Effect modal shows description and activation button
+- `playerEffects` tracks status effects (frozen turns, shield count, etc.)
+
 ### Landscape Grid Adaptation
 When `aspectRatio > 1.5`, grid reshapes: 30×30 selection becomes ~50×18 grid (same total squares).
 

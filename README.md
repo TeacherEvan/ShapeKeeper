@@ -20,7 +20,8 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 - **Lobby System** - Create/join rooms with unique codes
 - **Smart turn logic** - Complete a square, keep your turn!
 - **Real-time score tracking** - Live updates for both players
-- **Score Multipliers** - Reveal hidden multipliers when completing squares
+- **Tile Effects System** - Hidden traps and powerups revealed when capturing squares
+- **Party Game Mode** - Dares, secrets, hypotheticals, and physical challenges
 
 ### Visual Enhancements
 
