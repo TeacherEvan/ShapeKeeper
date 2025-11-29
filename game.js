@@ -2684,6 +2684,9 @@ class DotsAndBoxesGame {
      * Phase 3: Draw dynamic background gradient
      */
     drawDynamicBackground() {
+        // Check theme for dark mode support
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        
         // Shift hue based on score differential
         const scoreDiff = this.scores[1] - this.scores[2];
         const targetHue = 220 + scoreDiff * 2; // Subtle shift
@@ -2694,8 +2697,15 @@ class DotsAndBoxesGame {
             this.logicalWidth / 2, this.logicalHeight / 2, Math.max(this.logicalWidth, this.logicalHeight)
         );
         
-        gradient.addColorStop(0, `hsla(${this.backgroundHue}, 15%, 98%, 0.3)`);
-        gradient.addColorStop(1, `hsla(${this.backgroundHue + 30}, 10%, 95%, 0.2)`);
+        if (isDark) {
+            // Dark theme: darker background
+            gradient.addColorStop(0, `hsla(${this.backgroundHue}, 20%, 12%, 0.3)`);
+            gradient.addColorStop(1, `hsla(${this.backgroundHue + 30}, 15%, 8%, 0.2)`);
+        } else {
+            // Light theme: original light background
+            gradient.addColorStop(0, `hsla(${this.backgroundHue}, 15%, 98%, 0.3)`);
+            gradient.addColorStop(1, `hsla(${this.backgroundHue + 30}, 10%, 95%, 0.2)`);
+        }
         
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.logicalWidth, this.logicalHeight);

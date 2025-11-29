@@ -3,15 +3,47 @@
 ## Project Overview
 ShapeKeeper is a Dots and Boxes game with **local and online multiplayer** support. Vanilla JavaScript frontend with HTML5 Canvas, Convex backend for real-time multiplayer, deployed on Vercel at [shape-keeper.vercel.app](https://shape-keeper.vercel.app).
 
-**Version:** 4.0.0 | **Updated:** November 29, 2025
+**Version:** 4.1.0 | **Updated:** November 30, 2025
 
 ## Architecture
 
-### Frontend (No Build Step)
+### Frontend (ES6 Modules - In Progress)
+```
+src/
+├── core/           # Constants and utilities
+│   ├── constants.js    # GAME, ANIMATION, PARTICLES, SOUND_FREQ, TILE_EFFECTS
+│   └── utils.js        # getLineKey, parseSquareKey, clamp, lerp, hexToRgba
+├── sound/          # Audio system
+│   └── SoundManager.js # Web Audio API wrapper
+├── effects/        # Visual effects
+│   ├── ParticleSystem.js   # Burst and ambient particles
+│   └── TileEffects.js      # Traps and powerups
+├── animations/     # Animation systems
+│   ├── KissEmojiSystem.js  # Emoji burst effects
+│   └── SquareAnimations.js # Square completion animations
+├── game/           # Game logic
+│   ├── InputHandler.js     # Touch/mouse input
+│   ├── MultiplierSystem.js # Score multipliers
+│   └── GameState.js        # State management
+├── ui/             # UI components
+│   └── ThemeManager.js     # Dark/light theme
+└── multiplayer/    # (Future) Convex integration
+```
+
+### Legacy Files (Being Modularized)
 - `game.js` - `DotsAndBoxesGame` class: canvas rendering, game logic, animations, sound
 - `welcome.js` - Screen navigation, lobby UI, Convex integration, theme management
 - `convex-client.js` - Wrapper around Convex browser SDK exposing `window.ShapeKeeperConvex`
 - `styles.css` - CSS custom properties for dark/light theming
+
+### Documentation Structure
+```
+docs/
+├── development/    # QUICKSTART.md, CODE_AUDIT.md, MERGE_CONFLICT_GUIDE.md
+├── planning/       # JOBCARD.md, CounterPlan.md, MULTIPLAYER_PLANNING.md, REFACTORING_PLAN.md
+├── history/        # BEFORE_AFTER.md, CLEANUP_SUMMARY.md, DEPLOYMENT_STATUS.md
+└── technical/      # BENQ_FIX.md, FEATURE_SUMMARY.md, PERFORMANCE_IMPROVEMENTS.md
+```
 
 ### Backend (Convex)
 - `convex/schema.ts` - Tables: `rooms`, `players`, `lines`, `squares`
@@ -132,11 +164,25 @@ CSS custom properties with localStorage persistence:
 | Task | Location |
 |------|----------|
 | Add grid size | `index.html` buttons + `setupCanvas()` thresholds |
-| Change animations | `DotsAndBoxesGame.ANIMATION_*` static constants |
-| Modify multipliers | `initializeMultipliers()` in game.js, `generateMultiplier()` in games.ts |
-| Game rules | `checkForSquares()` + `handleClick()`/`handleTouchEnd()` |
-| Add sounds | `SoundManager` class methods in game.js |
-| Theme colors | CSS custom properties in `:root` and `[data-theme="dark"]` |
+| Change animations | `src/core/constants.js` ANIMATION object |
+| Modify multipliers | `src/game/MultiplierSystem.js` or `convex/games.ts` |
+| Game rules | `src/game/GameState.js` or `game.js checkForSquares()` |
+| Add sounds | `src/sound/SoundManager.js` |
+| Theme colors | `src/ui/ThemeManager.js` or CSS custom properties |
+| Particle effects | `src/effects/ParticleSystem.js` |
+| Tile effects | `src/effects/TileEffects.js` |
+
+## Module Import Pattern
+```javascript
+// ES6 module imports (when type="module" is added)
+import { GAME, ANIMATION, PARTICLES } from './src/core/constants.js';
+import { getLineKey, parseSquareKey } from './src/core/utils.js';
+import { SoundManager } from './src/sound/SoundManager.js';
+import { ParticleSystem } from './src/effects/ParticleSystem.js';
+import { TileEffectsManager } from './src/effects/TileEffects.js';
+import { InputHandler } from './src/game/InputHandler.js';
+import { GameState } from './src/game/GameState.js';
+```
 
 ## Device Handling
 - **Landscape-only**: CSS overlay in portrait mode

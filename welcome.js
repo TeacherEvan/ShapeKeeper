@@ -218,8 +218,11 @@ class WelcomeAnimation {
     
     draw() {
         // Clear with slight fade for trail effect (dimmed in game mode)
-        const fadeAlpha = this.isDimmed ? 0.15 : 0.1;
-        const bgColor = this.isDimmed ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.1)';
+        // Read background color from CSS variables for theme support
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const baseBg = isDark ? '26, 26, 46' : '255, 255, 255'; // --bg-primary RGB values
+        const fadeAlpha = this.isDimmed ? 0.3 : 0.1;
+        const bgColor = `rgba(${baseBg}, ${fadeAlpha})`;
         this.ctx.fillStyle = bgColor;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
