@@ -36,6 +36,221 @@ class DotsAndBoxesGame {
     static SOUND_SQUARE_BASE = 523;
     static SOUND_COMBO_BASE = 659;
     
+    // Tile Effects System - Traps (negative) and Powerups (positive)
+    static TILE_EFFECTS = {
+        // TRAPS (Red/Orange theme) - 10 effects
+        traps: [
+            {
+                id: 'landmine',
+                icon: '💣',
+                name: 'Landmine!',
+                description: 'BOOM! The area explodes! No one scores and you lose your turn.',
+                color: '#FF4444',
+                sound: 'explosion'
+            },
+            {
+                id: 'secret',
+                icon: '🔮',
+                name: 'Reveal a Secret',
+                description: 'Spill the tea! Share an embarrassing secret about yourself.',
+                color: '#9C27B0',
+                sound: 'mystical'
+            },
+            {
+                id: 'hypothetical',
+                icon: '🤔',
+                name: 'Hypothetical',
+                description: 'Answer the hypothetical question honestly!',
+                color: '#FF9800',
+                sound: 'thinking'
+            },
+            {
+                id: 'drink',
+                icon: '🍺',
+                name: 'Drink!',
+                description: 'Take a sip of your beverage! Cheers! 🍻',
+                color: '#FFC107',
+                sound: 'gulp'
+            },
+            {
+                id: 'dared',
+                icon: '🎯',
+                name: "You're DARED!",
+                description: 'Complete the dare or forfeit your next turn!',
+                color: '#F44336',
+                sound: 'dramatic'
+            },
+            {
+                id: 'reverse',
+                icon: '🔄',
+                name: 'Reverse!',
+                description: 'Turn order is now reversed! Uno-style chaos!',
+                color: '#E91E63',
+                sound: 'whoosh'
+            },
+            {
+                id: 'freeze',
+                icon: '❄️',
+                name: 'Frozen!',
+                description: 'Brrr! Skip your next turn while you thaw out.',
+                color: '#03A9F4',
+                sound: 'freeze'
+            },
+            {
+                id: 'swap_scores',
+                icon: '🎭',
+                name: 'Score Swap!',
+                description: 'Your score gets swapped with the player on your left!',
+                color: '#673AB7',
+                sound: 'swap'
+            },
+            {
+                id: 'ghost',
+                icon: '👻',
+                name: 'Ghost Mode',
+                description: 'Your next 3 lines are invisible to opponents! Spooky!',
+                color: '#607D8B',
+                sound: 'ghost'
+            },
+            {
+                id: 'chaos',
+                icon: '🌪️',
+                name: 'Chaos Storm!',
+                description: 'All unclaimed squares are randomly redistributed!',
+                color: '#FF5722',
+                sound: 'storm'
+            }
+        ],
+        // POWERUPS (Blue/Green theme) - 10 effects
+        powerups: [
+            {
+                id: 'extra_turns',
+                icon: '➕',
+                name: '+2 Extra Moves!',
+                description: 'Lucky you! Take 2 additional turns right now!',
+                color: '#4CAF50',
+                sound: 'powerup'
+            },
+            {
+                id: 'steal_territory',
+                icon: '🏴‍☠️',
+                name: "Pirate's Plunder",
+                description: 'Steal one of your opponent\'s squares and all connected to it!',
+                color: '#2196F3',
+                sound: 'pirate'
+            },
+            {
+                id: 'dare_left',
+                icon: '👈',
+                name: 'Dare Left!',
+                description: 'You get to DARE the player on your left! Make it good!',
+                color: '#00BCD4',
+                sound: 'challenge'
+            },
+            {
+                id: 'physical_challenge',
+                icon: '🤸',
+                name: 'Physical Challenge!',
+                description: 'The player on your right must do a silly physical challenge!',
+                color: '#8BC34A',
+                sound: 'fanfare'
+            },
+            {
+                id: 'shield',
+                icon: '🛡️',
+                name: 'Shield Up!',
+                description: 'Your next 3 completed squares are protected from stealing!',
+                color: '#3F51B5',
+                sound: 'shield'
+            },
+            {
+                id: 'lightning',
+                icon: '⚡',
+                name: 'Lightning Strike!',
+                description: 'POWER! Draw 2 lines at once on your next turn!',
+                color: '#FFEB3B',
+                sound: 'lightning'
+            },
+            {
+                id: 'gift',
+                icon: '🎁',
+                name: 'Gift of Giving',
+                description: 'Feeling generous? Give one of your squares to any player!',
+                color: '#E91E63',
+                sound: 'gift'
+            },
+            {
+                id: 'oracle',
+                icon: '🔍',
+                name: "Oracle's Vision",
+                description: 'See all hidden tile effects on the board for 10 seconds!',
+                color: '#9C27B0',
+                sound: 'reveal'
+            },
+            {
+                id: 'double_points',
+                icon: '✨',
+                name: 'Lucky Star!',
+                description: 'Your next 3 squares are worth DOUBLE points!',
+                color: '#FFD700',
+                sound: 'sparkle'
+            },
+            {
+                id: 'wildcard',
+                icon: '🌟',
+                name: 'Wildcard!',
+                description: 'Choose ANY powerup effect! The power is yours!',
+                color: '#FF4081',
+                sound: 'wildcard'
+            }
+        ]
+    };
+    
+    // Social prompts for party game effects
+    static HYPOTHETICALS = [
+        "Would you rather fight 100 duck-sized horses or 1 horse-sized duck?",
+        "Would you rather have unlimited money or unlimited time?",
+        "Would you rather be able to fly or be invisible?",
+        "Would you rather live without music or without movies?",
+        "Would you rather always be 10 minutes late or 20 minutes early?",
+        "Would you rather have a rewind button or a pause button for your life?",
+        "Would you rather know how you die or when you die?",
+        "Would you rather speak all languages or talk to animals?",
+        "Would you rather give up social media forever or never watch TV again?",
+        "Would you rather be famous for something bad or unknown for something great?"
+    ];
+    
+    static DARES = [
+        "Do your best impression of another player!",
+        "Speak in an accent for the next 3 turns!",
+        "Let another player post anything on your social media!",
+        "Do 10 jumping jacks right now!",
+        "Tell an embarrassing story about yourself!",
+        "Let the player on your right give you a new nickname for the game!",
+        "Sing the chorus of the last song you listened to!",
+        "Do your best dance move for 10 seconds!",
+        "Compliment every player sincerely!",
+        "Keep your eyes closed until your next turn!",
+        "Speak in third person for the next 3 turns!",
+        "Make a funny face and hold it for 10 seconds!",
+        "Do a backflip... or pretend to try!",
+        "Tickle a pickle (find something to wiggle)!",
+        "Speak in rhymes for your next 2 turns!"
+    ];
+    
+    static PHYSICAL_CHALLENGES = [
+        "Do a dramatic slow-motion replay of capturing that square!",
+        "Stand on one foot until your next turn!",
+        "Touch your nose with your tongue (or try)!",
+        "Do your best superhero pose!",
+        "Give the player on your left a high five!",
+        "Do the robot dance for 10 seconds!",
+        "Spin around 3 times!",
+        "Do an air guitar solo!",
+        "Make the most ridiculous face you can!",
+        "Do a victory dance right now!"
+    ];
+    
     constructor(gridSize, player1Color, player2Color) {
         this.gridSize = gridSize;
         this.player1Color = player1Color;
@@ -68,9 +283,28 @@ class DotsAndBoxesGame {
         this.particles = []; // Particle effects for celebrations
         this.kissEmojis = []; // Kiss emoji animations for completed squares
         
-        // Score multiplier system
+        // Score multiplier system (legacy - replaced by tile effects)
         this.squareMultipliers = {}; // Store multipliers for each square
         this.revealedMultipliers = new Set(); // Track which squares have been clicked
+        
+        // Tile Effects System (traps & powerups)
+        this.tileEffects = {}; // Store effects for each square position
+        this.revealedEffects = new Set(); // Track which effects have been revealed
+        this.activatedEffects = new Set(); // Track which effects have been activated
+        this.pendingEffect = null; // Current effect waiting for user interaction
+        this.effectModal = null; // Reference to effect modal DOM element
+        this.oracleVisionActive = false; // Oracle's Vision powerup active
+        this.oracleVisionTimeout = null; // Timeout for Oracle's Vision
+        
+        // Player status effects (from tile effects)
+        this.playerEffects = {
+            1: { frozenTurns: 0, shieldCount: 0, doublePointsCount: 0, ghostLines: 0, bonusTurns: 0, doubleLine: false },
+            2: { frozenTurns: 0, shieldCount: 0, doublePointsCount: 0, ghostLines: 0, bonusTurns: 0, doubleLine: false }
+        };
+        
+        // Effect animations
+        this.effectAnimations = []; // Active effect-specific animations
+        this.effectShimmer = 0; // Global shimmer phase for hidden effects
         
         // Animated score counters
         this.displayedScores = { 1: 0, 2: 0 }; // Scores currently displayed (animated)
@@ -121,8 +355,10 @@ class DotsAndBoxesGame {
 
         this.setupCanvas();
         this.initializeMultipliers(); // Initialize multipliers AFTER grid dimensions are set
+        this.initializeTileEffects(); // Initialize tile effects (traps & powerups)
         this.initializeAmbientParticles(); // Phase 3: Initialize ambient particles
         this.initializeSoundManager(); // Phase 6: Initialize Web Audio
+        this.createEffectModal(); // Create the effect reveal modal
         this.setupEventListeners();
         this.draw();
         this.updateUI();
@@ -475,6 +711,101 @@ class DotsAndBoxesGame {
             this.squareMultipliers[allSquareKeys[index++]] = { type: 'multiplier', value: 2 };
         }
     }
+    
+    /**
+     * Initialize tile effects (traps and powerups) for the game board
+     * ~20% of squares get effects, balanced between traps and powerups
+     */
+    initializeTileEffects() {
+        const totalSquares = (this.gridRows - 1) * (this.gridCols - 1);
+        
+        // Create array of all square positions
+        const allPositions = [];
+        for (let row = 0; row < this.gridRows - 1; row++) {
+            for (let col = 0; col < this.gridCols - 1; col++) {
+                allPositions.push(`${row},${col}`);
+            }
+        }
+        
+        // Shuffle positions
+        for (let i = allPositions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allPositions[i], allPositions[j]] = [allPositions[j], allPositions[i]];
+        }
+        
+        // Calculate how many effects to place (~20% of squares)
+        const effectCount = Math.max(4, Math.floor(totalSquares * 0.20));
+        const trapsCount = Math.floor(effectCount / 2);
+        const powerupsCount = effectCount - trapsCount;
+        
+        const traps = DotsAndBoxesGame.TILE_EFFECTS.traps;
+        const powerups = DotsAndBoxesGame.TILE_EFFECTS.powerups;
+        
+        let index = 0;
+        
+        // Assign traps
+        for (let i = 0; i < trapsCount && index < allPositions.length; i++) {
+            const trap = traps[Math.floor(Math.random() * traps.length)];
+            this.tileEffects[allPositions[index++]] = {
+                type: 'trap',
+                effect: trap,
+                revealed: false,
+                activated: false
+            };
+        }
+        
+        // Assign powerups
+        for (let i = 0; i < powerupsCount && index < allPositions.length; i++) {
+            const powerup = powerups[Math.floor(Math.random() * powerups.length)];
+            this.tileEffects[allPositions[index++]] = {
+                type: 'powerup',
+                effect: powerup,
+                revealed: false,
+                activated: false
+            };
+        }
+        
+        console.log(`[TileEffects] Initialized ${effectCount} effects (${trapsCount} traps, ${powerupsCount} powerups)`);
+    }
+    
+    /**
+     * Create the effect modal DOM element for displaying trap/powerup reveals
+     */
+    createEffectModal() {
+        // Check if modal already exists
+        if (document.getElementById('effectModal')) {
+            this.effectModal = document.getElementById('effectModal');
+            return;
+        }
+        
+        const modal = document.createElement('div');
+        modal.id = 'effectModal';
+        modal.className = 'effect-modal';
+        modal.innerHTML = `
+            <div class="effect-modal-content">
+                <div class="effect-modal-header">
+                    <span class="effect-icon"></span>
+                    <h2 class="effect-title"></h2>
+                </div>
+                <p class="effect-description"></p>
+                <div class="effect-prompt"></div>
+                <div class="effect-actions">
+                    <button class="effect-btn effect-btn-primary">Activate!</button>
+                    <button class="effect-btn effect-btn-secondary" style="display: none;">Cancel</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        this.effectModal = modal;
+        
+        // Add click handlers
+        const primaryBtn = modal.querySelector('.effect-btn-primary');
+        const secondaryBtn = modal.querySelector('.effect-btn-secondary');
+        
+        primaryBtn.addEventListener('click', () => this.activateCurrentEffect());
+        secondaryBtn.addEventListener('click', () => this.closeEffectModal());
+    }
 
     setupEventListeners() {
         window.addEventListener('resize', () => {
@@ -676,11 +1007,19 @@ class DotsAndBoxesGame {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         
-        // Check if clicking on a completed square to reveal multiplier
+        // Check if clicking on a completed square to reveal effect or multiplier
         const clickedSquare = this.getSquareAtPosition(x, y);
-        if (clickedSquare && this.squares[clickedSquare] && !this.revealedMultipliers.has(clickedSquare)) {
-            this.revealMultiplier(clickedSquare);
-            return;
+        if (clickedSquare && this.squares[clickedSquare]) {
+            // Check for tile effect first
+            if (this.tileEffects[clickedSquare] && !this.revealedEffects.has(clickedSquare)) {
+                this.revealTileEffect(clickedSquare);
+                return;
+            }
+            // Fall back to multiplier reveal
+            if (!this.revealedMultipliers.has(clickedSquare)) {
+                this.revealMultiplier(clickedSquare);
+                return;
+            }
         }
 
         const dot = this.getNearestDot(x, y);
@@ -769,6 +1108,266 @@ class DotsAndBoxesGame {
             this.updateUI();
         }
         this.draw();
+    }
+    
+    /**
+     * Reveal a tile effect (trap or powerup) when clicking on a completed square
+     */
+    revealTileEffect(squareKey) {
+        const effectData = this.tileEffects[squareKey];
+        if (!effectData || this.revealedEffects.has(squareKey)) return;
+        
+        // Mark as revealed
+        this.revealedEffects.add(squareKey);
+        effectData.revealed = true;
+        
+        // Store pending effect for activation
+        this.pendingEffect = {
+            squareKey,
+            effectData,
+            player: this.squares[squareKey]
+        };
+        
+        // Play reveal sound
+        this.playEffectRevealSound(effectData.type);
+        
+        // Trigger reveal particles
+        this.triggerEffectRevealParticles(squareKey, effectData);
+        
+        // Show the effect modal
+        this.showEffectModal(effectData);
+        
+        this.draw();
+    }
+    
+    /**
+     * Show the effect modal with trap/powerup details
+     */
+    showEffectModal(effectData) {
+        if (!this.effectModal) return;
+        
+        const effect = effectData.effect;
+        const isTrap = effectData.type === 'trap';
+        
+        // Update modal content
+        const icon = this.effectModal.querySelector('.effect-icon');
+        const title = this.effectModal.querySelector('.effect-title');
+        const description = this.effectModal.querySelector('.effect-description');
+        const prompt = this.effectModal.querySelector('.effect-prompt');
+        const primaryBtn = this.effectModal.querySelector('.effect-btn-primary');
+        
+        icon.textContent = effect.icon;
+        title.textContent = effect.name;
+        description.textContent = effect.description;
+        
+        // Set theme class
+        this.effectModal.classList.remove('trap-theme', 'powerup-theme');
+        this.effectModal.classList.add(isTrap ? 'trap-theme' : 'powerup-theme');
+        
+        // Add special prompts for social effects
+        prompt.innerHTML = '';
+        prompt.style.display = 'none';
+        
+        if (effect.id === 'hypothetical') {
+            const question = DotsAndBoxesGame.HYPOTHETICALS[
+                Math.floor(Math.random() * DotsAndBoxesGame.HYPOTHETICALS.length)
+            ];
+            prompt.innerHTML = `<div class="effect-question">"${question}"</div>`;
+            prompt.style.display = 'block';
+        } else if (effect.id === 'dared' || effect.id === 'dare_left') {
+            const dare = DotsAndBoxesGame.DARES[
+                Math.floor(Math.random() * DotsAndBoxesGame.DARES.length)
+            ];
+            prompt.innerHTML = `<div class="effect-dare">${dare}</div>`;
+            prompt.style.display = 'block';
+        } else if (effect.id === 'physical_challenge') {
+            const challenge = DotsAndBoxesGame.PHYSICAL_CHALLENGES[
+                Math.floor(Math.random() * DotsAndBoxesGame.PHYSICAL_CHALLENGES.length)
+            ];
+            prompt.innerHTML = `<div class="effect-challenge">${challenge}</div>`;
+            prompt.style.display = 'block';
+        }
+        
+        // Button text based on effect type
+        primaryBtn.textContent = isTrap ? 'Accept Fate!' : 'Activate!';
+        primaryBtn.style.background = effect.color;
+        
+        // Show modal with animation
+        this.effectModal.classList.add('show');
+    }
+    
+    /**
+     * Close the effect modal
+     */
+    closeEffectModal() {
+        if (this.effectModal) {
+            this.effectModal.classList.remove('show');
+            this.pendingEffect = null;
+        }
+    }
+    
+    /**
+     * Activate the current pending effect
+     */
+    activateCurrentEffect() {
+        if (!this.pendingEffect) {
+            this.closeEffectModal();
+            return;
+        }
+        
+        const { squareKey, effectData, player } = this.pendingEffect;
+        const effect = effectData.effect;
+        
+        // Mark as activated
+        this.activatedEffects.add(squareKey);
+        effectData.activated = true;
+        
+        // Play activation sound
+        this.playEffectActivationSound(effectData.type, effect.id);
+        
+        // Execute the effect
+        this.executeEffect(effect.id, effectData.type, player, squareKey);
+        
+        // Close modal
+        this.closeEffectModal();
+        
+        // Update UI
+        this.updateUI();
+        this.draw();
+    }
+    
+    /**
+     * Execute the gameplay effect
+     */
+    executeEffect(effectId, effectType, player, squareKey) {
+        const otherPlayer = player === 1 ? 2 : 1;
+        
+        switch (effectId) {
+            // === TRAPS ===
+            case 'landmine':
+                // Remove the square, no one gets points
+                delete this.squares[squareKey];
+                this.scores[player] = Math.max(0, this.scores[player] - 1);
+                this.triggerLandmineAnimation(squareKey);
+                // Lose turn handled by not giving bonus
+                break;
+                
+            case 'secret':
+            case 'hypothetical':
+            case 'drink':
+            case 'dared':
+                // Social effects - just display, honor system
+                // Already shown in modal
+                break;
+                
+            case 'reverse':
+                // Visual effect only in 2-player (would affect multiplayer order)
+                this.triggerReverseAnimation();
+                break;
+                
+            case 'freeze':
+                this.playerEffects[player].frozenTurns = 1;
+                this.triggerFreezeAnimation(player);
+                break;
+                
+            case 'swap_scores':
+                const temp = this.scores[player];
+                this.scores[player] = this.scores[otherPlayer];
+                this.scores[otherPlayer] = temp;
+                this.triggerSwapAnimation();
+                break;
+                
+            case 'ghost':
+                this.playerEffects[player].ghostLines = 3;
+                break;
+                
+            case 'chaos':
+                this.triggerChaosStorm();
+                break;
+                
+            // === POWERUPS ===
+            case 'extra_turns':
+                this.playerEffects[player].bonusTurns += 2;
+                this.triggerPowerupParticles(squareKey, '#4CAF50');
+                break;
+                
+            case 'steal_territory':
+                // For now, steal one random opponent square
+                this.stealRandomSquare(player, otherPlayer);
+                break;
+                
+            case 'dare_left':
+            case 'physical_challenge':
+                // Social effects - already shown in modal
+                break;
+                
+            case 'shield':
+                this.playerEffects[player].shieldCount = 3;
+                this.triggerShieldAnimation(player);
+                break;
+                
+            case 'lightning':
+                this.playerEffects[player].doubleLine = true;
+                this.triggerLightningAnimation();
+                break;
+                
+            case 'gift':
+                // For simplicity, give one point to opponent (diplomacy!)
+                this.scores[otherPlayer] += 1;
+                this.triggerGiftAnimation(otherPlayer);
+                break;
+                
+            case 'oracle':
+                this.activateOracleVision();
+                break;
+                
+            case 'double_points':
+                this.playerEffects[player].doublePointsCount = 3;
+                this.triggerPowerupParticles(squareKey, '#FFD700');
+                break;
+                
+            case 'wildcard':
+                // For now, give +2 bonus turns (best powerup)
+                this.playerEffects[player].bonusTurns += 2;
+                this.triggerWildcardAnimation(squareKey);
+                break;
+        }
+    }
+    
+    /**
+     * Oracle's Vision - reveal all hidden effects temporarily
+     */
+    activateOracleVision() {
+        this.oracleVisionActive = true;
+        this.draw();
+        
+        // Clear any existing timeout
+        if (this.oracleVisionTimeout) {
+            clearTimeout(this.oracleVisionTimeout);
+        }
+        
+        // Deactivate after 10 seconds
+        this.oracleVisionTimeout = setTimeout(() => {
+            this.oracleVisionActive = false;
+            this.draw();
+        }, 10000);
+    }
+    
+    /**
+     * Steal a random square from opponent
+     */
+    stealRandomSquare(player, opponent) {
+        const opponentSquares = Object.entries(this.squares)
+            .filter(([key, owner]) => owner === opponent)
+            .map(([key]) => key);
+        
+        if (opponentSquares.length > 0) {
+            const randomKey = opponentSquares[Math.floor(Math.random() * opponentSquares.length)];
+            this.squares[randomKey] = player;
+            this.scores[opponent]--;
+            this.scores[player]++;
+            this.triggerStealAnimation(randomKey);
+        }
     }
 
     /**
@@ -992,12 +1591,21 @@ class DotsAndBoxesGame {
             const x = touch.clientX - rect.left;
             const y = touch.clientY - rect.top;
 
-            // Check if tapping on a completed square to reveal multiplier
+            // Check if tapping on a completed square to reveal effect or multiplier
             const clickedSquare = this.getSquareAtPosition(x, y);
-            if (clickedSquare && this.squares[clickedSquare] && !this.revealedMultipliers.has(clickedSquare)) {
-                this.revealMultiplier(clickedSquare);
-                this.activeTouches.delete(touch.identifier);
-                continue;
+            if (clickedSquare && this.squares[clickedSquare]) {
+                // Check for tile effect first
+                if (this.tileEffects[clickedSquare] && !this.revealedEffects.has(clickedSquare)) {
+                    this.revealTileEffect(clickedSquare);
+                    this.activeTouches.delete(touch.identifier);
+                    continue;
+                }
+                // Fall back to multiplier reveal
+                if (!this.revealedMultipliers.has(clickedSquare)) {
+                    this.revealMultiplier(clickedSquare);
+                    this.activeTouches.delete(touch.identifier);
+                    continue;
+                }
             }
 
             // Get the dot at the touch end position
@@ -1167,6 +1775,437 @@ class DotsAndBoxesGame {
                 life: 1.0,
                 decay: 0.008,
                 smoke: true
+            });
+        }
+    }
+    
+    // === TILE EFFECT ANIMATIONS ===
+    
+    /**
+     * Play sound when revealing a tile effect
+     */
+    playEffectRevealSound(type) {
+        if (!this.soundEnabled || !this.soundManager?.ctx) return;
+        
+        const ctx = this.soundManager.ctx;
+        const now = ctx.currentTime;
+        
+        if (type === 'trap') {
+            // Ominous descending tone
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.5);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc.connect(gain).connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.5);
+        } else {
+            // Magical ascending sparkle
+            const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+            notes.forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                gain.gain.setValueAtTime(0.1, now + i * 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.2);
+                osc.connect(gain).connect(ctx.destination);
+                osc.start(now + i * 0.08);
+                osc.stop(now + i * 0.08 + 0.25);
+            });
+        }
+    }
+    
+    /**
+     * Play sound when activating an effect
+     */
+    playEffectActivationSound(type, effectId) {
+        if (!this.soundEnabled || !this.soundManager?.ctx) return;
+        
+        const ctx = this.soundManager.ctx;
+        const now = ctx.currentTime;
+        
+        // Special sounds for specific effects
+        if (effectId === 'landmine') {
+            // Explosion sound
+            const noise = ctx.createBufferSource();
+            const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < buffer.length; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.1));
+            }
+            noise.buffer = buffer;
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            noise.connect(gain).connect(ctx.destination);
+            noise.start(now);
+        } else if (effectId === 'freeze') {
+            // Ice crackle
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(2000, now);
+            osc.frequency.exponentialRampToValueAtTime(500, now + 0.2);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            osc.connect(gain).connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        }
+    }
+    
+    /**
+     * Trigger particles when revealing an effect
+     */
+    triggerEffectRevealParticles(squareKey, effectData) {
+        const { row, col } = this.parseSquareKey(squareKey);
+        const centerX = this.offsetX + (col + 0.5) * this.cellSize;
+        const centerY = this.offsetY + (row + 0.5) * this.cellSize;
+        const color = effectData.effect.color;
+        
+        // Burst of themed particles
+        for (let i = 0; i < 20; i++) {
+            const angle = (Math.PI * 2 * i) / 20;
+            const speed = 2 + Math.random() * 2;
+            
+            this.particles.push({
+                x: centerX,
+                y: centerY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: color,
+                size: 3 + Math.random() * 3,
+                life: 1.0,
+                decay: 0.02,
+                trail: [],
+                spark: effectData.type === 'powerup'
+            });
+        }
+    }
+    
+    /**
+     * Landmine explosion animation
+     */
+    triggerLandmineAnimation(squareKey) {
+        const { row, col } = this.parseSquareKey(squareKey);
+        const centerX = this.offsetX + (col + 0.5) * this.cellSize;
+        const centerY = this.offsetY + (row + 0.5) * this.cellSize;
+        
+        // Big screen shake
+        this.shakeIntensity = 15;
+        
+        // Explosion particles
+        for (let i = 0; i < 50; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 3 + Math.random() * 5;
+            
+            this.particles.push({
+                x: centerX,
+                y: centerY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: ['#FF4444', '#FF8800', '#FFDD00'][Math.floor(Math.random() * 3)],
+                size: 4 + Math.random() * 6,
+                life: 1.0,
+                decay: 0.02,
+                trail: []
+            });
+        }
+        
+        // Smoke particles
+        for (let i = 0; i < 20; i++) {
+            this.particles.push({
+                x: centerX + (Math.random() - 0.5) * this.cellSize,
+                y: centerY + (Math.random() - 0.5) * this.cellSize,
+                vx: (Math.random() - 0.5) * 2,
+                vy: -2 - Math.random() * 2,
+                color: '#333333',
+                size: 8 + Math.random() * 8,
+                life: 1.0,
+                decay: 0.01,
+                smoke: true
+            });
+        }
+    }
+    
+    /**
+     * Freeze animation
+     */
+    triggerFreezeAnimation(player) {
+        // Ice blue particles across the screen
+        for (let i = 0; i < 30; i++) {
+            this.particles.push({
+                x: Math.random() * this.logicalWidth,
+                y: -20,
+                vx: (Math.random() - 0.5) * 2,
+                vy: 2 + Math.random() * 2,
+                color: '#03A9F4',
+                size: 3 + Math.random() * 4,
+                life: 1.0,
+                decay: 0.01,
+                spark: true
+            });
+        }
+    }
+    
+    /**
+     * Score swap animation
+     */
+    triggerSwapAnimation() {
+        this.shakeIntensity = 8;
+        this.screenPulse = 1;
+        
+        // Swirling particles
+        for (let i = 0; i < 40; i++) {
+            const angle = (Math.PI * 2 * i) / 40;
+            const radius = 50 + Math.random() * 50;
+            
+            this.particles.push({
+                x: this.logicalWidth / 2 + Math.cos(angle) * radius,
+                y: this.logicalHeight / 2 + Math.sin(angle) * radius,
+                vx: Math.cos(angle + Math.PI / 2) * 3,
+                vy: Math.sin(angle + Math.PI / 2) * 3,
+                color: '#673AB7',
+                size: 3 + Math.random() * 3,
+                life: 1.0,
+                decay: 0.015,
+                trail: []
+            });
+        }
+    }
+    
+    /**
+     * Reverse turn order animation
+     */
+    triggerReverseAnimation() {
+        this.screenPulse = 0.5;
+        
+        // Spinning arrow particles
+        for (let i = 0; i < 20; i++) {
+            const angle = (Math.PI * 2 * i) / 20;
+            
+            this.particles.push({
+                x: this.logicalWidth / 2,
+                y: this.logicalHeight / 2,
+                vx: Math.cos(angle) * 4,
+                vy: Math.sin(angle) * 4,
+                color: '#E91E63',
+                size: 4,
+                life: 1.0,
+                decay: 0.02,
+                trail: []
+            });
+        }
+    }
+    
+    /**
+     * Chaos storm - redistribute squares
+     */
+    triggerChaosStorm() {
+        // Get all squares
+        const allSquares = Object.keys(this.squares);
+        
+        // Shuffle ownership
+        const players = allSquares.map(key => this.squares[key]);
+        for (let i = players.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [players[i], players[j]] = [players[j], players[i]];
+        }
+        
+        // Reassign
+        allSquares.forEach((key, i) => {
+            this.squares[key] = players[i];
+        });
+        
+        // Recalculate scores
+        this.scores = { 1: 0, 2: 0 };
+        Object.values(this.squares).forEach(player => {
+            this.scores[player]++;
+        });
+        
+        // Big visual effect
+        this.shakeIntensity = 12;
+        this.screenPulse = 1.5;
+        
+        // Tornado particles
+        for (let i = 0; i < 60; i++) {
+            const angle = (Math.PI * 2 * i) / 60;
+            const radius = 30 + i * 2;
+            
+            this.particles.push({
+                x: this.logicalWidth / 2 + Math.cos(angle) * radius,
+                y: this.logicalHeight / 2 + Math.sin(angle) * radius,
+                vx: Math.cos(angle + Math.PI / 2) * 5,
+                vy: Math.sin(angle + Math.PI / 2) * 5 - 1,
+                color: '#FF5722',
+                size: 3 + Math.random() * 3,
+                life: 1.0,
+                decay: 0.015,
+                trail: []
+            });
+        }
+    }
+    
+    /**
+     * Generic powerup particles
+     */
+    triggerPowerupParticles(squareKey, color) {
+        const { row, col } = this.parseSquareKey(squareKey);
+        const centerX = this.offsetX + (col + 0.5) * this.cellSize;
+        const centerY = this.offsetY + (row + 0.5) * this.cellSize;
+        
+        for (let i = 0; i < 25; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 1 + Math.random() * 3;
+            
+            this.particles.push({
+                x: centerX,
+                y: centerY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 1,
+                color: color,
+                size: 3 + Math.random() * 3,
+                life: 1.0,
+                decay: 0.015,
+                spark: true,
+                trail: []
+            });
+        }
+    }
+    
+    /**
+     * Shield activation animation
+     */
+    triggerShieldAnimation(player) {
+        this.effectAnimations.push({
+            type: 'shield',
+            player,
+            startTime: Date.now(),
+            duration: 2000
+        });
+        
+        // Blue shield particles
+        for (let i = 0; i < 30; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            
+            this.particles.push({
+                x: this.logicalWidth / 2,
+                y: this.logicalHeight / 2,
+                vx: Math.cos(angle) * 2,
+                vy: Math.sin(angle) * 2,
+                color: '#3F51B5',
+                size: 4,
+                life: 1.0,
+                decay: 0.02,
+                spark: true
+            });
+        }
+    }
+    
+    /**
+     * Lightning strike animation
+     */
+    triggerLightningAnimation() {
+        this.screenPulse = 1;
+        this.shakeIntensity = 5;
+        
+        // Yellow electric particles
+        for (let i = 0; i < 40; i++) {
+            this.particles.push({
+                x: Math.random() * this.logicalWidth,
+                y: 0,
+                vx: (Math.random() - 0.5) * 4,
+                vy: 5 + Math.random() * 5,
+                color: '#FFEB3B',
+                size: 2 + Math.random() * 3,
+                life: 1.0,
+                decay: 0.03,
+                spark: true,
+                trail: []
+            });
+        }
+    }
+    
+    /**
+     * Gift animation
+     */
+    triggerGiftAnimation(recipient) {
+        // Hearts floating up
+        for (let i = 0; i < 15; i++) {
+            this.particles.push({
+                x: this.logicalWidth / 2 + (Math.random() - 0.5) * 100,
+                y: this.logicalHeight / 2,
+                vx: (Math.random() - 0.5) * 2,
+                vy: -2 - Math.random() * 2,
+                color: '#E91E63',
+                size: 4,
+                life: 1.0,
+                decay: 0.015,
+                spark: true
+            });
+        }
+    }
+    
+    /**
+     * Steal territory animation
+     */
+    triggerStealAnimation(squareKey) {
+        const { row, col } = this.parseSquareKey(squareKey);
+        const centerX = this.offsetX + (col + 0.5) * this.cellSize;
+        const centerY = this.offsetY + (row + 0.5) * this.cellSize;
+        
+        this.shakeIntensity = 5;
+        
+        // Pirate-themed particles
+        for (let i = 0; i < 30; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 2 + Math.random() * 3;
+            
+            this.particles.push({
+                x: centerX,
+                y: centerY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: '#2196F3',
+                size: 3 + Math.random() * 3,
+                life: 1.0,
+                decay: 0.02,
+                trail: []
+            });
+        }
+    }
+    
+    /**
+     * Wildcard animation (rainbow!)
+     */
+    triggerWildcardAnimation(squareKey) {
+        const { row, col } = this.parseSquareKey(squareKey);
+        const centerX = this.offsetX + (col + 0.5) * this.cellSize;
+        const centerY = this.offsetY + (row + 0.5) * this.cellSize;
+        
+        this.screenPulse = 1;
+        
+        // Rainbow particles
+        const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#8B00FF'];
+        for (let i = 0; i < 40; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 2 + Math.random() * 4;
+            
+            this.particles.push({
+                x: centerX,
+                y: centerY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: 3 + Math.random() * 4,
+                life: 1.0,
+                decay: 0.015,
+                spark: true,
+                trail: []
             });
         }
     }
@@ -1415,6 +2454,123 @@ class DotsAndBoxesGame {
                     this.ctx.fillText(`x${multiplierData.value}`, x + this.cellSize / 2, y + this.cellSize * 0.75);
                 }
             }
+            
+            // Draw tile effect indicator
+            this.drawTileEffectIndicator(squareKey, x, y, player);
+        }
+        
+        // Draw hidden effect shimmer for uncompleted squares (Oracle's Vision or hint)
+        this.drawHiddenEffectShimmers();
+    }
+    
+    /**
+     * Draw tile effect indicator on a completed square
+     */
+    drawTileEffectIndicator(squareKey, x, y, player) {
+        const effectData = this.tileEffects[squareKey];
+        if (!effectData) return;
+        
+        const effect = effectData.effect;
+        const isRevealed = this.revealedEffects.has(squareKey);
+        const isActivated = this.activatedEffects.has(squareKey);
+        
+        // Update shimmer phase
+        this.effectShimmer = (this.effectShimmer + 0.05) % (Math.PI * 2);
+        
+        if (!isRevealed) {
+            // Hidden effect - show subtle shimmer to indicate something is there
+            const shimmerAlpha = 0.3 + Math.sin(this.effectShimmer + x * 0.1) * 0.2;
+            const shimmerColor = effectData.type === 'trap' ? '#FF6B6B' : '#6BCB77';
+            
+            // Draw mysterious glow
+            this.ctx.save();
+            this.ctx.shadowColor = shimmerColor;
+            this.ctx.shadowBlur = 8 + Math.sin(this.effectShimmer) * 4;
+            this.ctx.fillStyle = shimmerColor + Math.floor(shimmerAlpha * 80).toString(16).padStart(2, '0');
+            this.ctx.beginPath();
+            this.ctx.arc(x + this.cellSize / 2, y + this.cellSize / 2, this.cellSize * 0.15, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.restore();
+            
+            // Draw question mark
+            this.ctx.font = `bold ${this.cellSize * 0.3}px Arial`;
+            this.ctx.fillStyle = shimmerColor;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText('?', x + this.cellSize / 2, y + this.cellSize * 0.3);
+        } else if (!isActivated) {
+            // Revealed but not activated - show icon with glow
+            const pulseScale = 1 + Math.sin(this.effectShimmer * 2) * 0.1;
+            
+            this.ctx.save();
+            this.ctx.shadowColor = effect.color;
+            this.ctx.shadowBlur = 15;
+            
+            // Background circle
+            this.ctx.fillStyle = effect.color + '40';
+            this.ctx.beginPath();
+            this.ctx.arc(x + this.cellSize / 2, y + this.cellSize * 0.7, this.cellSize * 0.25 * pulseScale, 0, Math.PI * 2);
+            this.ctx.fill();
+            
+            // Effect icon
+            this.ctx.font = `${this.cellSize * 0.35 * pulseScale}px Arial`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(effect.icon, x + this.cellSize / 2, y + this.cellSize * 0.7);
+            
+            // "Tap to activate" hint
+            this.ctx.font = `${this.cellSize * 0.12}px Arial`;
+            this.ctx.fillStyle = effect.color;
+            this.ctx.fillText('TAP', x + this.cellSize / 2, y + this.cellSize * 0.9);
+            
+            this.ctx.restore();
+        } else {
+            // Activated - show faded icon
+            this.ctx.globalAlpha = 0.4;
+            this.ctx.font = `${this.cellSize * 0.25}px Arial`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(effect.icon, x + this.cellSize / 2, y + this.cellSize * 0.75);
+            this.ctx.globalAlpha = 1;
+        }
+    }
+    
+    /**
+     * Draw shimmer effects on squares with hidden effects (Oracle's Vision)
+     */
+    drawHiddenEffectShimmers() {
+        if (!this.oracleVisionActive) return;
+        
+        // Show all hidden effects during Oracle's Vision
+        for (const squareKey in this.tileEffects) {
+            if (this.squares[squareKey]) continue; // Only show on uncompleted squares
+            if (this.revealedEffects.has(squareKey)) continue;
+            
+            const effectData = this.tileEffects[squareKey];
+            const effect = effectData.effect;
+            const { row, col } = this.parseSquareKey(squareKey);
+            const x = this.offsetX + col * this.cellSize;
+            const y = this.offsetY + row * this.cellSize;
+            
+            // Draw preview of hidden effect
+            const pulseAlpha = 0.4 + Math.sin(this.effectShimmer) * 0.2;
+            
+            this.ctx.save();
+            this.ctx.globalAlpha = pulseAlpha;
+            this.ctx.shadowColor = effect.color;
+            this.ctx.shadowBlur = 10;
+            
+            // Semi-transparent background
+            this.ctx.fillStyle = effect.color + '30';
+            this.ctx.fillRect(x, y, this.cellSize, this.cellSize);
+            
+            // Icon
+            this.ctx.font = `${this.cellSize * 0.4}px Arial`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(effect.icon, x + this.cellSize / 2, y + this.cellSize / 2);
+            
+            this.ctx.restore();
         }
     }
 

@@ -1292,3 +1292,252 @@ canvas {
         font-size: 0.85rem;
     }
 }
+
+/* ========================================
+   Tile Effect Modal System
+   ======================================== */
+
+.effect-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.effect-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.effect-modal-content {
+    background: var(--bg-primary);
+    border-radius: 24px;
+    padding: 30px 40px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    transform: scale(0.8) translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+    border: 2px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.effect-modal.show .effect-modal-content {
+    transform: scale(1) translateY(0);
+}
+
+/* Trap theme (red/orange) */
+.effect-modal.trap-theme .effect-modal-content {
+    border-color: #FF4444;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(255, 68, 68, 0.1) 100%);
+}
+
+.effect-modal.trap-theme .effect-modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #FF4444, #FF8800, #FF4444);
+    animation: trapGlow 2s ease-in-out infinite;
+}
+
+@keyframes trapGlow {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+/* Powerup theme (blue/green) */
+.effect-modal.powerup-theme .effect-modal-content {
+    border-color: #4CAF50;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(76, 175, 80, 0.1) 100%);
+}
+
+.effect-modal.powerup-theme .effect-modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4CAF50, #2196F3, #4CAF50);
+    animation: powerupGlow 2s ease-in-out infinite;
+}
+
+@keyframes powerupGlow {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+.effect-modal-header {
+    margin-bottom: 20px;
+}
+
+.effect-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 10px;
+    animation: effectBounce 0.6s ease-out;
+}
+
+@keyframes effectBounce {
+    0% { transform: scale(0) rotate(-20deg); }
+    50% { transform: scale(1.2) rotate(10deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+.effect-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--text-primary);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.trap-theme .effect-title {
+    color: #FF4444;
+    text-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+}
+
+.powerup-theme .effect-title {
+    color: #4CAF50;
+    text-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+}
+
+.effect-description {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin: 0 0 20px 0;
+    line-height: 1.6;
+}
+
+.effect-prompt {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    border-left: 4px solid var(--border-color);
+}
+
+.effect-question,
+.effect-dare,
+.effect-challenge {
+    font-size: 1.1rem;
+    font-style: italic;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.trap-theme .effect-prompt {
+    border-left-color: #FF4444;
+    background: rgba(255, 68, 68, 0.1);
+}
+
+.powerup-theme .effect-prompt {
+    border-left-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.effect-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.effect-btn {
+    padding: 14px 32px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.effect-btn-primary {
+    background: #4CAF50;
+    color: white;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.effect-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+}
+
+.effect-btn-primary:active {
+    transform: translateY(0);
+}
+
+.trap-theme .effect-btn-primary {
+    background: #FF4444;
+    box-shadow: 0 4px 15px rgba(255, 68, 68, 0.4);
+}
+
+.trap-theme .effect-btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(255, 68, 68, 0.5);
+}
+
+.effect-btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+}
+
+.effect-btn-secondary:hover {
+    background: var(--border-color);
+}
+
+/* Mobile responsive for effect modal */
+@media screen and (max-width: 480px) {
+    .effect-modal-content {
+        padding: 25px 20px;
+        border-radius: 20px;
+    }
+    
+    .effect-icon {
+        font-size: 3rem;
+    }
+    
+    .effect-title {
+        font-size: 1.4rem;
+    }
+    
+    .effect-description {
+        font-size: 1rem;
+    }
+    
+    .effect-btn {
+        padding: 12px 24px;
+        font-size: 1rem;
+    }
+}
+
+/* Effect indicator animations on canvas */
+@keyframes effectPulse {
+    0%, 100% { 
+        box-shadow: 0 0 10px currentColor;
+        transform: scale(1);
+    }
+    50% { 
+        box-shadow: 0 0 25px currentColor;
+        transform: scale(1.05);
+    }
+}
