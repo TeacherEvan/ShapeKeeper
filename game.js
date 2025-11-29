@@ -260,6 +260,7 @@ class DotsAndBoxesGame {
         this.scores = { 1: 0, 2: 0 };
         this.lines = new Set();
         this.squares = {};
+        this.triangles = {}; // Track completed triangles by key
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.dotRadius = DotsAndBoxesGame.DOT_RADIUS;
@@ -1003,6 +1004,273 @@ class DotsAndBoxesGame {
             !this.squares[`${row},${col}`];
     }
 
+    /**
+     * Check for completed triangles after a line is drawn
+     * Triangles are formed by 3 lines: 2 orthogonal + 1 diagonal
+     * 
+     * Each grid cell can contain 4 possible triangles:
+     * ┌─────┐
+     * │╲ 1 ╱│  1: Top-left    (top + left + diagonal TL→BR)
+     * │2╲ ╱3│  2: Bottom-left (bottom + left + diagonal BL→TR)
+     * │╱ ╲╱│  3: Top-right   (top + right + diagonal TR→BL)  
+     * │ 4  │  4: Bottom-right(bottom + right + diagonal BR→TL)
+     * └─────┘
+     */
+    checkForTriangles(lineKey) {
+        const [start, end] = lineKey.split('-').map(s => {
+            const [row, col] = s.split(',').map(Number);
+            return { row, col };
+        });
+
+        const completedTriangles = [];
+        const lineType = this.getLineType(start, end);
+
+        if (lineType === 'diagonal') {
+            // Diagonal lines can complete triangles in adjacent cells
+            this._checkTrianglesForDiagonal(start, end, completedTriangles);
+        } else if (lineType === 'horizontal' || lineType === 'vertical') {
+            // Orthogonal lines can complete triangles they're part of
+            this._checkTrianglesForOrthogonal(start, end, lineType, completedTriangles);
+        }
+
+        return completedTriangles;
+    }
+
+    /**
+     * Get line type from two dots
+     * @returns {'horizontal' | 'vertical' | 'diagonal' | 'invalid'}
+     */
+    getLineType(dot1, dot2) {
+        const rowDiff = Math.abs(dot1.row - dot2.row);
+        const colDiff = Math.abs(dot1.col - dot2.col);
+        
+        if (rowDiff === 0 && colDiff === 1) return 'horizontal';
+        if (colDiff === 0 && rowDiff === 1) return 'vertical';
+        if (rowDiff === 1 && colDiff === 1) return 'diagonal';
+        return 'invalid';
+    }
+
+    /**
+     * When a diagonal line is drawn, check triangles it can complete
+     */
+    _checkTrianglesForDiagonal(start, end, completedTriangles) {
+        const minRow = Math.min(start.row, end.row);
+        const minCol = Math.min(start.col, end.col);
+        
+        // Determine diagonal direction: TL→BR or TR→BL
+        const isTLtoBR = (start.row < end.row && start.col < end.col) ||
+                         (start.row > end.row && start.col > end.col);
+        
+        if (isTLtoBR) {
+            // Diagonal goes from top-left to bottom-right
+            // Can complete: top-right triangle and bottom-left triangle
+            
+            // Top-right: uses top edge + right edge + this diagonal
+            const topRight = this._checkSingleTriangle(
+                { row: minRow, col: minCol },     // TL corner
+                { row: minRow, col: minCol + 1 }, // TR corner
+                { row: minRow + 1, col: minCol + 1 }, // BR corner
+                'TR'
+            );
+            if (topRight) completedTriangles.push(topRight);
+            
+            // Bottom-left: uses left edge + bottom edge + this diagonal
+            const bottomLeft = this._checkSingleTriangle(
+                { row: minRow, col: minCol },     // TL corner
+                { row: minRow + 1, col: minCol }, // BL corner
+                { row: minRow + 1, col: minCol + 1 }, // BR corner
+                'BL'
+            );
+            if (bottomLeft) completedTriangles.push(bottomLeft);
+        } else {
+            // Diagonal goes from top-right to bottom-left
+            // Can complete: top-left triangle and bottom-right triangle
+            
+            // Top-left: uses top edge + left edge + this diagonal
+            const topLeft = this._checkSingleTriangle(
+                { row: minRow, col: minCol },     // TL corner
+                { row: minRow, col: minCol + 1 }, // TR corner  
+                { row: minRow + 1, col: minCol }, // BL corner
+                'TL'
+            );
+            if (topLeft) completedTriangles.push(topLeft);
+            
+            // Bottom-right: uses right edge + bottom edge + this diagonal
+            const bottomRight = this._checkSingleTriangle(
+                { row: minRow, col: minCol + 1 }, // TR corner
+                { row: minRow + 1, col: minCol }, // BL corner
+                { row: minRow + 1, col: minCol + 1 }, // BR corner
+                'BR'
+            );
+            if (bottomRight) completedTriangles.push(bottomRight);
+        }
+    }
+
+    /**
+     * When an orthogonal line is drawn, check adjacent triangles
+     */
+    _checkTrianglesForOrthogonal(start, end, lineType, completedTriangles) {
+        const minRow = Math.min(start.row, end.row);
+        const maxRow = Math.max(start.row, end.row);
+        const minCol = Math.min(start.col, end.col);
+        const maxCol = Math.max(start.col, end.col);
+
+        if (lineType === 'horizontal') {
+            // Horizontal line at row=minRow, cols minCol to maxCol
+            // Check triangles above (if row > 0) and below (if row < gridRows-1)
+            
+            // Triangles below this horizontal line
+            if (minRow < this.gridRows - 1) {
+                // Bottom-left triangle of cell above
+                const bl = this._checkSingleTriangle(
+                    { row: minRow, col: minCol },
+                    { row: minRow, col: maxCol },
+                    { row: minRow + 1, col: minCol },
+                    'BL'
+                );
+                if (bl) completedTriangles.push(bl);
+                
+                // Bottom-right triangle of cell above
+                const br = this._checkSingleTriangle(
+                    { row: minRow, col: minCol },
+                    { row: minRow, col: maxCol },
+                    { row: minRow + 1, col: maxCol },
+                    'BR'
+                );
+                if (br) completedTriangles.push(br);
+            }
+            
+            // Triangles above this horizontal line
+            if (minRow > 0) {
+                // Top-left triangle of cell below
+                const tl = this._checkSingleTriangle(
+                    { row: minRow - 1, col: minCol },
+                    { row: minRow, col: minCol },
+                    { row: minRow, col: maxCol },
+                    'TL'
+                );
+                if (tl) completedTriangles.push(tl);
+                
+                // Top-right triangle of cell below  
+                const tr = this._checkSingleTriangle(
+                    { row: minRow - 1, col: maxCol },
+                    { row: minRow, col: minCol },
+                    { row: minRow, col: maxCol },
+                    'TR'
+                );
+                if (tr) completedTriangles.push(tr);
+            }
+        } else if (lineType === 'vertical') {
+            // Vertical line at col=minCol, rows minRow to maxRow
+            // Check triangles left and right
+            
+            // Triangles to the right of this vertical line
+            if (minCol < this.gridCols - 1) {
+                // Top-right triangle
+                const tr = this._checkSingleTriangle(
+                    { row: minRow, col: minCol },
+                    { row: maxRow, col: minCol },
+                    { row: minRow, col: minCol + 1 },
+                    'TR'
+                );
+                if (tr) completedTriangles.push(tr);
+                
+                // Bottom-right triangle
+                const br = this._checkSingleTriangle(
+                    { row: minRow, col: minCol },
+                    { row: maxRow, col: minCol },
+                    { row: maxRow, col: minCol + 1 },
+                    'BR'
+                );
+                if (br) completedTriangles.push(br);
+            }
+            
+            // Triangles to the left of this vertical line
+            if (minCol > 0) {
+                // Top-left triangle
+                const tl = this._checkSingleTriangle(
+                    { row: minRow, col: minCol },
+                    { row: maxRow, col: minCol },
+                    { row: minRow, col: minCol - 1 },
+                    'TL'
+                );
+                if (tl) completedTriangles.push(tl);
+                
+                // Bottom-left triangle
+                const bl = this._checkSingleTriangle(
+                    { row: minRow, col: minCol },
+                    { row: maxRow, col: minCol },
+                    { row: maxRow, col: minCol - 1 },
+                    'BL'
+                );
+                if (bl) completedTriangles.push(bl);
+            }
+        }
+    }
+
+    /**
+     * Check if a specific triangle (defined by 3 vertices) is complete
+     * @returns {Object|null} Triangle data if complete, null otherwise
+     */
+    _checkSingleTriangle(v1, v2, v3, orientation) {
+        // Get the 3 edges of this triangle
+        const edge1 = this.getLineKey(v1, v2);
+        const edge2 = this.getLineKey(v2, v3);
+        const edge3 = this.getLineKey(v3, v1);
+
+        // Check if all 3 edges exist
+        if (!this.lines.has(edge1) || !this.lines.has(edge2) || !this.lines.has(edge3)) {
+            return null;
+        }
+
+        // Generate unique triangle key based on vertices
+        const vertices = [v1, v2, v3].sort((a, b) => 
+            a.row === b.row ? a.col - b.col : a.row - b.row
+        );
+        const triKey = `tri-${vertices[0].row},${vertices[0].col}-${vertices[1].row},${vertices[1].col}-${vertices[2].row},${vertices[2].col}`;
+
+        // Only return if not already completed
+        if (this.triangles[triKey]) {
+            return null;
+        }
+
+        return {
+            key: triKey,
+            vertices: [v1, v2, v3],
+            orientation: orientation
+        };
+    }
+
+    /**
+     * Trigger animation for completed triangle
+     */
+    triggerTriangleAnimation(triangleKey, triangleData) {
+        // Calculate center of triangle for animation
+        const v = triangleData.vertices;
+        const centerRow = (v[0].row + v[1].row + v[2].row) / 3;
+        const centerCol = (v[0].col + v[1].col + v[2].col) / 3;
+        const centerX = this.offsetX + centerCol * this.cellSize;
+        const centerY = this.offsetY + centerRow * this.cellSize;
+
+        // Add triangle animation (similar to square but with different color)
+        this.squareAnimations.push({
+            type: 'triangle',
+            key: triangleKey,
+            vertices: triangleData.vertices,
+            centerX,
+            centerY,
+            startTime: Date.now(),
+            duration: DotsAndBoxesGame.ANIMATION_SQUARE_DURATION,
+            player: this.currentPlayer
+        });
+
+        // Spawn particles at triangle center
+        this.spawnParticles(centerX, centerY, this.currentPlayer === 1 ? this.player1Color : this.player2Color, 10);
+
+        // Spawn kiss emojis
+        this.spawnKissEmoji(centerX, centerY, 3);
+    }
+
     handleClick(e) {
         // === MOUSE CLICK HANDLER ===
         // Prevent mouse events that follow touch events (some devices fire both)
@@ -1447,19 +1715,28 @@ class DotsAndBoxesGame {
             this.playLineSound();
             
             const completedSquares = this.checkForSquares(lineKey);
+            const completedTriangles = this.checkForTriangles(lineKey);
+            
+            // Track completed triangles
+            completedTriangles.forEach(tri => {
+                this.triangles[tri.key] = this.currentPlayer;
+            });
 
-            if (completedSquares.length === 0) {
+            const totalShapes = completedSquares.length + completedTriangles.length;
+
+            if (totalShapes === 0) {
                 // Reset combo on turn switch
                 this.comboCount = 0;
                 this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
             } else {
-                this.scores[this.currentPlayer] += completedSquares.length;
+                // Squares = 1 point, Triangles = 0.5 points
+                this.scores[this.currentPlayer] += completedSquares.length + (completedTriangles.length * 0.5);
                 
                 // Phase 5: Update combo system
                 if (this.lastComboPlayer === this.currentPlayer) {
-                    this.comboCount += completedSquares.length;
+                    this.comboCount += totalShapes;
                 } else {
-                    this.comboCount = completedSquares.length;
+                    this.comboCount = totalShapes;
                     this.lastComboPlayer = this.currentPlayer;
                 }
                 
@@ -1480,12 +1757,16 @@ class DotsAndBoxesGame {
                     this.triggerSquareAnimation(squareKey);
                 });
                 
-                // Phase 6: Play square sound
+                completedTriangles.forEach(tri => {
+                    this.triggerTriangleAnimation(tri.key, tri);
+                });
+                
+                // Phase 6: Play square sound (also for triangles)
                 this.playSquareSound(this.comboCount);
                 
-                // Trigger screen shake for multiple squares (Phase 1.3)
-                if (completedSquares.length >= 2) {
-                    this.shakeIntensity = completedSquares.length * 2;
+                // Trigger screen shake for multiple shapes (Phase 1.3)
+                if (totalShapes >= 2) {
+                    this.shakeIntensity = totalShapes * 2;
                 }
             }
 
@@ -2327,6 +2608,9 @@ class DotsAndBoxesGame {
 
         // Draw completed squares with animations
         this.drawSquaresWithAnimations();
+        
+        // Draw completed triangles with animations
+        this.drawTrianglesWithAnimations();
 
         // Draw particles on top
         this.drawParticles();
@@ -2485,6 +2769,104 @@ class DotsAndBoxesGame {
         
         // Draw hidden effect shimmer for uncompleted squares (Oracle's Vision or hint)
         this.drawHiddenEffectShimmers();
+    }
+
+    /**
+     * Draw completed triangles with animations
+     * Triangles are rendered with diagonal stripes for visual distinction from squares
+     */
+    drawTrianglesWithAnimations() {
+        const now = Date.now();
+
+        for (const triKey in this.triangles) {
+            const player = this.triangles[triKey];
+            const color = player === 1 ? this.player1Color : this.player2Color;
+            
+            // Parse triangle key to get vertices
+            // Format: tri-r1,c1-r2,c2-r3,c3
+            const parts = triKey.replace('tri-', '').split('-');
+            const vertices = parts.map(p => {
+                const [row, col] = p.split(',').map(Number);
+                return { row, col };
+            });
+
+            // Convert to canvas coordinates
+            const points = vertices.map(v => ({
+                x: this.offsetX + v.col * this.cellSize,
+                y: this.offsetY + v.row * this.cellSize
+            }));
+
+            // Calculate center for animations
+            const centerX = (points[0].x + points[1].x + points[2].x) / 3;
+            const centerY = (points[0].y + points[1].y + points[2].y) / 3;
+
+            // Check if this triangle has an active animation
+            const animation = this.squareAnimations.find(a => a.type === 'triangle' && a.key === triKey);
+
+            this.ctx.save();
+
+            if (animation) {
+                const age = now - animation.startTime;
+                const progress = age / animation.duration;
+
+                // Easing function (ease-out-back)
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                const scale = 0.3 + easeProgress * 0.7;
+                const alpha = Math.min(progress * 2, 1);
+
+                // Glow effect
+                const glowIntensity = Math.sin(progress * Math.PI) * 0.5;
+                this.ctx.shadowColor = color;
+                this.ctx.shadowBlur = 20 * glowIntensity;
+
+                // Apply scaling from center
+                this.ctx.translate(centerX, centerY);
+                this.ctx.scale(scale, scale);
+                this.ctx.translate(-centerX, -centerY);
+
+                // Draw triangle with animation alpha
+                this.ctx.fillStyle = color + Math.floor(alpha * 0.35 * 255).toString(16).padStart(2, '0');
+            } else {
+                // Normal triangle rendering (slightly more opaque than squares for distinction)
+                this.ctx.fillStyle = color + '50';
+            }
+
+            // Draw triangle path
+            this.ctx.beginPath();
+            this.ctx.moveTo(points[0].x, points[0].y);
+            this.ctx.lineTo(points[1].x, points[1].y);
+            this.ctx.lineTo(points[2].x, points[2].y);
+            this.ctx.closePath();
+            this.ctx.fill();
+
+            // Draw striped pattern overlay for visual distinction
+            this.ctx.strokeStyle = color + '40';
+            this.ctx.lineWidth = 1;
+            this.ctx.clip(); // Clip to triangle shape
+            
+            // Draw diagonal stripes
+            const minX = Math.min(points[0].x, points[1].x, points[2].x);
+            const maxX = Math.max(points[0].x, points[1].x, points[2].x);
+            const minY = Math.min(points[0].y, points[1].y, points[2].y);
+            const maxY = Math.max(points[0].y, points[1].y, points[2].y);
+            
+            for (let i = minX - (maxY - minY); i < maxX + (maxY - minY); i += 4) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(i, minY);
+                this.ctx.lineTo(i + (maxY - minY), maxY);
+                this.ctx.stroke();
+            }
+
+            this.ctx.restore();
+            this.ctx.shadowBlur = 0;
+
+            // Draw triangle symbol (▲) in center
+            this.ctx.fillStyle = color;
+            this.ctx.font = `bold ${this.cellSize * 0.3}px Arial`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText('▲', centerX, centerY);
+        }
     }
     
     /**
