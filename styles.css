@@ -4,14 +4,60 @@
     box-sizing: border-box;
 }
 
+/* CSS Custom Properties for theming */
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --bg-tertiary: #f9f9f9;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --border-color: #dddddd;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --canvas-bg: rgba(255, 255, 255, 0.9);
+}
+
+/* Dark mode theme */
+[data-theme="dark"] {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-tertiary: #0f3460;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --border-color: #3a3a5a;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --canvas-bg: rgba(26, 26, 46, 0.9);
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #ffffff;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     overflow: hidden;
     width: 100vw;
     height: 100vh;
     /* Support for notched devices */
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 10px 15px;
+    font-size: 1.5rem;
+    background: transparent;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 100;
+}
+
+.theme-toggle:hover {
+    background: var(--bg-secondary);
+    transform: scale(1.1);
 }
 
 .screen {
@@ -58,12 +104,12 @@ body {
 .welcome-container h1 {
     font-size: 3rem;
     margin-bottom: 10px;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .credit {
     font-style: italic;
-    color: #666;
+    color: var(--text-secondary);
     margin-bottom: 40px;
 }
 
@@ -74,7 +120,7 @@ body {
 .setup-section h2 {
     font-size: 1.5rem;
     margin-bottom: 15px;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .grid-options {
@@ -86,8 +132,9 @@ body {
 .grid-btn {
     padding: 15px 30px;
     font-size: 1.2rem;
-    border: 3px solid #ddd;
-    background: white;
+    border: 3px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
     cursor: pointer;
     border-radius: 10px;
     transition: all 0.3s;
@@ -136,7 +183,7 @@ input[type="color"] {
 
 /* Game Screen */
 #gameScreen {
-    background: white;
+    background: var(--bg-primary);
     position: relative;
 }
 
@@ -157,8 +204,8 @@ input[type="color"] {
     justify-content: space-between;
     align-items: center;
     padding: 8px 20px;
-    background: rgba(245, 245, 245, 0.95);
-    border-bottom: 2px solid #ddd;
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-color);
 }
 
 .player-info {
@@ -240,6 +287,33 @@ input[type="color"] {
     display: none;
 }
 
+/* Sound toggle button */
+.sound-btn {
+    padding: 8px 12px;
+    font-size: 1.2rem;
+    background: transparent;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.sound-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: #4CAF50;
+}
+
+.sound-btn.muted {
+    opacity: 0.5;
+}
+
+/* Footer buttons container */
+.footer-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
 .game-container {
     position: relative;
     z-index: 1;
@@ -252,9 +326,9 @@ input[type="color"] {
 }
 
 #gameCanvas {
-    border: 2px solid #333;
+    border: 2px solid var(--border-color);
     cursor: pointer;
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--canvas-bg);
 }
 
 .game-footer {
@@ -265,8 +339,8 @@ input[type="color"] {
     align-items: center;
     gap: 10px;
     padding: 6px 10px;
-    background: rgba(245, 245, 245, 0.95);
-    border-top: 2px solid #ddd;
+    background: var(--bg-secondary);
+    border-top: 2px solid var(--border-color);
 }
 
 /* Mobile-specific footer */
@@ -317,9 +391,9 @@ input[type="color"] {
     margin: auto;
     padding: 40px;
     text-align: center;
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--bg-primary);
     border-radius: 24px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
+    box-shadow: 0 20px 60px var(--shadow-color),
                 0 0 100px rgba(255, 215, 0, 0.2);
     animation: winnerAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -338,7 +412,7 @@ input[type="color"] {
 .winner-container h1 {
     font-size: 3rem;
     margin-bottom: 10px;
-    color: #333;
+    color: var(--text-primary);
     animation: bounceIn 0.8s ease-out 0.3s both;
 }
 
@@ -673,7 +747,7 @@ canvas {
 
 .lobby-header h1 {
     font-size: 2.5rem;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 15px;
 }
 
@@ -682,15 +756,15 @@ canvas {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--bg-primary);
     padding: 15px 25px;
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px var(--shadow-color);
 }
 
 .room-label {
     font-size: 1rem;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .room-code {
@@ -705,14 +779,14 @@ canvas {
     padding: 8px 12px;
     font-size: 1.2rem;
     background: transparent;
-    border: 2px solid #ddd;
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s;
 }
 
 .copy-btn:hover {
-    background: #f5f5f5;
+    background: var(--bg-secondary);
     border-color: #4CAF50;
 }
 
@@ -723,16 +797,16 @@ canvas {
 
 /* Lobby Settings */
 .lobby-settings {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--bg-primary);
     padding: 20px;
     border-radius: 12px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px var(--shadow-color);
 }
 
 .lobby-settings h2 {
     font-size: 1.2rem;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 15px;
 }
 
@@ -745,7 +819,7 @@ canvas {
 
 .setting-row label {
     font-weight: bold;
-    color: #555;
+    color: var(--text-secondary);
     min-width: 100px;
 }
 
@@ -760,17 +834,17 @@ canvas {
 
 /* Players Section */
 .players-section {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--bg-primary);
     padding: 20px;
     border-radius: 12px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px var(--shadow-color);
     flex: 1;
 }
 
 .players-section h2 {
     font-size: 1.2rem;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 15px;
 }
 
@@ -787,7 +861,7 @@ canvas {
     align-items: center;
     gap: 12px;
     padding: 12px 15px;
-    background: #f9f9f9;
+    background: var(--bg-tertiary);
     border-radius: 8px;
     border: 2px solid transparent;
     transition: all 0.3s;
@@ -812,15 +886,15 @@ canvas {
 .player-entry-name {
     flex: 1;
     font-weight: bold;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .player-entry-status {
     font-size: 0.9rem;
     padding: 4px 10px;
     border-radius: 20px;
-    background: #eee;
-    color: #666;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
 }
 
 .player-entry.ready .player-entry-status {
@@ -838,27 +912,29 @@ canvas {
 
 /* Your Settings Section */
 .your-settings {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--bg-primary);
     padding: 20px;
     border-radius: 12px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px var(--shadow-color);
 }
 
 .your-settings h2 {
     font-size: 1.2rem;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 15px;
 }
 
 .name-input {
     padding: 10px 15px;
     font-size: 1rem;
-    border: 2px solid #ddd;
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     outline: none;
     transition: border-color 0.3s;
     width: 200px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .name-input:focus {
@@ -931,11 +1007,13 @@ canvas {
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 8px;
-    border: 3px solid #ddd;
+    border: 3px solid var(--border-color);
     border-radius: 12px;
     outline: none;
     width: 250px;
     transition: border-color 0.3s;
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .room-code-input:focus {
@@ -945,7 +1023,7 @@ canvas {
 .room-code-input::placeholder {
     letter-spacing: 2px;
     font-size: 1rem;
-    color: #aaa;
+    color: var(--text-secondary);
 }
 
 /* ========================================
@@ -998,7 +1076,7 @@ canvas {
     align-items: center;
     gap: 15px;
     padding: 18px 24px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: var(--bg-secondary);
     border-radius: 16px;
     transition: all 0.3s ease;
     border: 2px solid transparent;
@@ -1042,7 +1120,7 @@ canvas {
     flex: 1;
     font-weight: bold;
     font-size: 1.1rem;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .final-score-points {
@@ -1147,8 +1225,8 @@ canvas {
     max-width: 90%;
     min-width: 300px;
     padding: 15px 20px;
-    background: #333;
-    color: white;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     z-index: 10000;

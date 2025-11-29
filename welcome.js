@@ -383,13 +383,37 @@ class LobbyManager {
 let welcomeAnimation = null;
 let lobbyManager = new LobbyManager();
 
+// Theme management
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('shapekeeper_theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeButton(savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('shapekeeper_theme', newTheme);
+    updateThemeButton(newTheme);
+}
+
+function updateThemeButton(theme) {
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
+    }
+}
+
 // Start animation when DOM is loaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
+        initializeTheme();
         welcomeAnimation = new WelcomeAnimation();
         initializeMenuNavigation();
     });
 } else {
+    initializeTheme();
     welcomeAnimation = new WelcomeAnimation();
     initializeMenuNavigation();
 }
@@ -590,12 +614,26 @@ function handleGameStateUpdate(gameState) {
             // playerIndex is 0-based, convert to 1-based player number
             game.lineOwners.set(line.lineKey, line.playerIndex + 1);
             
+            // Add line draw animation
+            const [startDot, endDot] = game.parseLineKey(line.lineKey);
+            game.lineDrawings.push({
+                lineKey: line.lineKey,
+                startDot,
+                endDot,
+                player: line.playerIndex + 1,
+                startTime: Date.now(),
+                duration: DotsAndBoxesGame.ANIMATION_LINE_DRAW_DURATION
+            });
+            
             // Add pulsating effect for new lines
             game.pulsatingLines.push({
                 line: line.lineKey,
                 player: line.playerIndex + 1,
                 time: Date.now()
             });
+            
+            // Play line sound
+            game.playLineSound();
         }
     });
     
@@ -606,22 +644,19 @@ function handleGameStateUpdate(gameState) {
             // playerIndex is 0-based, convert to 1-based player number
             game.squares[key] = square.playerIndex + 1;
             
+            // Sync multiplier from server (generated server-side)
+            if (square.multiplier) {
+                game.squareMultipliers[key] = {
+                    type: square.multiplier.type,
+                    value: square.multiplier.value
+                };
+            }
+            
             // Trigger the square animation (which handles particles and kiss emojis)
             game.triggerSquareAnimation(key);
-        }
-        
-        // Update multiplier if revealed
-        if (square.multiplierRevealed && !game.revealedMultipliers.has(key)) {
-            game.revealedMultipliers.add(key);
-            game.squareMultipliers[key] = {
-                type: square.multiplierType,
-                value: square.multiplierValue
-            };
             
-            // Trigger multiplier animation if it was just revealed
-            if (square.multiplierType === 'multiplier') {
-                game.triggerMultiplierAnimation(key, square.multiplierValue);
-            }
+            // Play square sound
+            game.playSquareSound(game.comboCount);
         }
     });
     
@@ -646,6 +681,12 @@ function handleGameStateUpdate(gameState) {
  * Initialize all menu navigation and event listeners
  */
 function initializeMenuNavigation() {
+    // ========================================
+    // Theme Toggle
+    // ========================================
+    
+    document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+    
     // ========================================
     // Main Menu Navigation
     // ========================================

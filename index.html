@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ShapeKeeper</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -21,6 +22,7 @@
                 <button id="joinGameBtn" class="menu-btn">Join Game</button>
                 <button id="localPlayBtn" class="menu-btn secondary">Local Play (2 Players)</button>
             </div>
+            <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
         </div>
     </div>
 
@@ -43,12 +45,12 @@
 
             <div class="setup-section">
                 <h2>Player 1 Color</h2>
-                <input type="color" id="player1Color" value="#FF0000">
+                <input type="color" id="player1Color" value="#FF0000" aria-label="Player 1 color picker">
             </div>
 
             <div class="setup-section">
                 <h2>Player 2 Color</h2>
-                <input type="color" id="player2Color" value="#0000FF">
+                <input type="color" id="player2Color" value="#0000FF" aria-label="Player 2 color picker">
             </div>
 
             <div class="button-row">
@@ -94,12 +96,12 @@
             <div class="your-settings">
                 <h2>Your Settings</h2>
                 <div class="setting-row">
-                    <label>Your Name:</label>
+                    <label for="playerName">Your Name:</label>
                     <input type="text" id="playerName" class="name-input" placeholder="Player" maxlength="15">
                 </div>
                 <div class="setting-row">
-                    <label>Your Color:</label>
-                    <input type="color" id="playerColor" value="#FF0000">
+                    <label for="playerColor">Your Color:</label>
+                    <input type="color" id="playerColor" value="#FF0000" aria-label="Your player color">
                 </div>
             </div>
 
@@ -121,12 +123,12 @@
 
             <div class="setup-section">
                 <h2>Room Code</h2>
-                <input type="text" id="joinRoomCode" class="room-code-input" placeholder="Enter code" maxlength="6">
+                <input type="text" id="joinRoomCode" class="room-code-input" placeholder="Enter code" maxlength="6" aria-label="Room code">
             </div>
 
             <div class="setup-section">
                 <h2>Your Name</h2>
-                <input type="text" id="joinPlayerName" class="name-input" placeholder="Your name" maxlength="15">
+                <input type="text" id="joinPlayerName" class="name-input" placeholder="Your name" maxlength="15" aria-label="Your name">
             </div>
 
             <div class="button-row">
@@ -158,7 +160,10 @@
 
         <div class="game-footer">
             <div class="turn-indicator" id="turnIndicator"></div>
-            <button id="populateBtn" class="populate-btn">Populate (10%)</button>
+            <div class="footer-buttons">
+                <button id="soundToggle" class="sound-btn" aria-label="Toggle sound effects">🔊</button>
+                <button id="populateBtn" class="populate-btn">Populate (10%)</button>
+            </div>
         </div>
     </div>
 

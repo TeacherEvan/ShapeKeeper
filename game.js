@@ -19,10 +19,22 @@ class DotsAndBoxesGame {
     static PARTICLE_COUNT_SQUARE = 15;
     static PARTICLE_COUNT_MULTIPLIER_SPARKS = 30;
     static PARTICLE_COUNT_MULTIPLIER_SMOKE = 10;
+    static PARTICLE_TRAIL_LENGTH = 8; // Trail history length for particles
+    static AMBIENT_PARTICLE_COUNT = 30; // Floating dust motes
     
     // Kiss emoji constants (reduced for performance)
     static KISS_EMOJI_MIN = 5;
     static KISS_EMOJI_MAX = 8;
+    
+    // Combo system constants
+    static COMBO_FLASH_THRESHOLD = 3;
+    static COMBO_PULSE_THRESHOLD = 5;
+    static COMBO_EPIC_THRESHOLD = 7;
+    
+    // Sound frequencies (Hz)
+    static SOUND_LINE_BASE = 440;
+    static SOUND_SQUARE_BASE = 523;
+    static SOUND_COMBO_BASE = 659;
     
     constructor(gridSize, player1Color, player2Color) {
         this.gridSize = gridSize;
@@ -71,6 +83,23 @@ class DotsAndBoxesGame {
         this.invalidLineFlash = null; // Flash effect for invalid line attempts
         this.hoveredDot = null; // Currently hovered dot for preview
         
+        // Phase 2: Motion Trails & Persistence
+        this.selectionRibbon = null; // Flowing ribbon when selecting dots
+        
+        // Phase 3: Glow & Atmosphere
+        this.ambientParticles = []; // Floating background dust motes
+        this.backgroundHue = 220; // Dynamic background gradient hue
+        
+        // Phase 5: Combo System
+        this.comboCount = 0; // Consecutive squares without turn switch
+        this.lastComboPlayer = 0; // Track which player has the combo
+        this.comboFlashActive = false; // Visual flash for combos
+        this.screenPulse = 0; // Screen pulse intensity
+        
+        // Phase 6: Sound Design
+        this.soundManager = null; // Web Audio API manager
+        this.soundEnabled = true; // Toggle for sound effects
+        
         // Multiplayer mode properties
         this.isMultiplayer = false; // Set to true when playing online
         this.myPlayerNumber = 1; // Which player number I am (1 or 2)
@@ -92,10 +121,199 @@ class DotsAndBoxesGame {
 
         this.setupCanvas();
         this.initializeMultipliers(); // Initialize multipliers AFTER grid dimensions are set
+        this.initializeAmbientParticles(); // Phase 3: Initialize ambient particles
+        this.initializeSoundManager(); // Phase 6: Initialize Web Audio
         this.setupEventListeners();
         this.draw();
         this.updateUI();
         this.animate();
+    }
+    
+    /**
+     * Phase 6: Initialize Web Audio API for procedural sounds
+     */
+    initializeSoundManager() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                this.soundManager = {
+                    ctx: null, // Lazy init on first user interaction
+                    initialized: false
+                };
+            }
+        } catch (e) {
+            console.log('[Sound] Web Audio API not available');
+            this.soundManager = null;
+        }
+    }
+    
+    /**
+     * Phase 6: Ensure audio context is initialized (must be called from user gesture)
+     */
+    ensureAudioContext() {
+        if (!this.soundManager || this.soundManager.initialized) return;
+        
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.soundManager.ctx = new AudioContext();
+            this.soundManager.initialized = true;
+        } catch (e) {
+            console.log('[Sound] Could not initialize audio context');
+        }
+    }
+    
+    /**
+     * Phase 6: Play line draw sound (rising tone)
+     */
+    playLineSound() {
+        if (!this.soundEnabled || !this.soundManager?.ctx) return;
+        
+        const ctx = this.soundManager.ctx;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(DotsAndBoxesGame.SOUND_LINE_BASE, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(
+            DotsAndBoxesGame.SOUND_LINE_BASE * 2, 
+            ctx.currentTime + 0.1
+        );
+        
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        
+        osc.connect(gain).connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.1);
+    }
+    
+    /**
+     * Phase 6: Play square completion sound (chord)
+     */
+    playSquareSound(comboCount = 1) {
+        if (!this.soundEnabled || !this.soundManager?.ctx) return;
+        
+        const ctx = this.soundManager.ctx;
+        const baseFreq = DotsAndBoxesGame.SOUND_SQUARE_BASE * (1 + comboCount * 0.1);
+        
+        // Play a chord (root + major third + fifth)
+        [1, 1.26, 1.5].forEach((mult, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(baseFreq * mult, ctx.currentTime);
+            
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+            
+            osc.connect(gain).connect(ctx.destination);
+            osc.start(ctx.currentTime + i * 0.05);
+            osc.stop(ctx.currentTime + 0.35);
+        });
+    }
+    
+    /**
+     * Phase 6: Play invalid move sound (dissonant buzz)
+     */
+    playInvalidSound() {
+        if (!this.soundEnabled || !this.soundManager?.ctx) return;
+        
+        const ctx = this.soundManager.ctx;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.15);
+        
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        
+        osc.connect(gain).connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+    }
+    
+    /**
+     * Phase 6: Play combo sound (escalating arpeggio)
+     */
+    playComboSound(comboLevel) {
+        if (!this.soundEnabled || !this.soundManager?.ctx) return;
+        
+        const ctx = this.soundManager.ctx;
+        const notes = [1, 1.26, 1.5, 2]; // Major arpeggio
+        
+        notes.slice(0, Math.min(comboLevel, 4)).forEach((mult, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(
+                DotsAndBoxesGame.SOUND_COMBO_BASE * mult * (1 + comboLevel * 0.05), 
+                ctx.currentTime
+            );
+            
+            gain.gain.setValueAtTime(0.1, ctx.currentTime + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.08 + 0.2);
+            
+            osc.connect(gain).connect(ctx.destination);
+            osc.start(ctx.currentTime + i * 0.08);
+            osc.stop(ctx.currentTime + i * 0.08 + 0.25);
+        });
+    }
+    
+    /**
+     * Phase 6: Play victory fanfare
+     */
+    playVictorySound() {
+        if (!this.soundEnabled || !this.soundManager?.ctx) return;
+        
+        const ctx = this.soundManager.ctx;
+        const melody = [523, 659, 784, 1047]; // C5, E5, G5, C6
+        
+        melody.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
+            
+            gain.gain.setValueAtTime(0.08, ctx.currentTime + i * 0.15);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.15 + 0.3);
+            
+            osc.connect(gain).connect(ctx.destination);
+            osc.start(ctx.currentTime + i * 0.15);
+            osc.stop(ctx.currentTime + i * 0.15 + 0.35);
+        });
+    }
+    
+    /**
+     * Phase 3: Initialize ambient floating particles
+     */
+    initializeAmbientParticles() {
+        this.ambientParticles = [];
+        for (let i = 0; i < DotsAndBoxesGame.AMBIENT_PARTICLE_COUNT; i++) {
+            this.ambientParticles.push(this.createAmbientParticle());
+        }
+    }
+    
+    /**
+     * Phase 3: Create a single ambient particle
+     */
+    createAmbientParticle(atEdge = false) {
+        const w = this.logicalWidth || 800;
+        const h = this.logicalHeight || 600;
+        
+        return {
+            x: atEdge ? (Math.random() < 0.5 ? 0 : w) : Math.random() * w,
+            y: Math.random() * h,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            size: 1 + Math.random() * 2,
+            opacity: 0.1 + Math.random() * 0.15,
+            phase: Math.random() * Math.PI * 2 // For sine wave motion
+        };
     }
 
     /**
@@ -272,8 +490,26 @@ class DotsAndBoxesGame {
             populateBtn.addEventListener('click', () => this.handlePopulate());
         }
         
+        // Setup sound toggle button
+        const soundToggle = document.getElementById('soundToggle');
+        if (soundToggle) {
+            soundToggle.addEventListener('click', () => this.toggleSound());
+        }
+        
         // Initial check for populate button visibility
         this.updatePopulateButtonVisibility();
+    }
+    
+    /**
+     * Toggle sound effects on/off
+     */
+    toggleSound() {
+        this.soundEnabled = !this.soundEnabled;
+        const soundToggle = document.getElementById('soundToggle');
+        if (soundToggle) {
+            soundToggle.textContent = this.soundEnabled ? '🔊' : '🔇';
+            soundToggle.classList.toggle('muted', !this.soundEnabled);
+        }
     }
 
     getNearestDot(x, y) {
@@ -432,6 +668,9 @@ class DotsAndBoxesGame {
             return; // Debounce rapid clicks
         }
         this.lastInteractionTime = now;
+        
+        // Phase 6: Ensure audio context on click
+        this.ensureAudioContext();
 
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -539,6 +778,9 @@ class DotsAndBoxesGame {
      */
     async drawLine(dot1, dot2) {
         const lineKey = this.getLineKey(dot1, dot2);
+        
+        // Phase 6: Ensure audio context is initialized on user interaction
+        this.ensureAudioContext();
 
         // In multiplayer mode, check if it's my turn
         if (this.isMultiplayer) {
@@ -559,6 +801,7 @@ class DotsAndBoxesGame {
                 // Local state will be updated by handleGameStateUpdate
                 this.selectedDot = null;
                 this.selectionLocked = false;
+                this.selectionRibbon = null;
                 return;
             }
         }
@@ -584,15 +827,45 @@ class DotsAndBoxesGame {
                 duration: DotsAndBoxesGame.ANIMATION_LINE_DRAW_DURATION
             });
             
+            // Phase 6: Play line sound
+            this.playLineSound();
+            
             const completedSquares = this.checkForSquares(lineKey);
 
             if (completedSquares.length === 0) {
+                // Reset combo on turn switch
+                this.comboCount = 0;
                 this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
             } else {
                 this.scores[this.currentPlayer] += completedSquares.length;
+                
+                // Phase 5: Update combo system
+                if (this.lastComboPlayer === this.currentPlayer) {
+                    this.comboCount += completedSquares.length;
+                } else {
+                    this.comboCount = completedSquares.length;
+                    this.lastComboPlayer = this.currentPlayer;
+                }
+                
+                // Phase 5: Trigger combo effects
+                if (this.comboCount >= DotsAndBoxesGame.COMBO_FLASH_THRESHOLD) {
+                    this.comboFlashActive = true;
+                    this.playComboSound(this.comboCount);
+                }
+                if (this.comboCount >= DotsAndBoxesGame.COMBO_PULSE_THRESHOLD) {
+                    this.screenPulse = Math.min(this.comboCount * 0.3, 2);
+                }
+                if (this.comboCount >= DotsAndBoxesGame.COMBO_EPIC_THRESHOLD) {
+                    // Epic mode: extra particles!
+                    this.triggerEpicParticles();
+                }
+                
                 completedSquares.forEach(squareKey => {
                     this.triggerSquareAnimation(squareKey);
                 });
+                
+                // Phase 6: Play square sound
+                this.playSquareSound(this.comboCount);
                 
                 // Trigger screen shake for multiple squares (Phase 1.3)
                 if (completedSquares.length >= 2) {
@@ -609,6 +882,32 @@ class DotsAndBoxesGame {
             // Clear selection and unlock after drawing line
             this.selectedDot = null;
             this.selectionLocked = false;
+            this.selectionRibbon = null;
+        }
+    }
+    
+    /**
+     * Phase 5: Trigger epic particle burst for high combos
+     */
+    triggerEpicParticles() {
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96E6A1', '#FFD93D', '#6BCB77'];
+        
+        for (let i = 0; i < 50; i++) {
+            const angle = (Math.PI * 2 * i) / 50;
+            const speed = 3 + Math.random() * 4;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            this.particles.push({
+                x: this.logicalWidth / 2,
+                y: this.logicalHeight / 2,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 2,
+                color,
+                size: 2 + Math.random() * 3,
+                life: 1.0,
+                decay: 0.01 + Math.random() * 0.01,
+                trail: []
+            });
         }
     }
 
@@ -617,6 +916,9 @@ class DotsAndBoxesGame {
 
         // Mark that we're handling touch events
         this.lastTouchTime = Date.now();
+        
+        // Phase 6: Ensure audio context on touch
+        this.ensureAudioContext();
 
         // Debounce to prevent event conflicts with Chrome extensions
         const now = Date.now();
@@ -662,6 +964,9 @@ class DotsAndBoxesGame {
                     startTime: this.activeTouches.get(touch.identifier).startTime
                 });
             }
+
+            // Phase 2: Update selection ribbon during drag
+            this.updateSelectionRibbon(x, y);
 
             // Do NOT update selected dot during move - only on touchend
             // This prevents selection loss on devices with sensitive touch screens
@@ -736,6 +1041,9 @@ class DotsAndBoxesGame {
 
             this.activeTouches.delete(touch.identifier);
         }
+
+        // Clear selection ribbon on touch end
+        this.selectionRibbon = null;
 
         // Redraw to show selection changes
         if (this.activeTouches.size === 0) {
@@ -867,7 +1175,13 @@ class DotsAndBoxesGame {
         // Use logical dimensions for clearRect since context is scaled by DPR
         this.ctx.clearRect(0, 0, this.logicalWidth, this.logicalHeight);
         
-        // Apply screen shake (Phase 1.3)
+        // Phase 3: Draw dynamic background gradient
+        this.drawDynamicBackground();
+        
+        // Phase 3: Draw ambient particles (behind everything)
+        this.drawAmbientParticles();
+        
+        // Apply screen shake (Phase 1.3) and screen pulse (Phase 5)
         this.ctx.save();
         if (this.shakeIntensity > 0.1) {
             this.ctx.translate(
@@ -875,12 +1189,28 @@ class DotsAndBoxesGame {
                 (Math.random() - 0.5) * this.shakeIntensity
             );
         }
+        
+        // Phase 5: Screen pulse effect for epic combos
+        if (this.screenPulse > 0) {
+            const pulseScale = 1 + this.screenPulse * 0.02;
+            const centerX = this.logicalWidth / 2;
+            const centerY = this.logicalHeight / 2;
+            this.ctx.translate(centerX, centerY);
+            this.ctx.scale(pulseScale, pulseScale);
+            this.ctx.translate(-centerX, -centerY);
+        }
 
         // Draw touch visuals (before other elements)
         this.drawTouchVisuals();
         
         // Draw hover preview line (Phase 1.4)
         this.drawHoverPreview();
+        
+        // Phase 2: Draw selection ribbon (flowing bezier)
+        this.drawSelectionRibbon();
+        
+        // Phase 5: Draw combo flash overlay
+        this.drawComboFlash();
 
         // Draw lines
         for (const lineKey of this.lines) {
@@ -1090,6 +1420,19 @@ class DotsAndBoxesGame {
 
     drawParticles() {
         this.particles.forEach(p => {
+            // Phase 2: Draw particle trails first
+            if (p.trail && p.trail.length > 1 && !p.smoke) {
+                for (let i = 0; i < p.trail.length - 1; i++) {
+                    const trailAlpha = (i / p.trail.length) * p.life * 0.4;
+                    const trailSize = p.size * (i / p.trail.length);
+                    
+                    this.ctx.fillStyle = p.color + Math.floor(trailAlpha * 255).toString(16).padStart(2, '0');
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.trail[i].x, p.trail[i].y, trailSize, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            }
+            
             if (p.spark) {
                 // Draw sparks with glow effect
                 this.ctx.shadowColor = p.color;
@@ -1182,6 +1525,126 @@ class DotsAndBoxesGame {
     }
     
     /**
+     * Phase 3: Draw dynamic background gradient
+     */
+    drawDynamicBackground() {
+        // Shift hue based on score differential
+        const scoreDiff = this.scores[1] - this.scores[2];
+        const targetHue = 220 + scoreDiff * 2; // Subtle shift
+        this.backgroundHue += (targetHue - this.backgroundHue) * 0.02;
+        
+        const gradient = this.ctx.createRadialGradient(
+            this.logicalWidth / 2, this.logicalHeight / 2, 0,
+            this.logicalWidth / 2, this.logicalHeight / 2, Math.max(this.logicalWidth, this.logicalHeight)
+        );
+        
+        gradient.addColorStop(0, `hsla(${this.backgroundHue}, 15%, 98%, 0.3)`);
+        gradient.addColorStop(1, `hsla(${this.backgroundHue + 30}, 10%, 95%, 0.2)`);
+        
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(0, 0, this.logicalWidth, this.logicalHeight);
+    }
+    
+    /**
+     * Phase 3: Draw ambient floating particles
+     */
+    drawAmbientParticles() {
+        const now = Date.now() / 1000;
+        
+        this.ambientParticles.forEach(p => {
+            // Calculate sine wave offset for gentle floating motion
+            const xOffset = Math.sin(now + p.phase) * 0.5;
+            const yOffset = Math.cos(now * 0.7 + p.phase) * 0.3;
+            
+            this.ctx.fillStyle = `rgba(100, 100, 120, ${p.opacity})`;
+            this.ctx.beginPath();
+            this.ctx.arc(p.x + xOffset, p.y + yOffset, p.size, 0, Math.PI * 2);
+            this.ctx.fill();
+        });
+    }
+    
+    /**
+     * Phase 2: Draw selection ribbon (flowing bezier curve)
+     */
+    drawSelectionRibbon() {
+        if (!this.selectionRibbon || !this.selectedDot) return;
+        
+        const now = Date.now();
+        const { targetX, targetY } = this.selectionRibbon;
+        
+        const startX = this.offsetX + this.selectedDot.col * this.cellSize;
+        const startY = this.offsetY + this.selectedDot.row * this.cellSize;
+        
+        // Calculate control points for bezier curve (slight wave)
+        const midX = (startX + targetX) / 2;
+        const midY = (startY + targetY) / 2;
+        const waveOffset = Math.sin(now / 200) * 10;
+        
+        const playerColor = this.currentPlayer === 1 ? this.player1Color : this.player2Color;
+        
+        this.ctx.save();
+        this.ctx.strokeStyle = playerColor + '60';
+        this.ctx.lineWidth = this.lineWidth * 1.5;
+        this.ctx.lineCap = 'round';
+        
+        // Animated dash pattern
+        const dashOffset = (now / 30) % 40;
+        this.ctx.setLineDash([15, 25]);
+        this.ctx.lineDashOffset = -dashOffset;
+        
+        // Draw bezier curve
+        this.ctx.beginPath();
+        this.ctx.moveTo(startX, startY);
+        this.ctx.quadraticCurveTo(midX + waveOffset, midY - waveOffset, targetX, targetY);
+        this.ctx.stroke();
+        
+        this.ctx.setLineDash([]);
+        this.ctx.restore();
+    }
+    
+    /**
+     * Phase 5: Draw combo flash overlay
+     */
+    drawComboFlash() {
+        if (!this.comboFlashActive) return;
+        
+        const playerColor = this.currentPlayer === 1 ? this.player1Color : this.player2Color;
+        
+        // Flash overlay
+        this.ctx.save();
+        this.ctx.fillStyle = playerColor + '15';
+        this.ctx.fillRect(0, 0, this.logicalWidth, this.logicalHeight);
+        this.ctx.restore();
+        
+        this.comboFlashActive = false;
+    }
+    
+    /**
+     * Update selection ribbon position for touch/mouse drag
+     */
+    updateSelectionRibbon(x, y) {
+        if (!this.selectedDot) {
+            this.selectionRibbon = null;
+            return;
+        }
+        
+        const dot = this.getNearestDot(x, y);
+        if (dot && this.areAdjacent(this.selectedDot, dot)) {
+            const lineKey = this.getLineKey(this.selectedDot, dot);
+            if (!this.lines.has(lineKey)) {
+                this.selectionRibbon = {
+                    targetX: this.offsetX + dot.col * this.cellSize,
+                    targetY: this.offsetY + dot.row * this.cellSize
+                };
+                return;
+            }
+        }
+        
+        // If not near a valid dot, show ribbon to cursor position
+        this.selectionRibbon = { targetX: x, targetY: y };
+    }
+    
+    /**
      * Easing function: ease-out-quad
      * @param {number} t - Progress 0-1
      * @returns {number} Eased value 0-1
@@ -1249,6 +1712,10 @@ class DotsAndBoxesGame {
             startTime: Date.now(),
             duration: DotsAndBoxesGame.ANIMATION_INVALID_FLASH_DURATION
         };
+        
+        // Phase 6: Play invalid sound
+        this.ensureAudioContext();
+        this.playInvalidSound();
         
         // Haptic feedback on mobile
         if (navigator.vibrate) {
@@ -1334,13 +1801,44 @@ class DotsAndBoxesGame {
     }
 
     animate() {
-        // Update particles
+        // Phase 4: Update particles with enhanced physics
         this.particles = this.particles.filter(p => {
+            // Phase 2: Update trail history
+            if (!p.trail) p.trail = [];
+            p.trail.push({ x: p.x, y: p.y });
+            if (p.trail.length > DotsAndBoxesGame.PARTICLE_TRAIL_LENGTH) {
+                p.trail.shift();
+            }
+            
+            // Phase 4: Air resistance
+            p.vx *= 0.98;
+            p.vy *= 0.98;
+            
             p.x += p.vx;
             p.y += p.vy;
             p.vy += 0.15; // Gravity
+            
+            // Phase 4: Bounce at bottom boundary
+            if (p.y > this.logicalHeight - 10 && !p.smoke) {
+                p.y = this.logicalHeight - 10;
+                p.vy *= -0.5; // Bounce with energy loss
+                p.vx *= 0.8; // Friction on bounce
+            }
+            
             p.life -= p.decay;
             return p.life > 0;
+        });
+        
+        // Phase 3: Update ambient particles
+        this.ambientParticles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            
+            // Wrap at boundaries
+            if (p.x < -10) p.x = this.logicalWidth + 10;
+            if (p.x > this.logicalWidth + 10) p.x = -10;
+            if (p.y < -10) p.y = this.logicalHeight + 10;
+            if (p.y > this.logicalHeight + 10) p.y = -10;
         });
 
         // Clean up old animations
@@ -1382,6 +1880,13 @@ class DotsAndBoxesGame {
             this.shakeIntensity = 0;
         }
         
+        // Phase 5: Decay screen pulse
+        if (this.screenPulse > 0.01) {
+            this.screenPulse *= 0.92;
+        } else {
+            this.screenPulse = 0;
+        }
+        
         // Update UI continuously for score animation
         this.updateUI();
 
@@ -1395,8 +1900,11 @@ class DotsAndBoxesGame {
             this.lineDrawings.length > 0 ||
             this.invalidLineFlash ||
             this.shakeIntensity > 0 ||
+            this.screenPulse > 0 ||
             this.hoveredDot ||
-            this.selectedDot;
+            this.selectionRibbon ||
+            this.selectedDot ||
+            this.ambientParticles.length > 0; // Always redraw for ambient particles
 
         // Redraw only if needed
         if (needsRedraw) {
@@ -1638,6 +2146,9 @@ class DotsAndBoxesGame {
         const winnerColor = winner === 1 ? this.player1Color : 
                            winner === 2 ? this.player2Color : '#FFD700';
         
+        // Phase 6: Play victory sound
+        this.playVictorySound();
+        
         // Build winner display
         const winnerScreen = document.getElementById('winnerScreen');
         const winnerText = document.getElementById('winnerText');
@@ -1673,6 +2184,114 @@ class DotsAndBoxesGame {
         
         // Launch confetti celebration
         this.launchConfetti(winnerColor);
+        
+        // Phase 5: Launch fireworks for winner
+        this.launchFireworks(winnerColor);
+    }
+    
+    /**
+     * Phase 5: Launch fireworks celebration animation
+     * @param {string} accentColor - Primary color for fireworks
+     */
+    launchFireworks(accentColor) {
+        const canvas = document.createElement('canvas');
+        canvas.id = 'fireworksCanvas';
+        canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10000;';
+        document.body.appendChild(canvas);
+        
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const fireworks = [];
+        const particles = [];
+        const colors = [accentColor, '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1'];
+        
+        // Launch fireworks periodically
+        let launchCount = 0;
+        const launchInterval = setInterval(() => {
+            if (launchCount >= 8) {
+                clearInterval(launchInterval);
+                return;
+            }
+            
+            fireworks.push({
+                x: canvas.width * (0.2 + Math.random() * 0.6),
+                y: canvas.height,
+                targetY: canvas.height * (0.2 + Math.random() * 0.3),
+                vy: -12 - Math.random() * 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                exploded: false
+            });
+            launchCount++;
+        }, 400);
+        
+        const animate = () => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Update fireworks
+            fireworks.forEach((fw, i) => {
+                if (!fw.exploded) {
+                    fw.y += fw.vy;
+                    fw.vy += 0.2; // Gravity
+                    
+                    // Draw trail
+                    ctx.beginPath();
+                    ctx.arc(fw.x, fw.y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = fw.color;
+                    ctx.fill();
+                    
+                    // Explode at target
+                    if (fw.y <= fw.targetY || fw.vy >= 0) {
+                        fw.exploded = true;
+                        
+                        // Create explosion particles
+                        for (let j = 0; j < 40; j++) {
+                            const angle = (Math.PI * 2 * j) / 40;
+                            const speed = 3 + Math.random() * 4;
+                            particles.push({
+                                x: fw.x,
+                                y: fw.y,
+                                vx: Math.cos(angle) * speed,
+                                vy: Math.sin(angle) * speed,
+                                color: fw.color,
+                                life: 1,
+                                decay: 0.015 + Math.random() * 0.01
+                            });
+                        }
+                    }
+                }
+            });
+            
+            // Update particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.08; // Gravity
+                p.vx *= 0.98; // Air resistance
+                p.life -= p.decay;
+                
+                if (p.life > 0) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color + Math.floor(p.life * 255).toString(16).padStart(2, '0');
+                    ctx.fill();
+                } else {
+                    particles.splice(i, 1);
+                }
+            }
+            
+            // Continue animation if there are still particles or fireworks
+            if (particles.length > 0 || fireworks.some(f => !f.exploded)) {
+                requestAnimationFrame(animate);
+            } else {
+                setTimeout(() => canvas.remove(), 1000);
+            }
+        };
+        
+        animate();
     }
     
     /**
