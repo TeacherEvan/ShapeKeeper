@@ -1,5 +1,5 @@
 {
-    "name": "shape-keeper",
+    "name": "shapekeeper",
     "version": "1.0.0",
     "description": "ShapeKeeper - A modern browser-based territory capture game",
     "main": "index.html",

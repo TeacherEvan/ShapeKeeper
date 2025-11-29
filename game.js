@@ -12,6 +12,8 @@ class DotsAndBoxesGame {
     static ANIMATION_KISS_DURATION = 1000;
     static ANIMATION_MULTIPLIER_DURATION = 2000;
     static ANIMATION_PULSATING_DURATION = 2000;
+    static ANIMATION_LINE_DRAW_DURATION = 150; // Line draw animation duration
+    static ANIMATION_INVALID_FLASH_DURATION = 300; // Invalid line flash duration
     
     // Particle constants
     static PARTICLE_COUNT_SQUARE = 15;
@@ -61,6 +63,13 @@ class DotsAndBoxesGame {
         // Animated score counters
         this.displayedScores = { 1: 0, 2: 0 }; // Scores currently displayed (animated)
         this.scoreAnimationSpeed = 0.1; // How fast scores count up
+        
+        // Phase 1 Animation Features (CounterPlan)
+        this.lineDrawings = []; // Lines currently being animated
+        this.shakeIntensity = 0; // Screen shake intensity
+        this.shakeDecay = 0.9; // How fast shake decays
+        this.invalidLineFlash = null; // Flash effect for invalid line attempts
+        this.hoveredDot = null; // Currently hovered dot for preview
         
         // Multiplayer mode properties
         this.isMultiplayer = false; // Set to true when playing online
@@ -289,12 +298,29 @@ class DotsAndBoxesGame {
         const y = e.clientY - rect.top;
 
         const dot = this.getNearestDot(x, y);
+        const oldHoveredDot = this.hoveredDot;
+        
         if (dot && this.selectedDot && this.areAdjacent(this.selectedDot, dot)) {
             this.canvas.style.cursor = 'pointer';
+            // Track hovered dot for preview line
+            const lineKey = this.getLineKey(this.selectedDot, dot);
+            if (!this.lines.has(lineKey)) {
+                this.hoveredDot = dot;
+            } else {
+                this.hoveredDot = null;
+            }
         } else if (dot) {
             this.canvas.style.cursor = 'pointer';
+            this.hoveredDot = null;
         } else {
             this.canvas.style.cursor = 'default';
+            this.hoveredDot = null;
+        }
+        
+        // Redraw if hover state changed
+        if ((oldHoveredDot?.row !== this.hoveredDot?.row) || 
+            (oldHoveredDot?.col !== this.hoveredDot?.col)) {
+            this.draw();
         }
     }
 
@@ -443,7 +469,9 @@ class DotsAndBoxesGame {
                 this.drawLine(this.selectedDot, dot);
                 this.selectionLocked = false; // Unlock after action
             } else {
-                // Clicked non-adjacent dot - select the new dot
+                // Clicked non-adjacent dot - trigger invalid line flash
+                this.triggerInvalidLineFlash(this.selectedDot, dot);
+                // Select the new dot
                 this.selectedDot = dot;
                 this.selectionLocked = true;
             }
@@ -545,6 +573,17 @@ class DotsAndBoxesGame {
                 time: Date.now()
             });
 
+            // Add line draw animation
+            const [startDot, endDot] = this.parseLineKey(lineKey);
+            this.lineDrawings.push({
+                lineKey,
+                startDot,
+                endDot,
+                player: this.currentPlayer,
+                startTime: Date.now(),
+                duration: DotsAndBoxesGame.ANIMATION_LINE_DRAW_DURATION
+            });
+            
             const completedSquares = this.checkForSquares(lineKey);
 
             if (completedSquares.length === 0) {
@@ -554,6 +593,11 @@ class DotsAndBoxesGame {
                 completedSquares.forEach(squareKey => {
                     this.triggerSquareAnimation(squareKey);
                 });
+                
+                // Trigger screen shake for multiple squares (Phase 1.3)
+                if (completedSquares.length >= 2) {
+                    this.shakeIntensity = completedSquares.length * 2;
+                }
             }
 
             this.updateUI();
@@ -669,7 +713,9 @@ class DotsAndBoxesGame {
                             this.drawLine(this.selectedDot, endDot);
                             // Selection cleared and unlocked in drawLine()
                         } else {
-                            // Non-adjacent dot tapped - select the new dot
+                            // Non-adjacent dot tapped - trigger invalid line flash
+                            this.triggerInvalidLineFlash(this.selectedDot, endDot);
+                            // Select the new dot
                             this.selectedDot = endDot;
                             this.touchStartDot = endDot;
                             this.selectionLocked = true;
@@ -820,12 +866,29 @@ class DotsAndBoxesGame {
     draw() {
         // Use logical dimensions for clearRect since context is scaled by DPR
         this.ctx.clearRect(0, 0, this.logicalWidth, this.logicalHeight);
+        
+        // Apply screen shake (Phase 1.3)
+        this.ctx.save();
+        if (this.shakeIntensity > 0.1) {
+            this.ctx.translate(
+                (Math.random() - 0.5) * this.shakeIntensity,
+                (Math.random() - 0.5) * this.shakeIntensity
+            );
+        }
 
         // Draw touch visuals (before other elements)
         this.drawTouchVisuals();
+        
+        // Draw hover preview line (Phase 1.4)
+        this.drawHoverPreview();
 
         // Draw lines
         for (const lineKey of this.lines) {
+            // Skip lines that are currently being animated
+            if (this.lineDrawings.some(anim => anim.lineKey === lineKey)) {
+                continue;
+            }
+            
             const [start, end] = this.parseLineKey(lineKey);
 
             const pulsating = this.pulsatingLines.find(p => p.line === lineKey);
@@ -848,6 +911,12 @@ class DotsAndBoxesGame {
             );
             this.ctx.stroke();
         }
+        
+        // Draw animated lines (Phase 1.2 - Line Draw Animation)
+        this.drawLineAnimations();
+        
+        // Draw invalid line flash (Phase 1.4)
+        this.drawInvalidLineFlash();
 
         // Draw completed squares
         for (const [squareKey, player] of Object.entries(this.squares)) {
@@ -927,6 +996,9 @@ class DotsAndBoxesGame {
             this.ctx.arc(x, y, this.dotRadius * 2, 0, Math.PI * 2);
             this.ctx.fill();
         }
+        
+        // Restore context after screen shake
+        this.ctx.restore();
     }
 
     drawTouchVisuals() {
@@ -1109,6 +1181,153 @@ class DotsAndBoxesGame {
         });
     }
     
+    /**
+     * Easing function: ease-out-quad
+     * @param {number} t - Progress 0-1
+     * @returns {number} Eased value 0-1
+     */
+    easeOutQuad(t) {
+        return t * (2 - t);
+    }
+    
+    /**
+     * Linear interpolation
+     * @param {number} start - Start value
+     * @param {number} end - End value
+     * @param {number} t - Progress 0-1
+     * @returns {number} Interpolated value
+     */
+    lerp(start, end, t) {
+        return start + (end - start) * t;
+    }
+    
+    /**
+     * Draw animated lines (Phase 1.2 - Line Draw Animation)
+     * Lines animate from start to end dot
+     */
+    drawLineAnimations() {
+        const now = Date.now();
+        
+        this.lineDrawings.forEach(anim => {
+            const age = now - anim.startTime;
+            const progress = Math.min(age / anim.duration, 1);
+            const easedProgress = this.easeOutQuad(progress);
+            
+            // Get start and end positions
+            const startX = this.offsetX + anim.startDot.col * this.cellSize;
+            const startY = this.offsetY + anim.startDot.row * this.cellSize;
+            const endX = this.offsetX + anim.endDot.col * this.cellSize;
+            const endY = this.offsetY + anim.endDot.row * this.cellSize;
+            
+            // Calculate current end position based on animation progress
+            const currentEndX = this.lerp(startX, endX, easedProgress);
+            const currentEndY = this.lerp(startY, endY, easedProgress);
+            
+            // Draw the animated line
+            const player = anim.player;
+            this.ctx.strokeStyle = player === DotsAndBoxesGame.POPULATE_PLAYER_ID ? this.populateColor : 
+                                   (player === 1 ? this.player1Color : this.player2Color);
+            this.ctx.lineWidth = this.lineWidth;
+            this.ctx.lineCap = 'round';
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(startX, startY);
+            this.ctx.lineTo(currentEndX, currentEndY);
+            this.ctx.stroke();
+        });
+    }
+    
+    /**
+     * Trigger invalid line flash effect (Phase 1.4)
+     * @param {Object} dot1 - First dot
+     * @param {Object} dot2 - Second dot (non-adjacent)
+     */
+    triggerInvalidLineFlash(dot1, dot2) {
+        this.invalidLineFlash = {
+            dot1,
+            dot2,
+            startTime: Date.now(),
+            duration: DotsAndBoxesGame.ANIMATION_INVALID_FLASH_DURATION
+        };
+        
+        // Haptic feedback on mobile
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
+    }
+    
+    /**
+     * Draw invalid line flash effect (Phase 1.4)
+     */
+    drawInvalidLineFlash() {
+        if (!this.invalidLineFlash) return;
+        
+        const now = Date.now();
+        const age = now - this.invalidLineFlash.startTime;
+        const progress = age / this.invalidLineFlash.duration;
+        
+        if (progress >= 1) {
+            this.invalidLineFlash = null;
+            return;
+        }
+        
+        const { dot1, dot2 } = this.invalidLineFlash;
+        const x1 = this.offsetX + dot1.col * this.cellSize;
+        const y1 = this.offsetY + dot1.row * this.cellSize;
+        const x2 = this.offsetX + dot2.col * this.cellSize;
+        const y2 = this.offsetY + dot2.row * this.cellSize;
+        
+        // Red flash with fade out
+        const alpha = 1 - progress;
+        this.ctx.save();
+        this.ctx.strokeStyle = `rgba(255, 60, 60, ${alpha})`;
+        this.ctx.lineWidth = this.lineWidth;
+        this.ctx.lineCap = 'round';
+        this.ctx.shadowColor = '#FF3C3C';
+        this.ctx.shadowBlur = 15 * alpha;
+        
+        // Draw dashed line
+        this.ctx.setLineDash([8, 8]);
+        this.ctx.beginPath();
+        this.ctx.moveTo(x1, y1);
+        this.ctx.lineTo(x2, y2);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+        this.ctx.restore();
+    }
+    
+    /**
+     * Draw hover preview line (Phase 1.4 - Dot Hover Preview)
+     */
+    drawHoverPreview() {
+        if (!this.hoveredDot || !this.selectedDot) return;
+        
+        const x1 = this.offsetX + this.selectedDot.col * this.cellSize;
+        const y1 = this.offsetY + this.selectedDot.row * this.cellSize;
+        const x2 = this.offsetX + this.hoveredDot.col * this.cellSize;
+        const y2 = this.offsetY + this.hoveredDot.row * this.cellSize;
+        
+        const playerColor = this.currentPlayer === 1 ? this.player1Color : this.player2Color;
+        
+        this.ctx.save();
+        this.ctx.strokeStyle = playerColor + '40'; // 25% opacity
+        this.ctx.lineWidth = this.lineWidth;
+        this.ctx.lineCap = 'round';
+        
+        // Flowing dash animation
+        const dashOffset = (Date.now() / 50) % 20;
+        this.ctx.setLineDash([10, 10]);
+        this.ctx.lineDashOffset = -dashOffset;
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(x1, y1);
+        this.ctx.lineTo(x2, y2);
+        this.ctx.stroke();
+        
+        this.ctx.setLineDash([]);
+        this.ctx.restore();
+    }
+    
     getLinePlayer(lineKey) {
         // Use stored line ownership for persistent color
         return this.lineOwners.get(lineKey) || 1;
@@ -1146,6 +1365,23 @@ class DotsAndBoxesGame {
             );
         }
         
+        // Clean up line draw animations (Phase 1.2)
+        this.lineDrawings = this.lineDrawings.filter(anim =>
+            now - anim.startTime < anim.duration
+        );
+        
+        // Clean up invalid line flash (Phase 1.4)
+        if (this.invalidLineFlash && (now - this.invalidLineFlash.startTime >= this.invalidLineFlash.duration)) {
+            this.invalidLineFlash = null;
+        }
+        
+        // Decay screen shake (Phase 1.3)
+        if (this.shakeIntensity > 0.1) {
+            this.shakeIntensity *= this.shakeDecay;
+        } else {
+            this.shakeIntensity = 0;
+        }
+        
         // Update UI continuously for score animation
         this.updateUI();
 
@@ -1156,6 +1392,10 @@ class DotsAndBoxesGame {
             this.kissEmojis.length > 0 ||
             this.pulsatingLines.length > 0 ||
             (this.multiplierAnimations && this.multiplierAnimations.length > 0) ||
+            this.lineDrawings.length > 0 ||
+            this.invalidLineFlash ||
+            this.shakeIntensity > 0 ||
+            this.hoveredDot ||
             this.selectedDot;
 
         // Redraw only if needed
