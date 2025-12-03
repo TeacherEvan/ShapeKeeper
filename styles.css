@@ -159,6 +159,50 @@ input[type="color"] {
     border-radius: 10px;
 }
 
+/* Checkbox settings styling */
+.checkbox-setting {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    padding: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    transition: all 0.3s ease;
+}
+
+.checkbox-setting:hover {
+    border-color: #4CAF50;
+    background: var(--bg-tertiary);
+}
+
+.checkbox-setting input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    accent-color: #4CAF50;
+}
+
+.checkbox-setting .checkbox-label {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.checkbox-setting .checkbox-description {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-align: center;
+    max-width: 300px;
+}
+
+.checkbox-setting:has(input:checked) {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
 .start-btn {
     margin-top: 30px;
     padding: 20px 50px;

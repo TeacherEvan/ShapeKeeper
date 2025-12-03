@@ -1,12 +1,12 @@
 /**
- * ShapeKeeper Kiss Emoji Animation System
+ * ShapeKeeper Sparkle Emoji Animation System
  * Handles animated emoji effects for square completions
  * @module animations/KissEmojiSystem
  */
 
 /**
- * Kiss emoji data structure
- * @typedef {Object} KissEmoji
+ * Sparkle emoji data structure
+ * @typedef {Object} SparkleEmoji
  * @property {number} x - X position
  * @property {number} y - Y position
  * @property {number} vx - X velocity
@@ -21,7 +21,7 @@
 export class KissEmojiSystem {
     constructor() {
         this.emojis = [];
-        this.availableEmojis = ['💋', '💕', '❤️', '💖', '✨', '🌟', '⭐'];
+        this.availableEmojis = ['✨', '⭐', '🌟', '💫', '🎇'];
     }
 
     /**
@@ -29,10 +29,10 @@ export class KissEmojiSystem {
      * @param {number} x - Center X
      * @param {number} y - Center Y
      * @param {number} count - Number of emojis (5-8 typical)
-     * @param {boolean} useKissOnly - Only use 💋 emoji
+     * @param {boolean} useSparklesOnly - Only use star/sparkle emojis
      */
-    createBurst(x, y, count = 6, useKissOnly = true) {
-        const emojisToUse = useKissOnly ? ['💋'] : this.availableEmojis;
+    createBurst(x, y, count = 6, useSparklesOnly = true) {
+        const emojisToUse = useSparklesOnly ? ['✨', '⭐', '🌟'] : this.availableEmojis;
         
         for (let i = 0; i < count; i++) {
             const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;

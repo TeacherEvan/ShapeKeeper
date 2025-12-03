@@ -762,6 +762,7 @@ function initializeMenuNavigation() {
     document.getElementById('startLocalGame').addEventListener('click', () => {
         const player1Color = document.getElementById('player1Color').value;
         const player2Color = document.getElementById('player2Color').value;
+        const hypotheticalsEnabled = document.getElementById('hypotheticalsToggle').checked;
         
         if (welcomeAnimation) {
             welcomeAnimation.moveToGameScreen();
@@ -770,7 +771,7 @@ function initializeMenuNavigation() {
         showScreen('gameScreen');
         requestFullscreen();
         
-        game = new DotsAndBoxesGame(selectedGridSize, player1Color, player2Color);
+        game = new DotsAndBoxesGame(selectedGridSize, player1Color, player2Color, { hypotheticalsEnabled });
     });
     
     // ========================================

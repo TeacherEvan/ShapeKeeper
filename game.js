@@ -22,9 +22,10 @@ class DotsAndBoxesGame {
     static PARTICLE_TRAIL_LENGTH = 8; // Trail history length for particles
     static AMBIENT_PARTICLE_COUNT = 30; // Floating dust motes
     
-    // Kiss emoji constants (reduced for performance)
-    static KISS_EMOJI_MIN = 5;
-    static KISS_EMOJI_MAX = 8;
+    // Star/sparkle emoji constants (reduced for performance)
+    static SPARKLE_EMOJI_MIN = 5;
+    static SPARKLE_EMOJI_MAX = 8;
+    static SPARKLE_EMOJIS = ['✨', '⭐', '🌟']; // Stars and sparkles
     
     // Combo system constants
     static COMBO_FLASH_THRESHOLD = 3;
@@ -251,7 +252,7 @@ class DotsAndBoxesGame {
         "Do a victory dance right now!"
     ];
     
-    constructor(gridSize, player1Color, player2Color) {
+    constructor(gridSize, player1Color, player2Color, options = {}) {
         this.gridSize = gridSize;
         this.player1Color = player1Color;
         this.player2Color = player2Color;
@@ -268,6 +269,9 @@ class DotsAndBoxesGame {
         this.selectedDot = null;
         this.pulsatingLines = [];
         this.lineOwners = new Map(); // Track which player drew each line
+        
+        // Game options
+        this.hypotheticalsEnabled = options.hypotheticalsEnabled !== false; // Default to true
 
         // Multi-touch support
         this.activeTouches = new Map(); // Track multiple touches by identifier
@@ -282,7 +286,7 @@ class DotsAndBoxesGame {
         // Animation system for completed squares
         this.squareAnimations = []; // Active square animations
         this.particles = []; // Particle effects for celebrations
-        this.kissEmojis = []; // Kiss emoji animations for completed squares
+        this.sparkleEmojis = []; // Star/sparkle emoji animations for completed squares
         
         // Score multiplier system (legacy - replaced by tile effects)
         this.squareMultipliers = {}; // Store multipliers for each square
@@ -739,7 +743,11 @@ class DotsAndBoxesGame {
         const trapsCount = Math.floor(effectCount / 2);
         const powerupsCount = effectCount - trapsCount;
         
-        const traps = DotsAndBoxesGame.TILE_EFFECTS.traps;
+        // Filter traps based on hypotheticalsEnabled setting
+        let traps = DotsAndBoxesGame.TILE_EFFECTS.traps;
+        if (!this.hypotheticalsEnabled) {
+            traps = traps.filter(trap => trap.id !== 'hypothetical');
+        }
         const powerups = DotsAndBoxesGame.TILE_EFFECTS.powerups;
         
         let index = 0;
@@ -766,7 +774,7 @@ class DotsAndBoxesGame {
             };
         }
         
-        console.log(`[TileEffects] Initialized ${effectCount} effects (${trapsCount} traps, ${powerupsCount} powerups)`);
+        console.log(`[TileEffects] Initialized ${effectCount} effects (${trapsCount} traps, ${powerupsCount} powerups), hypotheticals: ${this.hypotheticalsEnabled}`);
     }
     
     /**
@@ -1267,8 +1275,8 @@ class DotsAndBoxesGame {
         // Spawn particles at triangle center
         this.spawnParticles(centerX, centerY, this.currentPlayer === 1 ? this.player1Color : this.player2Color, 10);
 
-        // Spawn kiss emojis
-        this.spawnKissEmoji(centerX, centerY, 3);
+        // Spawn sparkle emojis
+        this.spawnSparkleEmojis(centerX, centerY, 3);
     }
 
     handleClick(e) {
@@ -1977,18 +1985,23 @@ class DotsAndBoxesGame {
         const centerX = this.offsetX + (col + 0.5) * this.cellSize;
         const centerY = this.offsetY + (row + 0.5) * this.cellSize;
 
-        // Add MULTIPLE kiss emoji animations (dozens randomly placed)
-        const kissCount = DotsAndBoxesGame.KISS_EMOJI_MIN + 
-                         Math.floor(Math.random() * (DotsAndBoxesGame.KISS_EMOJI_MAX - DotsAndBoxesGame.KISS_EMOJI_MIN));
-        for (let i = 0; i < kissCount; i++) {
+        // Add MULTIPLE star/sparkle emoji animations (randomly placed)
+        const sparkleCount = DotsAndBoxesGame.SPARKLE_EMOJI_MIN + 
+                         Math.floor(Math.random() * (DotsAndBoxesGame.SPARKLE_EMOJI_MAX - DotsAndBoxesGame.SPARKLE_EMOJI_MIN));
+        for (let i = 0; i < sparkleCount; i++) {
             // Random position within and around the square
             const offsetRange = this.cellSize * 2;
             const randomX = centerX + (Math.random() - 0.5) * offsetRange;
             const randomY = centerY + (Math.random() - 0.5) * offsetRange;
             
-            this.kissEmojis.push({
+            // Pick a random star/sparkle emoji
+            const emojiIndex = Math.floor(Math.random() * DotsAndBoxesGame.SPARKLE_EMOJIS.length);
+            const emoji = DotsAndBoxesGame.SPARKLE_EMOJIS[emojiIndex];
+            
+            this.sparkleEmojis.push({
                 x: randomX,
                 y: randomY,
+                emoji: emoji,
                 startTime: Date.now() + Math.random() * 200, // Stagger start times
                 duration: DotsAndBoxesGame.ANIMATION_KISS_DURATION + Math.random() * 500, // Varied durations
                 scale: 0.5 + Math.random() * 0.5 // Varied sizes
@@ -2021,6 +2034,34 @@ class DotsAndBoxesGame {
                 size: 1.5 + Math.random() * 2, // Reduced from 3 + Math.random() * 4
                 life: 1.0,
                 decay: 0.015 + Math.random() * 0.01
+            });
+        }
+    }
+    
+    /**
+     * Spawn sparkle emojis at a given position
+     * @param {number} centerX - X position
+     * @param {number} centerY - Y position  
+     * @param {number} count - Number of emojis to spawn
+     */
+    spawnSparkleEmojis(centerX, centerY, count = 3) {
+        for (let i = 0; i < count; i++) {
+            // Random position within and around the center
+            const offsetRange = this.cellSize * 1.5;
+            const randomX = centerX + (Math.random() - 0.5) * offsetRange;
+            const randomY = centerY + (Math.random() - 0.5) * offsetRange;
+            
+            // Pick a random star/sparkle emoji
+            const emojiIndex = Math.floor(Math.random() * DotsAndBoxesGame.SPARKLE_EMOJIS.length);
+            const emoji = DotsAndBoxesGame.SPARKLE_EMOJIS[emojiIndex];
+            
+            this.sparkleEmojis.push({
+                x: randomX,
+                y: randomY,
+                emoji: emoji,
+                startTime: Date.now() + Math.random() * 150,
+                duration: DotsAndBoxesGame.ANIMATION_KISS_DURATION + Math.random() * 300,
+                scale: 0.4 + Math.random() * 0.4
             });
         }
     }
@@ -2615,8 +2656,8 @@ class DotsAndBoxesGame {
         // Draw particles on top
         this.drawParticles();
 
-        // Draw kiss emojis
-        this.drawKissEmojis();
+        // Draw star/sparkle emojis
+        this.drawSparkleEmojis();
         
         // Draw multiplier animations
         this.drawMultiplierAnimations();
@@ -3020,20 +3061,20 @@ class DotsAndBoxesGame {
         });
     }
 
-    drawKissEmojis() {
+    drawSparkleEmojis() {
         const now = Date.now();
         
-        this.kissEmojis.forEach(kiss => {
-            const age = now - kiss.startTime;
+        this.sparkleEmojis.forEach(sparkle => {
+            const age = now - sparkle.startTime;
             if (age < 0) return; // Not started yet (staggered)
             
-            const progress = age / kiss.duration;
+            const progress = age / sparkle.duration;
             
             if (progress >= 1) return;
             
             // Ease-out for scale (grow then shrink slightly)
             const scaleProgress = progress < 0.5 ? progress * 2 : 1;
-            const scale = (kiss.scale || 1) * (0.5 + scaleProgress * 1.5);
+            const scale = (sparkle.scale || 1) * (0.5 + scaleProgress * 1.5);
             
             // Fade out in second half
             const alpha = progress < 0.5 ? 1 : 1 - ((progress - 0.5) * 2);
@@ -3047,7 +3088,8 @@ class DotsAndBoxesGame {
             this.ctx.font = `${this.cellSize * scale}px Arial`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
-            this.ctx.fillText('💋', kiss.x + xOffset, kiss.y + yOffset);
+            // Use the emoji stored in the sparkle object, defaulting to ✨ if not set
+            this.ctx.fillText(sparkle.emoji || '✨', sparkle.x + xOffset, sparkle.y + yOffset);
             this.ctx.restore();
         });
     }
@@ -3424,8 +3466,8 @@ class DotsAndBoxesGame {
         this.touchVisuals = this.touchVisuals.filter(tv =>
             now - tv.startTime < tv.duration
         );
-        this.kissEmojis = this.kissEmojis.filter(kiss =>
-            now - kiss.startTime < kiss.duration
+        this.sparkleEmojis = this.sparkleEmojis.filter(sparkle =>
+            now - sparkle.startTime < sparkle.duration
         );
         
         // Clean up multiplier animations
@@ -3466,7 +3508,7 @@ class DotsAndBoxesGame {
         const needsRedraw = this.particles.length > 0 || 
             this.squareAnimations.length > 0 || 
             this.touchVisuals.length > 0 || 
-            this.kissEmojis.length > 0 ||
+            this.sparkleEmojis.length > 0 ||
             this.pulsatingLines.length > 0 ||
             (this.multiplierAnimations && this.multiplierAnimations.length > 0) ||
             this.lineDrawings.length > 0 ||
