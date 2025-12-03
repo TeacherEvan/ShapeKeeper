@@ -6,6 +6,7 @@ class DotsAndBoxesGame {
     static CELL_SIZE_MAX = 40;
     static GRID_OFFSET = 20;
     static POPULATE_PLAYER_ID = 3; // Player ID for populate feature lines
+    static GHOST_LINE_OPACITY = 0.3; // Opacity for ghost lines (invisible to opponent)
     
     // Animation constants
     static ANIMATION_SQUARE_DURATION = 600;
@@ -260,6 +261,7 @@ class DotsAndBoxesGame {
         this.currentPlayer = 1;
         this.scores = { 1: 0, 2: 0 };
         this.lines = new Set();
+        this.ghostLines = new Set(); // Track lines drawn with ghost effect (semi-transparent)
         this.squares = {};
         this.triangles = {}; // Track completed triangles by key
         this.canvas = document.getElementById('gameCanvas');
@@ -1764,7 +1766,6 @@ class DotsAndBoxesGame {
     triggerDoublePointsVisual() {
         const turnIndicator = document.getElementById('turnIndicator');
         if (turnIndicator) {
-            const originalText = turnIndicator.textContent;
             turnIndicator.textContent = '✨ DOUBLE POINTS! ✨';
             turnIndicator.style.color = '#FFD700';
             setTimeout(() => {
@@ -1867,8 +1868,6 @@ class DotsAndBoxesGame {
             if (playerEffects.ghostLines > 0) {
                 playerEffects.ghostLines--;
                 isGhostLine = true;
-                // Store that this is a ghost line
-                if (!this.ghostLines) this.ghostLines = new Set();
                 this.ghostLines.add(lineKey);
             }
             
@@ -2802,7 +2801,7 @@ class DotsAndBoxesGame {
             // Ghost lines are semi-transparent and dashed
             if (isGhostLine) {
                 this.ctx.save();
-                this.ctx.globalAlpha = 0.3;
+                this.ctx.globalAlpha = DotsAndBoxesGame.GHOST_LINE_OPACITY;
                 this.ctx.setLineDash([5, 5]);
             }
             
@@ -3801,7 +3800,6 @@ class DotsAndBoxesGame {
         if (!effectsContainer) {
             effectsContainer = document.createElement('div');
             effectsContainer.className = 'player-effects';
-            effectsContainer.style.cssText = 'font-size: 0.8em; margin-top: 4px; display: flex; gap: 4px; flex-wrap: wrap; justify-content: center;';
             playerInfoElement.appendChild(effectsContainer);
         }
         
@@ -3809,7 +3807,7 @@ class DotsAndBoxesGame {
         const effectIcons = [];
         
         if (effects.frozenTurns > 0) {
-            effectIcons.push(`<span title="Frozen for ${effects.frozenTurns} turn(s)" style="filter: hue-rotate(180deg);">❄️</span>`);
+            effectIcons.push(`<span title="Frozen for ${effects.frozenTurns} turn(s)">❄️</span>`);
         }
         if (effects.shieldCount > 0) {
             effectIcons.push(`<span title="Shield (${effects.shieldCount} squares protected)">🛡️</span>`);
