@@ -486,13 +486,14 @@ Target: 60fps (16.67ms per frame)
 | Combo system | High | Medium | P2 | ✅ Complete |
 | Ambient particles | Medium | Low | P1 | ✅ Complete |
 | Dynamic background | Medium | Low | P1 | ✅ Complete |
+| Diagonal lines | High | Medium | P1 | ✅ Complete (v4.1.0) |
+| Triangle detection | High | High | P2 | ✅ Complete (v4.1.0) |
 
 ### Not Implemented (Future Work)
 
 | Feature | Impact | Effort | Priority | Notes |
 |---------|--------|--------|----------|-------|
-| Diagonal lines | High | Medium | P1 | Requires Triangle mode |
-| Triangle detection | High | High | P2 | Separate game mode |
+| Triangle multiplayer | Medium | Medium | P1 | Convex schema update needed |
 | Bloom effect | Medium | High | P2 | Performance concerns |
 | Asset system | Low | High | P3 | Not needed currently |
 

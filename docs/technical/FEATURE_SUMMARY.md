@@ -17,7 +17,7 @@
 
 ### 3. ✅ Multiple Kiss Emoji Animations
 - **Before:** Single 💋 emoji per completed square
-- **After:** 20-35 randomly placed 💋 emojis per square
+- **After:** 5-8 randomly placed 💋 emojis per shape (reduced for performance)
 - **Features:**
   - Random positioning within 2× cell size radius
   - Staggered start times (0-200ms delay)
@@ -28,12 +28,11 @@
 ### 4. ✅ Score Multiplier System
 
 #### Distribution (Randomly assigned to all squares)
-- **x2 multipliers:** 60% of squares
+- **x2 multipliers:** 65% of squares
 - **x3 multipliers:** 20% of squares
 - **x4 multipliers:** 10% of squares
-- **x5 multipliers:** 5% of squares
+- **x5 multipliers:** 4% of squares
 - **x10 multipliers:** 1% of squares
-- **Truth or Dare cards:** Remaining ~4% of squares
 
 #### Implementation Details
 - `initializeMultipliers()` generates distribution after grid setup
@@ -58,7 +57,43 @@
 - `scoreAnimationSpeed = 0.1` controls counting speed
 - Score display includes golden glow effect (CSS `text-shadow`)
 
-### 6. ✅ Code Audit & Optimizations
+### 6. ✅ Diagonal Lines (v4.1.0)
+- Players can now draw diagonal lines at 45° angles
+- **Adjacency expanded:** `areAdjacent()` now allows `rowDiff === 1 && colDiff === 1`
+- **Visual distinction:** Diagonal lines rendered at 50% width (3px vs 6px)
+- **Line type detection:** `getLineType(dot1, dot2)` returns 'horizontal', 'vertical', 'diagonal', or 'invalid'
+
+### 7. ✅ Triangle Detection System (v4.1.0)
+- Complete triangle shapes can now be formed and scored
+- **Geometry:** Triangle = 2 orthogonal edges + 1 diagonal edge
+- **4 triangles per cell:** TL (top-left), TR (top-right), BL (bottom-left), BR (bottom-right)
+- **Scoring:** Triangles = 0.5 points (Squares = 1 point)
+- **Visual:** Striped pattern fill + ▲ symbol at center
+
+#### Triangle Methods Added
+```javascript
+checkForTriangles(lineKey)           // Main detection entry
+getLineType(dot1, dot2)              // 'horizontal'|'vertical'|'diagonal'|'invalid'
+_checkTrianglesForDiagonal()         // Check when diagonal drawn
+_checkTrianglesForOrthogonal()       // Check when orthogonal drawn
+_checkSingleTriangle(v1, v2, v3)     // Verify 3 edges exist
+triggerTriangleAnimation()           // Visual feedback
+drawTrianglesWithAnimations()        // Render with striped pattern
+```
+
+#### Triangle State
+```javascript
+this.triangles = {}  // Object parallel to this.squares
+```
+
+### 8. ✅ Dark Mode Canvas Fix (v4.1.0)
+- Canvas backgrounds were hardcoded white
+- Now properly reads `data-theme` attribute
+- **welcome.js:** `draw()` method checks theme, uses `#1a1a2e` in dark mode
+- **game.js:** `drawDynamicBackground()` uses dark gradients in dark mode
+- **Dot colors:** `#CCC` (dark) / `#333` (light)
+
+### 9. ✅ Code Audit & Optimizations
 
 #### Constants Added
 All magic numbers extracted to static class constants:
@@ -137,8 +172,8 @@ All magic numbers extracted to static class constants:
 
 ## Future Enhancements (Optional)
 
-- Add sound effects for multiplier reveals
-- Animate Truth or Dare card flip
+- Triangle multiplayer sync (Convex backend)
+- Triangle-specific sound effects
 - Add particle pooling for very large grids (30x30+)
 - Add mobile haptic feedback on multiplier reveal
 - Track multiplier statistics in game over screen
@@ -148,9 +183,16 @@ All magic numbers extracted to static class constants:
 All requested features have been successfully implemented and tested:
 1. ✅ Line width increased by 300%
 2. ✅ Line colors persist
-3. ✅ Multiple kiss emojis
+3. ✅ Multiple kiss emojis (optimized count)
 4. ✅ Score multiplier system with distribution
 5. ✅ Animated score counter with effects
-6. ✅ Code audit completed with optimizations
+6. ✅ Diagonal lines support (v4.1.0)
+7. ✅ Triangle detection system (v4.1.0)
+8. ✅ Dark mode canvas fix (v4.1.0)
+9. ✅ Code audit completed with optimizations
 
 The code is production-ready with no critical issues identified.
+
+---
+
+*Last updated: December 3, 2025 - Version 4.1.0*

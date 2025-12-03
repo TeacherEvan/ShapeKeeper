@@ -2,7 +2,7 @@
 
 A modern, browser-based implementation of the classic Dots and Boxes game (reimagined as ShapeKeeper) with adaptive landscape layouts, smooth animations, and touch support.
 
-![Game Version](https://img.shields.io/badge/version-4.0.0-blue)
+![Game Version](https://img.shields.io/badge/version-4.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Deployment](https://img.shields.io/badge/deployed-shape--keeper.vercel.app-brightgreen)
 
@@ -15,10 +15,11 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 ### Core Gameplay
 
 - **Classic Dots and Boxes mechanics** - Connect dots to create boxes and score points
-- **Two-player turn-based gameplay** - Players alternate turns, with bonus turns for completing squares
+- **Diagonal Lines & Triangles** - Draw diagonal lines to complete triangles (0.5 points each)
+- **Two-player turn-based gameplay** - Players alternate turns, with bonus turns for completing shapes
 - **Online Multiplayer** - Real-time gameplay with Convex backend
 - **Lobby System** - Create/join rooms with unique codes
-- **Smart turn logic** - Complete a square, keep your turn!
+- **Smart turn logic** - Complete a square or triangle, keep your turn!
 - **Real-time score tracking** - Live updates for both players
 - **Tile Effects System** - Hidden traps and powerups revealed when capturing squares
 - **Party Game Mode** - Dares, secrets, hypotheticals, and physical challenges
@@ -27,15 +28,16 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 
 - **Adaptive Landscape Layout** - Automatically optimizes grid for landscape displays (e.g., 30x30 becomes ~50×18)
 - **Miniaturized Design** - Dots are 5× smaller than traditional implementations for more gameplay area
-- **Smooth Animations** - Particle effects and square completion animations
+- **Smooth Animations** - Particle effects and shape completion animations
+- **Triangle Patterns** - Striped fill visually distinguishes triangles from squares
 - **Pulsating Lines** - Visual feedback for newly drawn lines
 - **Touch Visuals** - Ripple effects for touch interactions
 - **Color Customization** - Choose your own player colors
 - **Motion Trails** - Particles leave fading trails for persistence of vision
 - **Ambient Particles** - Floating background particles create atmosphere
 - **Dynamic Background** - Gradient shifts based on game state
-- **Screen Shake** - Feedback on multi-square completions
-- **Combo System** - Visual escalation for consecutive square completions
+- **Screen Shake** - Feedback on multi-shape completions
+- **Combo System** - Visual escalation for consecutive shape completions
 - **Victory Fireworks** - Celebratory effects when game ends
 - **Dark Mode** - Toggle between light and dark themes
 
@@ -128,15 +130,28 @@ The game offers four preset grid sizes that automatically adapt to your display:
 ShapeKeeper/
 ├── index.html              # Main HTML structure (3-screen layout)
 ├── styles.css              # Styling and responsive design
-├── game.js                 # Core game logic and canvas rendering
-├── welcome.js              # Screen navigation and Convex integration
-├── convex-client.js        # Convex browser API wrapper
+├── game.js                 # Core game logic and canvas rendering (~3,900 lines)
+├── welcome.js              # Screen navigation and Convex integration (~1,000 lines)
+├── convex-client.js        # Convex browser API wrapper (~450 lines)
+├── src/                    # ES6 modules (partial refactoring)
+│   ├── core/               # Constants, utilities
+│   ├── game/               # Game state, input, multipliers
+│   ├── effects/            # Particles, tile effects
+│   ├── animations/         # Kiss emojis, square animations
+│   ├── sound/              # Web Audio API SoundManager
+│   └── ui/                 # Theme manager
 ├── convex/                 # Convex backend
-│   ├── schema.ts           # Database schema (rooms, games, players)
+│   ├── schema.ts           # Database schema (rooms, players, lines, squares)
 │   ├── rooms.ts            # Room management functions
 │   └── games.ts            # Game state functions
+├── docs/                   # Documentation
+│   ├── development/        # QUICKSTART, CODE_AUDIT, MERGE_CONFLICT_GUIDE
+│   ├── planning/           # JOBCARD, CounterPlan, MULTIPLAYER_PLANNING, REFACTORING_PLAN
+│   ├── history/            # DEPLOYMENT_STATUS
+│   └── technical/          # BENQ_FIX, FEATURE_SUMMARY, PERFORMANCE_IMPROVEMENTS
+├── Triangle/               # Triangle feature planning
+│   └── canvasBonusFeature.md
 ├── vercel.json             # Vercel deployment config
-├── CounterPlan.md          # Visual evolution roadmap
 ├── README.md               # This file
 └── .github/
     └── copilot-instructions.md  # Development guidelines
@@ -148,10 +163,10 @@ ShapeKeeper/
 
 #### DotsAndBoxesGame Class (`game.js`)
 
-- **State Management**: Lines (Set), Squares (Object), Scores (Object)
+- **State Management**: Lines (Set), Squares (Object), Triangles (Object), Scores (Object)
 - **Rendering Engine**: HTML5 Canvas with 60fps animation loop
 - **Event Handling**: Mouse, touch, and resize events
-- **Game Logic**: Square detection, turn management, win conditions
+- **Game Logic**: Square and triangle detection, turn management, win conditions
 
 #### Key Methods
 
@@ -159,6 +174,7 @@ ShapeKeeper/
 setupCanvas()          // Adaptive layout calculation
 getNearestDot()       // Collision detection for dot selection
 checkForSquares()     // Square completion detection
+checkForTriangles()   // Triangle completion detection (diagonal lines)
 draw()                // Main rendering loop
 animate()             // Animation frame management
 ```
@@ -170,6 +186,7 @@ animate()             // Animation frame management
 ```javascript
 "1,2-1,3"  // Horizontal line from (1,2) to (1,3)
 "1,2-2,2"  // Vertical line from (1,2) to (2,2)
+"1,1-2,2"  // Diagonal line from (1,1) to (2,2)
 ```
 
 Always sorted to prevent duplicates.
@@ -178,6 +195,12 @@ Always sorted to prevent duplicates.
 
 ```javascript
 "5,10"  // Square at row 5, column 10
+```
+
+#### Triangle Keys
+
+```javascript
+"tri-1,2-TR"  // Triangle at top-right of cell (1,2)
 ```
 
 ### Coordinate System
@@ -240,6 +263,7 @@ Default colors can be changed in `index.html`:
 - Parsing error in VSCode is cosmetic (ESLint configuration)
 - Portrait mode shows rotation prompt (landscape recommended)
 - Very large grids (50×50+) may impact performance on older devices
+- Triangles not yet synced in multiplayer mode (local only)
 
 ## 🔮 Future Enhancements
 
@@ -249,6 +273,9 @@ Default colors can be changed in `index.html`:
 - [x] Sound effects (procedural Web Audio API) ✅
 - [x] Dark/light theme toggle ✅
 - [x] Visual effects overhaul (CounterPlan complete) ✅
+- [x] Diagonal lines support ✅
+- [x] Triangle shape detection ✅
+- [ ] Triangle multiplayer sync
 - [ ] AI opponent with difficulty levels
 - [ ] Game replay and save/load functionality
 - [ ] Achievement system
@@ -283,7 +310,16 @@ Contributions welcome! Feel free to:
 
 ## 📝 Version History
 
-### v4.0.0 (Current)
+### v4.1.0 (Current)
+
+- **Diagonal Lines** - Players can connect dots diagonally at 45° angles
+- **Triangle Detection** - Complete triangles by drawing 2 orthogonal + 1 diagonal line
+- **Dark Mode Canvas Fix** - Canvas backgrounds now properly read theme state
+- **Triangle Scoring** - Triangles worth 0.5 points (squares = 1 point)
+- **Triangle Visuals** - Striped fill pattern distinguishes triangles from squares
+- **ES6 Module Structure** - Partial refactoring to modular architecture
+
+### v4.0.0
 
 - **Complete Visual Overhaul** - All CounterPlan phases implemented
 - **Procedural Sound Design** - Web Audio API sounds (no audio files)
