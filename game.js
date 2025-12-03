@@ -1662,6 +1662,165 @@ class DotsAndBoxesGame {
             this.triggerStealAnimation(randomKey);
         }
     }
+    
+    /**
+     * Switch to the next player, handling frozen turns and bonus turns
+     */
+    switchToNextPlayer() {
+        const currentPlayerEffects = this.playerEffects[this.currentPlayer];
+        
+        // Check if current player has bonus turns
+        if (currentPlayerEffects.bonusTurns > 0) {
+            currentPlayerEffects.bonusTurns--;
+            this.triggerBonusTurnVisual();
+            // Don't switch player - they get another turn
+            return;
+        }
+        
+        // Switch to other player
+        const nextPlayer = this.currentPlayer === 1 ? 2 : 1;
+        const nextPlayerEffects = this.playerEffects[nextPlayer];
+        
+        // Check if next player is frozen
+        if (nextPlayerEffects.frozenTurns > 0) {
+            nextPlayerEffects.frozenTurns--;
+            this.triggerSkipTurnVisual(nextPlayer);
+            // Skip the frozen player - keep current player or go to player after
+            // In 2-player game, this means current player goes again
+            return;
+        }
+        
+        this.currentPlayer = nextPlayer;
+    }
+    
+    /**
+     * Visual indicator for bonus turn
+     */
+    triggerBonusTurnVisual() {
+        // Flash the turn indicator
+        const turnIndicator = document.getElementById('turnIndicator');
+        if (turnIndicator) {
+            turnIndicator.textContent = '🎁 BONUS TURN! 🎁';
+            turnIndicator.style.animation = 'pulse 0.5s ease-in-out 3';
+            setTimeout(() => {
+                turnIndicator.style.animation = '';
+                this.updateUI();
+            }, 1500);
+        }
+        
+        // Sparkle particles
+        const playerColor = this.currentPlayer === 1 ? this.player1Color : this.player2Color;
+        for (let i = 0; i < 20; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 2 + Math.random() * 3;
+            
+            this.particles.push({
+                x: this.logicalWidth / 2,
+                y: this.logicalHeight / 2,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: playerColor,
+                size: 3 + Math.random() * 3,
+                life: 1.0,
+                decay: 0.02,
+                spark: true
+            });
+        }
+    }
+    
+    /**
+     * Visual indicator when a player's turn is skipped (frozen)
+     */
+    triggerSkipTurnVisual(skippedPlayer) {
+        // Show skip message
+        const turnIndicator = document.getElementById('turnIndicator');
+        if (turnIndicator) {
+            turnIndicator.textContent = `❄️ Player ${skippedPlayer} is FROZEN! Turn skipped! ❄️`;
+            turnIndicator.style.color = '#03A9F4';
+            setTimeout(() => {
+                this.updateUI();
+            }, 2000);
+        }
+        
+        // Ice particles
+        for (let i = 0; i < 25; i++) {
+            this.particles.push({
+                x: Math.random() * this.logicalWidth,
+                y: -10,
+                vx: (Math.random() - 0.5) * 2,
+                vy: 3 + Math.random() * 2,
+                color: '#03A9F4',
+                size: 3 + Math.random() * 3,
+                life: 1.0,
+                decay: 0.015,
+                spark: true
+            });
+        }
+    }
+    
+    /**
+     * Visual indicator for double points
+     */
+    triggerDoublePointsVisual() {
+        const turnIndicator = document.getElementById('turnIndicator');
+        if (turnIndicator) {
+            const originalText = turnIndicator.textContent;
+            turnIndicator.textContent = '✨ DOUBLE POINTS! ✨';
+            turnIndicator.style.color = '#FFD700';
+            setTimeout(() => {
+                this.updateUI();
+            }, 1500);
+        }
+        
+        // Golden sparkle particles
+        for (let i = 0; i < 30; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 2 + Math.random() * 3;
+            
+            this.particles.push({
+                x: this.logicalWidth / 2,
+                y: this.logicalHeight / 2,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 1,
+                color: '#FFD700',
+                size: 3 + Math.random() * 4,
+                life: 1.0,
+                decay: 0.015,
+                spark: true,
+                trail: []
+            });
+        }
+    }
+    
+    /**
+     * Visual reminder that player has a double line (lightning) - draw another line!
+     */
+    triggerDoubleLineReminder() {
+        const turnIndicator = document.getElementById('turnIndicator');
+        if (turnIndicator) {
+            turnIndicator.textContent = '⚡ LIGHTNING! Draw another line! ⚡';
+            turnIndicator.style.color = '#FFEB3B';
+            setTimeout(() => {
+                this.updateUI();
+            }, 2000);
+        }
+        
+        // Electric yellow particles
+        for (let i = 0; i < 25; i++) {
+            this.particles.push({
+                x: Math.random() * this.logicalWidth,
+                y: -10,
+                vx: (Math.random() - 0.5) * 3,
+                vy: 4 + Math.random() * 3,
+                color: '#FFEB3B',
+                size: 2 + Math.random() * 3,
+                life: 1.0,
+                decay: 0.02,
+                spark: true,
+                trail: []
+            });
+        }
+    }
 
     /**
      * Consolidated method for drawing a line between two dots
@@ -1701,11 +1860,24 @@ class DotsAndBoxesGame {
         // Local game logic (single player or fallback)
         if (!this.lines.has(lineKey)) {
             this.lines.add(lineKey);
+            
+            // Track ghost lines (invisible to opponent)
+            const playerEffects = this.playerEffects[this.currentPlayer];
+            let isGhostLine = false;
+            if (playerEffects.ghostLines > 0) {
+                playerEffects.ghostLines--;
+                isGhostLine = true;
+                // Store that this is a ghost line
+                if (!this.ghostLines) this.ghostLines = new Set();
+                this.ghostLines.add(lineKey);
+            }
+            
             this.lineOwners.set(lineKey, this.currentPlayer); // Store line ownership permanently
             this.pulsatingLines.push({
                 line: lineKey,
                 player: this.currentPlayer,
-                time: Date.now()
+                time: Date.now(),
+                ghost: isGhostLine
             });
 
             // Add line draw animation
@@ -1716,7 +1888,8 @@ class DotsAndBoxesGame {
                 endDot,
                 player: this.currentPlayer,
                 startTime: Date.now(),
-                duration: DotsAndBoxesGame.ANIMATION_LINE_DRAW_DURATION
+                duration: DotsAndBoxesGame.ANIMATION_LINE_DRAW_DURATION,
+                ghost: isGhostLine
             });
             
             // Phase 6: Play line sound
@@ -1733,12 +1906,28 @@ class DotsAndBoxesGame {
             const totalShapes = completedSquares.length + completedTriangles.length;
 
             if (totalShapes === 0) {
-                // Reset combo on turn switch
-                this.comboCount = 0;
-                this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
+                // Check for double line (lightning) effect - only switch if no second line pending
+                if (playerEffects.doubleLine) {
+                    playerEffects.doubleLine = false;
+                    this.triggerDoubleLineReminder();
+                    // Don't switch - player gets to draw another line
+                } else {
+                    // Reset combo on turn switch
+                    this.comboCount = 0;
+                    this.switchToNextPlayer();
+                }
             } else {
-                // Squares = 1 point, Triangles = 0.5 points
-                this.scores[this.currentPlayer] += completedSquares.length + (completedTriangles.length * 0.5);
+                // Calculate base points: Squares = 1 point, Triangles = 0.5 points
+                let basePoints = completedSquares.length + (completedTriangles.length * 0.5);
+                
+                // Apply double points if active
+                if (this.playerEffects[this.currentPlayer].doublePointsCount > 0) {
+                    basePoints *= 2;
+                    this.playerEffects[this.currentPlayer].doublePointsCount--;
+                    this.triggerDoublePointsVisual();
+                }
+                
+                this.scores[this.currentPlayer] += basePoints;
                 
                 // Phase 5: Update combo system
                 if (this.lastComboPlayer === this.currentPlayer) {
@@ -2602,10 +2791,22 @@ class DotsAndBoxesGame {
 
             const pulsating = this.pulsatingLines.find(p => p.line === lineKey);
             const player = pulsating?.player || this.getLinePlayer(lineKey);
+            
+            // Check if this is a ghost line
+            const isGhostLine = this.ghostLines && this.ghostLines.has(lineKey);
 
             // Use populate color for player 3, otherwise use player 1 or 2 colors
-            this.ctx.strokeStyle = player === DotsAndBoxesGame.POPULATE_PLAYER_ID ? this.populateColor : 
+            let lineColor = player === DotsAndBoxesGame.POPULATE_PLAYER_ID ? this.populateColor : 
                                    (player === 1 ? this.player1Color : this.player2Color);
+            
+            // Ghost lines are semi-transparent and dashed
+            if (isGhostLine) {
+                this.ctx.save();
+                this.ctx.globalAlpha = 0.3;
+                this.ctx.setLineDash([5, 5]);
+            }
+            
+            this.ctx.strokeStyle = lineColor;
             
             // Diagonal lines are thinner for visual distinction
             this.ctx.lineWidth = lineType === 'diagonal' ? this.lineWidth * 0.5 : this.lineWidth;
@@ -2621,6 +2822,12 @@ class DotsAndBoxesGame {
                 this.offsetY + end.row * this.cellSize
             );
             this.ctx.stroke();
+            
+            // Restore context for ghost lines
+            if (isGhostLine) {
+                this.ctx.setLineDash([]);
+                this.ctx.restore();
+            }
         }
         
         // Draw animated lines (Phase 1.2 - Line Draw Animation)
@@ -3566,6 +3773,10 @@ class DotsAndBoxesGame {
 
         player1Info.style.color = this.player1Color;
         player2Info.style.color = this.player2Color;
+        
+        // Show active effects indicators for each player
+        this.updatePlayerEffectsDisplay(1, player1Info);
+        this.updatePlayerEffectsDisplay(2, player2Info);
 
         // Update turn indicator with multiplayer awareness
         if (this.isMultiplayer) {
@@ -3575,6 +3786,48 @@ class DotsAndBoxesGame {
             turnIndicator.textContent = `Player ${this.currentPlayer}'s Turn`;
         }
         turnIndicator.style.color = this.currentPlayer === 1 ? this.player1Color : this.player2Color;
+    }
+    
+    /**
+     * Update the visual display of active effects for a player
+     */
+    updatePlayerEffectsDisplay(playerNum, playerInfoElement) {
+        if (!playerInfoElement) return;
+        
+        const effects = this.playerEffects[playerNum];
+        let effectsContainer = playerInfoElement.querySelector('.player-effects');
+        
+        // Create effects container if it doesn't exist
+        if (!effectsContainer) {
+            effectsContainer = document.createElement('div');
+            effectsContainer.className = 'player-effects';
+            effectsContainer.style.cssText = 'font-size: 0.8em; margin-top: 4px; display: flex; gap: 4px; flex-wrap: wrap; justify-content: center;';
+            playerInfoElement.appendChild(effectsContainer);
+        }
+        
+        // Build effects display
+        const effectIcons = [];
+        
+        if (effects.frozenTurns > 0) {
+            effectIcons.push(`<span title="Frozen for ${effects.frozenTurns} turn(s)" style="filter: hue-rotate(180deg);">❄️</span>`);
+        }
+        if (effects.shieldCount > 0) {
+            effectIcons.push(`<span title="Shield (${effects.shieldCount} squares protected)">🛡️</span>`);
+        }
+        if (effects.doublePointsCount > 0) {
+            effectIcons.push(`<span title="Double points (${effects.doublePointsCount} squares)">✨×2</span>`);
+        }
+        if (effects.ghostLines > 0) {
+            effectIcons.push(`<span title="Ghost lines (${effects.ghostLines} remaining)">👻</span>`);
+        }
+        if (effects.bonusTurns > 0) {
+            effectIcons.push(`<span title="Bonus turns (${effects.bonusTurns} remaining)">🎁×${effects.bonusTurns}</span>`);
+        }
+        if (effects.doubleLine) {
+            effectIcons.push(`<span title="Lightning - Draw 2 lines!">⚡</span>`);
+        }
+        
+        effectsContainer.innerHTML = effectIcons.join(' ');
     }
 
     checkGameOver() {
