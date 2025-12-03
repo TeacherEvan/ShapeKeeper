@@ -61,8 +61,7 @@
 - Players can now draw diagonal lines at 45° angles
 - **Adjacency expanded:** `areAdjacent()` now allows `rowDiff === 1 && colDiff === 1`
 - **Visual distinction:** Diagonal lines rendered at 50% width (3px vs 6px)
-- **Helper function:** `isDiagonalLine(dot1, dot2)` determines line type
-- **Line types:** `getLineType()` returns 'horizontal', 'vertical', 'diagonal', or 'invalid'
+- **Line type detection:** `getLineType(dot1, dot2)` returns 'horizontal', 'vertical', 'diagonal', or 'invalid'
 
 ### 7. ✅ Triangle Detection System (v4.1.0)
 - Complete triangle shapes can now be formed and scored
