@@ -26,10 +26,11 @@ cd ShapeKeeper
 npm install
 
 # Start Convex dev server (for multiplayer)
-npx convex dev
+npm run dev
 
 # In another terminal, serve the frontend
-python -m http.server 8000
+npm run start
+# Or: python -m http.server 8000
 ```
 
 Then open `http://localhost:8000`
@@ -40,25 +41,27 @@ Then open `http://localhost:8000`
 
 ### Mouse
 - **Click** a dot to select it (you'll see a colored ring)
-- **Click** an adjacent dot to draw a line
-- Complete a square to score a point and get another turn!
+- **Click** an adjacent dot to draw a line (orthogonal or diagonal!)
+- Complete a square or triangle to score and get another turn!
 
 ### Touch (Mobile/Tablet)
 - **Tap** dots just like clicking with a mouse
 - Works great in landscape mode!
 
-## 🏆 Game Rules (Super Simple)
+## 🏆 Game Rules
 
 1. **Players alternate** drawing lines between adjacent dots
-2. **Complete a square** by drawing its 4th side = you score!
-3. **Bonus**: Complete a square, get another turn
-4. **Win**: Have the most squares when the grid is full
+2. **Complete a square** (4 sides) = 1 point
+3. **Complete a triangle** (3 sides with diagonal) = 0.5 points
+4. **Bonus**: Complete any shape, get another turn
+5. **Win**: Have the most points when the grid is full
 
 ## 💡 Pro Tips
 
-- **Plan ahead** - Try not to give your opponent easy squares
-- **Control the endgame** - Be strategic about which squares to complete
-- **Double-crosses** - Look for patterns where you can complete multiple squares in one turn
+- **Plan ahead** - Try not to give your opponent easy shapes
+- **Diagonals** - Use diagonal lines to create triangles for bonus points
+- **Control the endgame** - Be strategic about which shapes to complete
+- **Double-crosses** - Look for patterns where you can complete multiple shapes in one turn
 - **Landscape mode** - Rotate your device for the best experience on mobile
 
 ## 🎨 Customization
@@ -90,6 +93,10 @@ Change player colors on the welcome screen:
 - Make sure you're tapping directly on dots
 - Try landscape orientation
 
+**Dark mode issues?**
+- Toggle theme using the theme button on welcome screen
+- Both canvases now properly respond to theme changes
+
 ## 🎯 That's It!
 
 You're ready to play! The game is intuitive - just start connecting dots and you'll get the hang of it in seconds.
@@ -99,6 +106,6 @@ You're ready to play! The game is intuitive - just start connecting dots and you
 ---
 
 Need more help? Check out:
-- [README.md](README.md) - Full documentation
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Development guide
+- [README.md](../../README.md) - Full documentation
+- [CONTRIBUTING.md](../../CONTRIBUTING.md) - Development guide
 - [GitHub Issues](https://github.com/TeacherEvan/ShapeKeeper/issues) - Report problems

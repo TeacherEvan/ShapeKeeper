@@ -106,27 +106,39 @@ Before submitting a PR, verify:
 
 We especially welcome contributions in these areas:
 
-1. **AI Opponent** - Implementing computer player with difficulty levels
-2. **Performance** - Optimizing for larger grids (50×50+)
-3. **Accessibility** - Keyboard navigation, screen reader support
-4. **Mobile Experience** - Better touch handling and UI
-5. **Features** - Undo/redo, save/load, replays
-6. **Documentation** - Tutorials, code examples, API docs
+1. **Triangle Multiplayer Sync** - Syncing triangle state to Convex backend
+2. **AI Opponent** - Implementing computer player with difficulty levels
+3. **Performance** - Optimizing for larger grids (50×50+)
+4. **Accessibility** - Keyboard navigation, screen reader support
+5. **Mobile Experience** - Better touch handling and UI
+6. **Features** - Undo/redo, save/load, replays
+7. **Documentation** - Tutorials, code examples, API docs
 
 ## 📁 File Organization
 
-### game.js
+### game.js (~3,940 lines)
 
 - `DotsAndBoxesGame` class
 - Canvas rendering logic
-- Game state management
+- Game state management (lines, squares, triangles)
 - Event handlers
+- Triangle detection system
 
-### welcome.js
+### welcome.js (~1,013 lines)
 
 - Screen transitions
 - Game initialization
 - Settings management
+- Lobby UI for multiplayer
+
+### src/ (ES6 Modules - Partial)
+
+- `src/core/` - Constants and utilities
+- `src/game/` - Game state, input, multipliers
+- `src/effects/` - Particles, tile effects
+- `src/animations/` - Kiss emojis, square animations
+- `src/sound/` - SoundManager
+- `src/ui/` - ThemeManager
 
 ### styles.css
 

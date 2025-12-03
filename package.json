@@ -1,6 +1,6 @@
 {
     "name": "shapekeeper",
-    "version": "4.0.0",
+    "version": "4.1.0",
     "description": "ShapeKeeper - A modern browser-based territory capture game with real-time multiplayer",
     "main": "index.html",
     "scripts": {

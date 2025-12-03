@@ -1,14 +1,30 @@
 # ShapeKeeper Development Jobcard
 
-## Session: November 30, 2025 (Evening)
+## Session: December 3, 2025
 
-### 🔄 Current Work: Triangle Feature + Dark Mode Fixes
+### 🔄 Current Work: Documentation Review and Update
 
 ---
 
 ### ✅ Completed This Session
 
-#### 1. Dark Mode Fix
+#### 1. Documentation Update
+Comprehensive review and update of all documentation files:
+
+| File | Update |
+|------|--------|
+| `README.md` | Version 4.1.0, Triangle feature docs, project structure |
+| `package.json` | Version bump to 4.1.0 |
+| `DEPLOYMENT_STATUS.md` | Updated date and deployment history |
+| `JOBCARD.md` | Current session documentation |
+
+---
+
+### 📋 Previous Session: November 30, 2025 (Evening)
+
+#### ✅ Completed Previously
+
+##### 1. Dark Mode Fix
 Canvas backgrounds were hardcoded white - now properly read `data-theme` attribute:
 
 | File | Fix |
@@ -17,7 +33,7 @@ Canvas backgrounds were hardcoded white - now properly read `data-theme` attribu
 | `game.js` | `drawDynamicBackground()` uses dark gradients in dark mode |
 | `game.js` | Dot colors: `#CCC` (dark) / `#333` (light) |
 
-#### 2. Diagonal Lines (45°)
+##### 2. Diagonal Lines (45°)
 Added support for diagonal line drawing between adjacent dots:
 
 | Change | Location |
@@ -26,7 +42,7 @@ Added support for diagonal line drawing between adjacent dots:
 | `isDiagonalLine()` | New helper function |
 | Line rendering | Diagonal lines drawn at 50% width for visual distinction |
 
-#### 3. Triangle Detection System
+##### 3. Triangle Detection System
 Complete triangle shape detection (3 lines: 2 orthogonal + 1 diagonal):
 
 ```javascript
@@ -46,20 +62,10 @@ drawTrianglesWithAnimations()        // Render with striped pattern
 - Scoring: Triangles = 0.5 points (Squares = 1 point)
 - Visual: Striped pattern fill + ▲ symbol at center
 
-#### 4. State Management
+##### 4. State Management
 ```javascript
 this.triangles = {}  // New state object parallel to this.squares
 ```
-
----
-
-### 📋 Git Commits This Session
-
-| Commit | Description |
-|--------|-------------|
-| `6d1a458` | Fix dark mode: canvas backgrounds now read theme state |
-| `d5013b1` | Add diagonal line support + dark mode dot colors |
-| `6d5c0bb` | Add triangle detection: 3-line shapes |
 
 ---
 
@@ -69,21 +75,14 @@ this.triangles = {}  // New state object parallel to this.squares
 |---------|--------|-------|
 | Dark mode background | ✅ Works | Both canvases respond to theme toggle |
 | Diagonal lines | ✅ Works | 45° lines between adjacent dots |
-| Triangle detection | ⏳ Pending | Just deployed, needs live testing |
-| Multiplayer sync | ❓ Unknown | Triangles not yet synced to Convex |
+| Triangle detection | ✅ Works | Live testing confirmed |
+| Multiplayer sync | ❓ Pending | Triangles not yet synced to Convex |
 
 ---
 
 ### 📋 Next Steps
 
 #### Immediate (P0)
-| Task | Priority |
-|------|----------|
-| Test triangle detection on live site | High |
-| Verify triangle scoring works | High |
-| Check animation performance | Medium |
-
-#### Short-term (P1)
 | Task | Priority |
 |------|----------|
 | Add triangles to Convex schema | High |
@@ -99,14 +98,9 @@ this.triangles = {}  // New state object parallel to this.squares
 
 ---
 
-### 🏗️ Architecture Changes
+### 🏗️ Architecture
 
-**Before:**
-```
-Lines → checkForSquares() → squares{} → scoring
-```
-
-**After:**
+**Current Flow:**
 ```
 Lines → checkForSquares() → squares{} ─┐
       → checkForTriangles() → triangles{} ─┴→ combined scoring
@@ -116,11 +110,12 @@ Lines → checkForSquares() → squares{} ─┐
 
 ### 📊 Code Metrics
 
-| Metric | Before | After |
-|--------|--------|-------|
-| `game.js` lines | 3,558 | 3,940 (+382) |
-| New methods | - | 8 triangle-related |
-| New state | - | `this.triangles` |
+| Metric | Value |
+|--------|-------|
+| `game.js` lines | ~3,940 |
+| `welcome.js` lines | ~1,013 |
+| `convex-client.js` lines | ~448 |
+| Total main files | ~5,400 |
 
 ---
 
@@ -132,11 +127,16 @@ Lines → checkForSquares() → squares{} ─┐
 
 ---
 
-### 📁 Files Modified This Session
+### 📁 ES6 Module Structure (In Progress)
 
 ```
-game.js        # +diagonal lines, +triangle detection, +dark mode fixes
-welcome.js     # +dark mode background fix
+src/
+├── core/           # Constants and utilities
+├── game/           # Game state, input, multipliers
+├── effects/        # Particles, tile effects
+├── animations/     # Kiss emojis, square animations
+├── sound/          # SoundManager
+└── ui/             # ThemeManager
 ```
 
 ---
@@ -144,8 +144,8 @@ welcome.js     # +dark mode background fix
 ### 🚀 Live Site
 
 - **URL:** https://shape-keeper.vercel.app
-- **Status:** Deployed (latest: 6d5c0bb)
-- **Test:** Try drawing diagonal lines and completing triangles
+- **Status:** Deployed
+- **Version:** 4.1.0
 
 ---
 
@@ -157,4 +157,4 @@ welcome.js     # +dark mode background fix
 
 ---
 
-*Last updated: November 30, 2025 (evening)*
+*Last updated: December 3, 2025*

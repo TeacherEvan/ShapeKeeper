@@ -1,6 +1,6 @@
 # Deployment Status
 
-**Date:** November 29, 2025  
+**Date:** December 3, 2025  
 **Status:** ✅ LIVE - Production Deployed
 
 ## Live Site
@@ -14,10 +14,17 @@ Branch: main
 Repository: TeacherEvan/ShapeKeeper
 Hosting: Vercel (auto-deploy from main)
 Backend: Convex (https://oceanic-antelope-781.convex.cloud)
+Version: 4.1.0
 Status: ✅ Production Ready
 ```
 
 ## Recent Deployments
+
+### December 2025
+- ✅ Diagonal line support
+- ✅ Triangle detection system
+- ✅ Dark mode canvas fix
+- ✅ ES6 module partial refactoring
 
 ### November 29, 2025
 - ✅ Convex backend schema and functions
