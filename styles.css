@@ -1585,3 +1585,16 @@ canvas {
         transform: scale(1.05);
     }
 }
+/* Player effects display */
+.player-effects {
+    font-size: 0.8em;
+    margin-top: 4px;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.player-effects span {
+    cursor: help;
+}
