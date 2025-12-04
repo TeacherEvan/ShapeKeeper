@@ -353,13 +353,17 @@ class DotsAndBoxesGame {
             player1Info: document.getElementById('player1Info'),
             player2Info: document.getElementById('player2Info'),
             turnIndicator: document.getElementById('turnIndicator'),
-            populateBtn: document.getElementById('populateBtn')
+            populateBtn: document.getElementById('populateBtn'),
+            loadingSkeleton: document.getElementById('gameLoadingSkeleton')
         };
         
         // UI update throttling
         this.lastUIUpdate = 0;
         this.uiUpdateInterval = 16; // ~60fps max for UI updates
 
+        // Show loading state initially
+        this.displayLoadingSkeleton(true);
+        
         this.setupCanvas();
         this.initializeMultipliers(); // Initialize multipliers AFTER grid dimensions are set
         this.initializeTileEffects(); // Initialize tile effects (traps & powerups)
@@ -370,6 +374,20 @@ class DotsAndBoxesGame {
         this.draw();
         this.updateUI();
         this.animate();
+        
+        // Hide loading skeleton after initialization
+        this.displayLoadingSkeleton(false);
+    }
+    
+    /**
+     * Display or hide the loading skeleton
+     * @param {boolean} isLoading - Whether to show the loading state
+     */
+    displayLoadingSkeleton(isLoading) {
+        const skeleton = this.domCache.loadingSkeleton;
+        if (skeleton) {
+            skeleton.classList.toggle('hidden', !isLoading);
+        }
     }
     
     /**

@@ -156,7 +156,7 @@
                 <span class="player-name">Player 1</span>
                 <span class="player-score" id="player1Score">0</span>
             </div>
-            <button id="exitGame" class="exit-btn">Exit</button>
+            <button id="exitGame" class="exit-btn" aria-label="Exit game">Exit</button>
             <div class="player-info" id="player2Info">
                 <span class="player-name">Player 2</span>
                 <span class="player-score" id="player2Score">0</span>
@@ -164,6 +164,11 @@
         </div>
 
         <div class="game-container">
+            <!-- Loading skeleton shown while game initializes -->
+            <div id="gameLoadingSkeleton" class="canvas-skeleton">
+                <div class="loading-spinner"></div>
+                <div class="skeleton-text" style="width: 120px;"></div>
+            </div>
             <canvas id="gameCanvas"></canvas>
         </div>
 
@@ -171,7 +176,7 @@
             <div class="turn-indicator" id="turnIndicator"></div>
             <div class="footer-buttons">
                 <button id="soundToggle" class="sound-btn" aria-label="Toggle sound effects">🔊</button>
-                <button id="populateBtn" class="populate-btn">Populate (10%)</button>
+                <button id="populateBtn" class="populate-btn" aria-label="Populate board with random lines">Populate (10%)</button>
             </div>
         </div>
     </div>
