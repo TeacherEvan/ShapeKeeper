@@ -306,8 +306,10 @@ class WelcomeAnimation {
         }
     }
     
-    // Legacy method for backward compatibility
+    // Legacy methods for backward compatibility
     stop() { this.stopAnimation(); }
+    animate() { this.startAnimationLoop(); }
+    initDots() { this.createParticles(); }
 }
 
 /**

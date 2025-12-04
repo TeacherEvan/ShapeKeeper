@@ -1856,7 +1856,7 @@ html {
 }
 
 .player-info.active {
-    background: rgba(var(--accent-primary), 0.1);
+    background: rgba(76, 175, 80, 0.1);
     box-shadow: var(--shadow-soft);
 }
 
