@@ -272,8 +272,8 @@ class DotsAndBoxesGame {
         this.pulsatingLines = [];
         this.lineOwners = new Map(); // Track which player drew each line
         
-        // Game options
-        this.hypotheticalsEnabled = options.hypotheticalsEnabled !== false; // Default to true
+        // Game options - Party Mode includes all tile effects (dares, hypotheticals, powerups, traps)
+        this.partyModeEnabled = options.partyModeEnabled !== false; // Default to true
 
         // Multi-touch support
         this.activeTouches = new Map(); // Track multiple touches by identifier
@@ -744,6 +744,12 @@ class DotsAndBoxesGame {
     initializeTileEffects() {
         const totalSquares = (this.gridRows - 1) * (this.gridCols - 1);
         
+        // If Party Mode is disabled, skip tile effects entirely
+        if (!this.partyModeEnabled) {
+            console.log('[TileEffects] Party Mode disabled - no tile effects');
+            return;
+        }
+        
         // Create array of all square positions
         const allPositions = [];
         for (let row = 0; row < this.gridRows - 1; row++) {
@@ -758,16 +764,13 @@ class DotsAndBoxesGame {
             [allPositions[i], allPositions[j]] = [allPositions[j], allPositions[i]];
         }
         
-        // Calculate how many effects to place (~20% of squares)
-        const effectCount = Math.max(4, Math.floor(totalSquares * 0.20));
+        // In Party Mode, ALL squares have effects (100% coverage)
+        const effectCount = totalSquares;
         const trapsCount = Math.floor(effectCount / 2);
         const powerupsCount = effectCount - trapsCount;
         
-        // Filter traps based on hypotheticalsEnabled setting
-        let traps = DotsAndBoxesGame.TILE_EFFECTS.traps;
-        if (!this.hypotheticalsEnabled) {
-            traps = traps.filter(trap => trap.id !== 'hypothetical');
-        }
+        // Use all traps and powerups in Party Mode
+        const traps = DotsAndBoxesGame.TILE_EFFECTS.traps;
         const powerups = DotsAndBoxesGame.TILE_EFFECTS.powerups;
         
         let index = 0;
@@ -794,7 +797,7 @@ class DotsAndBoxesGame {
             };
         }
         
-        console.log(`[TileEffects] Initialized ${effectCount} effects (${trapsCount} traps, ${powerupsCount} powerups), hypotheticals: ${this.hypotheticalsEnabled}`);
+        console.log(`[TileEffects] Party Mode enabled - ALL ${effectCount} squares have effects (${trapsCount} traps, ${powerupsCount} powerups)`);
     }
     
     /**

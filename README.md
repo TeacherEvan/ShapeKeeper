@@ -2,7 +2,7 @@
 
 A modern, browser-based implementation of the classic Dots and Boxes game (reimagined as ShapeKeeper) with adaptive landscape layouts, smooth animations, and touch support.
 
-![Game Version](https://img.shields.io/badge/version-4.1.0-blue)
+![Game Version](https://img.shields.io/badge/version-4.2.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Deployment](https://img.shields.io/badge/deployed-shape--keeper.vercel.app-brightgreen)
 
@@ -17,12 +17,11 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 - **Classic Dots and Boxes mechanics** - Connect dots to create boxes and score points
 - **Diagonal Lines & Triangles** - Draw diagonal lines to complete triangles (0.5 points each)
 - **Two-player turn-based gameplay** - Players alternate turns, with bonus turns for completing shapes
-- **Online Multiplayer** - Real-time gameplay with Convex backend
+- **Turn-Based Online Multiplayer** - Chess-like communication with Convex backend
 - **Lobby System** - Create/join rooms with unique codes
 - **Smart turn logic** - Complete a square or triangle, keep your turn!
 - **Real-time score tracking** - Live updates for both players
-- **Tile Effects System** - Hidden traps and powerups revealed when capturing squares
-- **Party Game Mode** - Dares, secrets, hypotheticals, and physical challenges
+- **Party Mode 🎉** - ALL squares have tile effects (dares, hypotheticals, powerups, traps)
 
 ### Visual Enhancements
 
@@ -310,7 +309,16 @@ Contributions welcome! Feel free to:
 
 ## 📝 Version History
 
-### v4.1.0 (Current)
+### v4.2.0 (Current)
+
+- **Party Mode 🎉** - Renamed "Hypotheticals" to "Party Mode" - ALL squares have tile effects
+- **Turn-Based Multiplayer Optimization** - Chess-like communication prevents glitches
+- **State Change Detection** - Only updates UI when meaningful state changes occur
+- **Debounced Updates** - Prevents rapid-fire updates from causing issues
+- **Documentation Index** - Added docs/README.md for easy navigation
+- **Copilot Instructions Index** - Table of contents for quick reference
+
+### v4.1.0
 
 - **Diagonal Lines** - Players can connect dots diagonally at 45° angles
 - **Triangle Detection** - Complete triangles by drawing 2 orthogonal + 1 diagonal line

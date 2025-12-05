@@ -1,7 +1,7 @@
 {
     "name": "shapekeeper",
-    "version": "4.1.0",
-    "description": "ShapeKeeper - A modern browser-based territory capture game with real-time multiplayer",
+    "version": "4.2.0",
+    "description": "ShapeKeeper - A modern browser-based territory capture game with turn-based multiplayer",
     "main": "index.html",
     "scripts": {
         "dev": "convex dev",
@@ -16,7 +16,8 @@
         "javascript",
         "html5",
         "multiplayer",
-        "board-game"
+        "board-game",
+        "party-mode"
     ],
     "author": "Teacher Evan",
     "license": "MIT",
