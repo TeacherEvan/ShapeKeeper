@@ -1,22 +1,54 @@
 # ShapeKeeper Development Jobcard
 
-## Session: December 3, 2025
+## Session: December 5, 2025
 
-### 🔄 Current Work: Documentation Review and Update
+### 🔄 Current Work: Party Mode & Turn-Based Multiplayer Optimization
 
 ---
 
 ### ✅ Completed This Session
 
-#### 1. Documentation Update
-Comprehensive review and update of all documentation files:
+#### 1. Party Mode Feature
+Renamed "Hypotheticals" to "Party Mode" - now ALL squares have tile effects:
 
-| File | Update |
-|------|--------|
-| `README.md` | Version 4.1.0, Triangle feature docs, project structure |
-| `package.json` | Version bump to 4.1.0 |
-| `DEPLOYMENT_STATUS.md` | Updated date and deployment history |
-| `JOBCARD.md` | Current session documentation |
+| Change | File |
+|--------|------|
+| Renamed toggle: "Enable Party Mode 🎉" | `index.html` |
+| Updated element ID: `partyModeToggle` | `index.html` |
+| Updated game options: `partyModeEnabled` | `welcome.js`, `game.js` |
+| 100% tile coverage when enabled | `game.js` |
+
+**Party Mode Behavior:**
+- When enabled: ALL squares have either a trap or powerup
+- 50% traps (red): Landmine, Freeze, Score Swap, Dares, Hypotheticals, etc.
+- 50% powerups (blue): Extra turns, Shield, Lightning, Oracle's Vision, etc.
+- When disabled: No tile effects (clean gameplay)
+
+#### 2. Turn-Based Multiplayer Optimization
+Implemented chess-like communication to fix "constant live state" glitches:
+
+| Change | File |
+|--------|------|
+| State change detection | `convex-client.js` |
+| Debounced updates (50ms) | `convex-client.js` |
+| Turn-based optimization | `convex-client.js` |
+| Clean subscription cleanup | `convex-client.js` |
+
+**Optimization Details:**
+- `stateHasChanged()` - Compares key state fields before triggering callbacks
+- Only updates on: turn change, new lines/squares, score changes, game status change
+- Debounce timer prevents rapid-fire updates
+- State trackers reset on room leave
+
+#### 3. Documentation Updates
+
+| Update | File |
+|--------|------|
+| Added Table of Contents | `.github/copilot-instructions.md` |
+| Updated version to 4.2.0 | `.github/copilot-instructions.md`, `package.json` |
+| Added turn-based subscription docs | `.github/copilot-instructions.md` |
+| Updated Party Mode documentation | `.github/copilot-instructions.md` |
+| Created docs index | `docs/README.md` |
 
 ---
 
@@ -106,6 +138,14 @@ Lines → checkForSquares() → squares{} ─┐
       → checkForTriangles() → triangles{} ─┴→ combined scoring
 ```
 
+**Multiplayer Communication (Turn-Based):**
+```
+drawLine() → Convex mutation → Server validates turn
+          → Updates DB → Subscription triggers
+          → stateHasChanged() check → Debounce
+          → handleGameStateUpdate() only if meaningful change
+```
+
 ---
 
 ### 📊 Code Metrics
@@ -114,8 +154,8 @@ Lines → checkForSquares() → squares{} ─┐
 |--------|-------|
 | `game.js` lines | ~3,940 |
 | `welcome.js` lines | ~1,013 |
-| `convex-client.js` lines | ~448 |
-| Total main files | ~5,400 |
+| `convex-client.js` lines | ~520 |
+| Total main files | ~5,500 |
 
 ---
 
@@ -145,7 +185,7 @@ src/
 
 - **URL:** https://shape-keeper.vercel.app
 - **Status:** Deployed
-- **Version:** 4.1.0
+- **Version:** 4.2.0
 
 ---
 

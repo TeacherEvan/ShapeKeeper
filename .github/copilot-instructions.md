@@ -1,9 +1,24 @@
 # Copilot Instructions: ShapeKeeper
 
+## Table of Contents
+1. [Project Overview](#project-overview)
+2. [Architecture](#architecture)
+3. [Critical Conventions](#critical-conventions)
+4. [Development Commands](#development-commands)
+5. [Convex Backend Patterns](#convex-backend-patterns)
+6. [Game Logic Details](#game-logic-details)
+7. [Animation System](#animation-system)
+8. [Sound System](#sound-system)
+9. [Theme System](#theme-system)
+10. [Common Modifications](#common-modifications)
+11. [Device Handling](#device-handling)
+
+---
+
 ## Project Overview
 ShapeKeeper is a Dots and Boxes game with **local and online multiplayer** support. Vanilla JavaScript frontend with HTML5 Canvas, Convex backend for real-time multiplayer, deployed on Vercel at [shape-keeper.vercel.app](https://shape-keeper.vercel.app).
 
-**Version:** 4.1.0 | **Updated:** November 30, 2025
+**Version:** 4.2.0 | **Updated:** December 5, 2025
 
 ## Architecture
 
@@ -41,7 +56,7 @@ src/
 docs/
 ├── development/    # QUICKSTART.md, CODE_AUDIT.md, MERGE_CONFLICT_GUIDE.md
 ├── planning/       # JOBCARD.md, CounterPlan.md, MULTIPLAYER_PLANNING.md, REFACTORING_PLAN.md
-├── history/        # BEFORE_AFTER.md, CLEANUP_SUMMARY.md, DEPLOYMENT_STATUS.md
+├── history/        # DEPLOYMENT_STATUS.md
 └── technical/      # BENQ_FIX.md, FEATURE_SUMMARY.md, PERFORMANCE_IMPROVEMENTS.md
 ```
 
@@ -100,19 +115,25 @@ npm run serve    # Alternative: Python HTTP server
 ### Session-Based Auth
 Players identified by `sessionId` stored in `localStorage`. No user accounts—session persists across page reloads.
 
-### Real-Time Subscriptions
+### Turn-Based Optimized Subscriptions
+Multiplayer uses turn-based optimization to minimize network traffic (like chess):
 ```javascript
-// Room updates (lobby state)
+// Room updates (lobby state) - debounced
 window.ShapeKeeperConvex.subscribeToRoom(handleRoomUpdate);
 
-// Game state updates (lines, squares, scores)
+// Game state updates (lines, squares, scores) - turn-based optimized
+// Only triggers callback when:
+// - Turn changes (currentPlayerIndex changes)
+// - Lines/squares count changes (actual game state change)  
+// - Scores change
+// - Game status changes (playing → finished)
 window.ShapeKeeperConvex.subscribeToGameState(handleGameStateUpdate);
 ```
 
 ### Mutation Pattern (rooms.ts, games.ts)
 1. Validate session owns the action (turn check, host check)
 2. Perform database operations
-3. Return result (subscription auto-broadcasts changes)
+3. Return result (subscription auto-broadcasts changes with turn-based optimization)
 
 ## Game Logic Details
 
@@ -122,13 +143,14 @@ After each line draw, check 2-4 adjacent squares (horizontal lines check above/b
 ### Multiplier Distribution
 65% ×2, 20% ×3, 10% ×4, 4% ×5, 1% ×10. Revealed on tap—**multiplies total score**, not adds.
 
-### Tile Effects System
-~20% of squares have hidden traps or powerups:
-- **Traps (red)**: Landmine, Freeze, Score Swap, Chaos Storm, social effects (dares, secrets)
-- **Powerups (blue)**: Extra turns, Steal territory, Shield, Lightning, Oracle's Vision
+### Party Mode (Tile Effects System)
+When Party Mode is enabled, **ALL squares** have tile effects (traps or powerups):
+- **Traps (red/50%)**: Landmine, Freeze, Score Swap, Chaos Storm, Hypotheticals, Dares, Secrets
+- **Powerups (blue/50%)**: Extra turns, Steal territory, Shield, Lightning, Oracle's Vision, Double Points
 - Effects stored in `tileEffects` object, revealed via `revealTileEffect()`
 - Effect modal shows description and activation button
 - `playerEffects` tracks status effects (frozen turns, shield count, etc.)
+- Toggle via "Enable Party Mode 🎉" checkbox on local setup screen
 
 ### Landscape Grid Adaptation
 When `aspectRatio > 1.5`, grid reshapes: 30×30 selection becomes ~50×18 grid (same total squares).

@@ -26,6 +26,57 @@ let currentRoomId = null;
 let currentSubscription = null;
 let gameStateSubscription = null;
 
+// Turn-based optimization: Track last state to detect changes
+let lastGameState = null;
+let lastRoomState = null;
+let updateDebounceTimer = null;
+const UPDATE_DEBOUNCE_MS = 50; // Debounce updates to batch rapid changes
+
+/**
+ * Deep compare two objects for equality (shallow for performance)
+ * @param {Object} obj1 - First object
+ * @param {Object} obj2 - Second object
+ * @returns {boolean} True if objects are equal
+ */
+function stateHasChanged(newState, lastState) {
+    if (!lastState) return true;
+    if (!newState) return lastState !== null;
+    
+    // For turn-based optimization, check key state fields:
+    // - currentPlayerIndex (turn changed)
+    // - lines.length (new line drawn)
+    // - squares.length (new square completed)
+    // - room.status (game state changed)
+    
+    const newRoom = newState.room || {};
+    const lastRoom = lastState.room || {};
+    
+    // Turn change detection
+    if (newRoom.currentPlayerIndex !== lastRoom.currentPlayerIndex) return true;
+    if (newRoom.status !== lastRoom.status) return true;
+    if (newRoom.updatedAt !== lastRoom.updatedAt) return true;
+    
+    // Line/square count change detection (efficient for turn-based)
+    const newLines = newState.lines || [];
+    const lastLines = lastState.lines || [];
+    if (newLines.length !== lastLines.length) return true;
+    
+    const newSquares = newState.squares || [];
+    const lastSquares = lastState.squares || [];
+    if (newSquares.length !== lastSquares.length) return true;
+    
+    // Score change detection
+    const newPlayers = newState.players || [];
+    const lastPlayers = lastState.players || [];
+    if (newPlayers.length !== lastPlayers.length) return true;
+    
+    for (let i = 0; i < newPlayers.length; i++) {
+        if (newPlayers[i]?.score !== lastPlayers[i]?.score) return true;
+    }
+    
+    return false;
+}
+
 /**
  * Initialize the Convex client and session
  */
@@ -134,6 +185,19 @@ async function leaveRoom() {
             currentSubscription();
             currentSubscription = null;
         }
+        
+        if (gameStateSubscription) {
+            gameStateSubscription();
+            gameStateSubscription = null;
+        }
+        
+        // Clear debounce timer and state trackers
+        if (updateDebounceTimer) {
+            clearTimeout(updateDebounceTimer);
+            updateDebounceTimer = null;
+        }
+        lastGameState = null;
+        lastRoomState = null;
         
         currentRoomId = null;
         console.log('[Convex] Left room');
@@ -279,18 +343,45 @@ function subscribeToRoom(callback) {
         currentSubscription();
     }
     
+    // Reset room state tracker on new subscription
+    lastRoomState = null;
+    
+    // Wrap callback with debouncing for turn-based optimization
+    const debouncedCallback = (newState) => {
+        // Only call callback if room state actually changed
+        if (!newState) {
+            lastRoomState = null;
+            callback(newState);
+            return;
+        }
+        
+        // For room/lobby updates, check if meaningful state changed
+        const hasChanged = !lastRoomState || 
+            newState.status !== lastRoomState.status ||
+            newState.updatedAt !== lastRoomState.updatedAt ||
+            (newState.players?.length || 0) !== (lastRoomState.players?.length || 0);
+        
+        if (hasChanged) {
+            lastRoomState = JSON.parse(JSON.stringify(newState));
+            callback(newState);
+        }
+    };
+    
     currentSubscription = convexClient.onUpdate(
         api.rooms.getRoom,
         { roomId: currentRoomId },
-        callback
+        debouncedCallback
     );
     
-    console.log('[Convex] Subscribed to room updates');
+    console.log('[Convex] Subscribed to room updates (turn-based optimized)');
     return currentSubscription;
 }
 
 /**
  * Subscribe to game state updates (during gameplay)
+ * Uses turn-based optimization to minimize unnecessary updates:
+ * - Only processes updates when turn changes or game state meaningfully changes
+ * - Debounces rapid updates to prevent glitches
  * @param {Function} callback - Called with game state on each update
  * @returns {Function} Unsubscribe function
  */
@@ -307,13 +398,38 @@ function subscribeToGameState(callback) {
         gameStateSubscription();
     }
     
+    // Reset game state tracker on new subscription
+    lastGameState = null;
+    
+    // Wrap callback with turn-based optimization
+    const optimizedCallback = (newState) => {
+        // Clear any pending debounced update
+        if (updateDebounceTimer) {
+            clearTimeout(updateDebounceTimer);
+            updateDebounceTimer = null;
+        }
+        
+        // Only process if state has meaningfully changed (turn-based detection)
+        if (!stateHasChanged(newState, lastGameState)) {
+            console.log('[Convex] Skipping duplicate game state update');
+            return;
+        }
+        
+        // Debounce rapid updates to batch them together
+        updateDebounceTimer = setTimeout(() => {
+            lastGameState = newState ? JSON.parse(JSON.stringify(newState)) : null;
+            callback(newState);
+            console.log('[Convex] Game state update processed (turn-based)');
+        }, UPDATE_DEBOUNCE_MS);
+    };
+    
     gameStateSubscription = convexClient.onUpdate(
         api.games.getGameState,
         { roomId: currentRoomId },
-        callback
+        optimizedCallback
     );
     
-    console.log('[Convex] Subscribed to game state updates');
+    console.log('[Convex] Subscribed to game state updates (turn-based optimized)');
     return gameStateSubscription;
 }
 
