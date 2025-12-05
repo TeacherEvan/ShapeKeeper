@@ -1,3 +1,19 @@
+/**
+ * ShapeKeeper - DotsAndBoxesGame
+ * Main game class for rendering and game logic
+ * 
+ * @version 4.2.0
+ * @author Teacher Evan
+ * 
+ * TODO: [OPTIMIZATION] Consider implementing offscreen canvas for static background
+ * TODO: [OPTIMIZATION] Use requestIdleCallback for non-critical updates
+ * TODO: [OPTIMIZATION] Implement spatial partitioning for large grids (30x30+)
+ * TODO: [ARCHITECTURE] Consider extracting rendering logic to separate Renderer class
+ * TODO: [ARCHITECTURE] Move tile effects logic to separate TileEffectsController
+ * TODO: [PERFORMANCE] Use Web Workers for particle physics calculations on large grids
+ * TODO: [UX] Add tutorial overlay for first-time players
+ */
+
 class DotsAndBoxesGame {
     // Configuration constants
     static DOT_RADIUS = 1.6;
@@ -8,7 +24,7 @@ class DotsAndBoxesGame {
     static POPULATE_PLAYER_ID = 3; // Player ID for populate feature lines
     static GHOST_LINE_OPACITY = 0.3; // Opacity for ghost lines (invisible to opponent)
     
-    // Animation constants
+    // Animation constants - tuned for 60fps smoothness
     static ANIMATION_SQUARE_DURATION = 600;
     static ANIMATION_KISS_DURATION = 1000;
     static ANIMATION_MULTIPLIER_DURATION = 2000;
@@ -16,7 +32,7 @@ class DotsAndBoxesGame {
     static ANIMATION_LINE_DRAW_DURATION = 150; // Line draw animation duration
     static ANIMATION_INVALID_FLASH_DURATION = 300; // Invalid line flash duration
     
-    // Particle constants
+    // Particle constants - balanced for performance
     static PARTICLE_COUNT_SQUARE = 15;
     static PARTICLE_COUNT_MULTIPLIER_SPARKS = 30;
     static PARTICLE_COUNT_MULTIPLIER_SMOKE = 10;

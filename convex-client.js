@@ -4,6 +4,15 @@
  * 
  * This file uses the Convex browser bundle loaded via script tag.
  * The 'convex' global object is provided by: https://unpkg.com/convex@1.29.3/dist/browser.bundle.js
+ * 
+ * @module ConvexClient
+ * @version 4.2.0
+ * 
+ * TODO: [OPTIMIZATION] Implement connection pooling for better resource management
+ * TODO: [OPTIMIZATION] Add offline queue for actions when connection drops
+ * TODO: [ARCHITECTURE] Consider implementing optimistic updates for immediate UI feedback
+ * TODO: [ARCHITECTURE] Move to Redis for scalability in high-traffic scenarios
+ * TODO: [SECURITY] Add rate limiting for mutations to prevent abuse
  */
 
 'use strict';

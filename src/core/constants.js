@@ -1,19 +1,49 @@
 /**
  * ShapeKeeper Constants
  * All static configuration values used throughout the application
+ * 
  * @module core/constants
+ * @version 4.2.0
+ * 
+ * TODO: [OPTIMIZATION] Consider moving frequently-changed constants to a config file
+ * TODO: [ARCHITECTURE] Consider using environment variables for deployment-specific values
  */
 
 // =============================================================================
-// CONFIGURATION
+// GAME CONFIGURATION
 // =============================================================================
 
-export const DOT_RADIUS = 1.6;
-export const LINE_WIDTH = 6;
-export const CELL_SIZE_MIN = 8;
-export const CELL_SIZE_MAX = 40;
-export const GRID_OFFSET = 20;
-export const POPULATE_PLAYER_ID = 3;
+/**
+ * Game-wide configuration constants
+ * @constant {Object} GAME
+ */
+export const GAME = {
+    // Grid rendering
+    DOT_RADIUS: 1.6,
+    LINE_WIDTH: 6,
+    CELL_SIZE_MIN: 8,
+    CELL_SIZE_MAX: 40,
+    GRID_OFFSET: 20,
+    
+    // Player configuration
+    POPULATE_PLAYER_ID: 3,
+    MAX_PLAYERS: 6,
+    MIN_PLAYERS: 2,
+    
+    // Ghost line visibility
+    GHOST_LINE_OPACITY: 0.3,
+    
+    // Default player colors
+    PLAYER_COLORS: ['#FF0000', '#0000FF', '#00FF00', '#FF8C00', '#8B00FF', '#00FFFF']
+};
+
+// Legacy exports for backward compatibility
+export const DOT_RADIUS = GAME.DOT_RADIUS;
+export const LINE_WIDTH = GAME.LINE_WIDTH;
+export const CELL_SIZE_MIN = GAME.CELL_SIZE_MIN;
+export const CELL_SIZE_MAX = GAME.CELL_SIZE_MAX;
+export const GRID_OFFSET = GAME.GRID_OFFSET;
+export const POPULATE_PLAYER_ID = GAME.POPULATE_PLAYER_ID;
 
 // =============================================================================
 // ANIMATION TIMING (milliseconds)
