@@ -33,13 +33,21 @@ let updateDebounceTimer = null;
 const UPDATE_DEBOUNCE_MS = 50; // Debounce updates to batch rapid changes
 
 /**
- * Deep compare two objects for equality (shallow for performance)
- * @param {Object} obj1 - First object
- * @param {Object} obj2 - Second object
- * @returns {boolean} True if objects are equal
+ * Check if game state has meaningfully changed (turn-based optimization)
+ * Only triggers updates when key state fields change:
+ * - currentPlayerIndex (turn changed)
+ * - lines.length (new line drawn)
+ * - squares.length (new square completed)
+ * - room.status (game state changed)
+ * - player scores
+ * @param {Object} newState - New state from server
+ * @param {Object} lastState - Previous cached state
+ * @returns {boolean} True if state has meaningfully changed
  */
 function stateHasChanged(newState, lastState) {
+    // First update always processes (no cached state)
     if (!lastState) return true;
+    // If new state is null but we had state before, that's a change (room deleted)
     if (!newState) return lastState !== null;
     
     // For turn-based optimization, check key state fields:
@@ -356,13 +364,20 @@ function subscribeToRoom(callback) {
         }
         
         // For room/lobby updates, check if meaningful state changed
+        const newPlayersLength = newState.players?.length || 0;
+        const lastPlayersLength = lastRoomState?.players?.length || 0;
         const hasChanged = !lastRoomState || 
             newState.status !== lastRoomState.status ||
             newState.updatedAt !== lastRoomState.updatedAt ||
-            (newState.players?.length || 0) !== (lastRoomState.players?.length || 0);
+            newPlayersLength !== lastPlayersLength;
         
         if (hasChanged) {
-            lastRoomState = JSON.parse(JSON.stringify(newState));
+            // Cache only the fields we compare (efficient shallow copy)
+            lastRoomState = {
+                status: newState.status,
+                updatedAt: newState.updatedAt,
+                players: { length: newPlayersLength }
+            };
             callback(newState);
         }
     };
@@ -417,7 +432,21 @@ function subscribeToGameState(callback) {
         
         // Debounce rapid updates to batch them together
         updateDebounceTimer = setTimeout(() => {
-            lastGameState = newState ? JSON.parse(JSON.stringify(newState)) : null;
+            // Cache only the fields we compare (efficient shallow copy)
+            if (newState) {
+                lastGameState = {
+                    room: newState.room ? {
+                        currentPlayerIndex: newState.room.currentPlayerIndex,
+                        status: newState.room.status,
+                        updatedAt: newState.room.updatedAt
+                    } : null,
+                    lines: { length: (newState.lines || []).length },
+                    squares: { length: (newState.squares || []).length },
+                    players: (newState.players || []).map(p => ({ score: p?.score || 0 }))
+                };
+            } else {
+                lastGameState = null;
+            }
             callback(newState);
             console.log('[Convex] Game state update processed (turn-based)');
         }, UPDATE_DEBOUNCE_MS);
