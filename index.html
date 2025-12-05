@@ -5,14 +5,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ShapeKeeper</title>
+    
+    <!-- SEO and Social Meta -->
+    <meta name="description" content="ShapeKeeper - A modern browser-based territory capture game with local and online multiplayer support">
+    <meta name="keywords" content="game, ShapeKeeper, dots and boxes, multiplayer, browser game">
+    <meta name="author" content="Teacher Evan">
+    <meta name="theme-color" content="#4CAF50">
+    
+    <!-- Open Graph / Social -->
+    <meta property="og:title" content="ShapeKeeper">
+    <meta property="og:description" content="A modern territory capture game with multiplayer support">
+    <meta property="og:type" content="website">
+    
+    <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+    
+    <!-- Preload critical CSS -->
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- DNS Prefetch for external resources -->
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="https://oceanic-antelope-781.convex.cloud">
+    
+    <!-- Preconnect for Convex backend -->
+    <link rel="preconnect" href="https://oceanic-antelope-781.convex.cloud" crossorigin>
 </head>
 
 <body>
     <!-- Main Menu Screen -->
     <div id="mainMenuScreen" class="screen active">
-        <canvas id="welcomeCanvas"></canvas>
+        <canvas id="welcomeCanvas" aria-hidden="true"></canvas>
         <div class="welcome-container">
             <h1>ShapeKeeper</h1>
             <p class="credit">Created by Teacher Evan</p>

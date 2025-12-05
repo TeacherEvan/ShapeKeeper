@@ -1978,3 +1978,193 @@ input[type="color"]:focus {
         display: none !important;
     }
 }
+
+/* ========================================
+   Premium Micro-interactions (Phase 2)
+   ======================================== */
+
+/* Button press depth effect */
+.menu-btn:active,
+.grid-btn:active,
+.start-btn:active,
+.ready-btn:active {
+    transform: translateY(2px) scale(0.98);
+    box-shadow: var(--shadow-soft);
+}
+
+/* Enhanced focus states for accessibility */
+.menu-btn:focus-visible,
+.grid-btn:focus-visible,
+.start-btn:focus-visible,
+.ready-btn:focus-visible {
+    outline: 3px solid var(--accent-primary);
+    outline-offset: 4px;
+    animation: focusPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes focusPulse {
+    0%, 100% { outline-offset: 4px; }
+    50% { outline-offset: 6px; }
+}
+
+/* Smooth scroll snap for mobile */
+@supports (scroll-snap-type: y mandatory) {
+    .screen.active {
+        scroll-snap-type: y proximity;
+        overflow-y: auto;
+    }
+    
+    .setup-section {
+        scroll-snap-align: start;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #000000;
+        --text-secondary: #333333;
+    }
+    
+    [data-theme="dark"] {
+        --border-color: #ffffff;
+        --text-secondary: #cccccc;
+    }
+    
+    .grid-btn,
+    .menu-btn,
+    .start-btn {
+        border-width: 3px;
+    }
+}
+
+/* Optimistic UI feedback - loading states */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: btnSpinner 0.8s linear infinite;
+}
+
+@keyframes btnSpinner {
+    100% { transform: rotate(360deg); }
+}
+
+/* Hover card lift effect */
+.player-entry:hover,
+.final-score-entry:hover {
+    transform: translateY(-2px) translateX(4px);
+    box-shadow: var(--shadow-medium);
+}
+
+/* Subtle pulse for active elements */
+.player-info.active .player-score {
+    animation: subtlePulse 2s ease-in-out infinite;
+}
+
+@keyframes subtlePulse {
+    0%, 100% { 
+        transform: scale(1);
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    }
+    50% { 
+        transform: scale(1.05);
+        text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    }
+}
+
+/* Enhanced turn indicator */
+.turn-indicator {
+    position: relative;
+    overflow: hidden;
+}
+
+.turn-indicator::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    100% { left: 100%; }
+}
+
+/* Toast notification enter/exit animations */
+.toast-notification {
+    animation: toastSlideIn 0.3s var(--easing-bounce);
+}
+
+.toast-notification:not(.show) {
+    animation: toastSlideOut 0.3s var(--easing-smooth) forwards;
+}
+
+@keyframes toastSlideIn {
+    0% {
+        transform: translateX(-50%) translateY(-100px) scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes toastSlideOut {
+    0% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-50%) translateY(-100px) scale(0.8);
+        opacity: 0;
+    }
+}
+
+/* Skeleton loading animation enhancement */
+.skeleton-pulse {
+    animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.7; }
+}
+
+/* TODO: [UX] Consider adding haptic feedback hints via CSS 
+   Currently not widely supported but future-proofing */
+
+/* GPU acceleration hints for animations */
+.menu-btn,
+.grid-btn,
+.start-btn,
+.ready-btn,
+.player-entry,
+.toast-notification,
+.effect-modal-content {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
