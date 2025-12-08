@@ -1,6 +1,11 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+// Constants for populate feature
+// Must match frontend DotsAndBoxesGame.POPULATE_PLAYER_ID = 3
+const POPULATE_PLAYER_ID = 3; // Display player ID for populate lines
+const POPULATE_PLAYER_INDEX = 2; // Backend player index (0=Player1, 1=Player2, 2=Populate)
+
 // Draw a line (make a move)
 export const drawLine = mutation({
   args: {
@@ -392,10 +397,6 @@ export const populateLines = mutation({
     if (room.hostPlayerId !== args.sessionId) {
       return { error: "Only the host can populate lines" };
     }
-
-    // Special player ID for populate feature
-    const POPULATE_PLAYER_ID = 999; // Use a special ID that won't conflict with real players
-    const POPULATE_PLAYER_INDEX = 2; // Use index 2 (3rd player) for visual distinction
 
     // Insert all the lines
     for (const lineKey of args.lineKeys) {
