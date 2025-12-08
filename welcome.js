@@ -598,6 +598,14 @@ function handleRoomUpdate(roomState) {
         playerNumber: p.playerNumber || (index + 1)
     }));
     
+    // Update party mode toggle to match room state
+    const lobbyPartyModeToggle = document.getElementById('lobbyPartyModeToggle');
+    if (lobbyPartyModeToggle) {
+        lobbyPartyModeToggle.checked = roomState.partyMode !== false;
+        // Disable for non-hosts
+        lobbyPartyModeToggle.disabled = !lobbyManager.isHost;
+    }
+    
     // Update grid size selection UI
     document.querySelectorAll('.lobby-grid-btn').forEach(btn => {
         btn.classList.toggle('selected', parseInt(btn.dataset.size) === roomState.gridSize);
@@ -630,7 +638,8 @@ function handleRoomUpdate(roomState) {
         const meInRoom = roomState.players.find(p => p.sessionId === mySessionId);
         
         // Initialize game with room settings and multiplayer mode
-        game = new DotsAndBoxesGame(roomState.gridSize, player1Color, player2Color);
+        const partyModeEnabled = roomState.partyMode !== false; // Default to true
+        game = new DotsAndBoxesGame(roomState.gridSize, player1Color, player2Color, { partyModeEnabled });
         game.isMultiplayer = true;
         // playerIndex is 0-based, convert to 1-based player number (1 or 2)
         game.myPlayerNumber = (meInRoom?.playerIndex ?? 0) + 1;
@@ -776,7 +785,8 @@ function initializeMenuNavigation() {
         // Use Convex backend if available
         if (window.ShapeKeeperConvex) {
             showToast('Creating room...', 'info', 2000);
-            const result = await window.ShapeKeeperConvex.createRoom(playerName, gridSize);
+            const partyMode = true; // Default to true, will be controlled in lobby
+            const result = await window.ShapeKeeperConvex.createRoom(playerName, gridSize, partyMode);
             
             if (result.error) {
                 showToast('Error: ' + result.error, 'error');
@@ -929,6 +939,37 @@ function initializeMenuNavigation() {
             }
         });
     });
+    
+    // Lobby party mode toggle (host only)
+    const lobbyPartyModeToggle = document.getElementById('lobbyPartyModeToggle');
+    if (lobbyPartyModeToggle) {
+        lobbyPartyModeToggle.addEventListener('change', async (e) => {
+            if (!lobbyManager.isHost) {
+                // Revert change if not host
+                e.target.checked = !e.target.checked;
+                showToast('Only the host can change game settings', 'warning', 2000);
+                return;
+            }
+            
+            const partyMode = e.target.checked;
+            
+            // Use Convex backend if available
+            if (window.ShapeKeeperConvex) {
+                const result = await window.ShapeKeeperConvex.updatePartyMode(partyMode);
+                if (result.error) {
+                    showToast('Error: ' + result.error, 'error');
+                    // Revert on error
+                    e.target.checked = !partyMode;
+                    return;
+                }
+                showToast(`Party Mode ${partyMode ? 'enabled' : 'disabled'}`, 'success', 2000);
+                // UI will update via subscription
+            } else {
+                lobbyManager.partyMode = partyMode;
+                showToast(`Party Mode ${partyMode ? 'enabled' : 'disabled'}`, 'info', 2000);
+            }
+        });
+    }
     
     // Copy room code
     document.getElementById('copyCodeBtn').addEventListener('click', () => {

@@ -27,6 +27,7 @@ export const createRoom = mutation({
     sessionId: v.string(),
     playerName: v.string(),
     gridSize: v.number(),
+    partyMode: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     // Generate unique room code
@@ -47,11 +48,12 @@ export const createRoom = mutation({
 
     const now = Date.now();
 
-    // Create the room
+    // Create the room with party mode setting (default true)
     const roomId = await ctx.db.insert("rooms", {
       roomCode,
       hostPlayerId: args.sessionId,
       gridSize: args.gridSize,
+      partyMode: args.partyMode !== false, // Default to true
       status: "lobby",
       currentPlayerIndex: 0,
       createdAt: now,
@@ -296,6 +298,49 @@ export const updateGridSize = mutation({
     if (room.hostPlayerId !== args.sessionId) {
       return { error: "Only the host can change grid size" };
     }
+
+    if (room.status !== "lobby") {
+      return { error: "Cannot change grid size while game is in progress" };
+    }
+
+    await ctx.db.patch(args.roomId, {
+      gridSize: args.gridSize,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+// Update party mode (host only)
+export const updatePartyMode = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    sessionId: v.string(),
+    partyMode: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.roomId);
+    if (!room) {
+      return { error: "Room not found" };
+    }
+
+    if (room.hostPlayerId !== args.sessionId) {
+      return { error: "Only the host can change party mode" };
+    }
+
+    if (room.status !== "lobby") {
+      return { error: "Cannot change party mode while game is in progress" };
+    }
+
+    await ctx.db.patch(args.roomId, {
+      partyMode: args.partyMode,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
 
     if (room.status !== "lobby") {
       return { error: "Cannot change grid size during game" };

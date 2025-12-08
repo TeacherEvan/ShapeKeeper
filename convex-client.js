@@ -134,7 +134,7 @@ function getSessionId() {
  * @param {number} gridSize - Grid size (5, 10, 20, or 30)
  * @returns {Promise<{roomId: string, roomCode: string} | {error: string}>}
  */
-async function createRoom(playerName, gridSize) {
+async function createRoom(playerName, gridSize, partyMode = true) {
     initConvex();
     
     try {
@@ -142,11 +142,12 @@ async function createRoom(playerName, gridSize) {
             sessionId,
             playerName,
             gridSize,
+            partyMode,
         });
         
         if (result.roomId) {
             currentRoomId = result.roomId;
-            console.log('[Convex] Room created:', result.roomCode);
+            console.log('[Convex] Room created:', result.roomCode, 'partyMode:', partyMode);
         }
         
         return result;
@@ -280,6 +281,26 @@ async function updateGridSize(gridSize) {
         });
     } catch (error) {
         console.error('[Convex] Error updating grid size:', error);
+        return { error: error.message };
+    }
+}
+
+/**
+ * Update party mode (host only)
+ * @param {boolean} partyMode - Party mode enabled
+ * @returns {Promise<{success: boolean} | {error: string}>}
+ */
+async function updatePartyMode(partyMode) {
+    if (!currentRoomId) return { error: "Not in a room" };
+    
+    try {
+        return await convexClient.mutation(api.rooms.updatePartyMode, {
+            roomId: currentRoomId,
+            sessionId,
+            partyMode,
+        });
+    } catch (error) {
+        console.error('[Convex] Error updating party mode:', error);
         return { error: error.message };
     }
 }
@@ -607,6 +628,7 @@ window.ShapeKeeperConvex = {
     toggleReady,
     updatePlayer,
     updateGridSize,
+    updatePartyMode,
     startGame,
     drawLine,
     revealMultiplier,

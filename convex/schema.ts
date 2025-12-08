@@ -7,6 +7,7 @@ export default defineSchema({
     roomCode: v.string(),           // 6-character code for joining
     hostPlayerId: v.string(),       // Session ID of the host
     gridSize: v.number(),           // 5, 10, 20, or 30
+    partyMode: v.optional(v.boolean()), // Party mode enabled (tile effects)
     status: v.union(
       v.literal("lobby"),
       v.literal("playing"),
