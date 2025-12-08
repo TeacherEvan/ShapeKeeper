@@ -22,6 +22,6 @@
     "author": "Teacher Evan",
     "license": "MIT",
     "dependencies": {
-        "convex": "^1.29.3"
+        "convex": "^1.30.0"
     }
 }
