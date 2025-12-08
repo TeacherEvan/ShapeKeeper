@@ -61,12 +61,14 @@ for (const lineKey of this.lines) {
 **Arrays that grow over time:**
 - `this.pulsatingLines` - Cleaned every 2 seconds ✓
 - `this.squareAnimations` - Cleaned after duration ✓
-- `this.particles` - Filtered on decay ✓
-- `this.kissEmojis` - Cleaned after duration ✓
+- `this.particles` - In-place compaction (v4.3.0) ✓
+- `this.sparkleEmojis` - Cleaned after duration ✓
 - `this.multiplierAnimations` - Cleaned after duration ✓
-- `this.truthOrDareAnimations` - Cleaned after duration ✓
+- `this.lineDrawings` - Cleaned after duration ✓
+- `this.touchVisuals` - Cleaned after duration ✓
+- `this.ambientParticles` - Persistent, frame-skipped (v4.3.0) ✓
 
-**Status:** GOOD - All temporary arrays are properly cleaned
+**Status:** GOOD - All temporary arrays properly cleaned via `_compactAnimationArray()` (v4.3.0)
 
 ## Code Quality Issues
 

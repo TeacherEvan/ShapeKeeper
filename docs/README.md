@@ -11,6 +11,7 @@
 |----------|-------------|
 | [QUICKSTART.md](development/QUICKSTART.md) | Getting started guide for developers |
 | [CODE_AUDIT.md](development/CODE_AUDIT.md) | Code quality and architecture audit |
+| [PR_SUMMARY.md](development/PR_SUMMARY.md) | Populate feature sync & turn-based optimization |
 | [MERGE_CONFLICT_GUIDE.md](development/MERGE_CONFLICT_GUIDE.md) | How to resolve merge conflicts |
 
 ### Planning (`/docs/planning/`)
@@ -25,13 +26,16 @@
 | Document | Description |
 |----------|-------------|
 | [FEATURE_SUMMARY.md](technical/FEATURE_SUMMARY.md) | Complete feature list and details |
-| [PERFORMANCE_IMPROVEMENTS.md](technical/PERFORMANCE_IMPROVEMENTS.md) | Optimization techniques used |
+| [PERFORMANCE_IMPROVEMENTS.md](technical/PERFORMANCE_IMPROVEMENTS.md) | Optimization techniques (v4.3.0) |
+| [TURN_BASED_OPTIMIZATION.md](technical/TURN_BASED_OPTIMIZATION.md) | Multiplayer state sync optimization |
+| [POPULATE_FEATURE.md](technical/POPULATE_FEATURE.md) | Populate feature implementation |
 | [BENQ_FIX.md](technical/BENQ_FIX.md) | BenQ board touch compatibility fix |
 
 ### History (`/docs/history/`)
 | Document | Description |
 |----------|-------------|
 | [DEPLOYMENT_STATUS.md](history/DEPLOYMENT_STATUS.md) | Deployment history and status |
+| [CONVEX_DEPLOYMENT_FIX_DEC2025.md](history/CONVEX_DEPLOYMENT_FIX_DEC2025.md) | partyMode fix (archived) |
 
 ---
 
@@ -43,7 +47,13 @@
 
 ---
 
-## 📋 Key Features (v4.2.0)
+## 📋 Key Features (v4.3.0)
+
+### Performance Optimizations 🚀
+- In-place array compaction in animation loop
+- Ambient particle frame skipping
+- Single-pass particle physics
+- Reduced GC pressure
 
 ### Party Mode 🎉
 - All tile effects enabled during gameplay
@@ -63,4 +73,5 @@
 
 ---
 
-*Last updated: December 5, 2025*
+*Last updated: December 9, 2025*
+

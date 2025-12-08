@@ -141,6 +141,55 @@ export function shuffleArray(array) {
 }
 
 /**
+ * Generate a distribution map for items across positions
+ * Used for multipliers, tile effects, etc.
+ * @param {Array} positions - Array of position keys to fill
+ * @param {Object} distribution - Map of value -> count (e.g., {x2: 10, x3: 5})
+ * @param {*} defaultValue - Value for positions not covered by distribution
+ * @returns {Object} Map of position -> value
+ */
+export function distributeOverPositions(positions, distribution, defaultValue = null) {
+    const shuffled = shuffleArray([...positions]);
+    const result = {};
+    let index = 0;
+    
+    for (const [value, count] of Object.entries(distribution)) {
+        for (let i = 0; i < count && index < shuffled.length; i++) {
+            result[shuffled[index++]] = value;
+        }
+    }
+    
+    // Fill remaining with default
+    while (index < shuffled.length) {
+        result[shuffled[index++]] = defaultValue;
+    }
+    
+    return result;
+}
+
+/**
+ * Clamp a value between min and max
+ * @param {number} value 
+ * @param {number} min 
+ * @param {number} max 
+ * @returns {number}
+ */
+export function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+}
+
+/**
+ * Linear interpolation between two values
+ * @param {number} a - Start value
+ * @param {number} b - End value
+ * @param {number} t - Progress (0-1)
+ * @returns {number}
+ */
+export function lerp(a, b, t) {
+    return a + (b - a) * clamp(t, 0, 1);
+}
+
+/**
  * Pick a random element from an array
  * @param {Array} array 
  * @returns {*} Random element

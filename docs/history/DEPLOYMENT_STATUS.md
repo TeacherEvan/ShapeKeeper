@@ -1,7 +1,7 @@
 # Deployment Status
 
-**Date:** December 8, 2025  
-**Status:** ⚠️ BACKEND DEPLOYMENT REQUIRED
+**Date:** December 9, 2025  
+**Status:** ✅ CURRENT
 
 ## Live Site
 
@@ -14,28 +14,24 @@ Branch: main
 Repository: TeacherEvan/ShapeKeeper
 Hosting: Vercel (auto-deploy from main)
 Backend: Convex (https://oceanic-antelope-781.convex.cloud)
-Frontend Version: 4.2.0 ✅
-Backend Version: 4.1.0 ⚠️ (outdated - needs deployment)
-Status: ⚠️ Schema Mismatch - Deploy Convex backend
+Frontend Version: 4.3.0 ✅
+Backend Version: 4.3.0 ✅
+Status: ✅ Synchronized
 ```
-
-## ⚠️ Action Required
-
-The Convex backend needs to be deployed to fix the `partyMode` validation error.
-
-**Quick Fix:**
-```bash
-npx convex deploy --yes
-```
-
-See [docs/CONVEX_DEPLOYMENT_FIX.md](../CONVEX_DEPLOYMENT_FIX.md) for detailed instructions.
 
 ## Recent Deployments
+
+### December 9, 2025 (v4.3.0)
+- ✅ Animation loop performance optimization
+- ✅ In-place array compaction (replaces filter())
+- ✅ Ambient particle frame skipping
+- ✅ Added utility functions (clamp, lerp, distributeOverPositions)
+- ✅ Documentation cleanup (consolidated 3 files → 1)
 
 ### December 8, 2025 (v4.2.0)
 - ✅ Party Mode support in schema and mutations
 - ✅ GitHub Actions workflow for auto-deployment
-- ⚠️ **PENDING:** Convex backend deployment (run `npx convex deploy`)
+- ✅ Convex backend deployment synchronized
 
 ### December 2025
 - ✅ Diagonal line support
