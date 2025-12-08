@@ -361,6 +361,7 @@ class DotsAndBoxesGame {
         this.isMultiplayer = false; // Set to true when playing online
         this.myPlayerNumber = 1; // Which player number I am (1 or 2)
         this.isMyTurn = true; // Is it currently my turn to play
+        this.isHost = false; // Is this player the host in multiplayer mode
         
         // DOM element cache for performance
         this.domCache = {
@@ -3988,7 +3989,7 @@ class DotsAndBoxesGame {
      * Handle populate button click
      * Randomly connects 10% of available safe lines using a random 3rd color
      */
-    handlePopulate() {
+    async handlePopulate() {
         const safeLines = this.getSafeLines();
         
         if (safeLines.length === 0) {
@@ -4003,6 +4004,28 @@ class DotsAndBoxesGame {
         const shuffled = safeLines.sort(() => Math.random() - 0.5);
         const selectedLines = shuffled.slice(0, lineCount);
         
+        // In multiplayer mode, send to server
+        if (this.isMultiplayer) {
+            if (!this.isHost) {
+                console.warn('[Game] Only host can populate in multiplayer');
+                return;
+            }
+            
+            if (window.ShapeKeeperConvex) {
+                const result = await window.ShapeKeeperConvex.populateLines(selectedLines);
+                if (result.error) {
+                    console.error('[Game] Error populating lines:', result.error);
+                    return;
+                }
+                // Server will broadcast the update via subscription
+                // Local state will be updated by handleGameStateUpdate
+                console.log('[Game] Populated', result.linesPopulated, 'lines');
+                this.updatePopulateButtonVisibility();
+                return;
+            }
+        }
+        
+        // Local game logic (single player or fallback)
         // Draw the selected lines with player 3 (populate color)
         selectedLines.forEach(lineKey => {
             const [dot1, dot2] = this.parseLineKey(lineKey);
@@ -4027,10 +4050,17 @@ class DotsAndBoxesGame {
     
     /**
      * Update populate button visibility based on available safe lines
+     * In multiplayer mode, only show for host
      */
     updatePopulateButtonVisibility() {
         const populateBtn = this.domCache.populateBtn;
         if (!populateBtn) return;
+        
+        // In multiplayer mode, only host can see the populate button
+        if (this.isMultiplayer && !this.isHost) {
+            populateBtn.classList.add('hidden');
+            return;
+        }
         
         const safeLines = this.getSafeLines();
         
