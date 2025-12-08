@@ -370,3 +370,61 @@ export const resetGame = mutation({
     return { success: true };
   },
 });
+
+// Populate lines (host only) - adds safe lines that don't complete squares
+export const populateLines = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    sessionId: v.string(),
+    lineKeys: v.array(v.string()), // Array of line keys to populate
+  },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.roomId);
+    if (!room) {
+      return { error: "Room not found" };
+    }
+
+    if (room.status !== "playing") {
+      return { error: "Game not in progress" };
+    }
+
+    // Only host can populate
+    if (room.hostPlayerId !== args.sessionId) {
+      return { error: "Only the host can populate lines" };
+    }
+
+    // Special player ID for populate feature
+    const POPULATE_PLAYER_ID = 999; // Use a special ID that won't conflict with real players
+    const POPULATE_PLAYER_INDEX = 2; // Use index 2 (3rd player) for visual distinction
+
+    // Insert all the lines
+    for (const lineKey of args.lineKeys) {
+      // Check if line already exists
+      const existingLine = await ctx.db
+        .query("lines")
+        .withIndex("by_room_and_key", (q) =>
+          q.eq("roomId", args.roomId).eq("lineKey", lineKey)
+        )
+        .first();
+
+      if (!existingLine) {
+        // Insert the line with special populate player ID
+        await ctx.db.insert("lines", {
+          roomId: args.roomId,
+          lineKey,
+          playerId: POPULATE_PLAYER_ID,
+          playerIndex: POPULATE_PLAYER_INDEX,
+          createdAt: Date.now(),
+        });
+      }
+    }
+
+    // Update room to trigger subscription (keep current player turn)
+    await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
+
+    return { 
+      success: true, 
+      linesPopulated: args.lineKeys.length 
+    };
+  },
+});

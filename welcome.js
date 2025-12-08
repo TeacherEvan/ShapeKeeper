@@ -634,8 +634,11 @@ function handleRoomUpdate(roomState) {
         game.isMultiplayer = true;
         // playerIndex is 0-based, convert to 1-based player number (1 or 2)
         game.myPlayerNumber = (meInRoom?.playerIndex ?? 0) + 1;
+        // Set if this player is the host
+        game.isHost = roomState.hostPlayerId === mySessionId;
         
-        console.log('[Game] Started as Player', game.myPlayerNumber, 'sessionId:', mySessionId);
+        console.log('[Game] Started as Player', game.myPlayerNumber, 
+                    'isHost:', game.isHost, 'sessionId:', mySessionId);
         
         // Subscribe to game state updates
         window.ShapeKeeperConvex.subscribeToGameState(handleGameStateUpdate);
@@ -671,8 +674,19 @@ function handleGameStateUpdate(gameState) {
     gameState.lines.forEach(line => {
         if (!game.lines.has(line.lineKey)) {
             game.lines.add(line.lineKey);
-            // playerIndex is 0-based, convert to 1-based player number
-            game.lineOwners.set(line.lineKey, line.playerIndex + 1);
+            
+            // Handle populate lines (playerIndex 2 = populate player)
+            // playerIndex is 0-based for players, but 2 is special for populate
+            let displayPlayerIndex;
+            if (line.playerIndex === 2) {
+                // Populate line - use special populate player ID
+                displayPlayerIndex = DotsAndBoxesGame.POPULATE_PLAYER_ID;
+            } else {
+                // Regular player line - convert to 1-based player number
+                displayPlayerIndex = line.playerIndex + 1;
+            }
+            
+            game.lineOwners.set(line.lineKey, displayPlayerIndex);
             
             // Add line draw animation
             const [startDot, endDot] = game.parseLineKey(line.lineKey);
@@ -680,7 +694,7 @@ function handleGameStateUpdate(gameState) {
                 lineKey: line.lineKey,
                 startDot,
                 endDot,
-                player: line.playerIndex + 1,
+                player: displayPlayerIndex,
                 startTime: Date.now(),
                 duration: DotsAndBoxesGame.ANIMATION_LINE_DRAW_DURATION
             });
@@ -688,7 +702,7 @@ function handleGameStateUpdate(gameState) {
             // Add pulsating effect for new lines
             game.pulsatingLines.push({
                 line: line.lineKey,
-                player: line.playerIndex + 1,
+                player: displayPlayerIndex,
                 time: Date.now()
             });
             
@@ -725,6 +739,9 @@ function handleGameStateUpdate(gameState) {
     const p2 = gameState.players?.find(p => p.playerIndex === 1);
     game.scores[1] = p1?.score || 0;
     game.scores[2] = p2?.score || 0;
+    
+    // Update populate button visibility (host-only in multiplayer)
+    game.updatePopulateButtonVisibility();
     
     // Check for game over
     if (gameState.room?.status === 'finished' && !game.isGameOver) {

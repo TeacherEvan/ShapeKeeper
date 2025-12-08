@@ -564,6 +564,26 @@ async function resetGame() {
 }
 
 /**
+ * Populate lines (host only) - adds safe lines that don't complete squares
+ * @param {string[]} lineKeys - Array of line keys to populate
+ * @returns {Promise<{success: boolean, linesPopulated: number} | {error: string}>}
+ */
+async function populateLines(lineKeys) {
+    if (!currentRoomId) return { error: "Not in a room" };
+    
+    try {
+        return await convexClient.mutation(api.games.populateLines, {
+            roomId: currentRoomId,
+            sessionId,
+            lineKeys,
+        });
+    } catch (error) {
+        console.error('[Convex] Error populating lines:', error);
+        return { error: error.message };
+    }
+}
+
+/**
  * Get the current room ID
  */
 function getCurrentRoomId() {
@@ -590,6 +610,7 @@ window.ShapeKeeperConvex = {
     startGame,
     drawLine,
     revealMultiplier,
+    populateLines,
     subscribeToRoom,
     subscribeToGameState,
     getRoomState,
