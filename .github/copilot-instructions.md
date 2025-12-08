@@ -18,7 +18,7 @@
 ## Project Overview
 ShapeKeeper is a Dots and Boxes game with **local and online multiplayer** support. Vanilla JavaScript frontend with HTML5 Canvas, Convex backend for real-time multiplayer, deployed on Vercel at [shape-keeper.vercel.app](https://shape-keeper.vercel.app).
 
-**Version:** 4.2.0 | **Updated:** December 5, 2025
+**Version:** 4.3.0 | **Updated:** December 9, 2025
 
 ## Architecture
 
@@ -103,9 +103,12 @@ if (this.isMultiplayer) {
 
 ## Development Commands
 ```bash
-npm run dev      # Start Convex dev server (required for multiplayer testing)
-npm run start    # Local HTTP server on port 8000
-npm run serve    # Alternative: Python HTTP server
+npm run dev         # Start Convex dev server (required for multiplayer testing)
+npm run start       # Local HTTP server on port 8000
+npm run serve       # Alternative: Python HTTP server
+npm run verify      # Type-check Convex + validate JS syntax
+npm run deploy      # Deploy Convex functions to production
+npm run deploy:prod # Deploy with explicit URL env var
 ```
 
 **File Load Order:** `game.js` must load before `welcome.js` (DotsAndBoxesGame class dependency)
@@ -140,17 +143,25 @@ window.ShapeKeeperConvex.subscribeToGameState(handleGameStateUpdate);
 ### Square Detection
 After each line draw, check 2-4 adjacent squares (horizontal lines check above/below, vertical check left/right). Square complete when all 4 sides exist in `lines` Set/table.
 
+### Shape Exclusivity
+Cells can only be claimed by ONE shape type. If a triangle claims a cell, no square can be formed there (and vice versa). Tracked via `claimedCells` Set with keys like `"row,col"`.
+
+### AOE Click Detection
+Dot selection uses area-of-effect detection: searches 3×3 grid around click point and selects the nearest valid dot within 1.5× the base radius. Makes touch input more forgiving.
+
 ### Multiplier Distribution
 65% ×2, 20% ×3, 10% ×4, 4% ×5, 1% ×10. Revealed on tap—**multiplies total score**, not adds.
 
 ### Party Mode (Tile Effects System)
 When Party Mode is enabled, **ALL squares** have tile effects (traps or powerups):
-- **Traps (red/50%)**: Landmine, Freeze, Score Swap, Chaos Storm, Hypotheticals, Dares, Secrets
+- **Traps (red/50%)**: Landmine, Freeze, Score Swap, Chaos Storm, Hypotheticals, Dares, Secrets, **Truth**
 - **Powerups (blue/50%)**: Extra turns, Steal territory, Shield, Lightning, Oracle's Vision, Double Points
 - Effects stored in `tileEffects` object, revealed via `revealTileEffect()`
 - Effect modal shows description and activation button
 - `playerEffects` tracks status effects (frozen turns, shield count, etc.)
 - Toggle via "Enable Party Mode 🎉" checkbox on local setup screen
+- **Dares**: Simplified to 2 options - "Be Dared" or "Dare Right"
+- **Truths**: New system with "Receive a Truth" or "Give a Truth" options
 
 ### Landscape Grid Adaptation
 When `aspectRatio > 1.5`, grid reshapes: 30×30 selection becomes ~50×18 grid (same total squares).

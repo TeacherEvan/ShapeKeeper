@@ -412,6 +412,18 @@ export const populateLines = mutation({
       return { error: "Only the host can populate lines" };
     }
 
+    // Get the host player document to use their _id for the lines
+    const hostPlayer = await ctx.db
+      .query("players")
+      .withIndex("by_room_and_session", (q) =>
+        q.eq("roomId", args.roomId).eq("sessionId", args.sessionId)
+      )
+      .first();
+
+    if (!hostPlayer) {
+      return { error: "Host player not found" };
+    }
+
     // Insert all the requested lines into the database
     // Each line is associated with a special "populate" player ID for visual distinction
     for (const lineKey of args.lineKeys) {
@@ -425,12 +437,12 @@ export const populateLines = mutation({
 
       if (!existingLine) {
         // Insert the line with special populate player ID
-        // playerId: 3 for visual rendering (matches frontend POPULATE_PLAYER_ID)
+        // playerId: hostPlayer._id for database reference
         // playerIndex: 2 for backend identification (0=Player1, 1=Player2, 2=Populate)
         await ctx.db.insert("lines", {
           roomId: args.roomId,
           lineKey,
-          playerId: room.hostPlayerId,
+          playerId: hostPlayer._id,
           playerIndex: POPULATE_PLAYER_INDEX,
           createdAt: Date.now(),
         });

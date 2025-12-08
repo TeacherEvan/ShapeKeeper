@@ -1,13 +1,16 @@
 {
     "name": "shapekeeper",
-    "version": "4.2.0",
+    "version": "4.3.0",
     "description": "ShapeKeeper - A modern browser-based territory capture game with turn-based multiplayer",
     "main": "index.html",
     "scripts": {
         "dev": "convex dev",
         "build": "echo 'No build step required'",
         "start": "npx http-server -p 8000 -o",
-        "serve": "python -m http.server 8000"
+        "serve": "python -m http.server 8000",
+        "verify": "echo '🔍 Verifying ShapeKeeper...' && npx convex typecheck && echo '✅ Convex types OK' && node -c game.js && echo '✅ game.js syntax OK' && node -c welcome.js && echo '✅ welcome.js syntax OK' && node -c convex-client.js && echo '✅ convex-client.js syntax OK' && echo '🎉 All verifications passed!'",
+        "deploy": "npx convex deploy --yes",
+        "deploy:prod": "npx convex deploy --cmd-url-env-var-name CONVEX_URL --yes"
     },
     "keywords": [
         "game",
@@ -23,5 +26,8 @@
     "license": "MIT",
     "dependencies": {
         "convex": "^1.30.0"
+    },
+    "devDependencies": {
+        "typescript": "^5.9.3"
     }
 }
