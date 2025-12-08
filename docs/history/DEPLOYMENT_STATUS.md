@@ -1,7 +1,7 @@
 # Deployment Status
 
-**Date:** December 3, 2025  
-**Status:** ✅ LIVE - Production Deployed
+**Date:** December 8, 2025  
+**Status:** ⚠️ BACKEND DEPLOYMENT REQUIRED
 
 ## Live Site
 
@@ -14,11 +14,28 @@ Branch: main
 Repository: TeacherEvan/ShapeKeeper
 Hosting: Vercel (auto-deploy from main)
 Backend: Convex (https://oceanic-antelope-781.convex.cloud)
-Version: 4.1.0
-Status: ✅ Production Ready
+Frontend Version: 4.2.0 ✅
+Backend Version: 4.1.0 ⚠️ (outdated - needs deployment)
+Status: ⚠️ Schema Mismatch - Deploy Convex backend
 ```
 
+## ⚠️ Action Required
+
+The Convex backend needs to be deployed to fix the `partyMode` validation error.
+
+**Quick Fix:**
+```bash
+npx convex deploy --yes
+```
+
+See [docs/CONVEX_DEPLOYMENT_FIX.md](../CONVEX_DEPLOYMENT_FIX.md) for detailed instructions.
+
 ## Recent Deployments
+
+### December 8, 2025 (v4.2.0)
+- ✅ Party Mode support in schema and mutations
+- ✅ GitHub Actions workflow for auto-deployment
+- ⚠️ **PENDING:** Convex backend deployment (run `npx convex deploy`)
 
 ### December 2025
 - ✅ Diagonal line support
@@ -37,10 +54,11 @@ Status: ✅ Production Ready
 
 | Component | Service | Status |
 |-----------|---------|--------|
-| Frontend | Vercel | ✅ Live |
-| Backend | Convex | ✅ Deployed |
+| Frontend | Vercel | ✅ Live (v4.2.0) |
+| Backend | Convex | ⚠️ Outdated (v4.1.0 - needs deployment) |
 | Database | Convex Tables | ✅ Active |
 | Repository | GitHub | ✅ Synced |
+| CI/CD | GitHub Actions | ✅ Workflow Added |
 
 ## Deployment Configuration
 
@@ -75,10 +93,11 @@ python -m http.server 8000
 ## Documentation
 
 - `README.md` - Main documentation
+- `docs/CONVEX_DEPLOYMENT_FIX.md` - **Deployment fix instructions** ⚠️
 - `CounterPlan.md` - Visual evolution roadmap
 - `MULTIPLAYER_PLANNING.md` - Multiplayer architecture
 - `.github/copilot-instructions.md` - Development guidelines
 
 ---
 
-**Status:** ✅ Production Ready
+**Status:** ⚠️ Backend Deployment Required - See [CONVEX_DEPLOYMENT_FIX.md](../CONVEX_DEPLOYMENT_FIX.md)
