@@ -4,7 +4,7 @@
  * @module effects/TileEffects
  */
 
-import { DARES, HYPOTHETICALS, PHYSICAL_CHALLENGES, TILE_EFFECTS } from '../core/constants.js';
+import { DARES, HYPOTHETICALS, PHYSICAL_CHALLENGES, TILE_EFFECTS, TRUTHS } from '../core/constants.js';
 
 /**
  * Effect result from activation
@@ -120,6 +120,12 @@ export class TileEffectsManager {
                 apply: (state) => ({ social: true, text: this.getRandomDare() })
             },
             {
+                name: 'Truth',
+                description: this.getRandomTruth(),
+                icon: '🔥',
+                apply: (state) => ({ social: true, text: this.getRandomTruth() })
+            },
+            {
                 name: 'Physical Challenge',
                 description: this.getRandomPhysicalChallenge(),
                 icon: '💪',
@@ -206,6 +212,14 @@ export class TileEffectsManager {
      */
     getRandomDare() {
         return DARES[Math.floor(Math.random() * DARES.length)];
+    }
+
+    /**
+     * Get random truth prompt
+     * @returns {string}
+     */
+    getRandomTruth() {
+        return TRUTHS[Math.floor(Math.random() * TRUTHS.length)];
     }
 
     /**

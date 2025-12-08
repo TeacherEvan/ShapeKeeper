@@ -99,6 +99,14 @@ class DotsAndBoxesGame {
                 sound: 'dramatic'
             },
             {
+                id: 'truth',
+                icon: '🔥',
+                name: "TRUTH TIME!",
+                description: 'Answer a truth honestly or face the consequences!',
+                color: '#FF5722',
+                sound: 'reveal'
+            },
+            {
                 id: 'reverse',
                 icon: '🔄',
                 name: 'Reverse!',
@@ -239,21 +247,14 @@ class DotsAndBoxesGame {
     ];
     
     static DARES = [
-        "Do your best impression of another player!",
-        "Speak in an accent for the next 3 turns!",
-        "Let another player post anything on your social media!",
-        "Do 10 jumping jacks right now!",
-        "Tell an embarrassing story about yourself!",
-        "Let the player on your right give you a new nickname for the game!",
-        "Sing the chorus of the last song you listened to!",
-        "Do your best dance move for 10 seconds!",
-        "Compliment every player sincerely!",
-        "Keep your eyes closed until your next turn!",
-        "Speak in third person for the next 3 turns!",
-        "Make a funny face and hold it for 10 seconds!",
-        "Do a backflip... or pretend to try!",
-        "Tickle a pickle (find something to wiggle)!",
-        "Speak in rhymes for your next 2 turns!"
+        "Be Dared! (The group decides your fate)",
+        "Dare the person to your right! (Make it good)"
+    ];
+    
+    // Truth prompts for party mode
+    static TRUTHS = [
+        "Receive a Truth! (The group asks you anything)",
+        "Give a Truth! (Ask the person to your left anything)"
     ];
     
     static PHYSICAL_CHALLENGES = [
@@ -280,6 +281,7 @@ class DotsAndBoxesGame {
         this.ghostLines = new Set(); // Track lines drawn with ghost effect (semi-transparent)
         this.squares = {};
         this.triangles = {}; // Track completed triangles by key
+        this.claimedCells = new Set(); // Track cells claimed by shapes (for exclusivity)
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.dotRadius = DotsAndBoxesGame.DOT_RADIUS;
@@ -922,19 +924,60 @@ class DotsAndBoxesGame {
         }
     }
 
+    /**
+     * AOE Click Detection - Always returns the nearest dot to the click position
+     * Searches in an expanded area around the click to ensure the closest dot is found
+     * @param {number} x - X position of click
+     * @param {number} y - Y position of click
+     * @returns {{row: number, col: number}|null} Nearest dot or null if outside grid area
+     */
     getNearestDot(x, y) {
+        // First, try the grid-aligned calculation for efficiency
         const col = Math.round((x - this.offsetX) / this.cellSize);
         const row = Math.round((y - this.offsetY) / this.cellSize);
 
-        if (row >= 0 && row < this.gridRows && col >= 0 && col < this.gridCols) {
-            const dotX = this.offsetX + col * this.cellSize;
-            const dotY = this.offsetY + row * this.cellSize;
-            const distance = Math.sqrt(Math.pow(x - dotX, 2) + Math.pow(y - dotY, 2));
+        // Check if click is within the general grid area (with expanded margin)
+        const margin = this.cellSize * 1.5; // Expanded detection area
+        const gridMinX = this.offsetX - margin;
+        const gridMaxX = this.offsetX + (this.gridCols - 1) * this.cellSize + margin;
+        const gridMinY = this.offsetY - margin;
+        const gridMaxY = this.offsetY + (this.gridRows - 1) * this.cellSize + margin;
 
-            if (distance <= this.cellSize * 0.5) {
-                return { row, col };
+        if (x < gridMinX || x > gridMaxX || y < gridMinY || y > gridMaxY) {
+            return null; // Click is too far from grid
+        }
+
+        // AOE search: check the 3x3 grid of dots around the initial calculation
+        let nearestDot = null;
+        let minDistance = Infinity;
+
+        for (let dRow = -1; dRow <= 1; dRow++) {
+            for (let dCol = -1; dCol <= 1; dCol++) {
+                const checkRow = row + dRow;
+                const checkCol = col + dCol;
+
+                // Ensure within grid bounds
+                if (checkRow >= 0 && checkRow < this.gridRows && 
+                    checkCol >= 0 && checkCol < this.gridCols) {
+                    
+                    const dotX = this.offsetX + checkCol * this.cellSize;
+                    const dotY = this.offsetY + checkRow * this.cellSize;
+                    const distance = Math.sqrt(Math.pow(x - dotX, 2) + Math.pow(y - dotY, 2));
+
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestDot = { row: checkRow, col: checkCol };
+                    }
+                }
             }
         }
+
+        // Return the nearest dot if within reasonable range (1.5x cell size)
+        // This allows more forgiving selection while preventing accidental far selections
+        if (nearestDot && minDistance <= this.cellSize * 1.5) {
+            return nearestDot;
+        }
+
         return null;
     }
 
@@ -1071,7 +1114,20 @@ class DotsAndBoxesGame {
         return completedSquares;
     }
 
+    /**
+     * Check if a square is complete (all 4 sides drawn)
+     * Also checks shape exclusivity: if any triangle exists in this cell, square cannot be formed
+     * @param {number} row - Row of the cell
+     * @param {number} col - Column of the cell
+     * @returns {boolean} True if square is complete and valid
+     */
     isSquareComplete(row, col) {
+        // Shape exclusivity check: if this cell is claimed by a triangle, square cannot form
+        const cellKey = `${row},${col}`;
+        if (this.claimedCells.has(cellKey)) {
+            return false;
+        }
+        
         const top = this.getLineKey({ row, col }, { row, col: col + 1 });
         const bottom = this.getLineKey({ row: row + 1, col }, { row: row + 1, col: col + 1 });
         const left = this.getLineKey({ row, col }, { row: row + 1, col });
@@ -1079,7 +1135,31 @@ class DotsAndBoxesGame {
 
         return this.lines.has(top) && this.lines.has(bottom) &&
             this.lines.has(left) && this.lines.has(right) &&
-            !this.squares[`${row},${col}`];
+            !this.squares[cellKey];
+    }
+    
+    /**
+     * Mark a cell as claimed by a shape (for shape exclusivity)
+     * Once a triangle is formed in a cell, no square can be formed there
+     * @param {number} row - Row of the cell
+     * @param {number} col - Column of the cell
+     */
+    claimCell(row, col) {
+        this.claimedCells.add(`${row},${col}`);
+    }
+    
+    /**
+     * Get the cell key for a triangle based on its vertices
+     * A triangle claims the cell containing its vertices
+     * @param {Array} vertices - Array of 3 vertex objects {row, col}
+     * @returns {string} Cell key "row,col"
+     */
+    getTriangleCellKey(vertices) {
+        // A triangle is always within a single cell
+        // The cell is determined by the minimum row and col of the vertices
+        const minRow = Math.min(vertices[0].row, vertices[1].row, vertices[2].row);
+        const minCol = Math.min(vertices[0].col, vertices[1].col, vertices[2].col);
+        return `${minRow},${minCol}`;
     }
 
     /**
@@ -1543,6 +1623,12 @@ class DotsAndBoxesGame {
             ];
             prompt.innerHTML = `<div class="effect-dare">${dare}</div>`;
             prompt.style.display = 'block';
+        } else if (effect.id === 'truth') {
+            const truth = DotsAndBoxesGame.TRUTHS[
+                Math.floor(Math.random() * DotsAndBoxesGame.TRUTHS.length)
+            ];
+            prompt.innerHTML = `<div class="effect-truth">${truth}</div>`;
+            prompt.style.display = 'block';
         } else if (effect.id === 'physical_challenge') {
             const challenge = DotsAndBoxesGame.PHYSICAL_CHALLENGES[
                 Math.floor(Math.random() * DotsAndBoxesGame.PHYSICAL_CHALLENGES.length)
@@ -1619,6 +1705,7 @@ class DotsAndBoxesGame {
             case 'hypothetical':
             case 'drink':
             case 'dared':
+            case 'truth':
                 // Social effects - just display, honor system
                 // Already shown in modal
                 break;
@@ -1962,13 +2049,23 @@ class DotsAndBoxesGame {
             // Phase 6: Play line sound
             this.playLineSound();
             
-            const completedSquares = this.checkForSquares(lineKey);
+            // Check for shapes - ORDER MATTERS for exclusivity!
+            // Triangles are checked first and claim cells, preventing squares from forming
             const completedTriangles = this.checkForTriangles(lineKey);
             
-            // Track completed triangles
+            // Track completed triangles and claim cells for shape exclusivity
             completedTriangles.forEach(tri => {
                 this.triangles[tri.key] = this.currentPlayer;
+                // Claim the cell so no square can form on these same 4 dots
+                const cellKey = this.getTriangleCellKey(tri.vertices);
+                this.claimCell(
+                    parseInt(cellKey.split(',')[0]),
+                    parseInt(cellKey.split(',')[1])
+                );
             });
+            
+            // Now check for squares (will skip cells claimed by triangles)
+            const completedSquares = this.checkForSquares(lineKey);
 
             const totalShapes = completedSquares.length + completedTriangles.length;
 

@@ -162,6 +162,14 @@ export const TILE_EFFECTS = {
             sound: 'dramatic'
         },
         {
+            id: 'truth',
+            icon: '🔥',
+            name: "TRUTH TIME!",
+            description: 'Answer a truth honestly or face the consequences!',
+            color: '#FF5722',
+            sound: 'reveal'
+        },
+        {
             id: 'reverse',
             icon: '🔄',
             name: 'Reverse!',
@@ -306,21 +314,13 @@ export const HYPOTHETICALS = [
 ];
 
 export const DARES = [
-    "Do your best impression of another player!",
-    "Speak in an accent for the next 3 turns!",
-    "Let another player post anything on your social media!",
-    "Do 10 jumping jacks right now!",
-    "Tell an embarrassing story about yourself!",
-    "Let the player on your right give you a new nickname for the game!",
-    "Sing the chorus of the last song you listened to!",
-    "Do your best dance move for 10 seconds!",
-    "Compliment every player sincerely!",
-    "Keep your eyes closed until your next turn!",
-    "Speak in third person for the next 3 turns!",
-    "Make a funny face and hold it for 10 seconds!",
-    "Do a backflip... or pretend to try!",
-    "Tickle a pickle (find something to wiggle)!",
-    "Speak in rhymes for your next 2 turns!"
+    "Be Dared! (The group decides your fate)",
+    "Dare the person to your right! (Make it good)"
+];
+
+export const TRUTHS = [
+    "Receive a Truth! (The group asks you anything)",
+    "Give a Truth! (Ask the person to your left anything)"
 ];
 
 export const PHYSICAL_CHALLENGES = [

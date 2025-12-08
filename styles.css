@@ -1738,11 +1738,17 @@ canvas {
 
 .effect-question,
 .effect-dare,
+.effect-truth,
 .effect-challenge {
     font-size: 1.1rem;
     font-style: italic;
     color: var(--text-primary);
     line-height: 1.5;
+}
+
+.effect-truth {
+    color: #FF5722;
+    font-weight: bold;
 }
 
 .trap-theme .effect-prompt {
