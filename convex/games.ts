@@ -430,7 +430,7 @@ export const populateLines = mutation({
         await ctx.db.insert("lines", {
           roomId: args.roomId,
           lineKey,
-          playerId: POPULATE_PLAYER_ID,
+          playerId: room.hostPlayerId,
           playerIndex: POPULATE_PLAYER_INDEX,
           createdAt: Date.now(),
         });
