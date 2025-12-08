@@ -615,14 +615,14 @@ class DotsAndBoxesGame {
         const maxWidth = container.clientWidth - 40;
         const maxHeight = container.clientHeight - 40;
 
-        // Calculate optimal grid dimensions for landscape
-        // If gridSize is passed as a single number, create landscape layout
+        // Calculate optimal grid dimensions based on aspect ratio
+        // Automatically adapt grid for both landscape and portrait orientations
         if (typeof this.gridSize === 'number') {
             const aspectRatio = maxWidth / maxHeight;
 
-            // Optimize grid for landscape (width > height)
+            // Optimize grid layout based on aspect ratio
             if (aspectRatio > 1.5) {
-                // Calculate cols and rows to fill landscape nicely
+                // Wide landscape (width > 1.5x height) - use horizontal grid
                 const totalSquares = (this.gridSize - 1) * (this.gridSize - 1);
                 this.gridCols = Math.ceil(Math.sqrt(totalSquares * aspectRatio));
                 this.gridRows = Math.ceil(totalSquares / (this.gridCols - 1)) + 1;
@@ -630,8 +630,17 @@ class DotsAndBoxesGame {
                 // Ensure we have at least the minimum dimensions
                 this.gridCols = Math.max(this.gridCols, Math.ceil(this.gridSize * 1.2));
                 this.gridRows = Math.max(this.gridRows, Math.ceil(this.gridSize * 0.6));
+            } else if (aspectRatio < 0.75) {
+                // Tall portrait (height > 1.33x width) - use vertical grid
+                const totalSquares = (this.gridSize - 1) * (this.gridSize - 1);
+                this.gridRows = Math.ceil(Math.sqrt(totalSquares / aspectRatio));
+                this.gridCols = Math.ceil(totalSquares / (this.gridRows - 1)) + 1;
+
+                // Ensure we have at least the minimum dimensions
+                this.gridRows = Math.max(this.gridRows, Math.ceil(this.gridSize * 1.2));
+                this.gridCols = Math.max(this.gridCols, Math.ceil(this.gridSize * 0.6));
             } else {
-                // Use square grid for non-landscape displays
+                // Balanced aspect ratio - use square grid
                 this.gridCols = this.gridSize;
                 this.gridRows = this.gridSize;
             }
@@ -857,10 +866,31 @@ class DotsAndBoxesGame {
     }
 
     setupEventListeners() {
+        // Re-setup canvas on window resize with debouncing
         window.addEventListener('resize', () => {
-            this.setupCanvas();
-            this.draw();
+            if (this.resizeTimeout) {
+                clearTimeout(this.resizeTimeout);
+            }
+            this.resizeTimeout = setTimeout(() => {
+                this.displayLoadingSkeleton(true);
+                this.setupCanvas();
+                this.draw();
+                this.displayLoadingSkeleton(false);
+            }, 300);
         });
+        
+        // Handle orientation change specifically for smoother transitions
+        if (window.screen && window.screen.orientation) {
+            window.screen.orientation.addEventListener('change', () => {
+                console.log('[Game] Orientation changed to:', window.screen.orientation.type);
+                this.displayLoadingSkeleton(true);
+                setTimeout(() => {
+                    this.setupCanvas();
+                    this.draw();
+                    this.displayLoadingSkeleton(false);
+                }, 100);
+            });
+        }
     }
 
     setupPopulateButton() {
