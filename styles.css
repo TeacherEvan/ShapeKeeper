@@ -257,12 +257,14 @@ input[type="color"] {
     border: 2px solid var(--border-color);
     border-radius: 10px;
     background: var(--bg-secondary);
-    transition: all 0.3s ease;
+    transition: all var(--transition-medium) var(--easing-smooth);
 }
 
 .checkbox-setting:hover {
     border-color: #4CAF50;
     background: var(--bg-tertiary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
 }
 
 .checkbox-setting input[type="checkbox"] {
@@ -270,12 +272,18 @@ input[type="color"] {
     height: 24px;
     cursor: pointer;
     accent-color: #4CAF50;
+    transition: transform var(--transition-fast) var(--easing-smooth);
+}
+
+.checkbox-setting input[type="checkbox"]:hover {
+    transform: scale(1.1);
 }
 
 .checkbox-setting .checkbox-label {
     font-size: 1.1rem;
     font-weight: bold;
     color: var(--text-primary);
+    transition: color var(--transition-medium) var(--easing-smooth);
 }
 
 .checkbox-setting .checkbox-description {
@@ -283,11 +291,38 @@ input[type="color"] {
     color: var(--text-secondary);
     text-align: center;
     max-width: 300px;
+    line-height: 1.4;
 }
 
 .checkbox-setting:has(input:checked) {
     border-color: #4CAF50;
     background: rgba(76, 175, 80, 0.1);
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.2);
+}
+
+.checkbox-setting:has(input:checked) .checkbox-label {
+    color: #4CAF50;
+}
+
+/* Disabled state for checkbox settings (non-host) */
+.checkbox-setting:has(input:disabled) {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--bg-secondary);
+}
+
+.checkbox-setting:has(input:disabled):hover {
+    transform: none;
+    border-color: var(--border-color);
+    box-shadow: none;
+}
+
+.checkbox-setting input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+}
+
+.checkbox-setting input[type="checkbox"]:disabled:hover {
+    transform: none;
 }
 
 .start-btn {
@@ -1073,15 +1108,21 @@ canvas {
 
 .setting-row {
     display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 10px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 15px;
 }
 
-.setting-row label {
+.setting-row > label:first-child {
     font-weight: bold;
     color: var(--text-secondary);
-    min-width: 100px;
+    font-size: 0.95rem;
+}
+
+/* Special handling for checkbox settings in setting-row */
+.setting-row .checkbox-setting {
+    width: 100%;
 }
 
 .grid-options.small {
