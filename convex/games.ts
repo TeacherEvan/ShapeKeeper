@@ -376,14 +376,27 @@ export const resetGame = mutation({
   },
 });
 
-// Populate lines (host only) - adds safe lines that don't complete squares
+/**
+ * Populate lines (host only) - adds safe lines that don't complete squares
+ * This feature allows the host to add random "safe" lines to prevent stalemates
+ * Safe lines are those that won't immediately complete any square
+ * 
+ * @mutation populateLines
+ * @permission host-only (validated server-side)
+ * @returns {success: boolean, linesPopulated: number} | {error: string}
+ * 
+ * TODO: [FEATURE] Consider allowing host to configure populate percentage
+ * TODO: [FEATURE] Add undo functionality for populate action
+ * TODO: [OPTIMIZATION] Batch line insertions for better performance on large populate counts
+ */
 export const populateLines = mutation({
   args: {
     roomId: v.id("rooms"),
     sessionId: v.string(),
-    lineKeys: v.array(v.string()), // Array of line keys to populate
+    lineKeys: v.array(v.string()), // Array of normalized line keys (e.g., ["1,2-1,3", "2,3-3,3"])
   },
   handler: async (ctx, args) => {
+    // Validate room exists and is in playing state
     const room = await ctx.db.get(args.roomId);
     if (!room) {
       return { error: "Room not found" };
@@ -393,14 +406,16 @@ export const populateLines = mutation({
       return { error: "Game not in progress" };
     }
 
-    // Only host can populate
+    // Server-side authorization: Only host can populate lines
+    // This prevents non-hosts from using the populate feature via API manipulation
     if (room.hostPlayerId !== args.sessionId) {
       return { error: "Only the host can populate lines" };
     }
 
-    // Insert all the lines
+    // Insert all the requested lines into the database
+    // Each line is associated with a special "populate" player ID for visual distinction
     for (const lineKey of args.lineKeys) {
-      // Check if line already exists
+      // Check if line already exists to prevent duplicates
       const existingLine = await ctx.db
         .query("lines")
         .withIndex("by_room_and_key", (q) =>
@@ -410,6 +425,8 @@ export const populateLines = mutation({
 
       if (!existingLine) {
         // Insert the line with special populate player ID
+        // playerId: 3 for visual rendering (matches frontend POPULATE_PLAYER_ID)
+        // playerIndex: 2 for backend identification (0=Player1, 1=Player2, 2=Populate)
         await ctx.db.insert("lines", {
           roomId: args.roomId,
           lineKey,
@@ -420,7 +437,9 @@ export const populateLines = mutation({
       }
     }
 
-    // Update room to trigger subscription (keep current player turn)
+    // Update room timestamp to trigger subscription updates
+    // This ensures all players receive the new lines via real-time sync
+    // Note: We don't change currentPlayerIndex, keeping the turn with the same player
     await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
 
     return { 
