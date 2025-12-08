@@ -798,8 +798,7 @@ class DotsAndBoxesGame {
         const powerupsCount = effectCount - trapsCount;
         
         // Use all traps and powerups in Party Mode
-        const traps = DotsAndBoxesGame.TILE_EFFECTS.traps;
-        const powerups = DotsAndBoxesGame.TILE_EFFECTS.powerups;
+        const { traps, powerups } = DotsAndBoxesGame.TILE_EFFECTS;
         
         let index = 0;
         
@@ -1507,8 +1506,7 @@ class DotsAndBoxesGame {
         const row = Math.floor((y - this.offsetY) / this.cellSize);
         
         if (row >= 0 && row < this.gridRows - 1 && col >= 0 && col < this.gridCols - 1) {
-            const squareKey = `${row},${col}`;
-            return squareKey;
+            return `${row},${col}`;
         }
         return null;
     }
@@ -1589,8 +1587,8 @@ class DotsAndBoxesGame {
     showEffectModal(effectData) {
         if (!this.effectModal) return;
         
-        const effect = effectData.effect;
-        const isTrap = effectData.type === 'trap';
+        const { effect, type } = effectData;
+        const isTrap = type === 'trap';
         
         // Update modal content
         const icon = this.effectModal.querySelector('.effect-icon');
@@ -1665,7 +1663,7 @@ class DotsAndBoxesGame {
         }
         
         const { squareKey, effectData, player } = this.pendingEffect;
-        const effect = effectData.effect;
+        const { effect } = effectData;
         
         // Mark as activated
         this.activatedEffects.add(squareKey);
@@ -3288,7 +3286,7 @@ class DotsAndBoxesGame {
         const effectData = this.tileEffects[squareKey];
         if (!effectData) return;
         
-        const effect = effectData.effect;
+        const { effect } = effectData;
         const isRevealed = this.revealedEffects.has(squareKey);
         const isActivated = this.activatedEffects.has(squareKey);
         
@@ -3365,7 +3363,7 @@ class DotsAndBoxesGame {
             if (this.revealedEffects.has(squareKey)) continue;
             
             const effectData = this.tileEffects[squareKey];
-            const effect = effectData.effect;
+            const { effect } = effectData;
             const { row, col } = this.parseSquareKey(squareKey);
             const x = this.offsetX + col * this.cellSize;
             const y = this.offsetY + row * this.cellSize;
@@ -4057,29 +4055,21 @@ class DotsAndBoxesGame {
         
         if (isHorizontal) {
             // Check square above
-            if (start.row > 0) {
-                if (this.isSquareComplete(start.row - 1, Math.min(start.col, end.col))) {
-                    wouldComplete = true;
-                }
+            if (start.row > 0 && this.isSquareComplete(start.row - 1, Math.min(start.col, end.col))) {
+                wouldComplete = true;
             }
             // Check square below
-            if (!wouldComplete && start.row < this.gridRows - 1) {
-                if (this.isSquareComplete(start.row, Math.min(start.col, end.col))) {
-                    wouldComplete = true;
-                }
+            if (!wouldComplete && start.row < this.gridRows - 1 && this.isSquareComplete(start.row, Math.min(start.col, end.col))) {
+                wouldComplete = true;
             }
         } else {
             // Check square to the left
-            if (start.col > 0) {
-                if (this.isSquareComplete(Math.min(start.row, end.row), start.col - 1)) {
-                    wouldComplete = true;
-                }
+            if (start.col > 0 && this.isSquareComplete(Math.min(start.row, end.row), start.col - 1)) {
+                wouldComplete = true;
             }
             // Check square to the right
-            if (!wouldComplete && start.col < this.gridCols - 1) {
-                if (this.isSquareComplete(Math.min(start.row, end.row), start.col)) {
-                    wouldComplete = true;
-                }
+            if (!wouldComplete && start.col < this.gridCols - 1 && this.isSquareComplete(Math.min(start.row, end.row), start.col)) {
+                wouldComplete = true;
             }
         }
         
