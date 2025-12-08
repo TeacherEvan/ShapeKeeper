@@ -342,19 +342,6 @@ export const updatePartyMode = mutation({
   },
 });
 
-    if (room.status !== "lobby") {
-      return { error: "Cannot change grid size during game" };
-    }
-
-    await ctx.db.patch(args.roomId, {
-      gridSize: args.gridSize,
-      updatedAt: Date.now(),
-    });
-
-    return { success: true };
-  },
-});
-
 // Get room by code (for joining)
 export const getRoomByCode = query({
   args: {
