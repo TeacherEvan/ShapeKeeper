@@ -41,6 +41,9 @@ let lastRoomState = null;
 let updateDebounceTimer = null;
 const UPDATE_DEBOUNCE_MS = 50; // Debounce updates to batch rapid changes
 
+// Error messages
+const CONVEX_CONNECTION_ERROR = CONVEX_CONNECTION_ERROR;
+
 /**
  * Check if game state has meaningfully changed (turn-based optimization)
  * Only triggers updates when key state fields change:
@@ -138,7 +141,7 @@ async function createRoom(playerName, gridSize, partyMode = true) {
     initConvex();
     
     if (!convexClient) {
-        return { error: 'Failed to connect to multiplayer server. Please check your internet connection and try again.' };
+        return { error: CONVEX_CONNECTION_ERROR };
     }
     
     try {
@@ -171,7 +174,7 @@ async function joinRoom(roomCode, playerName) {
     initConvex();
     
     if (!convexClient) {
-        return { error: 'Failed to connect to multiplayer server. Please check your internet connection and try again.' };
+        return { error: CONVEX_CONNECTION_ERROR };
     }
     
     try {
@@ -200,8 +203,10 @@ async function joinRoom(roomCode, playerName) {
 async function leaveRoom() {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
     if (!convexClient) {
-        return { error: 'Failed to connect to multiplayer server. Please check your internet connection and try again.' };
+        return { error: CONVEX_CONNECTION_ERROR };
     }
     
     try {
@@ -246,8 +251,10 @@ async function leaveRoom() {
 async function toggleReady() {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
     if (!convexClient) {
-        return { error: 'Failed to connect to multiplayer server. Please check your internet connection and try again.' };
+        return { error: CONVEX_CONNECTION_ERROR };
     }
     
     try {
@@ -269,8 +276,10 @@ async function toggleReady() {
 async function updatePlayer(updates) {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
     if (!convexClient) {
-        return { error: 'Failed to connect to multiplayer server. Please check your internet connection and try again.' };
+        return { error: CONVEX_CONNECTION_ERROR };
     }
     
     try {
@@ -293,8 +302,10 @@ async function updatePlayer(updates) {
 async function updateGridSize(gridSize) {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
     if (!convexClient) {
-        return { error: 'Failed to connect to multiplayer server. Please check your internet connection and try again.' };
+        return { error: CONVEX_CONNECTION_ERROR };
     }
     
     try {
@@ -317,8 +328,10 @@ async function updateGridSize(gridSize) {
 async function updatePartyMode(partyMode) {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
     if (!convexClient) {
-        return { error: 'Failed to connect to multiplayer server. Please check your internet connection and try again.' };
+        return { error: CONVEX_CONNECTION_ERROR };
     }
     
     try {
@@ -340,8 +353,10 @@ async function updatePartyMode(partyMode) {
 async function startGame() {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
     if (!convexClient) {
-        return { error: 'Failed to connect to multiplayer server. Please check your internet connection and try again.' };
+        return { error: CONVEX_CONNECTION_ERROR };
     }
     
     try {
@@ -363,8 +378,10 @@ async function startGame() {
 async function drawLine(lineKey) {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
     if (!convexClient) {
-        return { error: 'Failed to connect to multiplayer server. Please check your internet connection and try again.' };
+        return { error: CONVEX_CONNECTION_ERROR };
     }
     
     try {
@@ -387,8 +404,10 @@ async function drawLine(lineKey) {
 async function revealMultiplier(squareKey) {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
     if (!convexClient) {
-        return { error: 'Failed to connect to multiplayer server. Please check your internet connection and try again.' };
+        return { error: CONVEX_CONNECTION_ERROR };
     }
     
     try {
@@ -620,8 +639,10 @@ async function getGameState() {
 async function endGame() {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
     if (!convexClient) {
-        return { error: 'Failed to connect to multiplayer server. Please check your internet connection and try again.' };
+        return { error: CONVEX_CONNECTION_ERROR };
     }
     
     try {
@@ -642,8 +663,10 @@ async function endGame() {
 async function resetGame() {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
     if (!convexClient) {
-        return { error: 'Failed to connect to multiplayer server. Please check your internet connection and try again.' };
+        return { error: CONVEX_CONNECTION_ERROR };
     }
     
     try {
@@ -665,8 +688,10 @@ async function resetGame() {
 async function populateLines(lineKeys) {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
     if (!convexClient) {
-        return { error: 'Failed to connect to multiplayer server. Please check your internet connection and try again.' };
+        return { error: CONVEX_CONNECTION_ERROR };
     }
     
     try {
