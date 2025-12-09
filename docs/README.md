@@ -7,6 +7,7 @@
 ## 📁 Documentation Structure
 
 ### Development (`/docs/development/`)
+
 | Document | Description |
 |----------|-------------|
 | [QUICKSTART.md](development/QUICKSTART.md) | Getting started guide for developers |
@@ -15,6 +16,7 @@
 | [MERGE_CONFLICT_GUIDE.md](development/MERGE_CONFLICT_GUIDE.md) | How to resolve merge conflicts |
 
 ### Planning (`/docs/planning/`)
+
 | Document | Description |
 |----------|-------------|
 | [JOBCARD.md](planning/JOBCARD.md) | Current session work tracking |
@@ -23,6 +25,7 @@
 | [REFACTORING_PLAN.md](planning/REFACTORING_PLAN.md) | ES6 module refactoring plan |
 
 ### Technical (`/docs/technical/`)
+
 | Document | Description |
 |----------|-------------|
 | [FEATURE_SUMMARY.md](technical/FEATURE_SUMMARY.md) | Complete feature list and details |
@@ -32,6 +35,7 @@
 | [BENQ_FIX.md](technical/BENQ_FIX.md) | BenQ board touch compatibility fix |
 
 ### History (`/docs/history/`)
+
 | Document | Description |
 |----------|-------------|
 | [DEPLOYMENT_STATUS.md](history/DEPLOYMENT_STATUS.md) | Deployment history and status |
@@ -74,4 +78,3 @@
 ---
 
 *Last updated: December 9, 2025*
-

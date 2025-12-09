@@ -40,7 +40,7 @@ Extended `src/core/utils.js` with reusable helpers:
 
 ---
 
-### 📋 Previous Session: December 5, 2025
+### 📋 Session: December 5, 2025
 
 ---
 
@@ -153,6 +153,7 @@ this.triangles = {}  // New state object parallel to this.squares
 ### 📋 Next Steps
 
 #### Immediate (P0)
+
 | Task | Priority |
 |------|----------|
 | Add triangles to Convex schema | High |
@@ -160,6 +161,7 @@ this.triangles = {}  // New state object parallel to this.squares
 | Update game-over logic for triangles | Medium |
 
 #### Future (P2)
+
 | Task | Priority |
 |------|----------|
 | Triangle-specific sound effects | Low |
