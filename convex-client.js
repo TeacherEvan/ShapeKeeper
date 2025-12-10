@@ -41,6 +41,9 @@ let lastRoomState = null;
 let updateDebounceTimer = null;
 const UPDATE_DEBOUNCE_MS = 50; // Debounce updates to batch rapid changes
 
+// Error messages
+const CONVEX_CONNECTION_ERROR = CONVEX_CONNECTION_ERROR;
+
 /**
  * Check if game state has meaningfully changed (turn-based optimization)
  * Only triggers updates when key state fields change:
@@ -137,6 +140,10 @@ function getSessionId() {
 async function createRoom(playerName, gridSize, partyMode = true) {
     initConvex();
     
+    if (!convexClient) {
+        return { error: CONVEX_CONNECTION_ERROR };
+    }
+    
     try {
         const result = await convexClient.mutation(api.rooms.createRoom, {
             sessionId,
@@ -166,6 +173,10 @@ async function createRoom(playerName, gridSize, partyMode = true) {
 async function joinRoom(roomCode, playerName) {
     initConvex();
     
+    if (!convexClient) {
+        return { error: CONVEX_CONNECTION_ERROR };
+    }
+    
     try {
         const result = await convexClient.mutation(api.rooms.joinRoom, {
             roomCode: roomCode.toUpperCase(),
@@ -191,6 +202,12 @@ async function joinRoom(roomCode, playerName) {
  */
 async function leaveRoom() {
     if (!currentRoomId) return { error: "Not in a room" };
+    
+    initConvex();
+    
+    if (!convexClient) {
+        return { error: CONVEX_CONNECTION_ERROR };
+    }
     
     try {
         const result = await convexClient.mutation(api.rooms.leaveRoom, {
@@ -234,6 +251,12 @@ async function leaveRoom() {
 async function toggleReady() {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
+    if (!convexClient) {
+        return { error: CONVEX_CONNECTION_ERROR };
+    }
+    
     try {
         return await convexClient.mutation(api.rooms.toggleReady, {
             roomId: currentRoomId,
@@ -252,6 +275,12 @@ async function toggleReady() {
  */
 async function updatePlayer(updates) {
     if (!currentRoomId) return { error: "Not in a room" };
+    
+    initConvex();
+    
+    if (!convexClient) {
+        return { error: CONVEX_CONNECTION_ERROR };
+    }
     
     try {
         return await convexClient.mutation(api.rooms.updatePlayer, {
@@ -273,6 +302,12 @@ async function updatePlayer(updates) {
 async function updateGridSize(gridSize) {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
+    if (!convexClient) {
+        return { error: CONVEX_CONNECTION_ERROR };
+    }
+    
     try {
         return await convexClient.mutation(api.rooms.updateGridSize, {
             roomId: currentRoomId,
@@ -293,6 +328,12 @@ async function updateGridSize(gridSize) {
 async function updatePartyMode(partyMode) {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
+    if (!convexClient) {
+        return { error: CONVEX_CONNECTION_ERROR };
+    }
+    
     try {
         return await convexClient.mutation(api.rooms.updatePartyMode, {
             roomId: currentRoomId,
@@ -311,6 +352,12 @@ async function updatePartyMode(partyMode) {
  */
 async function startGame() {
     if (!currentRoomId) return { error: "Not in a room" };
+    
+    initConvex();
+    
+    if (!convexClient) {
+        return { error: CONVEX_CONNECTION_ERROR };
+    }
     
     try {
         return await convexClient.mutation(api.rooms.startGame, {
@@ -331,6 +378,12 @@ async function startGame() {
 async function drawLine(lineKey) {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
+    if (!convexClient) {
+        return { error: CONVEX_CONNECTION_ERROR };
+    }
+    
     try {
         return await convexClient.mutation(api.games.drawLine, {
             roomId: currentRoomId,
@@ -350,6 +403,12 @@ async function drawLine(lineKey) {
  */
 async function revealMultiplier(squareKey) {
     if (!currentRoomId) return { error: "Not in a room" };
+    
+    initConvex();
+    
+    if (!convexClient) {
+        return { error: CONVEX_CONNECTION_ERROR };
+    }
     
     try {
         return await convexClient.mutation(api.games.revealMultiplier, {
@@ -375,6 +434,11 @@ function subscribeToRoom(callback) {
     }
     
     initConvex();
+    
+    if (!convexClient) {
+        console.error('[Convex] Cannot subscribe: client not initialized');
+        return () => {};
+    }
     
     // Unsubscribe from previous subscription
     if (currentSubscription) {
@@ -437,6 +501,11 @@ function subscribeToGameState(callback) {
     }
     
     initConvex();
+    
+    if (!convexClient) {
+        console.error('[Convex] Cannot subscribe: client not initialized');
+        return () => {};
+    }
     
     // Unsubscribe from previous game state subscription
     if (gameStateSubscription) {
@@ -501,6 +570,11 @@ async function getRoomState() {
     
     initConvex();
     
+    if (!convexClient) {
+        console.error('[Convex] Cannot query: client not initialized');
+        return null;
+    }
+    
     try {
         return await convexClient.query(api.rooms.getRoom, {
             roomId: currentRoomId,
@@ -518,6 +592,11 @@ async function getRoomState() {
  */
 async function getRoomByCode(roomCode) {
     initConvex();
+    
+    if (!convexClient) {
+        console.error('[Convex] Cannot query: client not initialized');
+        return null;
+    }
     
     try {
         return await convexClient.query(api.rooms.getRoomByCode, {
@@ -538,6 +617,11 @@ async function getGameState() {
     
     initConvex();
     
+    if (!convexClient) {
+        console.error('[Convex] Cannot query: client not initialized');
+        return null;
+    }
+    
     try {
         return await convexClient.query(api.games.getGameState, {
             roomId: currentRoomId,
@@ -554,6 +638,12 @@ async function getGameState() {
  */
 async function endGame() {
     if (!currentRoomId) return { error: "Not in a room" };
+    
+    initConvex();
+    
+    if (!convexClient) {
+        return { error: CONVEX_CONNECTION_ERROR };
+    }
     
     try {
         return await convexClient.mutation(api.games.endGame, {
@@ -573,6 +663,12 @@ async function endGame() {
 async function resetGame() {
     if (!currentRoomId) return { error: "Not in a room" };
     
+    initConvex();
+    
+    if (!convexClient) {
+        return { error: CONVEX_CONNECTION_ERROR };
+    }
+    
     try {
         return await convexClient.mutation(api.games.resetGame, {
             roomId: currentRoomId,
@@ -591,6 +687,12 @@ async function resetGame() {
  */
 async function populateLines(lineKeys) {
     if (!currentRoomId) return { error: "Not in a room" };
+    
+    initConvex();
+    
+    if (!convexClient) {
+        return { error: CONVEX_CONNECTION_ERROR };
+    }
     
     try {
         return await convexClient.mutation(api.games.populateLines, {
