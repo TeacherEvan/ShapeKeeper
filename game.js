@@ -650,7 +650,11 @@ class DotsAndBoxesGame {
     }
 
     setupCanvas() {
-        const container = this.canvas.parentElement;
+        const container = this.canvas?.parentElement;
+        if (!container) {
+            console.warn('[Game] Cannot setup canvas: container not found');
+            return;
+        }
         const maxWidth = container.clientWidth - 40;
         const maxHeight = container.clientHeight - 40;
 
@@ -1289,20 +1293,6 @@ class DotsAndBoxesGame {
     }
 
     /**
-     * Get line type from two dots
-     * @returns {'horizontal' | 'vertical' | 'diagonal' | 'invalid'}
-     */
-    getLineType(dot1, dot2) {
-        const rowDiff = Math.abs(dot1.row - dot2.row);
-        const colDiff = Math.abs(dot1.col - dot2.col);
-
-        if (rowDiff === 0 && colDiff === 1) return 'horizontal';
-        if (colDiff === 0 && rowDiff === 1) return 'vertical';
-        if (rowDiff === 1 && colDiff === 1) return 'diagonal';
-        return 'invalid';
-    }
-
-    /**
      * When a diagonal line is drawn, check triangles it can complete
      */
     _checkTrianglesForDiagonal(start, end, completedTriangles) {
@@ -1784,25 +1774,6 @@ class DotsAndBoxesGame {
     }
 
     /**
-     * Determine which player should be considered the "owner" of a cell for applying effects.
-     * - Squares: the square owner
-     * - Triangles: if exactly one player owns triangles in the cell, use that
-     * - Otherwise: default to current player (local play / ambiguous ownership)
-     */
-    getCellOwnerForEffects(cellKey) {
-        if (this.squares && this.squares[cellKey]) {
-            return this.squares[cellKey];
-        }
-
-        const owners = this.triangleCellOwners?.get(cellKey);
-        if (owners && owners.size === 1) {
-            return Array.from(owners)[0];
-        }
-
-        return this.currentPlayer;
-    }
-
-    /**
      * Show the effect modal with trap/powerup details
      */
     showEffectModal(effectData) {
@@ -1967,12 +1938,13 @@ class DotsAndBoxesGame {
                 this.triggerFreezeAnimation(player);
                 break;
 
-            case 'swap_scores':
+            case 'swap_scores': {
                 const temp = this.scores[player];
                 this.scores[player] = this.scores[otherPlayer];
                 this.scores[otherPlayer] = temp;
                 this.triggerSwapAnimation();
                 break;
+            }
 
             case 'ghost':
                 this.playerEffects[player].ghostLines = 3;
