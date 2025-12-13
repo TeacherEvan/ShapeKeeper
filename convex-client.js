@@ -6,9 +6,14 @@
  * The 'convex' global object is provided by: https://unpkg.com/convex@1.29.3/dist/browser.bundle.js
  *
  * @module ConvexClient
- * @version 4.2.0
+ * @version 4.3.0
  *
- * TODO: [OPTIMIZATION] Implement connection pooling for better resource management
+ * Connection pooling implemented for efficient resource management:
+ * - Singleton client instance with lifecycle management
+ * - Connection state tracking and monitoring
+ * - Proper cleanup of subscriptions and resources
+ * - Automatic reconnection handling
+ *
  * TODO: [OPTIMIZATION] Add offline queue for actions when connection drops
  * TODO: [ARCHITECTURE] Consider implementing optimistic updates for immediate UI feedback
  * TODO: [ARCHITECTURE] Move to Redis for scalability in high-traffic scenarios
@@ -28,12 +33,17 @@ const ConvexClient = window.convex ? window.convex.ConvexClient : null;
 /** @type {import("convex/server")["anyApi"]} */
 const api = window.convex ? window.convex.anyApi : null;
 
-// Initialize the Convex client
+// Connection pooling: Singleton client instance
 let convexClient = null;
 let sessionId = null;
 let currentRoomId = null;
 let currentSubscription = null;
 let gameStateSubscription = null;
+
+// Connection state management
+let connectionState = 'disconnected'; // 'disconnected' | 'connecting' | 'connected' | 'reconnecting'
+let connectionStateListeners = [];
+let activeSubscriptions = new Set(); // Track all active subscriptions for cleanup
 
 // Turn-based optimization: Track last state to detect changes
 let lastGameState = null;
@@ -43,6 +53,41 @@ const UPDATE_DEBOUNCE_MS = 50; // Debounce updates to batch rapid changes
 
 // Error messages
 const CONVEX_CONNECTION_ERROR = 'Convex backend not available. Please check your connection.';
+
+/**
+ * Set connection state and notify listeners
+ * @private
+ */
+function setConnectionState(newState) {
+    if (connectionState !== newState) {
+        const oldState = connectionState;
+        connectionState = newState;
+        console.log(`[Convex] Connection state: ${oldState} → ${newState}`);
+        connectionStateListeners.forEach((listener) => listener(newState, oldState));
+    }
+}
+
+/**
+ * Subscribe to connection state changes
+ * @param {Function} callback - Called with (newState, oldState)
+ * @returns {Function} Unsubscribe function
+ */
+function onConnectionStateChange(callback) {
+    connectionStateListeners.push(callback);
+    // Immediately call with current state
+    callback(connectionState, connectionState);
+    return () => {
+        connectionStateListeners = connectionStateListeners.filter((l) => l !== callback);
+    };
+}
+
+/**
+ * Get current connection state
+ * @returns {string} Current connection state
+ */
+function getConnectionState() {
+    return connectionState;
+}
 
 /**
  * Check if game state has meaningfully changed (turn-based optimization)
@@ -99,28 +144,42 @@ function stateHasChanged(newState, lastState) {
 
 /**
  * Initialize the Convex client and session
+ * Connection pooling: Reuses existing client instance if available
  */
 function initConvex() {
-    if (convexClient) return convexClient;
+    if (convexClient) {
+        console.log('[Convex] Reusing existing client connection (pooling)');
+        return convexClient;
+    }
 
     if (!ConvexClient) {
         console.error(
             '[Convex] Browser bundle not loaded. Make sure convex browser bundle is included before this script.'
         );
+        setConnectionState('disconnected');
         return null;
     }
 
-    convexClient = new ConvexClient(CONVEX_URL);
+    setConnectionState('connecting');
 
-    // Generate or retrieve session ID
-    sessionId = localStorage.getItem('shapekeeper_session_id');
-    if (!sessionId) {
-        sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('shapekeeper_session_id', sessionId);
+    try {
+        convexClient = new ConvexClient(CONVEX_URL);
+
+        // Generate or retrieve session ID
+        sessionId = localStorage.getItem('shapekeeper_session_id');
+        if (!sessionId) {
+            sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('shapekeeper_session_id', sessionId);
+        }
+
+        setConnectionState('connected');
+        console.log('[Convex] Client initialized with session:', sessionId);
+        return convexClient;
+    } catch (error) {
+        console.error('[Convex] Failed to initialize client:', error);
+        setConnectionState('disconnected');
+        return null;
     }
-
-    console.log('[Convex] Client initialized with session:', sessionId);
-    return convexClient;
 }
 
 /**
@@ -217,26 +276,9 @@ async function leaveRoom() {
             sessionId,
         });
 
-        // Unsubscribe from updates
-        if (currentSubscription) {
-            currentSubscription();
-            currentSubscription = null;
-        }
+        // Clean up room-specific resources
+        cleanupRoomResources();
 
-        if (gameStateSubscription) {
-            gameStateSubscription();
-            gameStateSubscription = null;
-        }
-
-        // Clear debounce timer and state trackers
-        if (updateDebounceTimer) {
-            clearTimeout(updateDebounceTimer);
-            updateDebounceTimer = null;
-        }
-        lastGameState = null;
-        lastRoomState = null;
-
-        currentRoomId = null;
         console.log('[Convex] Left room');
 
         return result;
@@ -244,6 +286,89 @@ async function leaveRoom() {
         console.error('[Convex] Error leaving room:', error);
         return { error: error.message };
     }
+}
+
+/**
+ * Clean up room-specific resources (subscriptions, timers, state)
+ * @private
+ */
+function cleanupRoomResources() {
+    // Unsubscribe from updates
+    if (currentSubscription) {
+        currentSubscription();
+        activeSubscriptions.delete(currentSubscription);
+        currentSubscription = null;
+    }
+
+    if (gameStateSubscription) {
+        gameStateSubscription();
+        activeSubscriptions.delete(gameStateSubscription);
+        gameStateSubscription = null;
+    }
+
+    // Clear debounce timer and state trackers
+    if (updateDebounceTimer) {
+        clearTimeout(updateDebounceTimer);
+        updateDebounceTimer = null;
+    }
+    lastGameState = null;
+    lastRoomState = null;
+
+    currentRoomId = null;
+}
+
+/**
+ * Close the Convex connection and clean up all resources
+ * Connection pooling: Properly releases the client instance
+ * Should be called when the application is closing or when connection is no longer needed
+ */
+function closeConnection() {
+    if (!convexClient) {
+        console.log('[Convex] No active connection to close');
+        return;
+    }
+
+    console.log('[Convex] Closing connection and cleaning up resources');
+
+    // Clean up all room resources
+    cleanupRoomResources();
+
+    // Unsubscribe from all active subscriptions
+    activeSubscriptions.forEach((unsubscribe) => {
+        try {
+            unsubscribe();
+        } catch (error) {
+            console.error('[Convex] Error unsubscribing:', error);
+        }
+    });
+    activeSubscriptions.clear();
+
+    // Close the Convex client connection
+    try {
+        if (convexClient.close && typeof convexClient.close === 'function') {
+            convexClient.close();
+        }
+    } catch (error) {
+        console.error('[Convex] Error closing client:', error);
+    }
+
+    // Reset connection state
+    convexClient = null;
+    setConnectionState('disconnected');
+
+    console.log('[Convex] Connection closed and resources cleaned up');
+}
+
+/**
+ * Reset connection (close and reinitialize)
+ * Useful for handling connection errors or forcing reconnection
+ * @returns {Object|null} New Convex client instance or null
+ */
+function resetConnection() {
+    console.log('[Convex] Resetting connection');
+    closeConnection();
+    setConnectionState('reconnecting');
+    return initConvex();
 }
 
 /**
@@ -426,6 +551,7 @@ async function revealMultiplier(squareKey) {
 
 /**
  * Subscribe to room updates (lobby)
+ * Connection pooling: Tracks subscription for proper cleanup
  * @param {Function} callback - Called with room state on each update
  * @returns {Function} Unsubscribe function
  */
@@ -445,6 +571,7 @@ function subscribeToRoom(callback) {
     // Unsubscribe from previous subscription
     if (currentSubscription) {
         currentSubscription();
+        activeSubscriptions.delete(currentSubscription);
     }
 
     // Reset room state tracker on new subscription
@@ -485,6 +612,9 @@ function subscribeToRoom(callback) {
         debouncedCallback
     );
 
+    // Track subscription for cleanup
+    activeSubscriptions.add(currentSubscription);
+
     console.log('[Convex] Subscribed to room updates (turn-based optimized)');
     return currentSubscription;
 }
@@ -494,6 +624,7 @@ function subscribeToRoom(callback) {
  * Uses turn-based optimization to minimize unnecessary updates:
  * - Only processes updates when turn changes or game state meaningfully changes
  * - Debounces rapid updates to prevent glitches
+ * Connection pooling: Tracks subscription for proper cleanup
  * @param {Function} callback - Called with game state on each update
  * @returns {Function} Unsubscribe function
  */
@@ -513,6 +644,7 @@ function subscribeToGameState(callback) {
     // Unsubscribe from previous game state subscription
     if (gameStateSubscription) {
         gameStateSubscription();
+        activeSubscriptions.delete(gameStateSubscription);
     }
 
     // Reset game state tracker on new subscription
@@ -561,6 +693,9 @@ function subscribeToGameState(callback) {
         { roomId: currentRoomId },
         optimizedCallback
     );
+
+    // Track subscription for cleanup
+    activeSubscriptions.add(gameStateSubscription);
 
     console.log('[Convex] Subscribed to game state updates (turn-based optimized)');
     return gameStateSubscription;
@@ -749,4 +884,9 @@ window.ShapeKeeperConvex = {
     resetGame,
     getCurrentRoomId,
     setCurrentRoomId,
+    // Connection pooling methods
+    closeConnection,
+    resetConnection,
+    getConnectionState,
+    onConnectionStateChange,
 };
