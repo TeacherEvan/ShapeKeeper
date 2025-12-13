@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Pooling Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 3px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 2px 0;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .status {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 3px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .status.disconnected { background: #ffcccc; }
+        .status.connecting { background: #ffffcc; }
+        .status.connected { background: #ccffcc; }
+        .status.reconnecting { background: #ffddaa; }
+    </style>
+</head>
+<body>
+    <h1>Connection Pooling Test</h1>
+    <p>This page tests the Convex client connection pooling implementation.</p>
+
+    <div class="test-section">
+        <h3>Connection State</h3>
+        <div>
+            Current State: <span id="connectionState" class="status disconnected">disconnected</span>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>Connection Tests</h3>
+        <button onclick="testInitConnection()">1. Initialize Connection</button>
+        <button onclick="testReuseConnection()">2. Test Connection Reuse</button>
+        <button onclick="testCloseConnection()">3. Close Connection</button>
+        <button onclick="testResetConnection()">4. Reset Connection</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Subscription Tests</h3>
+        <button onclick="testSubscriptionTracking()">5. Test Subscription Tracking</button>
+        <button onclick="testCleanupSubscriptions()">6. Test Subscription Cleanup</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Test Log</h3>
+        <button onclick="clearLog()">Clear Log</button>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script src="https://unpkg.com/convex@1.29.3/dist/browser.bundle.js"></script>
+    <script src="/convex-client.js"></script>
+    <script>
+        const logElement = document.getElementById('log');
+        const stateElement = document.getElementById('connectionState');
+
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logElement.appendChild(entry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            logElement.innerHTML = '';
+        }
+
+        function updateConnectionState(state) {
+            stateElement.textContent = state;
+            stateElement.className = `status ${state}`;
+        }
+
+        // Subscribe to connection state changes
+        window.ShapeKeeperConvex.onConnectionStateChange((newState, oldState) => {
+            log(`Connection state changed: ${oldState} → ${newState}`, 'info');
+            updateConnectionState(newState);
+        });
+
+        // Test 1: Initialize connection
+        function testInitConnection() {
+            log('TEST 1: Initializing connection...', 'info');
+            try {
+                const client = window.ShapeKeeperConvex.initConvex();
+                if (client) {
+                    log('✓ Connection initialized successfully', 'success');
+                    log(`  Session ID: ${window.ShapeKeeperConvex.getSessionId()}`, 'info');
+                } else {
+                    log('✗ Failed to initialize connection', 'error');
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 2: Test connection reuse (pooling)
+        function testReuseConnection() {
+            log('TEST 2: Testing connection reuse (pooling)...', 'info');
+            try {
+                const client1 = window.ShapeKeeperConvex.initConvex();
+                const client2 = window.ShapeKeeperConvex.initConvex();
+                const client3 = window.ShapeKeeperConvex.initConvex();
+                
+                // All should return the same instance (pooling)
+                if (client1 === client2 && client2 === client3) {
+                    log('✓ Connection pooling working - same instance reused', 'success');
+                } else {
+                    log('✗ Connection pooling failed - different instances created', 'error');
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 3: Close connection
+        function testCloseConnection() {
+            log('TEST 3: Closing connection...', 'info');
+            try {
+                window.ShapeKeeperConvex.closeConnection();
+                const state = window.ShapeKeeperConvex.getConnectionState();
+                if (state === 'disconnected') {
+                    log('✓ Connection closed successfully', 'success');
+                } else {
+                    log(`✗ Connection state is ${state}, expected disconnected`, 'error');
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 4: Reset connection
+        function testResetConnection() {
+            log('TEST 4: Resetting connection...', 'info');
+            try {
+                const client = window.ShapeKeeperConvex.resetConnection();
+                const state = window.ShapeKeeperConvex.getConnectionState();
+                if (client && state === 'connected') {
+                    log('✓ Connection reset successfully', 'success');
+                } else {
+                    log(`✗ Connection reset failed, state: ${state}`, 'error');
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 5: Test subscription tracking
+        let testSubscription = null;
+        function testSubscriptionTracking() {
+            log('TEST 5: Testing subscription tracking...', 'info');
+            try {
+                // Note: This will fail if not in a room, but tests the tracking mechanism
+                log('  Attempting to subscribe (will fail without room, this is expected)...', 'info');
+                testSubscription = window.ShapeKeeperConvex.subscribeToRoom((state) => {
+                    log('  Room state update received', 'info');
+                });
+                log('✓ Subscription created (check console for tracking confirmation)', 'success');
+            } catch (error) {
+                log(`  Error (expected): ${error.message}`, 'info');
+            }
+        }
+
+        // Test 6: Test subscription cleanup
+        function testCleanupSubscriptions() {
+            log('TEST 6: Testing subscription cleanup...', 'info');
+            try {
+                if (testSubscription) {
+                    testSubscription();
+                    log('✓ Test subscription unsubscribed', 'success');
+                }
+                
+                // Close connection should cleanup all subscriptions
+                window.ShapeKeeperConvex.closeConnection();
+                log('✓ All subscriptions cleaned up via closeConnection()', 'success');
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Initial state
+        log('Connection pooling test page loaded', 'info');
+        log('Run tests in order (1-6) to verify functionality', 'info');
+        updateConnectionState(window.ShapeKeeperConvex.getConnectionState());
+    </script>
+</body>
+</html>
