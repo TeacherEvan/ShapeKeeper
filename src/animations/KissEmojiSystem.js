@@ -33,12 +33,12 @@ export class KissEmojiSystem {
      */
     createBurst(x, y, count = 6, useSparklesOnly = true) {
         const emojisToUse = useSparklesOnly ? ['✨', '⭐', '🌟'] : this.availableEmojis;
-        
+
         for (let i = 0; i < count; i++) {
             const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
             const speed = 2 + Math.random() * 3;
             const delay = i * 50; // Stagger spawn
-            
+
             setTimeout(() => {
                 this.emojis.push({
                     x,
@@ -50,7 +50,7 @@ export class KissEmojiSystem {
                     rotation: (Math.random() - 0.5) * 0.5,
                     rotationSpeed: (Math.random() - 0.5) * 0.1,
                     emoji: emojisToUse[Math.floor(Math.random() * emojisToUse.length)],
-                    life: 1
+                    life: 1,
                 });
             }, delay);
         }
@@ -72,19 +72,19 @@ export class KissEmojiSystem {
     update(deltaTime = 16) {
         for (let i = this.emojis.length - 1; i >= 0; i--) {
             const e = this.emojis[i];
-            
+
             // Apply physics
             e.x += e.vx;
             e.y += e.vy;
             e.vy += 0.05; // Gentle gravity
             e.vx *= 0.98; // Friction
             e.rotation += e.rotationSpeed;
-            
+
             // Fade out
             e.life -= 0.015;
             e.opacity = Math.max(0, e.life);
             e.scale *= 0.995; // Shrink slightly
-            
+
             // Remove dead emojis
             if (e.life <= 0) {
                 this.emojis.splice(i, 1);
@@ -98,7 +98,7 @@ export class KissEmojiSystem {
      */
     draw(ctx) {
         ctx.save();
-        
+
         for (const e of this.emojis) {
             ctx.save();
             ctx.translate(e.x, e.y);
@@ -111,7 +111,7 @@ export class KissEmojiSystem {
             ctx.fillText(e.emoji, 0, 0);
             ctx.restore();
         }
-        
+
         ctx.restore();
     }
 

@@ -1,13 +1,13 @@
 /**
  * Convex Client Integration for ShapeKeeper
  * Handles real-time multiplayer communication with Convex backend
- * 
+ *
  * This file uses the Convex browser bundle loaded via script tag.
  * The 'convex' global object is provided by: https://unpkg.com/convex@1.29.3/dist/browser.bundle.js
- * 
+ *
  * @module ConvexClient
  * @version 4.2.0
- * 
+ *
  * TODO: [OPTIMIZATION] Implement connection pooling for better resource management
  * TODO: [OPTIMIZATION] Add offline queue for actions when connection drops
  * TODO: [ARCHITECTURE] Consider implementing optimistic updates for immediate UI feedback
@@ -18,7 +18,7 @@
 'use strict';
 
 // Get Convex URL from environment or use default
-const CONVEX_URL = window.CONVEX_URL || "https://oceanic-antelope-781.convex.cloud";
+const CONVEX_URL = window.CONVEX_URL || 'https://oceanic-antelope-781.convex.cloud';
 
 // Use the global convex object from the browser bundle
 /** @type {import("convex/browser")["ConvexClient"]} */
@@ -42,7 +42,7 @@ let updateDebounceTimer = null;
 const UPDATE_DEBOUNCE_MS = 50; // Debounce updates to batch rapid changes
 
 // Error messages
-const CONVEX_CONNECTION_ERROR = "Convex backend not available. Please check your connection.";
+const CONVEX_CONNECTION_ERROR = 'Convex backend not available. Please check your connection.';
 
 /**
  * Check if game state has meaningfully changed (turn-based optimization)
@@ -61,39 +61,39 @@ function stateHasChanged(newState, lastState) {
     if (!lastState) return true;
     // If new state is null but we had state before, that's a change (room deleted)
     if (!newState) return lastState !== null;
-    
+
     // For turn-based optimization, check key state fields:
     // - currentPlayerIndex (turn changed)
     // - lines.length (new line drawn)
     // - squares.length (new square completed)
     // - room.status (game state changed)
-    
+
     const newRoom = newState.room || {};
     const lastRoom = lastState.room || {};
-    
+
     // Turn change detection
     if (newRoom.currentPlayerIndex !== lastRoom.currentPlayerIndex) return true;
     if (newRoom.status !== lastRoom.status) return true;
     if (newRoom.updatedAt !== lastRoom.updatedAt) return true;
-    
+
     // Line/square count change detection (efficient for turn-based)
     const newLines = newState.lines || [];
     const lastLines = lastState.lines || [];
     if (newLines.length !== lastLines.length) return true;
-    
+
     const newSquares = newState.squares || [];
     const lastSquares = lastState.squares || [];
     if (newSquares.length !== lastSquares.length) return true;
-    
+
     // Score change detection
     const newPlayers = newState.players || [];
     const lastPlayers = lastState.players || [];
     if (newPlayers.length !== lastPlayers.length) return true;
-    
+
     for (let i = 0; i < newPlayers.length; i++) {
         if (newPlayers[i]?.score !== lastPlayers[i]?.score) return true;
     }
-    
+
     return false;
 }
 
@@ -102,21 +102,23 @@ function stateHasChanged(newState, lastState) {
  */
 function initConvex() {
     if (convexClient) return convexClient;
-    
+
     if (!ConvexClient) {
-        console.error('[Convex] Browser bundle not loaded. Make sure convex browser bundle is included before this script.');
+        console.error(
+            '[Convex] Browser bundle not loaded. Make sure convex browser bundle is included before this script.'
+        );
         return null;
     }
-    
+
     convexClient = new ConvexClient(CONVEX_URL);
-    
+
     // Generate or retrieve session ID
     sessionId = localStorage.getItem('shapekeeper_session_id');
     if (!sessionId) {
         sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('shapekeeper_session_id', sessionId);
     }
-    
+
     console.log('[Convex] Client initialized with session:', sessionId);
     return convexClient;
 }
@@ -139,11 +141,11 @@ function getSessionId() {
  */
 async function createRoom(playerName, gridSize, partyMode = true) {
     initConvex();
-    
+
     if (!convexClient) {
         return { error: CONVEX_CONNECTION_ERROR };
     }
-    
+
     try {
         const result = await convexClient.mutation(api.rooms.createRoom, {
             sessionId,
@@ -151,12 +153,12 @@ async function createRoom(playerName, gridSize, partyMode = true) {
             gridSize,
             partyMode,
         });
-        
+
         if (result.roomId) {
             currentRoomId = result.roomId;
             console.log('[Convex] Room created:', result.roomCode, 'partyMode:', partyMode);
         }
-        
+
         return result;
     } catch (error) {
         console.error('[Convex] Error creating room:', error);
@@ -172,23 +174,23 @@ async function createRoom(playerName, gridSize, partyMode = true) {
  */
 async function joinRoom(roomCode, playerName) {
     initConvex();
-    
+
     if (!convexClient) {
         return { error: CONVEX_CONNECTION_ERROR };
     }
-    
+
     try {
         const result = await convexClient.mutation(api.rooms.joinRoom, {
             roomCode: roomCode.toUpperCase(),
             sessionId,
             playerName,
         });
-        
+
         if (result.roomId) {
             currentRoomId = result.roomId;
             console.log('[Convex] Joined room:', roomCode);
         }
-        
+
         return result;
     } catch (error) {
         console.error('[Convex] Error joining room:', error);
@@ -201,31 +203,31 @@ async function joinRoom(roomCode, playerName) {
  * @returns {Promise<{success: boolean} | {error: string}>}
  */
 async function leaveRoom() {
-    if (!currentRoomId) return { error: "Not in a room" };
-    
+    if (!currentRoomId) return { error: 'Not in a room' };
+
     initConvex();
-    
+
     if (!convexClient) {
         return { error: CONVEX_CONNECTION_ERROR };
     }
-    
+
     try {
         const result = await convexClient.mutation(api.rooms.leaveRoom, {
             roomId: currentRoomId,
             sessionId,
         });
-        
+
         // Unsubscribe from updates
         if (currentSubscription) {
             currentSubscription();
             currentSubscription = null;
         }
-        
+
         if (gameStateSubscription) {
             gameStateSubscription();
             gameStateSubscription = null;
         }
-        
+
         // Clear debounce timer and state trackers
         if (updateDebounceTimer) {
             clearTimeout(updateDebounceTimer);
@@ -233,10 +235,10 @@ async function leaveRoom() {
         }
         lastGameState = null;
         lastRoomState = null;
-        
+
         currentRoomId = null;
         console.log('[Convex] Left room');
-        
+
         return result;
     } catch (error) {
         console.error('[Convex] Error leaving room:', error);
@@ -249,14 +251,14 @@ async function leaveRoom() {
  * @returns {Promise<{isReady: boolean} | {error: string}>}
  */
 async function toggleReady() {
-    if (!currentRoomId) return { error: "Not in a room" };
-    
+    if (!currentRoomId) return { error: 'Not in a room' };
+
     initConvex();
-    
+
     if (!convexClient) {
         return { error: CONVEX_CONNECTION_ERROR };
     }
-    
+
     try {
         return await convexClient.mutation(api.rooms.toggleReady, {
             roomId: currentRoomId,
@@ -274,14 +276,14 @@ async function toggleReady() {
  * @returns {Promise<{success: boolean} | {error: string}>}
  */
 async function updatePlayer(updates) {
-    if (!currentRoomId) return { error: "Not in a room" };
-    
+    if (!currentRoomId) return { error: 'Not in a room' };
+
     initConvex();
-    
+
     if (!convexClient) {
         return { error: CONVEX_CONNECTION_ERROR };
     }
-    
+
     try {
         return await convexClient.mutation(api.rooms.updatePlayer, {
             roomId: currentRoomId,
@@ -300,14 +302,14 @@ async function updatePlayer(updates) {
  * @returns {Promise<{success: boolean} | {error: string}>}
  */
 async function updateGridSize(gridSize) {
-    if (!currentRoomId) return { error: "Not in a room" };
-    
+    if (!currentRoomId) return { error: 'Not in a room' };
+
     initConvex();
-    
+
     if (!convexClient) {
         return { error: CONVEX_CONNECTION_ERROR };
     }
-    
+
     try {
         return await convexClient.mutation(api.rooms.updateGridSize, {
             roomId: currentRoomId,
@@ -326,14 +328,14 @@ async function updateGridSize(gridSize) {
  * @returns {Promise<{success: boolean} | {error: string}>}
  */
 async function updatePartyMode(partyMode) {
-    if (!currentRoomId) return { error: "Not in a room" };
-    
+    if (!currentRoomId) return { error: 'Not in a room' };
+
     initConvex();
-    
+
     if (!convexClient) {
         return { error: CONVEX_CONNECTION_ERROR };
     }
-    
+
     try {
         return await convexClient.mutation(api.rooms.updatePartyMode, {
             roomId: currentRoomId,
@@ -351,14 +353,14 @@ async function updatePartyMode(partyMode) {
  * @returns {Promise<{success: boolean} | {error: string}>}
  */
 async function startGame() {
-    if (!currentRoomId) return { error: "Not in a room" };
-    
+    if (!currentRoomId) return { error: 'Not in a room' };
+
     initConvex();
-    
+
     if (!convexClient) {
         return { error: CONVEX_CONNECTION_ERROR };
     }
-    
+
     try {
         return await convexClient.mutation(api.rooms.startGame, {
             roomId: currentRoomId,
@@ -376,14 +378,14 @@ async function startGame() {
  * @returns {Promise<{success: boolean, completedSquares: number, completedTriangles: number, keepTurn: boolean} | {error: string}>}
  */
 async function drawLine(lineKey) {
-    if (!currentRoomId) return { error: "Not in a room" };
-    
+    if (!currentRoomId) return { error: 'Not in a room' };
+
     initConvex();
-    
+
     if (!convexClient) {
         return { error: CONVEX_CONNECTION_ERROR };
     }
-    
+
     try {
         return await convexClient.mutation(api.games.drawLine, {
             roomId: currentRoomId,
@@ -402,14 +404,14 @@ async function drawLine(lineKey) {
  * @returns {Promise<{success: boolean, multiplier: object} | {error: string}>}
  */
 async function revealMultiplier(squareKey) {
-    if (!currentRoomId) return { error: "Not in a room" };
-    
+    if (!currentRoomId) return { error: 'Not in a room' };
+
     initConvex();
-    
+
     if (!convexClient) {
         return { error: CONVEX_CONNECTION_ERROR };
     }
-    
+
     try {
         return await convexClient.mutation(api.games.revealMultiplier, {
             roomId: currentRoomId,
@@ -432,22 +434,22 @@ function subscribeToRoom(callback) {
         console.error('[Convex] Cannot subscribe: not in a room');
         return () => {};
     }
-    
+
     initConvex();
-    
+
     if (!convexClient) {
         console.error('[Convex] Cannot subscribe: client not initialized');
         return () => {};
     }
-    
+
     // Unsubscribe from previous subscription
     if (currentSubscription) {
         currentSubscription();
     }
-    
+
     // Reset room state tracker on new subscription
     lastRoomState = null;
-    
+
     // Wrap callback with debouncing for turn-based optimization
     const debouncedCallback = (newState) => {
         // Only call callback if room state actually changed
@@ -456,32 +458,33 @@ function subscribeToRoom(callback) {
             callback(newState);
             return;
         }
-        
+
         // For room/lobby updates, check if meaningful state changed
         const newPlayersLength = newState.players?.length || 0;
         const lastPlayersLength = lastRoomState?.players?.length || 0;
-        const hasChanged = !lastRoomState || 
+        const hasChanged =
+            !lastRoomState ||
             newState.status !== lastRoomState.status ||
             newState.updatedAt !== lastRoomState.updatedAt ||
             newPlayersLength !== lastPlayersLength;
-        
+
         if (hasChanged) {
             // Cache only the fields we compare (efficient shallow copy)
             lastRoomState = {
                 status: newState.status,
                 updatedAt: newState.updatedAt,
-                players: { length: newPlayersLength }
+                players: { length: newPlayersLength },
             };
             callback(newState);
         }
     };
-    
+
     currentSubscription = convexClient.onUpdate(
         api.rooms.getRoom,
         { roomId: currentRoomId },
         debouncedCallback
     );
-    
+
     console.log('[Convex] Subscribed to room updates (turn-based optimized)');
     return currentSubscription;
 }
@@ -499,22 +502,22 @@ function subscribeToGameState(callback) {
         console.error('[Convex] Cannot subscribe: not in a room');
         return () => {};
     }
-    
+
     initConvex();
-    
+
     if (!convexClient) {
         console.error('[Convex] Cannot subscribe: client not initialized');
         return () => {};
     }
-    
+
     // Unsubscribe from previous game state subscription
     if (gameStateSubscription) {
         gameStateSubscription();
     }
-    
+
     // Reset game state tracker on new subscription
     lastGameState = null;
-    
+
     // Wrap callback with turn-based optimization
     const optimizedCallback = (newState) => {
         // Clear any pending debounced update
@@ -522,26 +525,28 @@ function subscribeToGameState(callback) {
             clearTimeout(updateDebounceTimer);
             updateDebounceTimer = null;
         }
-        
+
         // Only process if state has meaningfully changed (turn-based detection)
         if (!stateHasChanged(newState, lastGameState)) {
             console.log('[Convex] Skipping duplicate game state update');
             return;
         }
-        
+
         // Debounce rapid updates to batch them together
         updateDebounceTimer = setTimeout(() => {
             // Cache only the fields we compare (efficient shallow copy)
             if (newState) {
                 lastGameState = {
-                    room: newState.room ? {
-                        currentPlayerIndex: newState.room.currentPlayerIndex,
-                        status: newState.room.status,
-                        updatedAt: newState.room.updatedAt
-                    } : null,
+                    room: newState.room
+                        ? {
+                              currentPlayerIndex: newState.room.currentPlayerIndex,
+                              status: newState.room.status,
+                              updatedAt: newState.room.updatedAt,
+                          }
+                        : null,
                     lines: { length: (newState.lines || []).length },
                     squares: { length: (newState.squares || []).length },
-                    players: (newState.players || []).map(p => ({ score: p?.score || 0 }))
+                    players: (newState.players || []).map((p) => ({ score: p?.score || 0 })),
                 };
             } else {
                 lastGameState = null;
@@ -550,13 +555,13 @@ function subscribeToGameState(callback) {
             console.log('[Convex] Game state update processed (turn-based)');
         }, UPDATE_DEBOUNCE_MS);
     };
-    
+
     gameStateSubscription = convexClient.onUpdate(
         api.games.getGameState,
         { roomId: currentRoomId },
         optimizedCallback
     );
-    
+
     console.log('[Convex] Subscribed to game state updates (turn-based optimized)');
     return gameStateSubscription;
 }
@@ -567,14 +572,14 @@ function subscribeToGameState(callback) {
  */
 async function getRoomState() {
     if (!currentRoomId) return null;
-    
+
     initConvex();
-    
+
     if (!convexClient) {
         console.error('[Convex] Cannot query: client not initialized');
         return null;
     }
-    
+
     try {
         return await convexClient.query(api.rooms.getRoom, {
             roomId: currentRoomId,
@@ -592,12 +597,12 @@ async function getRoomState() {
  */
 async function getRoomByCode(roomCode) {
     initConvex();
-    
+
     if (!convexClient) {
         console.error('[Convex] Cannot query: client not initialized');
         return null;
     }
-    
+
     try {
         return await convexClient.query(api.rooms.getRoomByCode, {
             roomCode: roomCode.toUpperCase(),
@@ -614,14 +619,14 @@ async function getRoomByCode(roomCode) {
  */
 async function getGameState() {
     if (!currentRoomId) return null;
-    
+
     initConvex();
-    
+
     if (!convexClient) {
         console.error('[Convex] Cannot query: client not initialized');
         return null;
     }
-    
+
     try {
         return await convexClient.query(api.games.getGameState, {
             roomId: currentRoomId,
@@ -637,14 +642,14 @@ async function getGameState() {
  * @returns {Promise<{success: boolean} | {error: string}>}
  */
 async function endGame() {
-    if (!currentRoomId) return { error: "Not in a room" };
-    
+    if (!currentRoomId) return { error: 'Not in a room' };
+
     initConvex();
-    
+
     if (!convexClient) {
         return { error: CONVEX_CONNECTION_ERROR };
     }
-    
+
     try {
         return await convexClient.mutation(api.games.endGame, {
             roomId: currentRoomId,
@@ -661,14 +666,14 @@ async function endGame() {
  * @returns {Promise<{success: boolean} | {error: string}>}
  */
 async function resetGame() {
-    if (!currentRoomId) return { error: "Not in a room" };
-    
+    if (!currentRoomId) return { error: 'Not in a room' };
+
     initConvex();
-    
+
     if (!convexClient) {
         return { error: CONVEX_CONNECTION_ERROR };
     }
-    
+
     try {
         return await convexClient.mutation(api.games.resetGame, {
             roomId: currentRoomId,
@@ -686,14 +691,14 @@ async function resetGame() {
  * @returns {Promise<{success: boolean, linesPopulated: number} | {error: string}>}
  */
 async function populateLines(lineKeys) {
-    if (!currentRoomId) return { error: "Not in a room" };
-    
+    if (!currentRoomId) return { error: 'Not in a room' };
+
     initConvex();
-    
+
     if (!convexClient) {
         return { error: CONVEX_CONNECTION_ERROR };
     }
-    
+
     try {
         return await convexClient.mutation(api.games.populateLines, {
             roomId: currentRoomId,

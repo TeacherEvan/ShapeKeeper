@@ -88,14 +88,14 @@ Then visit `http://localhost:8000` in your browser.
 
 The game offers four preset grid sizes that automatically adapt to your display:
 
-| Selection | Square Mode | Landscape Mode* | Total Squares |
-|-----------|-------------|-----------------|---------------|
-| 5×5       | 5×5 grid    | ~7×4 grid       | 16 squares    |
-| 10×10     | 10×10 grid  | ~16×7 grid      | 81 squares    |
-| 20×20     | 20×20 grid  | ~33×14 grid     | 361 squares   |
-| 30×30     | 30×30 grid  | ~50×18 grid     | 841 squares   |
+| Selection | Square Mode | Landscape Mode\* | Total Squares |
+| --------- | ----------- | ---------------- | ------------- |
+| 5×5       | 5×5 grid    | ~7×4 grid        | 16 squares    |
+| 10×10     | 10×10 grid  | ~16×7 grid       | 81 squares    |
+| 20×20     | 20×20 grid  | ~33×14 grid      | 361 squares   |
+| 30×30     | 30×30 grid  | ~50×18 grid      | 841 squares   |
 
-*Landscape mode activates when aspect ratio > 1.5
+\*Landscape mode activates when aspect ratio > 1.5
 
 ## 🎯 How to Play
 
@@ -170,12 +170,12 @@ ShapeKeeper/
 #### Key Methods
 
 ```javascript
-setupCanvas()          // Adaptive layout calculation
-getNearestDot()       // Collision detection for dot selection
-checkForSquares()     // Square completion detection
-checkForTriangles()   // Triangle completion detection (diagonal lines)
-draw()                // Main rendering loop
-animate()             // Animation frame management
+setupCanvas(); // Adaptive layout calculation
+getNearestDot(); // Collision detection for dot selection
+checkForSquares(); // Square completion detection
+checkForTriangles(); // Triangle completion detection (diagonal lines)
+draw(); // Main rendering loop
+animate(); // Animation frame management
 ```
 
 ### Data Structures
@@ -183,9 +183,9 @@ animate()             // Animation frame management
 #### Line Keys (Normalized)
 
 ```javascript
-"1,2-1,3"  // Horizontal line from (1,2) to (1,3)
-"1,2-2,2"  // Vertical line from (1,2) to (2,2)
-"1,1-2,2"  // Diagonal line from (1,1) to (2,2)
+'1,2-1,3'; // Horizontal line from (1,2) to (1,3)
+'1,2-2,2'; // Vertical line from (1,2) to (2,2)
+'1,1-2,2'; // Diagonal line from (1,1) to (2,2)
 ```
 
 Always sorted to prevent duplicates.
@@ -193,13 +193,13 @@ Always sorted to prevent duplicates.
 #### Square Keys
 
 ```javascript
-"5,10"  // Square at row 5, column 10
+'5,10'; // Square at row 5, column 10
 ```
 
 #### Triangle Keys
 
 ```javascript
-"tri-1,2-TR"  // Triangle at top-right of cell (1,2)
+'tri-1,2-TR'; // Triangle at top-right of cell (1,2)
 ```
 
 ### Coordinate System
@@ -227,9 +227,9 @@ Edit `index.html` to add new grid size buttons:
 In `game.js` constructor:
 
 ```javascript
-this.dotRadius = 1.6;    // Dot size
-this.lineWidth = 2;      // Line thickness
-this.cellSize = 8-40;    // Cell size range (calculated)
+this.dotRadius = 1.6; // Dot size
+this.lineWidth = 2; // Line thickness
+this.cellSize = 8 - 40; // Cell size range (calculated)
 ```
 
 ### Color Schemes
@@ -237,14 +237,14 @@ this.cellSize = 8-40;    // Cell size range (calculated)
 Default colors can be changed in `index.html`:
 
 ```html
-<input type="color" id="player1Color" value="#FF0000">
-<input type="color" id="player2Color" value="#0000FF">
+<input type="color" id="player1Color" value="#FF0000" />
+<input type="color" id="player2Color" value="#0000FF" />
 ```
 
 ## 📱 Browser Compatibility
 
-| Browser | Version | Status |
-|---------|---------|--------|
+| Browser | Version | Status          |
+| ------- | ------- | --------------- |
 | Chrome  | 90+     | ✅ Full Support |
 | Firefox | 88+     | ✅ Full Support |
 | Safari  | 14+     | ✅ Full Support |

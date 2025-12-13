@@ -4,7 +4,13 @@
  * @module effects/TileEffects
  */
 
-import { DARES, HYPOTHETICALS, PHYSICAL_CHALLENGES, TILE_EFFECTS, TRUTHS } from '../core/constants.js';
+import {
+    DARES,
+    HYPOTHETICALS,
+    PHYSICAL_CHALLENGES,
+    TILE_EFFECTS,
+    TRUTHS,
+} from '../core/constants.js';
 
 /**
  * Effect result from activation
@@ -33,7 +39,7 @@ export class TileEffectsManager {
             shieldCount: 0,
             extraTurns: 0,
             oracleActive: false,
-            lightningActive: false
+            lightningActive: false,
         };
         this.revealedEffects = new Set();
     }
@@ -47,7 +53,7 @@ export class TileEffectsManager {
     initializeEffects(gridRows, gridCols, effectChance = TILE_EFFECTS.EFFECT_CHANCE) {
         this.tileEffects = {};
         this.revealedEffects.clear();
-        
+
         for (let row = 0; row < gridRows - 1; row++) {
             for (let col = 0; col < gridCols - 1; col++) {
                 if (Math.random() < effectChance) {
@@ -66,11 +72,11 @@ export class TileEffectsManager {
         const isTrap = Math.random() < TILE_EFFECTS.TRAP_CHANCE;
         const effects = isTrap ? this.getTraps() : this.getPowerups();
         const effect = effects[Math.floor(Math.random() * effects.length)];
-        
+
         return {
             ...effect,
             type: isTrap ? 'trap' : 'powerup',
-            revealed: false
+            revealed: false,
         };
     }
 
@@ -85,49 +91,49 @@ export class TileEffectsManager {
                 name: 'Landmine!',
                 description: 'BOOM! The area explodes! No one scores and you lose your turn.',
                 icon: '💣',
-                apply: (state) => ({ scoreChange: -3, loseTurn: true })
+                apply: (state) => ({ scoreChange: -3, loseTurn: true }),
             },
             {
                 id: 'secret',
                 name: 'Reveal a Secret',
                 description: 'Spill the tea! Share an embarrassing secret about yourself.',
                 icon: '🔮',
-                apply: (state) => ({ social: true })
+                apply: (state) => ({ social: true }),
             },
             {
                 id: 'hypothetical',
                 name: 'Hypothetical',
                 description: 'Answer the hypothetical question honestly!',
                 icon: '🤔',
-                apply: (state) => ({ social: true, text: this.getRandomHypothetical() })
+                apply: (state) => ({ social: true, text: this.getRandomHypothetical() }),
             },
             {
                 id: 'drink',
                 name: 'Drink!',
                 description: 'Take a sip of your beverage! Cheers! 🍻',
                 icon: '🍺',
-                apply: (state) => ({ social: true })
+                apply: (state) => ({ social: true }),
             },
             {
                 id: 'dared',
                 name: "You're DARED!",
                 description: 'Complete the dare or forfeit your next turn!',
                 icon: '🎯',
-                apply: (state) => ({ social: true, text: this.getRandomDare() })
+                apply: (state) => ({ social: true, text: this.getRandomDare() }),
             },
             {
                 id: 'truth',
-                name: "TRUTH TIME!",
+                name: 'TRUTH TIME!',
                 description: 'Answer a truth honestly or face the consequences!',
                 icon: '🔥',
-                apply: (state) => ({ social: true, text: this.getRandomTruth() })
+                apply: (state) => ({ social: true, text: this.getRandomTruth() }),
             },
             {
                 id: 'reverse',
                 name: 'Reverse!',
                 description: 'Turn order is now reversed! Uno-style chaos!',
                 icon: '🔄',
-                apply: (state) => ({ reverseTurn: true })
+                apply: (state) => ({ reverseTurn: true }),
             },
             {
                 id: 'freeze',
@@ -137,29 +143,29 @@ export class TileEffectsManager {
                 apply: (state) => {
                     this.playerEffects.frozen = 1;
                     return { frozen: true };
-                }
+                },
             },
             {
                 id: 'swap_scores',
                 name: 'Score Swap!',
                 description: 'Your score gets swapped with the player on your left!',
                 icon: '🎭',
-                apply: (state) => ({ swapScores: true })
+                apply: (state) => ({ swapScores: true }),
             },
             {
                 id: 'ghost',
                 name: 'Ghost Mode',
                 description: 'Your next 3 lines are invisible to opponents! Spooky!',
                 icon: '👻',
-                apply: (state) => ({ ghostMode: true })
+                apply: (state) => ({ ghostMode: true }),
             },
             {
                 id: 'chaos',
                 name: 'Chaos Storm!',
                 description: 'All unclaimed squares are randomly redistributed!',
                 icon: '🌪️',
-                apply: (state) => ({ chaosStorm: true })
-            }
+                apply: (state) => ({ chaosStorm: true }),
+            },
         ];
     }
 
@@ -177,28 +183,28 @@ export class TileEffectsManager {
                 apply: (state) => {
                     this.playerEffects.extraTurns += 2;
                     return { extraTurn: true };
-                }
+                },
             },
             {
                 id: 'steal_territory',
                 name: "Pirate's Plunder",
-                description: 'Steal one of your opponent\'s squares and all connected to it!',
+                description: "Steal one of your opponent's squares and all connected to it!",
                 icon: '🏴‍☠️',
-                apply: (state) => ({ stealSquare: true })
+                apply: (state) => ({ stealSquare: true }),
             },
             {
                 id: 'dare_left',
                 name: 'Dare Left!',
                 description: 'You get to DARE the player on your left! Make it good!',
                 icon: '👈',
-                apply: (state) => ({ social: true })
+                apply: (state) => ({ social: true }),
             },
             {
                 id: 'physical_challenge',
                 name: 'Physical Challenge!',
                 description: 'The player on your right must do a silly physical challenge!',
                 icon: '🤸',
-                apply: (state) => ({ social: true, text: this.getRandomPhysicalChallenge() })
+                apply: (state) => ({ social: true, text: this.getRandomPhysicalChallenge() }),
             },
             {
                 id: 'shield',
@@ -209,7 +215,7 @@ export class TileEffectsManager {
                     this.playerEffects.shield = true;
                     this.playerEffects.shieldCount = 3;
                     return { shieldActive: true };
-                }
+                },
             },
             {
                 id: 'lightning',
@@ -219,14 +225,14 @@ export class TileEffectsManager {
                 apply: (state) => {
                     this.playerEffects.lightningActive = true;
                     return { lightning: true };
-                }
+                },
             },
             {
                 id: 'gift',
                 name: 'Gift of Giving',
                 description: 'Feeling generous? Give one of your squares to any player!',
                 icon: '🎁',
-                apply: (state) => ({ giftSquare: true })
+                apply: (state) => ({ giftSquare: true }),
             },
             {
                 id: 'oracle',
@@ -236,22 +242,22 @@ export class TileEffectsManager {
                 apply: (state) => {
                     this.playerEffects.oracleActive = true;
                     return { revealAdjacent: true };
-                }
+                },
             },
             {
                 id: 'double_points',
                 name: 'Lucky Star!',
                 description: 'Your next 3 squares are worth DOUBLE points!',
                 icon: '✨',
-                apply: (state) => ({ pointsMultiplier: 2 })
+                apply: (state) => ({ pointsMultiplier: 2 }),
             },
             {
                 id: 'wildcard',
                 name: 'Wildcard!',
                 description: 'Choose ANY powerup effect! The power is yours!',
                 icon: '🌟',
-                apply: (state) => ({ wildcard: true })
-            }
+                apply: (state) => ({ wildcard: true }),
+            },
         ];
     }
 
@@ -336,7 +342,7 @@ export class TileEffectsManager {
             return {
                 message: '🛡️ Shield blocked the trap!',
                 success: false,
-                blocked: true
+                blocked: true,
             };
         }
 
@@ -344,7 +350,7 @@ export class TileEffectsManager {
         return {
             message: `${effect.icon} ${effect.name}: ${effect.description}`,
             success: true,
-            ...result
+            ...result,
         };
     }
 
@@ -356,11 +362,16 @@ export class TileEffectsManager {
     revealAdjacentEffects(squareKey) {
         const [row, col] = squareKey.split(',').map(Number);
         const revealed = [];
-        
+
         const adjacentOffsets = [
-            [-1, -1], [-1, 0], [-1, 1],
-            [0, -1],           [0, 1],
-            [1, -1],  [1, 0],  [1, 1]
+            [-1, -1],
+            [-1, 0],
+            [-1, 1],
+            [0, -1],
+            [0, 1],
+            [1, -1],
+            [1, 0],
+            [1, 1],
         ];
 
         for (const [dRow, dCol] of adjacentOffsets) {
@@ -408,7 +419,7 @@ export class TileEffectsManager {
             shieldCount: 0,
             extraTurns: 0,
             oracleActive: false,
-            lightningActive: false
+            lightningActive: false,
         };
     }
 
@@ -426,7 +437,7 @@ export class TileEffectsManager {
      * @returns {{bg: string, border: string}}
      */
     getEffectColors(type) {
-        return type === 'trap' 
+        return type === 'trap'
             ? { bg: 'rgba(255, 0, 0, 0.2)', border: '#ff4444' }
             : { bg: 'rgba(0, 150, 255, 0.2)', border: '#4488ff' };
     }
@@ -445,13 +456,13 @@ export class TileEffectsManager {
      * @returns {Object}
      */
     getStats() {
-        const traps = Object.values(this.tileEffects).filter(e => e.type === 'trap').length;
-        const powerups = Object.values(this.tileEffects).filter(e => e.type === 'powerup').length;
+        const traps = Object.values(this.tileEffects).filter((e) => e.type === 'trap').length;
+        const powerups = Object.values(this.tileEffects).filter((e) => e.type === 'powerup').length;
         return {
             total: Object.keys(this.tileEffects).length,
             traps,
             powerups,
-            revealed: this.revealedEffects.size
+            revealed: this.revealedEffects.size,
         };
     }
 }

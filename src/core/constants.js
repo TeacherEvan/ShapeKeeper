@@ -1,10 +1,10 @@
 /**
  * ShapeKeeper Constants
  * All static configuration values used throughout the application
- * 
+ *
  * @module core/constants
  * @version 4.2.0
- * 
+ *
  * TODO: [OPTIMIZATION] Consider moving frequently-changed constants to a config file
  * TODO: [ARCHITECTURE] Consider using environment variables for deployment-specific values
  */
@@ -24,17 +24,17 @@ export const GAME = {
     CELL_SIZE_MIN: 8,
     CELL_SIZE_MAX: 40,
     GRID_OFFSET: 20,
-    
+
     // Player configuration
     POPULATE_PLAYER_ID: 3,
     MAX_PLAYERS: 6,
     MIN_PLAYERS: 2,
-    
+
     // Ghost line visibility
     GHOST_LINE_OPACITY: 0.3,
-    
+
     // Default player colors
-    PLAYER_COLORS: ['#FF0000', '#0000FF', '#00FF00', '#FF8C00', '#8B00FF', '#00FFFF']
+    PLAYER_COLORS: ['#FF0000', '#0000FF', '#00FF00', '#FF8C00', '#8B00FF', '#00FFFF'],
 };
 
 // Legacy exports for backward compatibility
@@ -56,7 +56,7 @@ export const ANIMATION = {
     PULSATING_DURATION: 2000,
     LINE_DRAW_DURATION: 150,
     INVALID_FLASH_DURATION: 300,
-    LINE_PULSE_DURATION: 2000
+    LINE_PULSE_DURATION: 2000,
 };
 
 // =============================================================================
@@ -78,7 +78,7 @@ export const PARTICLES = {
     RADIUS_MIN: 2,
     RADIUS_MAX: 6,
     DECAY_MIN: 0.015,
-    DECAY_MAX: 0.03
+    DECAY_MAX: 0.03,
 };
 
 // =============================================================================
@@ -87,7 +87,7 @@ export const PARTICLES = {
 
 export const KISS_EMOJI = {
     MIN: 5,
-    MAX: 8
+    MAX: 8,
 };
 
 // =============================================================================
@@ -97,7 +97,7 @@ export const KISS_EMOJI = {
 export const COMBO = {
     FLASH_THRESHOLD: 3,
     PULSE_THRESHOLD: 5,
-    EPIC_THRESHOLD: 7
+    EPIC_THRESHOLD: 7,
 };
 
 // =============================================================================
@@ -107,7 +107,7 @@ export const COMBO = {
 export const SOUND_FREQ = {
     LINE_BASE: 440,
     SQUARE_BASE: 523,
-    COMBO_BASE: 659
+    COMBO_BASE: 659,
 };
 
 // =============================================================================
@@ -116,9 +116,9 @@ export const SOUND_FREQ = {
 
 export const TILE_EFFECTS = {
     // Configuration
-    EFFECT_CHANCE: 0.2,    // 20% of squares have effects
-    TRAP_CHANCE: 0.5,      // 50% traps, 50% powerups when effect exists
-    
+    EFFECT_CHANCE: 0.2, // 20% of squares have effects
+    TRAP_CHANCE: 0.5, // 50% traps, 50% powerups when effect exists
+
     // TRAPS (Red/Orange theme) - 10 effects
     traps: [
         {
@@ -127,7 +127,7 @@ export const TILE_EFFECTS = {
             name: 'Landmine!',
             description: 'BOOM! The area explodes! No one scores and you lose your turn.',
             color: '#FF4444',
-            sound: 'explosion'
+            sound: 'explosion',
         },
         {
             id: 'secret',
@@ -135,7 +135,7 @@ export const TILE_EFFECTS = {
             name: 'Reveal a Secret',
             description: 'Spill the tea! Share an embarrassing secret about yourself.',
             color: '#9C27B0',
-            sound: 'mystical'
+            sound: 'mystical',
         },
         {
             id: 'hypothetical',
@@ -143,7 +143,7 @@ export const TILE_EFFECTS = {
             name: 'Hypothetical',
             description: 'Answer the hypothetical question honestly!',
             color: '#FF9800',
-            sound: 'thinking'
+            sound: 'thinking',
         },
         {
             id: 'drink',
@@ -151,7 +151,7 @@ export const TILE_EFFECTS = {
             name: 'Drink!',
             description: 'Take a sip of your beverage! Cheers! 🍻',
             color: '#FFC107',
-            sound: 'gulp'
+            sound: 'gulp',
         },
         {
             id: 'dared',
@@ -159,15 +159,15 @@ export const TILE_EFFECTS = {
             name: "You're DARED!",
             description: 'Complete the dare or forfeit your next turn!',
             color: '#F44336',
-            sound: 'dramatic'
+            sound: 'dramatic',
         },
         {
             id: 'truth',
             icon: '🔥',
-            name: "TRUTH TIME!",
+            name: 'TRUTH TIME!',
             description: 'Answer a truth honestly or face the consequences!',
             color: '#FF5722',
-            sound: 'reveal'
+            sound: 'reveal',
         },
         {
             id: 'reverse',
@@ -175,7 +175,7 @@ export const TILE_EFFECTS = {
             name: 'Reverse!',
             description: 'Turn order is now reversed! Uno-style chaos!',
             color: '#E91E63',
-            sound: 'whoosh'
+            sound: 'whoosh',
         },
         {
             id: 'freeze',
@@ -183,7 +183,7 @@ export const TILE_EFFECTS = {
             name: 'Frozen!',
             description: 'Brrr! Skip your next turn while you thaw out.',
             color: '#03A9F4',
-            sound: 'freeze'
+            sound: 'freeze',
         },
         {
             id: 'swap_scores',
@@ -191,7 +191,7 @@ export const TILE_EFFECTS = {
             name: 'Score Swap!',
             description: 'Your score gets swapped with the player on your left!',
             color: '#673AB7',
-            sound: 'swap'
+            sound: 'swap',
         },
         {
             id: 'ghost',
@@ -199,7 +199,7 @@ export const TILE_EFFECTS = {
             name: 'Ghost Mode',
             description: 'Your next 3 lines are invisible to opponents! Spooky!',
             color: '#607D8B',
-            sound: 'ghost'
+            sound: 'ghost',
         },
         {
             id: 'chaos',
@@ -207,10 +207,10 @@ export const TILE_EFFECTS = {
             name: 'Chaos Storm!',
             description: 'All unclaimed squares are randomly redistributed!',
             color: '#FF5722',
-            sound: 'storm'
-        }
+            sound: 'storm',
+        },
     ],
-    
+
     // POWERUPS (Blue/Green theme) - 10 effects
     powerups: [
         {
@@ -219,15 +219,15 @@ export const TILE_EFFECTS = {
             name: '+2 Extra Moves!',
             description: 'Lucky you! Take 2 additional turns right now!',
             color: '#4CAF50',
-            sound: 'powerup'
+            sound: 'powerup',
         },
         {
             id: 'steal_territory',
             icon: '🏴‍☠️',
             name: "Pirate's Plunder",
-            description: 'Steal one of your opponent\'s squares and all connected to it!',
+            description: "Steal one of your opponent's squares and all connected to it!",
             color: '#2196F3',
-            sound: 'pirate'
+            sound: 'pirate',
         },
         {
             id: 'dare_left',
@@ -235,7 +235,7 @@ export const TILE_EFFECTS = {
             name: 'Dare Left!',
             description: 'You get to DARE the player on your left! Make it good!',
             color: '#00BCD4',
-            sound: 'challenge'
+            sound: 'challenge',
         },
         {
             id: 'physical_challenge',
@@ -243,7 +243,7 @@ export const TILE_EFFECTS = {
             name: 'Physical Challenge!',
             description: 'The player on your right must do a silly physical challenge!',
             color: '#8BC34A',
-            sound: 'fanfare'
+            sound: 'fanfare',
         },
         {
             id: 'shield',
@@ -251,7 +251,7 @@ export const TILE_EFFECTS = {
             name: 'Shield Up!',
             description: 'Your next 3 completed squares are protected from stealing!',
             color: '#3F51B5',
-            sound: 'shield'
+            sound: 'shield',
         },
         {
             id: 'lightning',
@@ -259,7 +259,7 @@ export const TILE_EFFECTS = {
             name: 'Lightning Strike!',
             description: 'POWER! Draw 2 lines at once on your next turn!',
             color: '#FFEB3B',
-            sound: 'lightning'
+            sound: 'lightning',
         },
         {
             id: 'gift',
@@ -267,7 +267,7 @@ export const TILE_EFFECTS = {
             name: 'Gift of Giving',
             description: 'Feeling generous? Give one of your squares to any player!',
             color: '#E91E63',
-            sound: 'gift'
+            sound: 'gift',
         },
         {
             id: 'oracle',
@@ -275,7 +275,7 @@ export const TILE_EFFECTS = {
             name: "Oracle's Vision",
             description: 'See all hidden tile effects on the board for 10 seconds!',
             color: '#9C27B0',
-            sound: 'reveal'
+            sound: 'reveal',
         },
         {
             id: 'double_points',
@@ -283,7 +283,7 @@ export const TILE_EFFECTS = {
             name: 'Lucky Star!',
             description: 'Your next 3 squares are worth DOUBLE points!',
             color: '#FFD700',
-            sound: 'sparkle'
+            sound: 'sparkle',
         },
         {
             id: 'wildcard',
@@ -291,9 +291,9 @@ export const TILE_EFFECTS = {
             name: 'Wildcard!',
             description: 'Choose ANY powerup effect! The power is yours!',
             color: '#FF4081',
-            sound: 'wildcard'
-        }
-    ]
+            sound: 'wildcard',
+        },
+    ],
 };
 
 // =============================================================================
@@ -301,52 +301,52 @@ export const TILE_EFFECTS = {
 // =============================================================================
 
 export const HYPOTHETICALS = [
-    "Would you rather fight 100 duck-sized horses or 1 horse-sized duck?",
-    "Would you rather have unlimited money or unlimited time?",
-    "Would you rather be able to fly or be invisible?",
-    "Would you rather live without music or without movies?",
-    "Would you rather always be 10 minutes late or 20 minutes early?",
-    "Would you rather have a rewind button or a pause button for your life?",
-    "Would you rather know how you die or when you die?",
-    "Would you rather speak all languages or talk to animals?",
-    "Would you rather give up social media forever or never watch TV again?",
-    "Would you rather be famous for something bad or unknown for something great?"
+    'Would you rather fight 100 duck-sized horses or 1 horse-sized duck?',
+    'Would you rather have unlimited money or unlimited time?',
+    'Would you rather be able to fly or be invisible?',
+    'Would you rather live without music or without movies?',
+    'Would you rather always be 10 minutes late or 20 minutes early?',
+    'Would you rather have a rewind button or a pause button for your life?',
+    'Would you rather know how you die or when you die?',
+    'Would you rather speak all languages or talk to animals?',
+    'Would you rather give up social media forever or never watch TV again?',
+    'Would you rather be famous for something bad or unknown for something great?',
 ];
 
 export const DARES = [
-    "Be Dared! (The group decides your fate)",
-    "Dare the person to your right! (Make it good)"
+    'Be Dared! (The group decides your fate)',
+    'Dare the person to your right! (Make it good)',
 ];
 
 export const TRUTHS = [
-    "Receive a Truth! (The group asks you anything)",
-    "Give a Truth! (Ask the person to your left anything)"
+    'Receive a Truth! (The group asks you anything)',
+    'Give a Truth! (Ask the person to your left anything)',
 ];
 
 export const PHYSICAL_CHALLENGES = [
-    "Do a dramatic slow-motion replay of capturing that square!",
-    "Stand on one foot until your next turn!",
-    "Touch your nose with your tongue (or try)!",
-    "Do your best superhero pose!",
-    "Give the player on your left a high five!",
-    "Do the robot dance for 10 seconds!",
-    "Spin around 3 times!",
-    "Do an air guitar solo!",
-    "Make the most ridiculous face you can!",
-    "Do a victory dance right now!"
+    'Do a dramatic slow-motion replay of capturing that square!',
+    'Stand on one foot until your next turn!',
+    'Touch your nose with your tongue (or try)!',
+    'Do your best superhero pose!',
+    'Give the player on your left a high five!',
+    'Do the robot dance for 10 seconds!',
+    'Spin around 3 times!',
+    'Do an air guitar solo!',
+    'Make the most ridiculous face you can!',
+    'Do a victory dance right now!',
 ];
 
 export const SHAPE_MESSAGES = [
-    "Triangle Power! 🔺",
-    "Three sides, infinite possibilities!",
-    "Acute move! 😉",
+    'Triangle Power! 🔺',
+    'Three sides, infinite possibilities!',
+    'Acute move! 😉',
     "You're looking sharp!",
-    "Pyramid scheme? No, just points!",
-    "Tri-umphant!",
-    "Isosceles what you did there!",
-    "Equilateral excellence!",
-    "Pointy business!",
-    "Geometry rules!"
+    'Pyramid scheme? No, just points!',
+    'Tri-umphant!',
+    'Isosceles what you did there!',
+    'Equilateral excellence!',
+    'Pointy business!',
+    'Geometry rules!',
 ];
 
 // =============================================================================
@@ -359,7 +359,7 @@ export const DEFAULT_COLORS = [
     '#00FF00', // Green
     '#FF8C00', // Orange
     '#8B00FF', // Purple
-    '#00FFFF'  // Cyan
+    '#00FFFF', // Cyan
 ];
 
 // =============================================================================
@@ -367,9 +367,29 @@ export const DEFAULT_COLORS = [
 // =============================================================================
 
 export const WELCOME_COLORS = [
-    '#FF0000', '#FF4500', '#FF6B00', '#FF8C00', '#FFA500',
-    '#FFD700', '#FFFF00', '#00FF00', '#00FF7F', '#00FFFF',
-    '#0080FF', '#0000FF', '#4B0082', '#8B00FF', '#FF00FF',
-    '#FF1493', '#FF69B4', '#00CED1', '#20B2AA', '#3CB371',
-    '#9370DB', '#BA55D3', '#FF6347', '#FF4500', '#DC143C'
+    '#FF0000',
+    '#FF4500',
+    '#FF6B00',
+    '#FF8C00',
+    '#FFA500',
+    '#FFD700',
+    '#FFFF00',
+    '#00FF00',
+    '#00FF7F',
+    '#00FFFF',
+    '#0080FF',
+    '#0000FF',
+    '#4B0082',
+    '#8B00FF',
+    '#FF00FF',
+    '#FF1493',
+    '#FF69B4',
+    '#00CED1',
+    '#20B2AA',
+    '#3CB371',
+    '#9370DB',
+    '#BA55D3',
+    '#FF6347',
+    '#FF4500',
+    '#DC143C',
 ];

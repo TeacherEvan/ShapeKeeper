@@ -1,6 +1,7 @@
 # Merge Conflict Resolution Guide
 
 ## Situation
+
 - **Your Changes:** Code cleanup, consolidation, documentation
 - **Remote Changes:** Zoom feature improvements, mobile optimizations
 - **Conflict:** Both modified `game.js` in different ways
@@ -67,54 +68,53 @@ git push origin feature/code-cleanup
 
 1. **Save your work:**
 
-   ```bash
-   git reset --soft HEAD~1
-   git stash save "Code cleanup: consolidation and documentation"
-   ```
+    ```bash
+    git reset --soft HEAD~1
+    git stash save "Code cleanup: consolidation and documentation"
+    ```
 
 2. **Get latest from remote:**
 
-   ```bash
-   git pull origin main
-   ```
+    ```bash
+    git pull origin main
+    ```
 
 3. **Re-apply your cleanup:**
 
-   ```bash
-   git stash pop
-   ```
+    ```bash
+    git stash pop
+    ```
 
 4. **If conflicts, resolve them keeping:**
-   - Remote's zoom features (manualZoomLevel, panOffset, etc.)
-   - Your drawLine() consolidation
-   - Your removed duplicates (isAdjacent, processTouchClick)
-   - Your documentation improvements
+    - Remote's zoom features (manualZoomLevel, panOffset, etc.)
+    - Your drawLine() consolidation
+    - Your removed duplicates (isAdjacent, processTouchClick)
+    - Your documentation improvements
 
 5. **Commit combined work:**
 
-   ```bash
-   git add .
-   git commit -m "Code cleanup integrated with latest zoom features"
-   ```
+    ```bash
+    git add .
+    git commit -m "Code cleanup integrated with latest zoom features"
+    ```
 
 6. **Push to remote:**
 
-   ```bash
-   git push origin main
-   ```
+    ```bash
+    git push origin main
+    ```
 
 ## Files to Pay Attention To
 
 - **game.js** - Main conflict area
-  - Zoom variables (accept remote)
-  - drawLine() method (keep yours)  
-  - Touch handlers (merge both improvements)
-  
+    - Zoom variables (accept remote)
+    - drawLine() method (keep yours)
+    - Touch handlers (merge both improvements)
 - **styles.css** - Minor conflicts
-  - Merge both formatting improvements
+    - Merge both formatting improvements
 
 - **Documentation** - No conflicts
-  - Your new MD files are additions
+    - Your new MD files are additions
 
 ## After Resolution
 
@@ -133,6 +133,7 @@ git fetch --prune
 ## Need Help?
 
 If you prefer, I can:
+
 1. Guide you through manual conflict resolution
 2. Show you exactly which code to keep from each version
 3. Create a combined version for you to review

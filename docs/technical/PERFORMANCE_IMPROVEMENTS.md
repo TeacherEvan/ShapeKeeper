@@ -18,9 +18,11 @@ The game was experiencing freezing issues after extended play, particularly on l
 ### 1. Removed Truth or Dare Feature
 
 **Files Modified:**
+
 - `game.js`: 108 lines removed, 31 lines added (net: -77 lines)
 
 **Code Changes:**
+
 - Removed `ANIMATION_TRUTHORDARE_DURATION` constant
 - Removed `triggerTruthOrDareAnimation()` method (17 lines)
 - Removed `drawTruthOrDareAnimations()` method (39 lines)
@@ -30,6 +32,7 @@ The game was experiencing freezing issues after extended play, particularly on l
 - Removed Truth or Dare animation cleanup from `animate()` loop
 
 **Impact:**
+
 - Eliminated memory leak from accumulated Truth or Dare animations
 - Removed unnecessary animation rendering overhead
 - Simplified multiplier system
@@ -37,18 +40,21 @@ The game was experiencing freezing issues after extended play, particularly on l
 ### 2. Optimized Kiss Emoji Animations
 
 **Before:**
+
 ```javascript
 static KISS_EMOJI_MIN = 10;
 static KISS_EMOJI_MAX = 17;
 ```
 
 **After:**
+
 ```javascript
 static KISS_EMOJI_MIN = 5;
 static KISS_EMOJI_MAX = 8;
 ```
 
 **Impact:**
+
 - 50% reduction in kiss emoji count per square
 - Reduced rendering overhead for completed squares
 - Maintained visual feedback while improving performance
@@ -56,6 +62,7 @@ static KISS_EMOJI_MAX = 8;
 ### 3. Improved Animation Loop
 
 **Before:**
+
 ```javascript
 // Redraw if animations are active or zooming
 if (this.particles.length > 0 || this.squareAnimations.length > 0 || ...) {
@@ -64,15 +71,17 @@ if (this.particles.length > 0 || this.squareAnimations.length > 0 || ...) {
 ```
 
 **After:**
+
 ```javascript
 // Check if redraw is needed (animations, zoom, or selected dot)
-const needsRedraw = this.particles.length > 0 || 
-    this.squareAnimations.length > 0 || 
-    this.touchVisuals.length > 0 || 
+const needsRedraw =
+    this.particles.length > 0 ||
+    this.squareAnimations.length > 0 ||
+    this.touchVisuals.length > 0 ||
     this.kissEmojis.length > 0 ||
     this.pulsatingLines.length > 0 ||
     (this.multiplierAnimations && this.multiplierAnimations.length > 0) ||
-    Math.abs(this.zoomLevel - this.manualZoomLevel) > 0.01 || 
+    Math.abs(this.zoomLevel - this.manualZoomLevel) > 0.01 ||
     this.selectedDot;
 
 // Redraw only if needed
@@ -82,6 +91,7 @@ if (needsRedraw) {
 ```
 
 **Impact:**
+
 - Better variable naming for clarity
 - More efficient animation state checking
 - Reduced unnecessary draw calls
@@ -89,6 +99,7 @@ if (needsRedraw) {
 ### 4. Enhanced Multiplier Distribution
 
 **Distribution (for 860 squares in 30×30 landscape grid):**
+
 - x2: 560 squares (65%)
 - x3: 172 squares (20%)
 - x4: 86 squares (10%)
@@ -100,6 +111,7 @@ if (needsRedraw) {
 ## Testing Results
 
 ### Test Environment
+
 - **Grid Size:** 30×30 (860 squares, rendered as 21×44 in landscape)
 - **Lines Drawn:** 479 lines using populate feature
 - **Browser:** Chrome/Firefox
@@ -107,17 +119,18 @@ if (needsRedraw) {
 
 ### Performance Metrics
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Kiss Emojis per Square | 10-17 | 5-8 | 50% reduction |
-| Animation Arrays | 7 | 6 | 14% reduction |
-| Code Lines | 1495 | 1418 | 77 lines removed |
-| Animation Cleanup | Incomplete | Complete | 100% fixed |
-| Memory Leaks | 1 (Truth/Dare) | 0 | Eliminated |
+| Metric                 | Before         | After    | Improvement      |
+| ---------------------- | -------------- | -------- | ---------------- |
+| Kiss Emojis per Square | 10-17          | 5-8      | 50% reduction    |
+| Animation Arrays       | 7              | 6        | 14% reduction    |
+| Code Lines             | 1495           | 1418     | 77 lines removed |
+| Animation Cleanup      | Incomplete     | Complete | 100% fixed       |
+| Memory Leaks           | 1 (Truth/Dare) | 0        | Eliminated       |
 
 ### Animation Cleanup Verification
 
 After 479 lines drawn on 30×30 grid:
+
 ```
 ✓ Particles: 0 (properly cleaned up)
 ✓ Square animations: 0 (properly cleaned up)
@@ -129,34 +142,38 @@ After 479 lines drawn on 30×30 grid:
 
 ### Freezing Test Results
 
-| Grid Size | Squares | Lines Tested | Freezing | Notes |
-|-----------|---------|--------------|----------|-------|
-| 5×5 | 16 | Full game | ✅ None | Smooth |
-| 10×10 | 81 | Full game | ✅ None | Smooth |
-| 20×20 | 361 | 200+ lines | ✅ None | Smooth |
-| 30×30 | 860 | 479 lines | ✅ None | Smooth, responsive |
+| Grid Size | Squares | Lines Tested | Freezing | Notes              |
+| --------- | ------- | ------------ | -------- | ------------------ |
+| 5×5       | 16      | Full game    | ✅ None  | Smooth             |
+| 10×10     | 81      | Full game    | ✅ None  | Smooth             |
+| 20×20     | 361     | 200+ lines   | ✅ None  | Smooth             |
+| 30×30     | 860     | 479 lines    | ✅ None  | Smooth, responsive |
 
 ## Code Quality
 
 ### Security Scan (CodeQL)
+
 - **Status:** ✅ PASSED
 - **Alerts:** 0
 - **Vulnerabilities:** None found
 
 ### Code Review
+
 - **Status:** ✅ PASSED
 - **Issues Found:** 2 (both addressed)
-  1. Clarified multiplier distribution remainder handling
-  2. Improved variable naming in animation loop
+    1. Clarified multiplier distribution remainder handling
+    2. Improved variable naming in animation loop
 
 ## User-Facing Changes
 
 ### Removed Features
+
 - ❌ Truth or Dare feature (no longer appears in gameplay)
 - ❌ Truth or Dare card animation
 - ❌ "T/D" indicator on revealed squares
 
 ### Retained Features
+
 - ✅ All multiplier functionality (x2, x3, x4, x5, x10)
 - ✅ Multiplier reveal animations (golden sparks and smoke)
 - ✅ Score multiplier system
@@ -164,6 +181,7 @@ After 479 lines drawn on 30×30 grid:
 - ✅ All other game features
 
 ### Performance Improvements
+
 - ✅ No more freezing after extended play
 - ✅ Smoother animations
 - ✅ Better memory management
@@ -179,12 +197,14 @@ After 479 lines drawn on 30×30 grid:
 ## Future Considerations
 
 ### Potential Further Optimizations
+
 1. Implement animation pooling for particles
 2. Add throttling for very large grids (50×50+)
 3. Consider canvas layering for static/dynamic content
 4. Add performance monitoring in production
 
 ### Feature Requests to Consider
+
 1. Configurable animation intensity setting
 2. Performance mode for older devices
 3. Animation on/off toggle
@@ -194,12 +214,15 @@ After 479 lines drawn on 30×30 grid:
 ## Version 4.3.0 - Animation Loop Optimization (December 9, 2025)
 
 ### Problem
+
 The animation loop was using multiple `filter()` calls per frame, creating unnecessary garbage collection pressure and wasted iterations.
 
 ### Optimizations Implemented
 
 #### 1. In-Place Array Compaction
+
 **Before:**
+
 ```javascript
 this.particles = this.particles.filter(p => p.life > 0);
 this.squareAnimations = this.squareAnimations.filter(a => ...);
@@ -208,6 +231,7 @@ this.sparkleEmojis = this.sparkleEmojis.filter(s => ...);
 ```
 
 **After:**
+
 ```javascript
 // Single-pass in-place compaction - no new array allocations
 _compactAnimationArray(arr, now, keepPredicate) {
@@ -224,36 +248,40 @@ _compactAnimationArray(arr, now, keepPredicate) {
 **Impact:** Eliminates GC pressure from filter() array allocations
 
 #### 2. Single-Pass Particle Physics
+
 **Before:** Physics update + filter in same callback, creating closure overhead  
 **After:** Single for-loop with in-place compaction
 
 #### 3. Ambient Particle Frame Skipping
+
 **Before:** Ambient particles triggered redraw every frame (60fps)  
 **After:** Ambient particles render every 3rd frame (48ms intervals)
 
 ```javascript
-const ambientRedraw = this.ambientParticles.length > 0 && (now % 48 < 16);
+const ambientRedraw = this.ambientParticles.length > 0 && now % 48 < 16;
 ```
 
 **Impact:** ~66% reduction in ambient particle rendering (imperceptible visually)
 
 #### 4. Cached Dimension Lookups
+
 **Before:** `this.logicalWidth` accessed in loop  
 **After:** `const w = this.logicalWidth` cached before loop
 
 ### New Utility Functions (src/core/utils.js)
+
 - `distributeOverPositions()` - Generic distribution for multipliers/effects
 - `clamp()` - Value clamping utility
 - `lerp()` - Linear interpolation for animations
 
 ### Performance Impact
 
-| Optimization | Memory Impact | CPU Impact |
-|--------------|---------------|------------|
-| In-place compaction | -100% array allocations | ~10% faster |
-| Single-pass physics | -50% iterations | ~15% faster |
-| Ambient frame skip | No change | -66% ambient render cost |
-| Cached lookups | No change | ~5% faster |
+| Optimization        | Memory Impact           | CPU Impact               |
+| ------------------- | ----------------------- | ------------------------ |
+| In-place compaction | -100% array allocations | ~10% faster              |
+| Single-pass physics | -50% iterations         | ~15% faster              |
+| Ambient frame skip  | No change               | -66% ambient render cost |
+| Cached lookups      | No change               | ~5% faster               |
 
 ---
 
@@ -262,6 +290,7 @@ const ambientRedraw = this.ambientParticles.length > 0 && (now % 48 < 16);
 The performance improvements successfully address the freezing issue while removing the Truth or Dare feature as requested. The game now performs smoothly even on large 30×30 grids with hundreds of lines drawn.
 
 **Key Achievements:**
+
 - ✅ Game freezing eliminated
 - ✅ Truth or Dare feature completely removed
 - ✅ 50% reduction in kiss emoji animations
@@ -272,6 +301,7 @@ The performance improvements successfully address the freezing issue while remov
 - ✅ Animation loop optimized (v4.3.0)
 
 **Impact Summary:**
+
 - Better performance across all grid sizes
 - Cleaner codebase
 - Improved maintainability

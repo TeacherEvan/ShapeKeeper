@@ -68,7 +68,7 @@ export class ParticleSystem {
             radius: Math.random() * 3 + 1,
             opacity: 0,
             maxOpacity: Math.random() * 0.3 + 0.1,
-            phase: Math.random() * Math.PI * 2
+            phase: Math.random() * Math.PI * 2,
         };
     }
 
@@ -82,25 +82,30 @@ export class ParticleSystem {
      */
     createBurst(x, y, color, count = PARTICLES.BURST_COUNT, comboMultiplier = 1) {
         const particleCount = Math.floor(count * Math.min(comboMultiplier, 3));
-        
+
         for (let i = 0; i < particleCount; i++) {
             const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.3;
-            const speed = PARTICLES.SPEED_MIN + Math.random() * (PARTICLES.SPEED_MAX - PARTICLES.SPEED_MIN);
+            const speed =
+                PARTICLES.SPEED_MIN + Math.random() * (PARTICLES.SPEED_MAX - PARTICLES.SPEED_MIN);
             const speedMultiplier = 1 + (comboMultiplier - 1) * 0.3;
-            
+
             this.particles.push({
                 x,
                 y,
                 vx: Math.cos(angle) * speed * speedMultiplier,
                 vy: Math.sin(angle) * speed * speedMultiplier,
-                radius: PARTICLES.RADIUS_MIN + Math.random() * (PARTICLES.RADIUS_MAX - PARTICLES.RADIUS_MIN),
+                radius:
+                    PARTICLES.RADIUS_MIN +
+                    Math.random() * (PARTICLES.RADIUS_MAX - PARTICLES.RADIUS_MIN),
                 maxRadius: PARTICLES.RADIUS_MAX * 1.5,
                 life: 1,
-                decay: PARTICLES.DECAY_MIN + Math.random() * (PARTICLES.DECAY_MAX - PARTICLES.DECAY_MIN),
+                decay:
+                    PARTICLES.DECAY_MIN +
+                    Math.random() * (PARTICLES.DECAY_MAX - PARTICLES.DECAY_MIN),
                 color: this.varyColor(color),
                 opacity: 1,
                 hasTrail: Math.random() > 0.5,
-                trail: []
+                trail: [],
             });
         }
     }
@@ -116,7 +121,7 @@ export class ParticleSystem {
         for (let i = 0; i < count; i++) {
             const angle = Math.random() * Math.PI * 2;
             const distance = Math.random() * 30;
-            
+
             this.particles.push({
                 x: x + Math.cos(angle) * distance,
                 y: y + Math.sin(angle) * distance,
@@ -130,7 +135,7 @@ export class ParticleSystem {
                 opacity: 1,
                 hasTrail: false,
                 trail: [],
-                isSparkle: true
+                isSparkle: true,
             });
         }
     }
@@ -146,12 +151,12 @@ export class ParticleSystem {
     createLineTrail(x1, y1, x2, y2, color) {
         const distance = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
         const count = Math.floor(distance / 15);
-        
+
         for (let i = 0; i < count; i++) {
             const t = i / count;
             const x = x1 + (x2 - x1) * t;
             const y = y1 + (y2 - y1) * t;
-            
+
             setTimeout(() => {
                 this.createSparkles(x, y, color, 3);
             }, i * 20);
@@ -166,7 +171,7 @@ export class ParticleSystem {
         // Update burst particles
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
-            
+
             // Update trail
             if (p.hasTrail && p.trail) {
                 p.trail.unshift({ x: p.x, y: p.y });
@@ -174,25 +179,25 @@ export class ParticleSystem {
                     p.trail.pop();
                 }
             }
-            
+
             // Apply physics
             p.x += p.vx;
             p.y += p.vy;
             p.vy += PARTICLES.GRAVITY;
             p.vx *= PARTICLES.FRICTION;
             p.vy *= PARTICLES.FRICTION;
-            
+
             // Update life
             p.life -= p.decay;
             p.opacity = p.life;
             p.radius = p.maxRadius * p.life;
-            
+
             // Remove dead particles
             if (p.life <= 0) {
                 this.particles.splice(i, 1);
             }
         }
-        
+
         // Update ambient particles
         this.updateAmbient();
     }
@@ -206,7 +211,7 @@ export class ParticleSystem {
             p.y += p.vy;
             p.phase += 0.02;
             p.opacity = p.maxOpacity * (0.5 + 0.5 * Math.sin(p.phase));
-            
+
             // Wrap around screen
             if (p.x < 0) p.x = this.canvas.width;
             if (p.x > this.canvas.width) p.x = 0;
@@ -222,7 +227,7 @@ export class ParticleSystem {
     draw(ctx) {
         // Draw ambient particles first (background)
         this.drawAmbient(ctx);
-        
+
         // Draw burst particles
         for (const p of this.particles) {
             // Draw trail
@@ -236,13 +241,13 @@ export class ParticleSystem {
                 ctx.lineWidth = p.radius * 0.5;
                 ctx.stroke();
             }
-            
+
             // Draw particle
             ctx.beginPath();
             ctx.arc(p.x, p.y, Math.max(0, p.radius), 0, Math.PI * 2);
             ctx.fillStyle = `rgba(${this.hexToRgb(p.color)}, ${p.opacity})`;
             ctx.fill();
-            
+
             // Add glow for sparkles
             if (p.isSparkle) {
                 ctx.shadowBlur = 10;
@@ -275,13 +280,13 @@ export class ParticleSystem {
         const variation = 30;
         const rgb = this.hexToRgb(baseColor);
         if (!rgb) return baseColor;
-        
-        const parts = rgb.split(',').map(n => parseInt(n.trim()));
-        const varied = parts.map(c => 
+
+        const parts = rgb.split(',').map((n) => parseInt(n.trim()));
+        const varied = parts.map((c) =>
             Math.max(0, Math.min(255, c + (Math.random() - 0.5) * variation))
         );
-        
-        return `#${varied.map(c => Math.round(c).toString(16).padStart(2, '0')).join('')}`;
+
+        return `#${varied.map((c) => Math.round(c).toString(16).padStart(2, '0')).join('')}`;
     }
 
     /**
@@ -291,7 +296,7 @@ export class ParticleSystem {
      */
     hexToRgb(hex) {
         if (!hex) return '255, 255, 255';
-        
+
         // Handle rgba format
         if (hex.startsWith('rgba') || hex.startsWith('rgb')) {
             const match = hex.match(/\d+/g);
@@ -299,13 +304,13 @@ export class ParticleSystem {
                 return `${match[0]}, ${match[1]}, ${match[2]}`;
             }
         }
-        
+
         // Handle hex format
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         if (result) {
             return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`;
         }
-        
+
         return '255, 255, 255';
     }
 
@@ -338,7 +343,7 @@ export class ParticleSystem {
     getStats() {
         return {
             burst: this.particles.length,
-            ambient: this.ambientParticles.length
+            ambient: this.ambientParticles.length,
         };
     }
 }

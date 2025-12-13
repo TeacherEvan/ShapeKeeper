@@ -1,231 +1,299 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+        />
+        <title>ShapeKeeper</title>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ShapeKeeper</title>
-    
-    <!-- SEO and Social Meta -->
-    <meta name="description" content="ShapeKeeper - A modern browser-based territory capture game with local and online multiplayer support">
-    <meta name="keywords" content="game, ShapeKeeper, dots and boxes, multiplayer, browser game">
-    <meta name="author" content="Teacher Evan">
-    <meta name="theme-color" content="#4CAF50">
-    
-    <!-- Open Graph / Social -->
-    <meta property="og:title" content="ShapeKeeper">
-    <meta property="og:description" content="A modern territory capture game with multiplayer support">
-    <meta property="og:type" content="website">
-    
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
-    
-    <!-- Preload critical CSS -->
-    <link rel="stylesheet" href="styles.css">
-    
-    <!-- DNS Prefetch for external resources -->
-    <link rel="dns-prefetch" href="https://unpkg.com">
-    <link rel="dns-prefetch" href="https://oceanic-antelope-781.convex.cloud">
-    
-    <!-- Preconnect for Convex backend -->
-    <link rel="preconnect" href="https://oceanic-antelope-781.convex.cloud" crossorigin>
-</head>
+        <!-- SEO and Social Meta -->
+        <meta
+            name="description"
+            content="ShapeKeeper - A modern browser-based territory capture game with local and online multiplayer support"
+        />
+        <meta
+            name="keywords"
+            content="game, ShapeKeeper, dots and boxes, multiplayer, browser game"
+        />
+        <meta name="author" content="Teacher Evan" />
+        <meta name="theme-color" content="#4CAF50" />
 
-<body>
-    <!-- Main Menu Screen -->
-    <div id="mainMenuScreen" class="screen active">
-        <canvas id="welcomeCanvas" aria-hidden="true"></canvas>
-        <div class="welcome-container">
-            <h1>ShapeKeeper</h1>
-            <p class="credit">Created by Teacher Evan</p>
+        <!-- Open Graph / Social -->
+        <meta property="og:title" content="ShapeKeeper" />
+        <meta
+            property="og:description"
+            content="A modern territory capture game with multiplayer support"
+        />
+        <meta property="og:type" content="website" />
 
-            <div class="menu-options">
-                <button id="createGameBtn" class="menu-btn">Create Game</button>
-                <button id="joinGameBtn" class="menu-btn">Join Game</button>
-                <button id="localPlayBtn" class="menu-btn secondary">Local Play (2 Players)</button>
-            </div>
-            <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
-        </div>
-    </div>
+        <!-- Favicon -->
+        <link
+            rel="icon"
+            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>"
+        />
 
-    <!-- Local Play Setup Screen (original welcome screen) -->
-    <div id="localSetupScreen" class="screen">
-        <canvas id="localSetupCanvas"></canvas>
-        <div class="welcome-container">
-            <h1>Local Play</h1>
-            <p class="credit">2 Player Mode</p>
+        <!-- Preload critical CSS -->
+        <link rel="stylesheet" href="styles.css" />
 
-            <div class="setup-section">
-                <h2>Select Grid Size</h2>
-                <div class="grid-options">
-                    <button class="grid-btn local-grid-btn" data-size="5">5x5</button>
-                    <button class="grid-btn local-grid-btn" data-size="10">10x10</button>
-                    <button class="grid-btn local-grid-btn" data-size="20">20x20</button>
-                    <button class="grid-btn local-grid-btn" data-size="30">30x30</button>
+        <!-- DNS Prefetch for external resources -->
+        <link rel="dns-prefetch" href="https://unpkg.com" />
+        <link rel="dns-prefetch" href="https://oceanic-antelope-781.convex.cloud" />
+
+        <!-- Preconnect for Convex backend -->
+        <link rel="preconnect" href="https://oceanic-antelope-781.convex.cloud" crossorigin />
+    </head>
+
+    <body>
+        <!-- Main Menu Screen -->
+        <div id="mainMenuScreen" class="screen active">
+            <canvas id="welcomeCanvas" aria-hidden="true"></canvas>
+            <div class="welcome-container">
+                <h1>ShapeKeeper</h1>
+                <p class="credit">Created by Teacher Evan</p>
+
+                <div class="menu-options">
+                    <button id="createGameBtn" class="menu-btn">Create Game</button>
+                    <button id="joinGameBtn" class="menu-btn">Join Game</button>
+                    <button id="localPlayBtn" class="menu-btn secondary">
+                        Local Play (2 Players)
+                    </button>
                 </div>
-            </div>
-
-            <div class="setup-section">
-                <h2>Player 1 Color</h2>
-                <input type="color" id="player1Color" value="#FF0000" aria-label="Player 1 color picker">
-            </div>
-
-            <div class="setup-section">
-                <h2>Player 2 Color</h2>
-                <input type="color" id="player2Color" value="#0000FF" aria-label="Player 2 color picker">
-            </div>
-
-            <div class="setup-section">
-                <h2>Game Options</h2>
-                <label class="checkbox-setting">
-                    <input type="checkbox" id="partyModeToggle" checked>
-                    <span class="checkbox-label">Enable Party Mode 🎉</span>
-                    <span class="checkbox-description">Includes all tile effects: dares, hypotheticals, powerups, and traps during gameplay</span>
-                </label>
-            </div>
-
-            <div class="button-row">
-                <button id="backToMenuFromLocal" class="back-btn">← Back</button>
-                <button id="startLocalGame" class="start-btn" disabled>Start Game</button>
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    🌙
+                </button>
             </div>
         </div>
-    </div>
 
-    <!-- Create Game / Lobby Screen -->
-    <div id="lobbyScreen" class="screen">
-        <canvas id="lobbyCanvas"></canvas>
-        <div class="lobby-container">
-            <div class="lobby-header">
-                <h1>Game Lobby</h1>
-                <div class="room-code-section">
-                    <span class="room-label">Room Code:</span>
-                    <span class="room-code" id="roomCode">------</span>
-                    <button id="copyCodeBtn" class="copy-btn" title="Copy room code">📋</button>
-                </div>
-            </div>
+        <!-- Local Play Setup Screen (original welcome screen) -->
+        <div id="localSetupScreen" class="screen">
+            <canvas id="localSetupCanvas"></canvas>
+            <div class="welcome-container">
+                <h1>Local Play</h1>
+                <p class="credit">2 Player Mode</p>
 
-            <div class="lobby-settings">
-                <h2>Game Settings</h2>
-                <div class="setting-row">
-                    <label>Grid Size:</label>
-                    <div class="grid-options small">
-                        <button class="grid-btn lobby-grid-btn selected" data-size="5">5x5</button>
-                        <button class="grid-btn lobby-grid-btn" data-size="10">10x10</button>
-                        <button class="grid-btn lobby-grid-btn" data-size="20">20x20</button>
-                        <button class="grid-btn lobby-grid-btn" data-size="30">30x30</button>
+                <div class="setup-section">
+                    <h2>Select Grid Size</h2>
+                    <div class="grid-options">
+                        <button class="grid-btn local-grid-btn" data-size="5">5x5</button>
+                        <button class="grid-btn local-grid-btn" data-size="10">10x10</button>
+                        <button class="grid-btn local-grid-btn" data-size="20">20x20</button>
+                        <button class="grid-btn local-grid-btn" data-size="30">30x30</button>
                     </div>
                 </div>
-                <div class="setting-row">
+
+                <div class="setup-section">
+                    <h2>Player 1 Color</h2>
+                    <input
+                        type="color"
+                        id="player1Color"
+                        value="#FF0000"
+                        aria-label="Player 1 color picker"
+                    />
+                </div>
+
+                <div class="setup-section">
+                    <h2>Player 2 Color</h2>
+                    <input
+                        type="color"
+                        id="player2Color"
+                        value="#0000FF"
+                        aria-label="Player 2 color picker"
+                    />
+                </div>
+
+                <div class="setup-section">
+                    <h2>Game Options</h2>
                     <label class="checkbox-setting">
-                        <input type="checkbox" id="lobbyPartyModeToggle" checked>
+                        <input type="checkbox" id="partyModeToggle" checked />
                         <span class="checkbox-label">Enable Party Mode 🎉</span>
-                        <span class="checkbox-description">Includes all tile effects: dares, hypotheticals, powerups, and traps during gameplay</span>
+                        <span class="checkbox-description"
+                            >Includes all tile effects: dares, hypotheticals, powerups, and traps
+                            during gameplay</span
+                        >
                     </label>
                 </div>
-            </div>
 
-            <div class="players-section">
-                <h2>Players (<span id="playerCount">1</span>/6)</h2>
-                <div class="players-list" id="playersList">
-                    <!-- Player entries will be added here dynamically -->
+                <div class="button-row">
+                    <button id="backToMenuFromLocal" class="back-btn">← Back</button>
+                    <button id="startLocalGame" class="start-btn" disabled>Start Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Game / Lobby Screen -->
+        <div id="lobbyScreen" class="screen">
+            <canvas id="lobbyCanvas"></canvas>
+            <div class="lobby-container">
+                <div class="lobby-header">
+                    <h1>Game Lobby</h1>
+                    <div class="room-code-section">
+                        <span class="room-label">Room Code:</span>
+                        <span class="room-code" id="roomCode">------</span>
+                        <button id="copyCodeBtn" class="copy-btn" title="Copy room code">📋</button>
+                    </div>
+                </div>
+
+                <div class="lobby-settings">
+                    <h2>Game Settings</h2>
+                    <div class="setting-row">
+                        <label>Grid Size:</label>
+                        <div class="grid-options small">
+                            <button class="grid-btn lobby-grid-btn selected" data-size="5">
+                                5x5
+                            </button>
+                            <button class="grid-btn lobby-grid-btn" data-size="10">10x10</button>
+                            <button class="grid-btn lobby-grid-btn" data-size="20">20x20</button>
+                            <button class="grid-btn lobby-grid-btn" data-size="30">30x30</button>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <label class="checkbox-setting">
+                            <input type="checkbox" id="lobbyPartyModeToggle" checked />
+                            <span class="checkbox-label">Enable Party Mode 🎉</span>
+                            <span class="checkbox-description"
+                                >Includes all tile effects: dares, hypotheticals, powerups, and
+                                traps during gameplay</span
+                            >
+                        </label>
+                    </div>
+                </div>
+
+                <div class="players-section">
+                    <h2>Players (<span id="playerCount">1</span>/6)</h2>
+                    <div class="players-list" id="playersList">
+                        <!-- Player entries will be added here dynamically -->
+                    </div>
+                </div>
+
+                <div class="your-settings">
+                    <h2>Your Settings</h2>
+                    <div class="setting-row">
+                        <label for="playerName">Your Name:</label>
+                        <input
+                            type="text"
+                            id="playerName"
+                            class="name-input"
+                            placeholder="Player"
+                            maxlength="15"
+                        />
+                    </div>
+                    <div class="setting-row">
+                        <label for="playerColor">Your Color:</label>
+                        <input
+                            type="color"
+                            id="playerColor"
+                            value="#FF0000"
+                            aria-label="Your player color"
+                        />
+                    </div>
+                </div>
+
+                <div class="lobby-actions">
+                    <button id="readyBtn" class="ready-btn">Ready</button>
+                    <button id="startMultiplayerGame" class="start-btn" disabled>Start Game</button>
+                </div>
+
+                <button id="leaveLobby" class="leave-btn">Leave Room</button>
+            </div>
+        </div>
+
+        <!-- Join Game Screen -->
+        <div id="joinScreen" class="screen">
+            <canvas id="joinCanvas"></canvas>
+            <div class="welcome-container">
+                <h1>Join Game</h1>
+                <p class="credit">Enter the room code to join</p>
+
+                <div class="setup-section">
+                    <h2>Room Code</h2>
+                    <input
+                        type="text"
+                        id="joinRoomCode"
+                        class="room-code-input"
+                        placeholder="Enter code"
+                        maxlength="6"
+                        aria-label="Room code"
+                    />
+                </div>
+
+                <div class="setup-section">
+                    <h2>Your Name</h2>
+                    <input
+                        type="text"
+                        id="joinPlayerName"
+                        class="name-input"
+                        placeholder="Your name"
+                        maxlength="15"
+                        aria-label="Your name"
+                    />
+                </div>
+
+                <div class="button-row">
+                    <button id="backToMenuFromJoin" class="back-btn">← Back</button>
+                    <button id="joinRoomBtn" class="start-btn" disabled>Join Room</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <canvas id="gameBackgroundCanvas"></canvas>
+            <div class="game-header" id="gameHeader">
+                <!-- Player info will be dynamically generated for 2-6 players -->
+                <div class="player-info" id="player1Info">
+                    <span class="player-name">Player 1</span>
+                    <span class="player-score" id="player1Score">0</span>
+                </div>
+                <button id="exitGame" class="exit-btn" aria-label="Exit game">Exit</button>
+                <div class="player-info" id="player2Info">
+                    <span class="player-name">Player 2</span>
+                    <span class="player-score" id="player2Score">0</span>
                 </div>
             </div>
 
-            <div class="your-settings">
-                <h2>Your Settings</h2>
-                <div class="setting-row">
-                    <label for="playerName">Your Name:</label>
-                    <input type="text" id="playerName" class="name-input" placeholder="Player" maxlength="15">
+            <div class="game-container">
+                <!-- Loading skeleton shown while game initializes -->
+                <div id="gameLoadingSkeleton" class="canvas-skeleton">
+                    <div class="loading-spinner"></div>
+                    <div class="skeleton-text" style="width: 120px"></div>
                 </div>
-                <div class="setting-row">
-                    <label for="playerColor">Your Color:</label>
-                    <input type="color" id="playerColor" value="#FF0000" aria-label="Your player color">
+                <canvas id="gameCanvas"></canvas>
+            </div>
+
+            <div class="game-footer">
+                <div class="turn-indicator" id="turnIndicator"></div>
+                <div class="footer-buttons">
+                    <button id="soundToggle" class="sound-btn" aria-label="Toggle sound effects">
+                        🔊
+                    </button>
+                    <button
+                        id="populateBtn"
+                        class="populate-btn"
+                        aria-label="Populate board with random lines"
+                    >
+                        Populate (10%)
+                    </button>
                 </div>
             </div>
-
-            <div class="lobby-actions">
-                <button id="readyBtn" class="ready-btn">Ready</button>
-                <button id="startMultiplayerGame" class="start-btn" disabled>Start Game</button>
-            </div>
-
-            <button id="leaveLobby" class="leave-btn">Leave Room</button>
         </div>
-    </div>
 
-    <!-- Join Game Screen -->
-    <div id="joinScreen" class="screen">
-        <canvas id="joinCanvas"></canvas>
-        <div class="welcome-container">
-            <h1>Join Game</h1>
-            <p class="credit">Enter the room code to join</p>
-
-            <div class="setup-section">
-                <h2>Room Code</h2>
-                <input type="text" id="joinRoomCode" class="room-code-input" placeholder="Enter code" maxlength="6" aria-label="Room code">
-            </div>
-
-            <div class="setup-section">
-                <h2>Your Name</h2>
-                <input type="text" id="joinPlayerName" class="name-input" placeholder="Your name" maxlength="15" aria-label="Your name">
-            </div>
-
-            <div class="button-row">
-                <button id="backToMenuFromJoin" class="back-btn">← Back</button>
-                <button id="joinRoomBtn" class="start-btn" disabled>Join Room</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Game Screen -->
-    <div id="gameScreen" class="screen">
-        <canvas id="gameBackgroundCanvas"></canvas>
-        <div class="game-header" id="gameHeader">
-            <!-- Player info will be dynamically generated for 2-6 players -->
-            <div class="player-info" id="player1Info">
-                <span class="player-name">Player 1</span>
-                <span class="player-score" id="player1Score">0</span>
-            </div>
-            <button id="exitGame" class="exit-btn" aria-label="Exit game">Exit</button>
-            <div class="player-info" id="player2Info">
-                <span class="player-name">Player 2</span>
-                <span class="player-score" id="player2Score">0</span>
+        <!-- Winner Screen -->
+        <div id="winnerScreen" class="screen">
+            <div class="winner-container">
+                <h1>Game Over!</h1>
+                <h2 id="winnerText"></h2>
+                <div id="finalScores" class="final-scores">
+                    <!-- Final scores will be dynamically generated -->
+                </div>
+                <button id="playAgain" class="start-btn">Play Again</button>
             </div>
         </div>
 
-        <div class="game-container">
-            <!-- Loading skeleton shown while game initializes -->
-            <div id="gameLoadingSkeleton" class="canvas-skeleton">
-                <div class="loading-spinner"></div>
-                <div class="skeleton-text" style="width: 120px;"></div>
-            </div>
-            <canvas id="gameCanvas"></canvas>
-        </div>
-
-        <div class="game-footer">
-            <div class="turn-indicator" id="turnIndicator"></div>
-            <div class="footer-buttons">
-                <button id="soundToggle" class="sound-btn" aria-label="Toggle sound effects">🔊</button>
-                <button id="populateBtn" class="populate-btn" aria-label="Populate board with random lines">Populate (10%)</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Winner Screen -->
-    <div id="winnerScreen" class="screen">
-        <div class="winner-container">
-            <h1>Game Over!</h1>
-            <h2 id="winnerText"></h2>
-            <div id="finalScores" class="final-scores">
-                <!-- Final scores will be dynamically generated -->
-            </div>
-            <button id="playAgain" class="start-btn">Play Again</button>
-        </div>
-    </div>
-
-    <script src="https://unpkg.com/convex@1.29.3/dist/browser.bundle.js"></script>
-    <script src="convex-client.js"></script>
-    <script src="game.js"></script>
-    <script src="welcome.js"></script>
-</body>
-
+        <script src="https://unpkg.com/convex@1.29.3/dist/browser.bundle.js"></script>
+        <script src="convex-client.js"></script>
+        <script src="game.js"></script>
+        <script src="welcome.js"></script>
+    </body>
 </html>

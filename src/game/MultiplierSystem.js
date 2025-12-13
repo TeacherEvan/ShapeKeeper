@@ -4,17 +4,16 @@
  * @module game/MultiplierSystem
  */
 
-
 /**
  * Multiplier distribution weights
  * @constant
  */
 const MULTIPLIER_WEIGHTS = {
-    2: 65,   // 65% chance
-    3: 20,   // 20% chance
-    4: 10,   // 10% chance
-    5: 4,    // 4% chance
-    10: 1    // 1% chance
+    2: 65, // 65% chance
+    3: 20, // 20% chance
+    4: 10, // 10% chance
+    5: 4, // 4% chance
+    10: 1, // 1% chance
 };
 
 export class MultiplierSystem {
@@ -31,7 +30,7 @@ export class MultiplierSystem {
     initialize(gridRows, gridCols) {
         this.multipliers = {};
         this.revealedMultipliers.clear();
-        
+
         for (let row = 0; row < gridRows - 1; row++) {
             for (let col = 0; col < gridCols - 1; col++) {
                 const squareKey = `${row},${col}`;
@@ -47,14 +46,14 @@ export class MultiplierSystem {
     generateMultiplier() {
         const totalWeight = Object.values(MULTIPLIER_WEIGHTS).reduce((a, b) => a + b, 0);
         let random = Math.random() * totalWeight;
-        
+
         for (const [multiplier, weight] of Object.entries(MULTIPLIER_WEIGHTS)) {
             random -= weight;
             if (random <= 0) {
                 return parseInt(multiplier);
             }
         }
-        
+
         return 2; // Default fallback
     }
 
@@ -103,12 +102,18 @@ export class MultiplierSystem {
      */
     getMultiplierColor(multiplier) {
         switch (multiplier) {
-            case 2: return '#4CAF50';  // Green
-            case 3: return '#2196F3';  // Blue
-            case 4: return '#9C27B0';  // Purple
-            case 5: return '#FF9800';  // Orange
-            case 10: return '#FFD700'; // Gold
-            default: return '#666666'; // Gray
+            case 2:
+                return '#4CAF50'; // Green
+            case 3:
+                return '#2196F3'; // Blue
+            case 4:
+                return '#9C27B0'; // Purple
+            case 5:
+                return '#FF9800'; // Orange
+            case 10:
+                return '#FFD700'; // Gold
+            default:
+                return '#666666'; // Gray
         }
     }
 
@@ -143,7 +148,7 @@ export class MultiplierSystem {
         return {
             total: Object.keys(this.multipliers).length,
             revealed: this.revealedMultipliers.size,
-            distribution: counts
+            distribution: counts,
         };
     }
 
@@ -163,7 +168,7 @@ export class MultiplierSystem {
     exportState() {
         return {
             multipliers: { ...this.multipliers },
-            revealed: Array.from(this.revealedMultipliers)
+            revealed: Array.from(this.revealedMultipliers),
         };
     }
 

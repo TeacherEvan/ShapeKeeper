@@ -43,7 +43,7 @@ export class SquareAnimationSystem {
      */
     addSquareAnimation(squareKey, color, comboMultiplier = 1) {
         const now = performance.now();
-        
+
         // Update combo
         if (now - this.lastSquareTime < 2000) {
             this.comboCount++;
@@ -59,7 +59,7 @@ export class SquareAnimationSystem {
             progress: 0,
             color,
             type: 'scale',
-            combo: this.comboCount
+            combo: this.comboCount,
         });
 
         // Add screen shake for multi-completions
@@ -78,7 +78,7 @@ export class SquareAnimationSystem {
             key: lineKey,
             startTime: performance.now(),
             duration: ANIMATION.LINE_PULSE_DURATION,
-            color
+            color,
         });
     }
 
@@ -100,7 +100,7 @@ export class SquareAnimationSystem {
             const anim = this.squareAnimations[i];
             const elapsed = currentTime - anim.startTime;
             anim.progress = Math.min(elapsed / anim.duration, 1);
-            
+
             if (anim.progress >= 1) {
                 this.squareAnimations.splice(i, 1);
             }
@@ -110,7 +110,7 @@ export class SquareAnimationSystem {
         for (let i = this.pulsatingLines.length - 1; i >= 0; i--) {
             const line = this.pulsatingLines[i];
             const elapsed = currentTime - line.startTime;
-            
+
             if (elapsed >= line.duration) {
                 this.pulsatingLines.splice(i, 1);
             }
@@ -121,7 +121,7 @@ export class SquareAnimationSystem {
             this.screenShake.x = (Math.random() - 0.5) * this.screenShake.intensity;
             this.screenShake.y = (Math.random() - 0.5) * this.screenShake.intensity;
             this.screenShake.intensity *= 0.9; // Decay
-            
+
             if (this.screenShake.intensity < 0.5) {
                 this.screenShake.intensity = 0;
                 this.screenShake.x = 0;
@@ -136,9 +136,9 @@ export class SquareAnimationSystem {
      * @returns {number} Scale factor (0-1)
      */
     getSquareScale(squareKey) {
-        const anim = this.squareAnimations.find(a => a.key === squareKey);
+        const anim = this.squareAnimations.find((a) => a.key === squareKey);
         if (!anim) return 1;
-        
+
         // Ease out bounce effect
         const t = anim.progress;
         if (t < 0.4) {
@@ -156,12 +156,12 @@ export class SquareAnimationSystem {
      * @returns {number} Glow intensity (0-1)
      */
     getLineGlow(lineKey) {
-        const line = this.pulsatingLines.find(l => l.key === lineKey);
+        const line = this.pulsatingLines.find((l) => l.key === lineKey);
         if (!line) return 0;
-        
+
         const elapsed = performance.now() - line.startTime;
         const progress = elapsed / line.duration;
-        
+
         // Pulse effect
         return Math.sin(progress * Math.PI) * (1 - progress);
     }
@@ -172,7 +172,7 @@ export class SquareAnimationSystem {
      * @returns {boolean}
      */
     isLinePulsating(lineKey) {
-        return this.pulsatingLines.some(l => l.key === lineKey);
+        return this.pulsatingLines.some((l) => l.key === lineKey);
     }
 
     /**
@@ -216,7 +216,7 @@ export class SquareAnimationSystem {
      */
     easeOutElastic(t) {
         if (t === 0 || t === 1) return t;
-        return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI) / 3) + 1;
+        return Math.pow(2, -10 * t) * Math.sin(((t * 10 - 0.75) * (2 * Math.PI)) / 3) + 1;
     }
 
     /**
@@ -238,7 +238,7 @@ export class SquareAnimationSystem {
             squares: this.squareAnimations.length,
             lines: this.pulsatingLines.length,
             combo: this.comboCount,
-            shaking: this.screenShake.intensity > 0
+            shaking: this.screenShake.intensity > 0,
         };
     }
 }

@@ -13,6 +13,7 @@ This guide shows how to manually test the backend logging system and verify it's
 ### Test 1: Room Creation Logging
 
 **Steps:**
+
 1. Open the application at http://localhost:8000
 2. Click "Host Game"
 3. Enter player name (e.g., "Alice")
@@ -21,6 +22,7 @@ This guide shows how to manually test the backend logging system and verify it's
 6. Click "Create Room"
 
 **Expected Logs in Convex Dashboard:**
+
 ```
 [createRoom] Starting room creation {
   sessionId: "session_...",
@@ -33,6 +35,7 @@ This guide shows how to manually test the backend logging system and verify it's
 ```
 
 **Browser Console Should Show:**
+
 ```
 [Convex] Room created: ABC123 partyMode: true
 ```
@@ -42,6 +45,7 @@ This guide shows how to manually test the backend logging system and verify it's
 ### Test 2: Join Room Logging
 
 **Steps:**
+
 1. Open a second browser tab/window
 2. Click "Join Game"
 3. Enter the room code from Test 1
@@ -49,6 +53,7 @@ This guide shows how to manually test the backend logging system and verify it's
 5. Click "Join"
 
 **Expected Logs:**
+
 ```
 [joinRoom] Join request {
   roomCode: "ABC123",
@@ -70,11 +75,13 @@ This guide shows how to manually test the backend logging system and verify it's
 ### Test 3: Error Handling - Invalid Room Code
 
 **Steps:**
+
 1. Click "Join Game"
 2. Enter invalid room code: "ZZZZZ9"
 3. Click "Join"
 
 **Expected Logs:**
+
 ```
 [joinRoom] Join request {
   roomCode: "ZZZZZ9",
@@ -85,6 +92,7 @@ This guide shows how to manually test the backend logging system and verify it's
 ```
 
 **UI Should Show:**
+
 ```
 Error: Room not found
 ```
@@ -94,11 +102,13 @@ Error: Room not found
 ### Test 4: Game Start Logging
 
 **Steps:**
+
 1. In the host tab, ensure at least 2 players are in the room
 2. Make sure other players click "Ready"
 3. Host clicks "Start Game"
 
 **Expected Logs:**
+
 ```
 [startGame] Start game request { roomId: "...", sessionId: "..." }
 [startGame] Validating players {
@@ -122,10 +132,12 @@ Error: Room not found
 ### Test 5: Line Drawing and Square Completion
 
 **Steps:**
+
 1. With game started, click on dots to draw lines
 2. Complete a square (4 connected lines)
 
 **Expected Logs for Line Draw:**
+
 ```
 [drawLine] Line draw request {
   roomId: "...",
@@ -146,6 +158,7 @@ Error: Room not found
 ```
 
 **Expected Logs for Square Completion:**
+
 ```
 [checkForCompletedSquares] Starting square check {
   newLineKey: "1,2-2,2",
@@ -191,10 +204,12 @@ Error: Room not found
 ### Test 6: Wrong Turn Error
 
 **Steps:**
+
 1. Wait for your turn to end
 2. Try to click to draw a line when it's not your turn
 
 **Expected Logs:**
+
 ```
 [drawLine] Line draw request {
   roomId: "...",
@@ -214,6 +229,7 @@ Error: Room not found
 ```
 
 **UI Should Show:**
+
 ```
 Error: Not your turn
 ```
@@ -223,10 +239,12 @@ Error: Not your turn
 ### Test 7: Populate Lines (Host Only)
 
 **Steps:**
+
 1. As host during gameplay, click "Populate" button (if available)
 2. Observe lines being added to the grid
 
 **Expected Logs:**
+
 ```
 [populateLines] Populate request {
   roomId: "...",
@@ -250,12 +268,14 @@ Error: Not your turn
 ### Test 8: Non-Host Populate Error
 
 **Steps:**
+
 1. As a non-host player, try to call populate (via browser console):
-   ```javascript
-   window.ShapeKeeperConvex.populateLines(["1,1-1,2"])
-   ```
+    ```javascript
+    window.ShapeKeeperConvex.populateLines(['1,1-1,2']);
+    ```
 
 **Expected Logs:**
+
 ```
 [populateLines] Populate request {
   roomId: "...",
@@ -273,6 +293,7 @@ Error: Not your turn
 ## Accessing Logs in Convex Dashboard
 
 ### Step-by-Step
+
 1. Go to https://dashboard.convex.dev
 2. Sign in to your account
 3. Select your ShapeKeeper deployment
@@ -280,13 +301,16 @@ Error: Not your turn
 5. You'll see all function calls in chronological order
 
 ### Filtering Logs
+
 - **By Function**: Type function name in filter (e.g., `drawLine`)
 - **By Status**: Click "Failed" to see only errors
 - **By Text**: Search for specific error messages or player names
 - **By Time**: Use the time range selector
 
 ### Reading a Log Entry
+
 Each log entry shows:
+
 - **Timestamp**: When the function was called
 - **Function**: Which backend function (e.g., `games:drawLine`)
 - **Status**: Success (green) or Failed (red)
@@ -294,7 +318,9 @@ Each log entry shows:
 - **Console Output**: All your `console.log()` statements
 
 ### Expanding Details
+
 Click any log entry to see:
+
 - Full request arguments
 - All console output (including objects)
 - Return value
@@ -305,11 +331,13 @@ Click any log entry to see:
 ## Using Request IDs
 
 When an error occurs in the browser, you'll see:
+
 ```
 Error: [Request ID: 395912a7cd8be2f4] Not your turn
 ```
 
 **To find this in logs:**
+
 1. Copy the Request ID: `395912a7cd8be2f4`
 2. Paste into the Logs filter box
 3. Click the matching entry to see full details
@@ -342,6 +370,7 @@ $ npm run dev
 ### No Logs Appearing
 
 **Check:**
+
 1. Is Convex dev/deploy running?
 2. Are you looking at the correct deployment?
 3. Is the browser actually calling backend functions?
@@ -350,6 +379,7 @@ $ npm run dev
 ### Too Many Logs
 
 **Filter by:**
+
 1. Function name (e.g., just `drawLine`)
 2. Failed status only
 3. Recent time range (last hour)
@@ -358,6 +388,7 @@ $ npm run dev
 ### Log Objects Not Showing
 
 **Solution:**
+
 1. Click the log entry to expand
 2. Click the arrow next to object fields
 3. Objects are collapsed by default to save space
@@ -367,6 +398,7 @@ $ npm run dev
 ## Verification Checklist
 
 After testing, verify you can:
+
 - [ ] See room creation logs in dashboard
 - [ ] See join room logs with player details
 - [ ] See error logs when joining invalid room
@@ -385,6 +417,7 @@ After testing, verify you can:
 ## Next Steps
 
 Once logging is verified:
+
 1. Use logs to debug production issues
 2. Monitor for unexpected errors in dashboard
 3. Add custom logs for new features
@@ -396,12 +429,14 @@ Once logging is verified:
 ## Production Monitoring
 
 ### Regular Checks
+
 1. **Daily**: Check for any failed function calls
 2. **After deployment**: Verify all functions still work
 3. **After user reports**: Search for their session ID in logs
 4. **Performance**: Monitor function durations for slowdowns
 
 ### Red Flags
+
 - Frequent "Room not found" errors (may indicate database issues)
 - High function durations (>1 second)
 - Internal Convex errors (infrastructure issues)

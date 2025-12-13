@@ -40,11 +40,13 @@ Then open `http://localhost:8000`
 ## 🎮 How to Play
 
 ### Mouse
+
 - **Click** a dot to select it (you'll see a colored ring)
 - **Click** an adjacent dot to draw a line (orthogonal or diagonal!)
 - Complete a square or triangle to score and get another turn!
 
 ### Touch (Mobile/Tablet)
+
 - **Tap** dots just like clicking with a mouse
 - Works great in landscape mode!
 
@@ -67,6 +69,7 @@ Then open `http://localhost:8000`
 ## 🎨 Customization
 
 Change player colors on the welcome screen:
+
 - **Player 1**: Red by default (top left)
 - **Player 2**: Blue by default (top right)
 
@@ -74,26 +77,30 @@ Change player colors on the welcome screen:
 
 - **Desktop**: Any modern browser, works great!
 - **Mobile**: Use landscape orientation for optimal layout
-- **Grid Size**: 
-  - 10×10 for quick games (2-3 minutes)
-  - 20×20 for medium games (5-10 minutes)  
-  - 30×30 for epic battles (15+ minutes)
+- **Grid Size**:
+    - 10×10 for quick games (2-3 minutes)
+    - 20×20 for medium games (5-10 minutes)
+    - 30×30 for epic battles (15+ minutes)
 
 ## 🐛 Troubleshooting
 
 **Dots not showing?**
+
 - Refresh the page (Ctrl+R or Cmd+R)
 - Make sure JavaScript is enabled
 
 **Game too small/big?**
+
 - Try fullscreen mode (should auto-trigger)
 - Resize your browser window and the game adapts
 
 **Touch not working?**
+
 - Make sure you're tapping directly on dots
 - Try landscape orientation
 
 **Dark mode issues?**
+
 - Toggle theme using the theme button on welcome screen
 - Both canvases now properly respond to theme changes
 
@@ -106,6 +113,7 @@ You're ready to play! The game is intuitive - just start connecting dots and you
 ---
 
 Need more help? Check out:
+
 - [README.md](../../README.md) - Full documentation
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) - Development guide
 - [GitHub Issues](https://github.com/TeacherEvan/ShapeKeeper/issues) - Report problems

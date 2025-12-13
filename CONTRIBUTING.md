@@ -8,47 +8,47 @@ Thank you for your interest in contributing! This document provides guidelines a
 
 1. **Check existing issues** - Someone may have already reported it
 2. **Create a new issue** with:
-   - Clear title and description
-   - Steps to reproduce
-   - Expected vs actual behavior
-   - Browser and OS information
-   - Screenshots if applicable
+    - Clear title and description
+    - Steps to reproduce
+    - Expected vs actual behavior
+    - Browser and OS information
+    - Screenshots if applicable
 
 ### Suggesting Enhancements
 
 1. **Open an issue** describing:
-   - The enhancement idea
-   - Why it would be useful
-   - Possible implementation approach
-   - Any mockups or examples
+    - The enhancement idea
+    - Why it would be useful
+    - Possible implementation approach
+    - Any mockups or examples
 
 ### Code Contributions
 
 1. **Fork the repository**
 2. **Create a feature branch**
 
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
 
 3. **Make your changes** following our coding standards
 4. **Test thoroughly** across different browsers
 5. **Commit with clear messages**
 
-   ```bash
-   git commit -m "Add: feature description"
-   ```
+    ```bash
+    git commit -m "Add: feature description"
+    ```
 
 6. **Push to your fork**
 
-   ```bash
-   git push origin feature/your-feature-name
-   ```
+    ```bash
+    git push origin feature/your-feature-name
+    ```
 
 7. **Open a Pull Request** with:
-   - Clear description of changes
-   - Reference to related issues
-   - Screenshots/GIFs for visual changes
+    - Clear description of changes
+    - Reference to related issues
+    - Screenshots/GIFs for visual changes
 
 ## 📋 Coding Standards
 

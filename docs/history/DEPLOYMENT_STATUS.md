@@ -22,6 +22,7 @@ Status: ✅ Synchronized
 ## Recent Deployments
 
 ### December 9, 2025 (v4.3.0)
+
 - ✅ Animation loop performance optimization
 - ✅ In-place array compaction (replaces filter())
 - ✅ Ambient particle frame skipping
@@ -29,17 +30,20 @@ Status: ✅ Synchronized
 - ✅ Documentation cleanup (consolidated 3 files → 1)
 
 ### December 8, 2025 (v4.2.0)
+
 - ✅ Party Mode support in schema and mutations
 - ✅ GitHub Actions workflow for auto-deployment
 - ✅ Convex backend deployment synchronized
 
 ### December 2025
+
 - ✅ Diagonal line support
 - ✅ Triangle detection system
 - ✅ Dark mode canvas fix
 - ✅ ES6 module partial refactoring
 
 ### November 29, 2025
+
 - ✅ Convex backend schema and functions
 - ✅ Multiplayer lobby system (room codes)
 - ✅ Real-time game state sync
@@ -48,26 +52,28 @@ Status: ✅ Synchronized
 
 ## Tech Stack
 
-| Component | Service | Status |
-|-----------|---------|--------|
-| Frontend | Vercel | ✅ Live (v4.2.0) |
-| Backend | Convex | ⚠️ Outdated (v4.1.0 - needs deployment) |
-| Database | Convex Tables | ✅ Active |
-| Repository | GitHub | ✅ Synced |
-| CI/CD | GitHub Actions | ✅ Workflow Added |
+| Component  | Service        | Status                                  |
+| ---------- | -------------- | --------------------------------------- |
+| Frontend   | Vercel         | ✅ Live (v4.2.0)                        |
+| Backend    | Convex         | ⚠️ Outdated (v4.1.0 - needs deployment) |
+| Database   | Convex Tables  | ✅ Active                               |
+| Repository | GitHub         | ✅ Synced                               |
+| CI/CD      | GitHub Actions | ✅ Workflow Added                       |
 
 ## Deployment Configuration
 
 ### vercel.json
+
 ```json
 {
-  "buildCommand": null,
-  "outputDirectory": ".",
-  "framework": null
+    "buildCommand": null,
+    "outputDirectory": ".",
+    "framework": null
 }
 ```
 
 ### Convex Tables
+
 - `rooms` - Multiplayer room management
 - `games` - Game state storage
 - `players` - Player sessions

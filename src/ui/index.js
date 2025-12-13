@@ -4,4 +4,3 @@
  */
 
 export { getCurrentTheme, initializeTheme, setTheme, toggleTheme } from './ThemeManager.js';
-

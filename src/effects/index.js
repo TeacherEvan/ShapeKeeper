@@ -5,4 +5,3 @@
 
 export { ParticleSystem } from './ParticleSystem.js';
 export { TileEffectsManager } from './TileEffects.js';
-

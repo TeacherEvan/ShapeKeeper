@@ -3,19 +3,10 @@
         "target": "ES2022",
         "module": "Node16",
         "moduleResolution": "node16",
-        "lib": [
-            "ES2022",
-            "DOM"
-        ],
+        "lib": ["ES2022", "DOM"],
         "checkJs": false,
         "noEmit": true
     },
-    "include": [
-        "*.js",
-        "**/*.js"
-    ],
-    "exclude": [
-        "node_modules",
-        "**/node_modules/*"
-    ]
+    "include": ["*.js", "**/*.js"],
+    "exclude": ["node_modules", "**/node_modules/*"]
 }

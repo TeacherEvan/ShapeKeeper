@@ -21,7 +21,7 @@ export class InputHandler {
             doubleTapMs: 300,
             longPressMs: 500,
             dragThreshold: 10,
-            ...options
+            ...options,
         };
 
         // State
@@ -68,8 +68,12 @@ export class InputHandler {
         this._boundHandlers.click = this._handleClick.bind(this);
 
         // Add listeners
-        this.canvas.addEventListener('touchstart', this._boundHandlers.touchStart, { passive: false });
-        this.canvas.addEventListener('touchmove', this._boundHandlers.touchMove, { passive: false });
+        this.canvas.addEventListener('touchstart', this._boundHandlers.touchStart, {
+            passive: false,
+        });
+        this.canvas.addEventListener('touchmove', this._boundHandlers.touchMove, {
+            passive: false,
+        });
         this.canvas.addEventListener('touchend', this._boundHandlers.touchEnd, { passive: false });
         this.canvas.addEventListener('mousedown', this._boundHandlers.mouseDown);
         this.canvas.addEventListener('mousemove', this._boundHandlers.mouseMove);
@@ -93,7 +97,7 @@ export class InputHandler {
         const scaleY = this.canvas.height / rect.height;
 
         let clientX, clientY;
-        
+
         if (e.touches && e.touches.length > 0) {
             clientX = e.touches[0].clientX;
             clientY = e.touches[0].clientY;
@@ -107,7 +111,7 @@ export class InputHandler {
 
         return {
             x: (clientX - rect.left) * scaleX,
-            y: (clientY - rect.top) * scaleY
+            y: (clientY - rect.top) * scaleY,
         };
     }
 
@@ -126,10 +130,10 @@ export class InputHandler {
     _handleTouchStart(e) {
         if (!this.isEnabled) return;
         e.preventDefault();
-        
+
         this.isTouchDevice = true;
         this.lastTouchTime = Date.now();
-        
+
         const pos = this._getCanvasCoordinates(e);
         this.touchStartPosition = pos;
         this.isDragging = false;
@@ -158,7 +162,7 @@ export class InputHandler {
         if (distance > this.options.dragThreshold && !this.isDragging) {
             this.isDragging = true;
             clearTimeout(this.longPressTimer);
-            
+
             if (this.onDragStart) {
                 this.onDragStart(this.touchStartPosition);
             }
@@ -178,7 +182,7 @@ export class InputHandler {
         e.preventDefault();
 
         clearTimeout(this.longPressTimer);
-        
+
         const pos = this._getCanvasCoordinates(e);
         const now = Date.now();
 
@@ -188,10 +192,11 @@ export class InputHandler {
             }
         } else {
             // Check for double tap
-            if (this.lastTapPosition && 
+            if (
+                this.lastTapPosition &&
                 now - this.lastTapTime < this.options.doubleTapMs &&
-                this._distance(pos, this.lastTapPosition) < 30) {
-                
+                this._distance(pos, this.lastTapPosition) < 30
+            ) {
                 if (this.onDoubleTap) {
                     this.onDoubleTap(pos);
                 }
@@ -216,7 +221,7 @@ export class InputHandler {
      */
     _handleMouseDown(e) {
         if (!this.isEnabled) return;
-        
+
         // Ignore if recent touch
         if (Date.now() - this.lastTouchTime < this.options.touchDebounceMs) {
             return;
@@ -243,7 +248,7 @@ export class InputHandler {
      */
     _handleMouseMove(e) {
         if (!this.isEnabled) return;
-        
+
         const pos = this._getCanvasCoordinates(e);
 
         // Hover callback (always)
@@ -258,7 +263,7 @@ export class InputHandler {
             if (distance > this.options.dragThreshold && !this.isDragging) {
                 this.isDragging = true;
                 clearTimeout(this.longPressTimer);
-                
+
                 if (this.onDragStart) {
                     this.onDragStart(this.touchStartPosition);
                 }
@@ -306,7 +311,7 @@ export class InputHandler {
      */
     _handleClick(e) {
         if (!this.isEnabled) return;
-        
+
         // Ignore if handled by touch or dragging
         if (this.isTouchDevice || this.isDragging) return;
         if (Date.now() - this.lastTouchTime < this.options.touchDebounceMs) return;
@@ -364,7 +369,7 @@ export class InputHandler {
         this.canvas.removeEventListener('mouseup', this._boundHandlers.mouseUp);
         this.canvas.removeEventListener('mouseleave', this._boundHandlers.mouseLeave);
         this.canvas.removeEventListener('click', this._boundHandlers.click);
-        
+
         clearTimeout(this.longPressTimer);
     }
 }

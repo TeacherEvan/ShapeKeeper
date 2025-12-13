@@ -16,9 +16,9 @@ The dot selection was not staying selected on the massive BenQ board with Chrome
 - Added `selectionLocked` flag that prevents accidental deselection
 - Lock is engaged when a dot is selected
 - Lock is released only when:
-  - A line is successfully drawn
-  - The same dot is clicked again (intentional deselection)
-  - A new dot is selected
+    - A line is successfully drawn
+    - The same dot is clicked again (intentional deselection)
+    - A new dot is selected
 
 ### 2. Event Debouncing
 
@@ -42,10 +42,10 @@ The dot selection was not staying selected on the massive BenQ board with Chrome
 
 - Added extra outer glow ring for better visibility on large displays
 - Triple-ring selection indicator:
-  - Outer glow (pulsing, semi-transparent)
-  - Middle ring (pulsing)
-  - Inner ring (solid)
-  - Enlarged center dot
+    - Outer glow (pulsing, semi-transparent)
+    - Middle ring (pulsing)
+    - Inner ring (solid)
+    - Enlarged center dot
 - Faster pulse animation (150ms/200ms) for more noticeable feedback
 
 ### 6. Click-Away Protection

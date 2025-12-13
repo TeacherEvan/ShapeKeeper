@@ -34,7 +34,7 @@ export class GameState {
             playerCount: 2,
             gridRows: 10,
             gridCols: 10,
-            ...options
+            ...options,
         };
 
         this.reset();
@@ -53,10 +53,22 @@ export class GameState {
         this.lastLineKey = null;
         this.lastSquaresCompleted = [];
         this.winner = null;
-        
+
         this.players = [
-            { id: 'p1', name: 'Player 1', color: GAME.PLAYER_COLORS[0], score: 0, squares: new Set() },
-            { id: 'p2', name: 'Player 2', color: GAME.PLAYER_COLORS[1], score: 0, squares: new Set() }
+            {
+                id: 'p1',
+                name: 'Player 1',
+                color: GAME.PLAYER_COLORS[0],
+                score: 0,
+                squares: new Set(),
+            },
+            {
+                id: 'p2',
+                name: 'Player 2',
+                color: GAME.PLAYER_COLORS[1],
+                score: 0,
+                squares: new Set(),
+            },
         ];
     }
 
@@ -133,7 +145,7 @@ export class GameState {
         return {
             success: true,
             squaresCompleted: completedSquares,
-            switchTurn
+            switchTurn,
         };
     }
 
@@ -152,7 +164,7 @@ export class GameState {
         if (r1 === r2) {
             // Horizontal line - check squares above and below
             const col = Math.min(c1, c2);
-            
+
             // Square above
             if (r1 > 0) {
                 const squareKey = `${r1 - 1},${col}`;
@@ -160,7 +172,7 @@ export class GameState {
                     completed.push(squareKey);
                 }
             }
-            
+
             // Square below
             if (r1 < this.options.gridRows - 1) {
                 const squareKey = `${r1},${col}`;
@@ -171,7 +183,7 @@ export class GameState {
         } else {
             // Vertical line - check squares left and right
             const row = Math.min(r1, r2);
-            
+
             // Square left
             if (c1 > 0) {
                 const squareKey = `${row},${c1 - 1}`;
@@ -179,7 +191,7 @@ export class GameState {
                     completed.push(squareKey);
                 }
             }
-            
+
             // Square right
             if (c1 < this.options.gridCols - 1) {
                 const squareKey = `${row},${c1}`;
@@ -204,10 +216,12 @@ export class GameState {
         const left = getLineKey({ row, col }, { row: row + 1, col });
         const right = getLineKey({ row, col: col + 1 }, { row: row + 1, col: col + 1 });
 
-        return this.lines.has(top) && 
-               this.lines.has(bottom) && 
-               this.lines.has(left) && 
-               this.lines.has(right);
+        return (
+            this.lines.has(top) &&
+            this.lines.has(bottom) &&
+            this.lines.has(left) &&
+            this.lines.has(right)
+        );
     }
 
     /**
@@ -222,7 +236,7 @@ export class GameState {
      */
     endGame() {
         this.phase = 'ended';
-        
+
         if (this.scores[0] > this.scores[1]) {
             this.winner = 0;
         } else if (this.scores[1] > this.scores[0]) {
@@ -304,22 +318,22 @@ export class GameState {
     stealRandomSquare(thiefIndex) {
         const victimIndex = (thiefIndex + 1) % 2;
         const victimSquares = Array.from(this.players[victimIndex].squares);
-        
+
         if (victimSquares.length === 0) return null;
-        
+
         const squareKey = victimSquares[Math.floor(Math.random() * victimSquares.length)];
-        
+
         // Transfer square
         this.players[victimIndex].squares.delete(squareKey);
         this.players[victimIndex].score--;
         this.scores[victimIndex]--;
-        
+
         this.players[thiefIndex].squares.add(squareKey);
         this.players[thiefIndex].score++;
         this.scores[thiefIndex]++;
-        
+
         this.squares.set(squareKey, thiefIndex);
-        
+
         return squareKey;
     }
 
@@ -335,13 +349,13 @@ export class GameState {
             squares: Object.fromEntries(this.squares),
             scores: [...this.scores],
             turnCount: this.turnCount,
-            players: this.players.map(p => ({
+            players: this.players.map((p) => ({
                 id: p.id,
                 name: p.name,
                 color: p.color,
                 score: p.score,
-                squares: Array.from(p.squares)
-            }))
+                squares: Array.from(p.squares),
+            })),
         };
     }
 
@@ -356,7 +370,7 @@ export class GameState {
         this.squares = new Map(Object.entries(state.squares || {}));
         this.scores = state.scores || [0, 0];
         this.turnCount = state.turnCount || 0;
-        
+
         if (state.players) {
             for (let i = 0; i < state.players.length; i++) {
                 const p = state.players[i];
@@ -365,7 +379,7 @@ export class GameState {
                     name: p.name,
                     color: p.color,
                     score: p.score,
-                    squares: new Set(p.squares)
+                    squares: new Set(p.squares),
                 };
             }
         }
@@ -384,7 +398,7 @@ export class GameState {
             squaresClaimed: this.squares.size,
             remaining: this.getRemainingSquares(),
             winner: this.winner,
-            players: this.players.map(p => ({ name: p.name, score: p.score }))
+            players: this.players.map((p) => ({ name: p.name, score: p.score })),
         };
     }
 }

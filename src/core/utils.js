@@ -28,7 +28,7 @@ export function getLineKey(dot1, dot2) {
  * @returns {Array} [startDot, endDot]
  */
 export function parseLineKey(lineKey) {
-    const [start, end] = lineKey.split('-').map(s => {
+    const [start, end] = lineKey.split('-').map((s) => {
         const [row, col] = s.split(',').map(Number);
         return { row, col };
     });
@@ -64,10 +64,10 @@ export function areAdjacent(dot1, dot2) {
 
 /**
  * Calculate distance between two points
- * @param {number} x1 
- * @param {number} y1 
- * @param {number} x2 
- * @param {number} y2 
+ * @param {number} x1
+ * @param {number} y1
+ * @param {number} x2
+ * @param {number} y2
  * @returns {number} Euclidean distance
  */
 export function distance(x1, y1, x2, y2) {
@@ -114,11 +114,11 @@ export function adjustColor(hex, amount) {
     let r = parseInt(hex.slice(1, 3), 16);
     let g = parseInt(hex.slice(3, 5), 16);
     let b = parseInt(hex.slice(5, 7), 16);
-    
+
     r = clamp(r + amount);
     g = clamp(g + amount);
     b = clamp(b + amount);
-    
+
     const toHex = (val) => val.toString(16).padStart(2, '0');
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
@@ -152,26 +152,26 @@ export function distributeOverPositions(positions, distribution, defaultValue = 
     const shuffled = shuffleArray([...positions]);
     const result = {};
     let index = 0;
-    
+
     for (const [value, count] of Object.entries(distribution)) {
         for (let i = 0; i < count && index < shuffled.length; i++) {
             result[shuffled[index++]] = value;
         }
     }
-    
+
     // Fill remaining with default
     while (index < shuffled.length) {
         result[shuffled[index++]] = defaultValue;
     }
-    
+
     return result;
 }
 
 /**
  * Clamp a value between min and max
- * @param {number} value 
- * @param {number} min 
- * @param {number} max 
+ * @param {number} value
+ * @param {number} min
+ * @param {number} max
  * @returns {number}
  */
 export function clamp(value, min, max) {
@@ -191,7 +191,7 @@ export function lerp(a, b, t) {
 
 /**
  * Pick a random element from an array
- * @param {Array} array 
+ * @param {Array} array
  * @returns {*} Random element
  */
 export function randomElement(array) {
@@ -256,7 +256,7 @@ export function throttle(func, limit) {
         if (!inThrottle) {
             func(...args);
             inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
+            setTimeout(() => (inThrottle = false), limit);
         }
     };
 }
@@ -321,8 +321,8 @@ export function generateRoomCode() {
 
 /**
  * Get item from localStorage with fallback
- * @param {string} key 
- * @param {*} defaultValue 
+ * @param {string} key
+ * @param {*} defaultValue
  * @returns {*}
  */
 export function getStorageItem(key, defaultValue = null) {
@@ -336,8 +336,8 @@ export function getStorageItem(key, defaultValue = null) {
 
 /**
  * Set item in localStorage
- * @param {string} key 
- * @param {*} value 
+ * @param {string} key
+ * @param {*} value
  */
 export function setStorageItem(key, value) {
     try {

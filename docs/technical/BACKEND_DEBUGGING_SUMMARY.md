@@ -17,6 +17,7 @@ Successfully implemented comprehensive backend debugging capabilities for ShapeK
 Added console.log statements to **all** Convex backend functions:
 
 #### Room Management Functions (rooms.ts)
+
 - ✅ `createRoom` - Room creation with collision detection
 - ✅ `joinRoom` - Player joining with rejoin support
 - ✅ `leaveRoom` - Player departure and host transfer
@@ -29,6 +30,7 @@ Added console.log statements to **all** Convex backend functions:
 - ✅ `getRoom` - Room state subscription query
 
 #### Game Logic Functions (games.ts)
+
 - ✅ `drawLine` - Line drawing and turn validation
 - ✅ `checkForCompletedSquares` - Square detection algorithm
 - ✅ `revealMultiplier` - Multiplier reveal and score update
@@ -46,20 +48,22 @@ All logs follow consistent structure:
 
 ```javascript
 console.log('[functionName] Action description', {
-  relevantId: value,
-  relevantState: state,
-  result: outcome
+    relevantId: value,
+    relevantState: state,
+    result: outcome,
 });
 ```
 
 ### Examples
 
 **Success Log:**
+
 ```javascript
 [createRoom] Room created successfully { roomId: "...", roomCode: "ABC123" }
 ```
 
 **Error Log:**
+
 ```javascript
 [drawLine] Error: Not player turn {
   expectedSession: "session_alice...",
@@ -68,6 +72,7 @@ console.log('[functionName] Action description', {
 ```
 
 **Validation Log:**
+
 ```javascript
 [drawLine] Turn validation {
   currentPlayerIndex: 0,
@@ -84,7 +89,9 @@ console.log('[functionName] Action description', {
 Logs now distinguish between:
 
 ### Application Errors (Expected)
+
 User-triggered validation failures:
+
 - Room not found
 - Not your turn
 - Line already drawn
@@ -93,19 +100,25 @@ User-triggered validation failures:
 - Not enough players
 
 ### Developer Errors (Bugs)
+
 Unexpected conditions indicating code issues:
+
 - Player not found when should exist
 - Room state mismatches
 - Missing references
 
 ### Authorization Errors
+
 Permission violations:
+
 - Non-host trying to start game
 - Non-host changing settings
 - Player revealing another's square
 
 ### State Transition Errors
+
 Invalid state changes:
+
 - Changing grid size during game
 - Starting already-started game
 
@@ -114,13 +127,17 @@ Invalid state changes:
 ## Context Logging Features
 
 ### Request Context
+
 Every function logs:
+
 - Function parameters (roomId, sessionId, lineKey, etc.)
 - Session identifiers for tracing
 - Player information (names, indices, colors)
 
 ### State Context
+
 Before/after state captured:
+
 - Room status transitions
 - Player ready states
 - Score changes
@@ -128,7 +145,9 @@ Before/after state captured:
 - Grid operations
 
 ### Operation Results
+
 Detailed outcomes:
+
 - Success indicators
 - Error details with context
 - Counts (players, lines, squares)
@@ -139,12 +158,14 @@ Detailed outcomes:
 ## Performance Monitoring
 
 Logs include timing data:
+
 - `createdAt` timestamps on all operations
 - Operation start/end logging
 - Count metrics (lines drawn, squares completed)
 - Player counts and room capacity
 
 Example:
+
 ```javascript
 [populateLines] Line insertion complete {
   requestedLines: 15,
@@ -162,27 +183,29 @@ Example:
 Comprehensive debugging reference including:
 
 **Sections:**
+
 - Quick Start guide
 - Accessing logs (Browser, Dashboard, Dev mode)
 - Understanding log messages with examples
 - Error classification system
 - Common issues with solutions:
-  - Room not found
-  - Not your turn
-  - Game stuck/won't start
-  - Multiplier not applying
-  - Populate lines not working
+    - Room not found
+    - Not your turn
+    - Game stuck/won't start
+    - Multiplier not applying
+    - Populate lines not working
 - Advanced debugging techniques:
-  - Enable verbose client logs
-  - Enable auth debug logs
-  - Track specific requests by ID
-  - Performance debugging
-  - Subscription debugging
-  - Database query debugging
+    - Enable verbose client logs
+    - Enable auth debug logs
+    - Track specific requests by ID
+    - Performance debugging
+    - Subscription debugging
+    - Database query debugging
 - Error handling best practices
 - Getting help resources
 
 **Appendix:**
+
 - Complete function reference
 - Helper function documentation
 - Version history
@@ -192,6 +215,7 @@ Comprehensive debugging reference including:
 Manual testing guide including:
 
 **Test Scenarios:**
+
 - Test 1: Room creation logging
 - Test 2: Join room logging
 - Test 3: Error handling - Invalid room code
@@ -202,12 +226,14 @@ Manual testing guide including:
 - Test 8: Non-host populate error
 
 **Dashboard Usage:**
+
 - Step-by-step access guide
 - Filtering techniques
 - Reading log entries
 - Using Request IDs
 
 **Development Mode:**
+
 - Live log viewing in terminal
 - Troubleshooting tips
 - Verification checklist
@@ -218,26 +244,31 @@ Manual testing guide including:
 ## Benefits Delivered
 
 ### 1. Faster Debugging
+
 - Filter Convex logs by Request ID to see entire request flow
 - Identify exact point of failure with context
 - Trace user sessions across operations
 
 ### 2. Production Monitoring
+
 - Identify issues before users report them
 - Monitor function performance
 - Track error patterns
 
 ### 3. Better Support
+
 - Include structured logs when reporting bugs
 - Share Request IDs for precise issue tracking
 - Provide context without accessing database
 
 ### 4. Developer Experience
+
 - Clear error messages with actionable context
 - Understand system behavior without stepping through code
 - Verify business logic correctness
 
 ### 5. Performance Insights
+
 - Track function durations
 - Monitor database query counts
 - Identify bottlenecks
@@ -247,12 +278,14 @@ Manual testing guide including:
 ## Quality Assurance
 
 ### Code Quality
+
 - ✅ TypeScript compilation passes
 - ✅ JavaScript syntax validated
 - ✅ Code review completed
 - ✅ Security scan passed (0 vulnerabilities)
 
 ### Log Quality
+
 - ✅ Consistent formatting across all functions
 - ✅ Structured data objects (not string concatenation)
 - ✅ No sensitive data logged (sessions are IDs, not tokens)
@@ -260,6 +293,7 @@ Manual testing guide including:
 - ✅ Function name prefixes for easy filtering
 
 ### Documentation Quality
+
 - ✅ Comprehensive debugging guide
 - ✅ Manual testing procedures
 - ✅ Real-world examples with sample output
@@ -271,6 +305,7 @@ Manual testing guide including:
 ## Backward Compatibility
 
 **No Breaking Changes:**
+
 - All logging is additive (console.log only)
 - No changes to function signatures
 - No changes to return values
@@ -278,6 +313,7 @@ Manual testing guide including:
 - No changes to database schema
 
 **Existing Code Works:**
+
 - All frontend code unchanged
 - All API contracts preserved
 - All client integrations unaffected
@@ -289,22 +325,24 @@ Manual testing guide including:
 ### For Developers
 
 1. **Start dev mode**:
-   ```bash
-   npm run dev
-   ```
-   See live logs in terminal
+
+    ```bash
+    npm run dev
+    ```
+
+    See live logs in terminal
 
 2. **Make API calls** (create room, join, draw lines)
 
 3. **View logs** in Convex Dashboard:
-   - Dashboard → Logs
-   - Filter by function name
-   - Search by Request ID
+    - Dashboard → Logs
+    - Filter by function name
+    - Search by Request ID
 
 4. **Debug issues**:
-   - Copy Request ID from browser error
-   - Paste into Convex logs filter
-   - See full request context
+    - Copy Request ID from browser error
+    - Paste into Convex logs filter
+    - See full request context
 
 ### For Production Monitoring
 
@@ -318,18 +356,23 @@ Manual testing guide including:
 ## Example: Debugging a "Not Your Turn" Error
 
 ### 1. User Reports Issue
+
 User says: "I can't draw lines even though it's my turn"
 
 ### 2. Get Request ID
+
 User provides error from browser:
+
 ```
 Error: [Request ID: abc123def456] Not your turn
 ```
 
 ### 3. Search Convex Logs
+
 Filter by Request ID: `abc123def456`
 
 ### 4. Analyze Logs
+
 ```javascript
 [drawLine] Line draw request {
   roomId: "k17abc...",
@@ -349,6 +392,7 @@ Filter by Request ID: `abc123def456`
 ```
 
 ### 5. Root Cause Identified
+
 - Alice's client thinks it's her turn
 - Server says it's Bob's turn (playerIndex 1)
 - Likely client state sync issue
@@ -361,6 +405,7 @@ Filter by Request ID: `abc123def456`
 ## Implementation Statistics
 
 **Lines Added**: ~700
+
 - rooms.ts: ~300 lines of logging
 - games.ts: ~250 lines of logging
 - Documentation: ~19,500 characters
@@ -370,6 +415,7 @@ Filter by Request ID: `abc123def456`
 **Common Issues Documented**: 5
 
 <!-- Time Investment statistic removed due to lack of precise tracking and to avoid underestimating effort. -->
+
 **Debugging Time Saved**: Estimated 80%+ reduction
 
 ---
@@ -422,6 +468,7 @@ Verified against issue checklist:
 ## Conclusion
 
 Successfully implemented a comprehensive backend debugging system that:
+
 - Provides visibility into all backend operations
 - Enables rapid issue diagnosis via Request IDs
 - Supports production monitoring and alerting

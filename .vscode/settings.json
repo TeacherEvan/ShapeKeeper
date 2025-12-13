@@ -1,33 +1,26 @@
 {
-  "javascript.validate.enable": true,
-  "javascript.format.enable": true,
-  "files.eol": "\n",
-  "editor.formatOnSave": false,
-  "editor.tabSize": 4,
-  "editor.insertSpaces": true,
-  "files.exclude": {
-    "**/.git": true,
-    "**/node_modules": true
-  },
-  "search.exclude": {
-    "**/node_modules": true
-  },
-  "cSpell.words": [
-    "Vercel",
-    "boids",
-    "shapekeeper",
-    "lerp",
-    "rgba",
-    "Perlin"
-  ],
-  "markdownlint.config": {
-    "MD009": false,
-    "MD022": false,
-    "MD026": false,
-    "MD031": false,
-    "MD032": false,
-    "MD034": false,
-    "MD036": false,
-    "MD040": false
-  }
+    "javascript.validate.enable": true,
+    "javascript.format.enable": true,
+    "files.eol": "\n",
+    "editor.formatOnSave": false,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.exclude": {
+        "**/.git": true,
+        "**/node_modules": true
+    },
+    "search.exclude": {
+        "**/node_modules": true
+    },
+    "cSpell.words": ["Vercel", "boids", "shapekeeper", "lerp", "rgba", "Perlin"],
+    "markdownlint.config": {
+        "MD009": false,
+        "MD022": false,
+        "MD026": false,
+        "MD031": false,
+        "MD032": false,
+        "MD034": false,
+        "MD036": false,
+        "MD040": false
+    }
 }

@@ -9,6 +9,7 @@
 ## Problem Summary
 
 **Error:**
+
 ```
 ArgumentValidationError: Object contains extra field `partyMode` that is not in the validator.
 ```
@@ -20,12 +21,15 @@ ArgumentValidationError: Object contains extra field `partyMode` that is not in 
 ## Solution Implemented
 
 ### 1. GitHub Actions Auto-Deployment
+
 Created `.github/workflows/deploy-convex.yml`:
-- Triggers on push to `main` (convex/** files)
+
+- Triggers on push to `main` (convex/\*\* files)
 - Uses `CONVEX_DEPLOY_KEY` secret
 - Keeps frontend and backend in sync
 
 ### 2. Manual Deployment (Quick Fix)
+
 ```bash
 npx convex login     # One-time auth
 npx convex deploy --yes
@@ -55,18 +59,19 @@ npx convex deploy --yes
 
 ## Files Involved
 
-| File | Change |
-|------|--------|
-| `.github/workflows/deploy-convex.yml` | NEW - Auto-deployment |
-| `convex/schema.ts` | Has `partyMode: v.optional(v.boolean())` |
-| `convex/rooms.ts` | Has `partyMode` in validator |
-| `convex-client.js` | Sends `partyMode` parameter |
+| File                                  | Change                                   |
+| ------------------------------------- | ---------------------------------------- |
+| `.github/workflows/deploy-convex.yml` | NEW - Auto-deployment                    |
+| `convex/schema.ts`                    | Has `partyMode: v.optional(v.boolean())` |
+| `convex/rooms.ts`                     | Has `partyMode` in validator             |
+| `convex-client.js`                    | Sends `partyMode` parameter              |
 
 ---
 
 ## Prevention
 
 With GitHub Actions workflow, future Convex changes auto-deploy when:
+
 1. Files in `convex/` change on `main` branch
 2. Workflow is manually triggered
 
@@ -79,4 +84,4 @@ With GitHub Actions workflow, future Convex changes auto-deploy when:
 
 ---
 
-*Archived: December 9, 2025*
+_Archived: December 9, 2025_

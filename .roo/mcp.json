@@ -1,581 +1,570 @@
 {
-  // Removed invalid automationProfile settings; VS Code expects null here.
-  "terminal.integrated.automationProfile.linux": null,
-  "terminal.integrated.automationProfile.windows": null,
-  // Use GitHub Copilot custom instructions files instead.
-  // See https://aka.ms/vscode-ghcp-custom-instructions for details.
-  // Use GitHub Copilot custom instructions files instead.
-  // See https://aka.ms/vscode-ghcp-custom-instructions for details.
-  "github.copilot.chat.codeGeneration.instructionsFiles": [
-    ".copilot-codeGeneration-instructions.md"
-  ],
-  "terminal.integrated.defaultProfile.windows": "PowerShell",
-  "terminal.integrated.env.windows": {},
-  "terminal.integrated.profiles.linux": {
-    "bash": {
-      "path": "bash",
-      "icon": "terminal-bash"
+    // Removed invalid automationProfile settings; VS Code expects null here.
+    "terminal.integrated.automationProfile.linux": null,
+    "terminal.integrated.automationProfile.windows": null,
+    // Use GitHub Copilot custom instructions files instead.
+    // See https://aka.ms/vscode-ghcp-custom-instructions for details.
+    // Use GitHub Copilot custom instructions files instead.
+    // See https://aka.ms/vscode-ghcp-custom-instructions for details.
+    "github.copilot.chat.codeGeneration.instructionsFiles": [
+        ".copilot-codeGeneration-instructions.md"
+    ],
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.env.windows": {},
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            "path": "bash",
+            "icon": "terminal-bash"
+        },
+        "zsh": {
+            "path": "zsh"
+        },
+        "fish": {
+            "path": "fish"
+        },
+        "tmux": {
+            "path": "tmux",
+            "icon": "terminal-tmux"
+        },
+        "pwsh": {
+            "path": "pwsh",
+            "icon": "terminal-powershell"
+        }
     },
-    "zsh": {
-      "path": "zsh"
+    "git.autofetch": true,
+    "cline.modelSettings.o3Mini.reasoningEffort": "high",
+    "cline.vsCodeLmModelSelector": {
+        "vendor": ""
     },
-    "fish": {
-      "path": "fish"
+    "workbench.colorCustomizations": {},
+    "workbench.editor.empty.hint": "hidden",
+    "github.copilot.chat.agent.thinkingTool": true,
+    "github.copilot.advanced": {},
+    "gitlens.ai.model": "vscode",
+    "gitlens.ai.vscode.model": "copilot:gpt-4o",
+    "redhat.telemetry.enabled": false,
+    "workbench.editor.enablePreviewFromCodeNavigation": true,
+    "workbench.editor.enablePreviewFromQuickOpen": true,
+    "editor.unicodeHighlight.invisibleCharacters": false,
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": true,
+        "markdown": true,
+        "scminput": false
     },
-    "tmux": {
-      "path": "tmux",
-      "icon": "terminal-tmux"
+    "liveServer.settings.donotShowInfoMsg": true,
+    "yaml.schemas": {
+        "file:///c%3A/Users/User/.vscode/extensions/continue.continue-1.2.2-win32-x64/config-yaml-schema.json": [
+            ".continue/**/*.yaml"
+        ]
     },
-    "pwsh": {
-      "path": "pwsh",
-      "icon": "terminal-powershell"
-    }
-  },
-  "git.autofetch": true,
-  "cline.modelSettings.o3Mini.reasoningEffort": "high",
-  "cline.vsCodeLmModelSelector": {
-    "vendor": ""
-  },
-  "workbench.colorCustomizations": {},
-  "workbench.editor.empty.hint": "hidden",
-  "github.copilot.chat.agent.thinkingTool": true,
-  "github.copilot.advanced": {},
-  "gitlens.ai.model": "vscode",
-  "gitlens.ai.vscode.model": "copilot:gpt-4o",
-  "redhat.telemetry.enabled": false,
-  "workbench.editor.enablePreviewFromCodeNavigation": true,
-  "workbench.editor.enablePreviewFromQuickOpen": true,
-  "editor.unicodeHighlight.invisibleCharacters": false,
-  "editor.unicodeHighlight.ambiguousCharacters": false,
-  "github.copilot.nextEditSuggestions.enabled": true,
-  "github.copilot.enable": {
-    "*": true,
-    "plaintext": true,
-    "markdown": true,
-    "scminput": false
-  },
-  "liveServer.settings.donotShowInfoMsg": true,
-  "yaml.schemas": {
-    "file:///c%3A/Users/User/.vscode/extensions/continue.continue-1.2.2-win32-x64/config-yaml-schema.json": [
-      ".continue/**/*.yaml"
-    ]
-  },
-  "files.associations": {
-    "*.html": "html"
-  },
-  "git.suggestSmartCommit": false,
-  "code-runner.executorMap": {
-    "cpp": "cd  && g++  -o  && ",
-    "c": "cd  && gcc  -o  && "
-  },
-  "explorer.confirmDragAndDrop": false,
-  "chat.mcp.serverSampling": {
-    "Claude Desktop: github": {
-      "allowedModels": [
-        "github.copilot-chat/claude-opus-4",
-        "github.copilot-chat/claude-3.5-sonnet",
-        "github.copilot-chat/claude-3.7-sonnet",
-        "github.copilot-chat/claude-3.7-sonnet-thought",
-        "github.copilot-chat/claude-sonnet-4",
-        "github.copilot-chat/gemini-2.0-flash-001",
-        "github.copilot-chat/gemini-2.5-pro",
-        "github.copilot-chat/gpt-4.1",
-        "github.copilot-chat/gpt-4o",
-        "github.copilot-chat/o3",
-        "github.copilot-chat/o3-mini",
-        "github.copilot-chat/o4-mini",
-        "github.copilot-chat/o4-mini-vision",
-        "github.copilot-chat/o4-mini-vision-advanced",
-        "github.copilot-chat/o4-mini-vision-advanced-2"
-      ]
+    "files.associations": {
+        "*.html": "html"
     },
-    "Global in Code: io.github.ChromeDevTools/chrome-devtools-mcp": {
-      "allowedModels": [
-        "copilot/auto",
-        "copilot/claude-haiku-4.5",
-        "copilot/claude-opus-41",
-        "copilot/claude-opus-4.5",
-        "copilot/claude-sonnet-4",
-        "copilot/claude-sonnet-4.5",
-        "copilot/gemini-2.5-pro",
-        "copilot/gemini-3-pro-preview",
-        "copilot/gpt-4.1",
-        "copilot/gpt-4o",
-        "copilot/gpt-5",
-        "copilot/gpt-5-mini",
-        "copilot/gpt-5-codex",
-        "copilot/gpt-5.1",
-        "copilot/gpt-5.1-codex",
-        "copilot/gpt-5.1-codex-mini",
-        "copilot/grok-code-fast-1",
-        "copilot/oswe-vscode-prime"
-      ]
+    "git.suggestSmartCommit": false,
+    "code-runner.executorMap": {
+        "cpp": "cd  && g++  -o  && ",
+        "c": "cd  && gcc  -o  && "
     },
-    "Global in Code: github/github-mcp-server": {
-      "allowedModels": [
-        "copilot/auto",
-        "copilot/claude-haiku-4.5",
-        "copilot/claude-opus-41",
-        "copilot/claude-opus-4.5",
-        "copilot/claude-sonnet-4",
-        "copilot/claude-sonnet-4.5",
-        "copilot/gemini-2.5-pro",
-        "copilot/gemini-3-pro-preview",
-        "copilot/gpt-4.1",
-        "copilot/gpt-4o",
-        "copilot/gpt-5",
-        "copilot/gpt-5-mini",
-        "copilot/gpt-5-codex",
-        "copilot/gpt-5.1",
-        "copilot/gpt-5.1-codex",
-        "copilot/gpt-5.1-codex-mini",
-        "copilot/grok-code-fast-1",
-        "copilot/oswe-vscode-prime"
-      ]
+    "explorer.confirmDragAndDrop": false,
+    "chat.mcp.serverSampling": {
+        "Claude Desktop: github": {
+            "allowedModels": [
+                "github.copilot-chat/claude-opus-4",
+                "github.copilot-chat/claude-3.5-sonnet",
+                "github.copilot-chat/claude-3.7-sonnet",
+                "github.copilot-chat/claude-3.7-sonnet-thought",
+                "github.copilot-chat/claude-sonnet-4",
+                "github.copilot-chat/gemini-2.0-flash-001",
+                "github.copilot-chat/gemini-2.5-pro",
+                "github.copilot-chat/gpt-4.1",
+                "github.copilot-chat/gpt-4o",
+                "github.copilot-chat/o3",
+                "github.copilot-chat/o3-mini",
+                "github.copilot-chat/o4-mini",
+                "github.copilot-chat/o4-mini-vision",
+                "github.copilot-chat/o4-mini-vision-advanced",
+                "github.copilot-chat/o4-mini-vision-advanced-2"
+            ]
+        },
+        "Global in Code: io.github.ChromeDevTools/chrome-devtools-mcp": {
+            "allowedModels": [
+                "copilot/auto",
+                "copilot/claude-haiku-4.5",
+                "copilot/claude-opus-41",
+                "copilot/claude-opus-4.5",
+                "copilot/claude-sonnet-4",
+                "copilot/claude-sonnet-4.5",
+                "copilot/gemini-2.5-pro",
+                "copilot/gemini-3-pro-preview",
+                "copilot/gpt-4.1",
+                "copilot/gpt-4o",
+                "copilot/gpt-5",
+                "copilot/gpt-5-mini",
+                "copilot/gpt-5-codex",
+                "copilot/gpt-5.1",
+                "copilot/gpt-5.1-codex",
+                "copilot/gpt-5.1-codex-mini",
+                "copilot/grok-code-fast-1",
+                "copilot/oswe-vscode-prime"
+            ]
+        },
+        "Global in Code: github/github-mcp-server": {
+            "allowedModels": [
+                "copilot/auto",
+                "copilot/claude-haiku-4.5",
+                "copilot/claude-opus-41",
+                "copilot/claude-opus-4.5",
+                "copilot/claude-sonnet-4",
+                "copilot/claude-sonnet-4.5",
+                "copilot/gemini-2.5-pro",
+                "copilot/gemini-3-pro-preview",
+                "copilot/gpt-4.1",
+                "copilot/gpt-4o",
+                "copilot/gpt-5",
+                "copilot/gpt-5-mini",
+                "copilot/gpt-5-codex",
+                "copilot/gpt-5.1",
+                "copilot/gpt-5.1-codex",
+                "copilot/gpt-5.1-codex-mini",
+                "copilot/grok-code-fast-1",
+                "copilot/oswe-vscode-prime"
+            ]
+        },
+        "Global in Code: everything": {
+            "allowedModels": [
+                "copilot/auto",
+                "copilot/claude-haiku-4.5",
+                "copilot/claude-opus-41",
+                "copilot/claude-opus-4.5",
+                "copilot/claude-sonnet-4",
+                "copilot/claude-sonnet-4.5",
+                "copilot/gemini-2.5-pro",
+                "copilot/gemini-3-pro-preview",
+                "copilot/gpt-4.1",
+                "copilot/gpt-4o",
+                "copilot/gpt-5",
+                "copilot/gpt-5-mini",
+                "copilot/gpt-5-codex",
+                "copilot/gpt-5.1",
+                "copilot/gpt-5.1-codex",
+                "copilot/gpt-5.1-codex-mini",
+                "copilot/grok-code-fast-1",
+                "copilot/oswe-vscode-prime"
+            ]
+        },
+        "Global in Code: fetch": {
+            "allowedModels": [
+                "copilot/auto",
+                "copilot/claude-haiku-4.5",
+                "copilot/claude-opus-41",
+                "copilot/claude-opus-4.5",
+                "copilot/claude-sonnet-4",
+                "copilot/claude-sonnet-4.5",
+                "copilot/gemini-2.5-pro",
+                "copilot/gemini-3-pro-preview",
+                "copilot/gpt-4.1",
+                "copilot/gpt-4o",
+                "copilot/gpt-5",
+                "copilot/gpt-5-mini",
+                "copilot/gpt-5-codex",
+                "copilot/gpt-5.1",
+                "copilot/gpt-5.1-codex",
+                "copilot/gpt-5.1-codex-mini",
+                "copilot/grok-code-fast-1",
+                "copilot/oswe-vscode-prime"
+            ]
+        },
+        "Global in Code: context7": {
+            "allowedModels": [
+                "copilot/auto",
+                "copilot/claude-haiku-4.5",
+                "copilot/claude-opus-41",
+                "copilot/claude-opus-4.5",
+                "copilot/claude-sonnet-4",
+                "copilot/claude-sonnet-4.5",
+                "copilot/gemini-2.5-pro",
+                "copilot/gemini-3-pro-preview",
+                "copilot/gpt-4.1",
+                "copilot/gpt-4o",
+                "copilot/gpt-5",
+                "copilot/gpt-5-mini",
+                "copilot/gpt-5-codex",
+                "copilot/gpt-5.1",
+                "copilot/gpt-5.1-codex",
+                "copilot/gpt-5.1-codex-mini",
+                "copilot/grok-code-fast-1",
+                "copilot/oswe-vscode-prime"
+            ]
+        },
+        "Global in Code: microsoft/playwright-mcp": {
+            "allowedModels": [
+                "copilot/auto",
+                "copilot/claude-haiku-4.5",
+                "copilot/claude-opus-41",
+                "copilot/claude-opus-4.5",
+                "copilot/claude-sonnet-4",
+                "copilot/claude-sonnet-4.5",
+                "copilot/gemini-2.5-pro",
+                "copilot/gemini-3-pro-preview",
+                "copilot/gpt-4.1",
+                "copilot/gpt-4o",
+                "copilot/gpt-5",
+                "copilot/gpt-5-mini",
+                "copilot/gpt-5-codex",
+                "copilot/gpt-5.1",
+                "copilot/gpt-5.1-codex",
+                "copilot/gpt-5.1-codex-mini",
+                "copilot/grok-code-fast-1",
+                "copilot/oswe-vscode-prime"
+            ]
+        },
+        "Global in Code: sequentialthinking": {
+            "allowedModels": [
+                "copilot/claude-sonnet-4.5",
+                "copilot/auto",
+                "copilot/claude-haiku-4.5",
+                "copilot/claude-opus-41",
+                "copilot/claude-opus-4.5",
+                "copilot/claude-sonnet-4",
+                "copilot/gemini-2.5-pro",
+                "copilot/gemini-3-pro-preview",
+                "copilot/gpt-4.1",
+                "copilot/gpt-4o",
+                "copilot/gpt-5",
+                "copilot/gpt-5-mini",
+                "copilot/gpt-5-codex",
+                "copilot/gpt-5.1",
+                "copilot/gpt-5.1-codex",
+                "copilot/gpt-5.1-codex-mini",
+                "copilot/grok-code-fast-1",
+                "copilot/oswe-vscode-prime"
+            ]
+        },
+        "Global in Code: memory": {
+            "allowedModels": [
+                "copilot/auto",
+                "copilot/claude-haiku-4.5",
+                "copilot/claude-opus-41",
+                "copilot/claude-opus-4.5",
+                "copilot/claude-sonnet-4",
+                "copilot/claude-sonnet-4.5",
+                "copilot/gemini-2.5-pro",
+                "copilot/gemini-3-pro-preview",
+                "copilot/gpt-4.1",
+                "copilot/gpt-4o",
+                "copilot/gpt-5",
+                "copilot/gpt-5-mini",
+                "copilot/gpt-5-codex",
+                "copilot/gpt-5.1",
+                "copilot/gpt-5.1-codex",
+                "copilot/gpt-5.1-codex-mini",
+                "copilot/grok-code-fast-1",
+                "copilot/oswe-vscode-prime"
+            ]
+        },
+        "Global in Code: filesystem": {
+            "allowedModels": [
+                "copilot/claude-sonnet-4.5",
+                "copilot/auto",
+                "copilot/claude-haiku-4.5",
+                "copilot/claude-opus-41",
+                "copilot/claude-opus-4.5",
+                "copilot/claude-sonnet-4",
+                "copilot/gemini-2.5-pro",
+                "copilot/gemini-3-pro-preview",
+                "copilot/gpt-4.1",
+                "copilot/gpt-4o",
+                "copilot/gpt-5",
+                "copilot/gpt-5-mini",
+                "copilot/gpt-5-codex",
+                "copilot/gpt-5.1",
+                "copilot/gpt-5.1-codex",
+                "copilot/gpt-5.1-codex-mini",
+                "copilot/grok-code-fast-1",
+                "copilot/oswe-vscode-prime"
+            ]
+        },
+        "Global in Code: io.github.github/github-mcp-server": {
+            "allowedModels": [
+                "copilot/auto",
+                "copilot/claude-haiku-4.5",
+                "copilot/claude-opus-41",
+                "copilot/claude-opus-4.5",
+                "copilot/claude-sonnet-4",
+                "copilot/claude-sonnet-4.5",
+                "copilot/gemini-2.5-pro",
+                "copilot/gemini-3-pro-preview",
+                "copilot/gpt-4.1",
+                "copilot/gpt-4o",
+                "copilot/gpt-5",
+                "copilot/gpt-5-mini",
+                "copilot/gpt-5-codex",
+                "copilot/gpt-5.1",
+                "copilot/gpt-5.1-codex",
+                "copilot/gpt-5.1-codex-mini",
+                "copilot/grok-code-fast-1",
+                "copilot/oswe-vscode-prime"
+            ]
+        },
+        "Global in Code: huggingface/hf-mcp-server": {
+            "allowedModels": [
+                "copilot/claude-sonnet-4.5",
+                "copilot/auto",
+                "copilot/claude-haiku-4.5",
+                "copilot/claude-opus-41",
+                "copilot/claude-opus-4.5",
+                "copilot/claude-sonnet-4",
+                "copilot/gemini-2.5-pro",
+                "copilot/gemini-3-pro-preview",
+                "copilot/gpt-4.1",
+                "copilot/gpt-4o",
+                "copilot/gpt-5",
+                "copilot/gpt-5-mini",
+                "copilot/gpt-5-codex",
+                "copilot/gpt-5.1",
+                "copilot/gpt-5.1-codex",
+                "copilot/gpt-5.1-codex-mini",
+                "copilot/grok-code-fast-1",
+                "copilot/oswe-vscode-prime"
+            ]
+        }
     },
-    "Global in Code: everything": {
-      "allowedModels": [
-        "copilot/auto",
-        "copilot/claude-haiku-4.5",
-        "copilot/claude-opus-41",
-        "copilot/claude-opus-4.5",
-        "copilot/claude-sonnet-4",
-        "copilot/claude-sonnet-4.5",
-        "copilot/gemini-2.5-pro",
-        "copilot/gemini-3-pro-preview",
-        "copilot/gpt-4.1",
-        "copilot/gpt-4o",
-        "copilot/gpt-5",
-        "copilot/gpt-5-mini",
-        "copilot/gpt-5-codex",
-        "copilot/gpt-5.1",
-        "copilot/gpt-5.1-codex",
-        "copilot/gpt-5.1-codex-mini",
-        "copilot/grok-code-fast-1",
-        "copilot/oswe-vscode-prime"
-      ]
+    "liveServer.settings.donotVerifyTags": true,
+    "geminicodeassist.inlineSuggestions.enableAuto": true,
+    "mssql.connectionGroups": [
+        {
+            "name": "ROOT",
+            "id": "08F0111C-2053-4026-8281-8C126DD2ABBE"
+        }
+    ],
+    "mcpServerRunner.servers": [
+        {
+            "name": "memory",
+            "command": "npx",
+            "args": ["@modelcontextprotocol/server-memory"],
+            "env": {
+                "MEMORY_FILE": "C:\\Users\\eboth\\.vscode\\MCP\\Memory\\Download folder\\memory.json"
+            }
+        }
+    ],
+    "docker.extension.enableComposeLanguageServer": false,
+    "editor.dropIntoEditor.preferences": [],
+    "containers.commands.attach": "${containerCommand} exec -it ${containerId} ${shellCommand}",
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
     },
-    "Global in Code: fetch": {
-      "allowedModels": [
-        "copilot/auto",
-        "copilot/claude-haiku-4.5",
-        "copilot/claude-opus-41",
-        "copilot/claude-opus-4.5",
-        "copilot/claude-sonnet-4",
-        "copilot/claude-sonnet-4.5",
-        "copilot/gemini-2.5-pro",
-        "copilot/gemini-3-pro-preview",
-        "copilot/gpt-4.1",
-        "copilot/gpt-4o",
-        "copilot/gpt-5",
-        "copilot/gpt-5-mini",
-        "copilot/gpt-5-codex",
-        "copilot/gpt-5.1",
-        "copilot/gpt-5.1-codex",
-        "copilot/gpt-5.1-codex-mini",
-        "copilot/grok-code-fast-1",
-        "copilot/oswe-vscode-prime"
-      ]
+    "@azure.argTenant": "",
+    "editor.defaultFormatter": null,
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "explicit"
     },
-    "Global in Code: context7": {
-      "allowedModels": [
-        "copilot/auto",
-        "copilot/claude-haiku-4.5",
-        "copilot/claude-opus-41",
-        "copilot/claude-opus-4.5",
-        "copilot/claude-sonnet-4",
-        "copilot/claude-sonnet-4.5",
-        "copilot/gemini-2.5-pro",
-        "copilot/gemini-3-pro-preview",
-        "copilot/gpt-4.1",
-        "copilot/gpt-4o",
-        "copilot/gpt-5",
-        "copilot/gpt-5-mini",
-        "copilot/gpt-5-codex",
-        "copilot/gpt-5.1",
-        "copilot/gpt-5.1-codex",
-        "copilot/gpt-5.1-codex-mini",
-        "copilot/grok-code-fast-1",
-        "copilot/oswe-vscode-prime"
-      ]
+    "editor.suggestSelection": "first",
+    "editor.suggest.showIcons": true,
+    "editor.suggest.showStatusBar": true,
+    "editor.suggest.localityBonus": true,
+    "editor.suggest.shareSuggestSelections": false,
+    "editor.snippetSuggestions": "top",
+    "editor.tabCompletion": "on",
+    "editor.wordBasedSuggestions": "matchingDocuments",
+    "makefile.configureOnOpen": true,
+    "cSpell.userWords": ["huggingface", "modelcontextprotocol", "sequentialthinking", "Sourcery"],
+    "geminicodeassist.project": "gen-lang-client-0822273391",
+    "[html]": {
+        "editor.defaultFormatter": "vscode.html-language-features"
     },
-    "Global in Code: microsoft/playwright-mcp": {
-      "allowedModels": [
-        "copilot/auto",
-        "copilot/claude-haiku-4.5",
-        "copilot/claude-opus-41",
-        "copilot/claude-opus-4.5",
-        "copilot/claude-sonnet-4",
-        "copilot/claude-sonnet-4.5",
-        "copilot/gemini-2.5-pro",
-        "copilot/gemini-3-pro-preview",
-        "copilot/gpt-4.1",
-        "copilot/gpt-4o",
-        "copilot/gpt-5",
-        "copilot/gpt-5-mini",
-        "copilot/gpt-5-codex",
-        "copilot/gpt-5.1",
-        "copilot/gpt-5.1-codex",
-        "copilot/gpt-5.1-codex-mini",
-        "copilot/grok-code-fast-1",
-        "copilot/oswe-vscode-prime"
-      ]
+    "chat.tools.terminal.autoApprove": {
+        "Get-Process | Where-Object {$_.ProcessName -like \"*webui*\" -or $_.ProcessName -like \"*open*\" -or $_.ProcessName -like \"*python*\"} | Select-Object Name, Id, CPU": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "wsl": true,
+        "wsl -d Ubuntu -e bash -c \"ps aux | grep -E '(webui|ollama|python.*3000|node.*3000)'\"": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "open": true,
+        "3000)'\"": true,
+        "wsl -d Ubuntu -e bash -c \"sudo docker ps -a | grep -E '(webui|open)'\"": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "netstat": true,
+        "Get-History": true,
+        "npm run build": true,
+        "git branch": true,
+        "git commit": true,
+        "git push": true,
+        "git add": true,
+        "touch/click": true,
+        "-": true,
+        ")": true,
+        "git pull": true,
+        "git checkout": true,
+        "git commit -m \"Fix critical bug: objects disappearing randomly + update Copilot instructions\n\n- Fixed collision detection bug in use-game-logic.ts where objects were incorrectly sliced\n- Bug caused falling objects to appear briefly then randomly disappear\n- Root cause: applySeparation() reassigned local parameter instead of using sliced array\n- Solution: Sort first, then slice to keep newest objects, use consistently in loop\n- Document TouchHandlerDebug as debug-only component (already not rendered)\n- Enhance Copilot instructions with critical architectural rules and singleton pattern\n- Add touch integration pattern examples and lazy loading documentation\"": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "git merge": true,
+        "npx": true,
+        "git fetch": true,
+        "git rebase": true,
+        "Move-Item": true,
+        "New-Item": true,
+        "npm run dev": true,
+        "npm run test": true,
+        "Set-Content": true,
+        "Get-Command": true,
+        "/^Get-Process node \\| Select-Object Id, ProcessName, StartTime$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "Get-CimInstance": true,
+        "npm install": true,
+        "npm run validate": true,
+        "/^node -v; git --version$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "npm test": true,
+        "/^npm run verify$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^npm run lint:fix$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^git config user\\.name \"TeacherEvan\"; git config user\\.email \"ewiebotha@gmail\\.com\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\eboth\\\\OneDrive\\\\Documents\\\\Vs1\\\\MathMaster\\\\MathMasterHTML\"; npm run verify$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "npm outdated": true,
+        "/^cd /home/eboth/projects/English-K1Run/English-K1Run && npm run check-types 2>&1 \\| head -50$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "git config": true,
+        "npm run lint": true,
+        "mkdir": true,
+        "gh": true,
+        "git remote": true,
+        "/^cd /home/eboth/projects/Vs1/ShapeKeeper && node --check game\\.js 2>&1 \\|\\| echo \"Checking with node\\.\\.\\.\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "npm run verify": true,
+        "npm run deploy:prod": true,
+        "/^cd /home/eboth/projects/Vs1/ShapeKeeper && node -c game\\.js && echo \"✅ game\\.js syntax OK\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^git show HEAD:Assets/Scripts/Runtime/UserManager\\.cs \\| Out-File -FilePath \"c:\\\\Users\\\\eboth\\\\OneDrive\\\\Documents\\\\vs\\\\Mini-me\\\\SANGSOMminiME\\\\Assets\\\\Scripts\\\\Runtime\\\\UserManager_backup\\.cs\" -Encoding UTF8$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "docker ps": true,
+        "docker build": true,
+        "Set-Location": true,
+        ".\\venv\\Scripts\\python.exe": true,
+        "/^python -m pytest -q$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     },
-    "Global in Code: sequentialthinking": {
-      "allowedModels": [
-        "copilot/claude-sonnet-4.5",
-        "copilot/auto",
-        "copilot/claude-haiku-4.5",
-        "copilot/claude-opus-41",
-        "copilot/claude-opus-4.5",
-        "copilot/claude-sonnet-4",
-        "copilot/gemini-2.5-pro",
-        "copilot/gemini-3-pro-preview",
-        "copilot/gpt-4.1",
-        "copilot/gpt-4o",
-        "copilot/gpt-5",
-        "copilot/gpt-5-mini",
-        "copilot/gpt-5-codex",
-        "copilot/gpt-5.1",
-        "copilot/gpt-5.1-codex",
-        "copilot/gpt-5.1-codex-mini",
-        "copilot/grok-code-fast-1",
-        "copilot/oswe-vscode-prime"
-      ]
+    "chat.mcp.autostart": "newAndOutdated",
+    "mdb.mcp.server": "prompt",
+    "githubPullRequests.pullBranch": "never",
+    "chat.agent.maxRequests": 200,
+    "terminal.integrated.suggest.enabled": true,
+    "python.analysis.diagnosticSeverityOverrides": {},
+    "[dockercompose]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.autoIndent": "advanced",
+        "editor.quickSuggestions": {
+            "other": true,
+            "comments": false,
+            "strings": true
+        },
+        "editor.defaultFormatter": "redhat.vscode-yaml"
     },
-    "Global in Code: memory": {
-      "allowedModels": [
-        "copilot/auto",
-        "copilot/claude-haiku-4.5",
-        "copilot/claude-opus-41",
-        "copilot/claude-opus-4.5",
-        "copilot/claude-sonnet-4",
-        "copilot/claude-sonnet-4.5",
-        "copilot/gemini-2.5-pro",
-        "copilot/gemini-3-pro-preview",
-        "copilot/gpt-4.1",
-        "copilot/gpt-4o",
-        "copilot/gpt-5",
-        "copilot/gpt-5-mini",
-        "copilot/gpt-5-codex",
-        "copilot/gpt-5.1",
-        "copilot/gpt-5.1-codex",
-        "copilot/gpt-5.1-codex-mini",
-        "copilot/grok-code-fast-1",
-        "copilot/oswe-vscode-prime"
-      ]
+    "[github-actions-workflow]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
     },
-    "Global in Code: filesystem": {
-      "allowedModels": [
-        "copilot/claude-sonnet-4.5",
-        "copilot/auto",
-        "copilot/claude-haiku-4.5",
-        "copilot/claude-opus-41",
-        "copilot/claude-opus-4.5",
-        "copilot/claude-sonnet-4",
-        "copilot/gemini-2.5-pro",
-        "copilot/gemini-3-pro-preview",
-        "copilot/gpt-4.1",
-        "copilot/gpt-4o",
-        "copilot/gpt-5",
-        "copilot/gpt-5-mini",
-        "copilot/gpt-5-codex",
-        "copilot/gpt-5.1",
-        "copilot/gpt-5.1-codex",
-        "copilot/gpt-5.1-codex-mini",
-        "copilot/grok-code-fast-1",
-        "copilot/oswe-vscode-prime"
-      ]
+    "diffEditor.maxComputationTime": 0,
+    "chat.instructionsFilesLocations": {
+        ".github/instructions": true,
+        "C:\\Users\\User\\.aitk\\instructions\\": true,
+        "C:\\Users\\eboth\\.aitk\\instructions\\": true
     },
-    "Global in Code: io.github.github/github-mcp-server": {
-      "allowedModels": [
-        "copilot/auto",
-        "copilot/claude-haiku-4.5",
-        "copilot/claude-opus-41",
-        "copilot/claude-opus-4.5",
-        "copilot/claude-sonnet-4",
-        "copilot/claude-sonnet-4.5",
-        "copilot/gemini-2.5-pro",
-        "copilot/gemini-3-pro-preview",
-        "copilot/gpt-4.1",
-        "copilot/gpt-4o",
-        "copilot/gpt-5",
-        "copilot/gpt-5-mini",
-        "copilot/gpt-5-codex",
-        "copilot/gpt-5.1",
-        "copilot/gpt-5.1-codex",
-        "copilot/gpt-5.1-codex-mini",
-        "copilot/grok-code-fast-1",
-        "copilot/oswe-vscode-prime"
-      ]
+    "chat.agent.todoList": {
+        "position": "default"
     },
-    "Global in Code: huggingface/hf-mcp-server": {
-      "allowedModels": [
-        "copilot/claude-sonnet-4.5",
-        "copilot/auto",
-        "copilot/claude-haiku-4.5",
-        "copilot/claude-opus-41",
-        "copilot/claude-opus-4.5",
-        "copilot/claude-sonnet-4",
-        "copilot/gemini-2.5-pro",
-        "copilot/gemini-3-pro-preview",
-        "copilot/gpt-4.1",
-        "copilot/gpt-4o",
-        "copilot/gpt-5",
-        "copilot/gpt-5-mini",
-        "copilot/gpt-5-codex",
-        "copilot/gpt-5.1",
-        "copilot/gpt-5.1-codex",
-        "copilot/gpt-5.1-codex-mini",
-        "copilot/grok-code-fast-1",
-        "copilot/oswe-vscode-prime"
-      ]
-    }
-  },
-  "liveServer.settings.donotVerifyTags": true,
-  "geminicodeassist.inlineSuggestions.enableAuto": true,
-  "mssql.connectionGroups": [
-    {
-      "name": "ROOT",
-      "id": "08F0111C-2053-4026-8281-8C126DD2ABBE"
-    }
-  ],
-  "mcpServerRunner.servers": [
-    {
-      "name": "memory",
-      "command": "npx",
-      "args": [
-        "@modelcontextprotocol/server-memory"
-      ],
-      "env": {
-        "MEMORY_FILE": "C:\\Users\\eboth\\.vscode\\MCP\\Memory\\Download folder\\memory.json"
-      }
-    }
-  ],
-  "docker.extension.enableComposeLanguageServer": false,
-  "editor.dropIntoEditor.preferences": [],
-  "containers.commands.attach": "${containerCommand} exec -it ${containerId} ${shellCommand}",
-  "[jsonc]": {
-    "editor.defaultFormatter": "vscode.json-language-features"
-  },
-  "@azure.argTenant": "",
-  "editor.defaultFormatter": null,
-  "editor.formatOnSave": true,
-  "editor.formatOnPaste": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.organizeImports": "explicit"
-  },
-  "editor.suggestSelection": "first",
-  "editor.suggest.showIcons": true,
-  "editor.suggest.showStatusBar": true,
-  "editor.suggest.localityBonus": true,
-  "editor.suggest.shareSuggestSelections": false,
-  "editor.snippetSuggestions": "top",
-  "editor.tabCompletion": "on",
-  "editor.wordBasedSuggestions": "matchingDocuments",
-  "makefile.configureOnOpen": true,
-  "cSpell.userWords": [
-    "huggingface",
-    "modelcontextprotocol",
-    "sequentialthinking",
-    "Sourcery"
-  ],
-  "geminicodeassist.project": "gen-lang-client-0822273391",
-  "[html]": {
-    "editor.defaultFormatter": "vscode.html-language-features"
-  },
-  "chat.tools.terminal.autoApprove": {
-    "Get-Process | Where-Object {$_.ProcessName -like \"*webui*\" -or $_.ProcessName -like \"*open*\" -or $_.ProcessName -like \"*python*\"} | Select-Object Name, Id, CPU": {
-      "approve": true,
-      "matchCommandLine": true
+    "chat.edits2.enabled": true,
+    "grunt.autoDetect": "on",
+    "gulp.autoDetect": "on",
+    "jake.autoDetect": "on",
+    "chat.checkpoints.showFileChanges": true,
+    "vs-kubernetes": {
+        "vscode-kubernetes.helm-path-windows": "C:\\Users\\User\\.vs-kubernetes\\tools\\helm\\windows-amd64\\helm.exe",
+        "vscode-kubernetes.minikube-path-windows": "C:\\Users\\User\\.vs-kubernetes\\tools\\minikube\\windows-amd64\\minikube.exe"
     },
-    "wsl": true,
-    "wsl -d Ubuntu -e bash -c \"ps aux | grep -E '(webui|ollama|python.*3000|node.*3000)'\"": {
-      "approve": true,
-      "matchCommandLine": true
+    "svelte.enable-ts-plugin": true,
+    "playwright.reuseBrowser": false,
+    "playwright.showTrace": false,
+    "playwright.useTestServer": true,
+    "chat.mcp.assisted.nuget.enabled": true,
+    "chat.mcp.assisted.playwright.enabled": true,
+    "extensions.experimental.affinity": {
+        "ms-playwright.playwright": 1
     },
-    "open": true,
-    "3000)'\"": true,
-    "wsl -d Ubuntu -e bash -c \"sudo docker ps -a | grep -E '(webui|open)'\"": {
-      "approve": true,
-      "matchCommandLine": true
+    "mcpExplorer.serverRegistry": "C:\\Users\\eboth\\.vscode\\MCP\\Mcp server registrymcp-servers-registry.json",
+    "git.confirmSync": false,
+    "workbench.secondarySideBar.defaultVisibility": "visible",
+    "chat.mcp.gallery.enabled": true,
+    "editor.linkedEditing": true,
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "netstat": true,
-    "Get-History": true,
-    "npm run build": true,
-    "git branch": true,
-    "git commit": true,
-    "git push": true,
-    "git add": true,
-    "touch/click": true,
-    "-": true,
-    ")": true,
-    "git pull": true,
-    "git checkout": true,
-    "git commit -m \"Fix critical bug: objects disappearing randomly + update Copilot instructions\n\n- Fixed collision detection bug in use-game-logic.ts where objects were incorrectly sliced\n- Bug caused falling objects to appear briefly then randomly disappear\n- Root cause: applySeparation() reassigned local parameter instead of using sliced array\n- Solution: Sort first, then slice to keep newest objects, use consistently in loop\n- Document TouchHandlerDebug as debug-only component (already not rendered)\n- Enhance Copilot instructions with critical architectural rules and singleton pattern\n- Add touch integration pattern examples and lazy loading documentation\"": {
-      "approve": true,
-      "matchCommandLine": true
+    "lldb.suppressUpdateNotifications": true,
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
     },
-    "git merge": true,
-    "npx": true,
-    "git fetch": true,
-    "git rebase": true,
-    "Move-Item": true,
-    "New-Item": true,
-    "npm run dev": true,
-    "npm run test": true,
-    "Set-Content": true,
-    "Get-Command": true,
-    "/^Get-Process node \\| Select-Object Id, ProcessName, StartTime$/": {
-      "approve": true,
-      "matchCommandLine": true
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "Get-CimInstance": true,
-    "npm install": true,
-    "npm run validate": true,
-    "/^node -v; git --version$/": {
-      "approve": true,
-      "matchCommandLine": true
+    "[markdown]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "npm test": true,
-    "/^npm run verify$/": {
-      "approve": true,
-      "matchCommandLine": true
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "/^npm run lint:fix$/": {
-      "approve": true,
-      "matchCommandLine": true
-    },
-    "/^git config user\\.name \"TeacherEvan\"; git config user\\.email \"ewiebotha@gmail\\.com\"$/": {
-      "approve": true,
-      "matchCommandLine": true
-    },
-    "/^cd \"c:\\\\Users\\\\eboth\\\\OneDrive\\\\Documents\\\\Vs1\\\\MathMaster\\\\MathMasterHTML\"; npm run verify$/": {
-      "approve": true,
-      "matchCommandLine": true
-    },
-    "npm outdated": true,
-    "/^cd /home/eboth/projects/English-K1Run/English-K1Run && npm run check-types 2>&1 \\| head -50$/": {
-      "approve": true,
-      "matchCommandLine": true
-    },
-    "git config": true,
-    "npm run lint": true,
-    "mkdir": true,
-    "gh": true,
-    "git remote": true,
-    "/^cd /home/eboth/projects/Vs1/ShapeKeeper && node --check game\\.js 2>&1 \\|\\| echo \"Checking with node\\.\\.\\.\"$/": {
-      "approve": true,
-      "matchCommandLine": true
-    },
-    "npm run verify": true,
-    "npm run deploy:prod": true,
-    "/^cd /home/eboth/projects/Vs1/ShapeKeeper && node -c game\\.js && echo \"✅ game\\.js syntax OK\"$/": {
-      "approve": true,
-      "matchCommandLine": true
-    },
-    "/^git show HEAD:Assets/Scripts/Runtime/UserManager\\.cs \\| Out-File -FilePath \"c:\\\\Users\\\\eboth\\\\OneDrive\\\\Documents\\\\vs\\\\Mini-me\\\\SANGSOMminiME\\\\Assets\\\\Scripts\\\\Runtime\\\\UserManager_backup\\.cs\" -Encoding UTF8$/": {
-      "approve": true,
-      "matchCommandLine": true
-    },
-    "docker ps": true,
-    "docker build": true,
-    "Set-Location": true,
-    ".\\venv\\Scripts\\python.exe": true,
-    "/^python -m pytest -q$/": {
-      "approve": true,
-      "matchCommandLine": true
-    }
-  },
-  "chat.mcp.autostart": "newAndOutdated",
-  "mdb.mcp.server": "prompt",
-  "githubPullRequests.pullBranch": "never",
-  "chat.agent.maxRequests": 200,
-  "terminal.integrated.suggest.enabled": true,
-  "python.analysis.diagnosticSeverityOverrides": {},
-  "[dockercompose]": {
-    "editor.insertSpaces": true,
-    "editor.tabSize": 2,
-    "editor.autoIndent": "advanced",
-    "editor.quickSuggestions": {
-      "other": true,
-      "comments": false,
-      "strings": true
-    },
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-  "[github-actions-workflow]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-  "diffEditor.maxComputationTime": 0,
-  "chat.instructionsFilesLocations": {
-    ".github/instructions": true,
-    "C:\\Users\\User\\.aitk\\instructions\\": true,
-    "C:\\Users\\eboth\\.aitk\\instructions\\": true
-  },
-  "chat.agent.todoList": {
-    "position": "default"
-  },
-  "chat.edits2.enabled": true,
-  "grunt.autoDetect": "on",
-  "gulp.autoDetect": "on",
-  "jake.autoDetect": "on",
-  "chat.checkpoints.showFileChanges": true,
-  "vs-kubernetes": {
-    "vscode-kubernetes.helm-path-windows": "C:\\Users\\User\\.vs-kubernetes\\tools\\helm\\windows-amd64\\helm.exe",
-    "vscode-kubernetes.minikube-path-windows": "C:\\Users\\User\\.vs-kubernetes\\tools\\minikube\\windows-amd64\\minikube.exe"
-  },
-  "svelte.enable-ts-plugin": true,
-  "playwright.reuseBrowser": false,
-  "playwright.showTrace": false,
-  "playwright.useTestServer": true,
-  "chat.mcp.assisted.nuget.enabled": true,
-  "chat.mcp.assisted.playwright.enabled": true,
-  "extensions.experimental.affinity": {
-    "ms-playwright.playwright": 1
-  },
-  "mcpExplorer.serverRegistry": "C:\\Users\\eboth\\.vscode\\MCP\\Mcp server registrymcp-servers-registry.json",
-  "git.confirmSync": false,
-  "workbench.secondarySideBar.defaultVisibility": "visible",
-  "chat.mcp.gallery.enabled": true,
-  "editor.linkedEditing": true,
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "lldb.suppressUpdateNotifications": true,
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "editor.formatOnType": true,
-  "workbench.iconTheme": "vscode-icons",
-  "workbench.colorTheme": "Viow Arabian",
-  "python.analysis.typeCheckingMode": "basic",
-  "terminal.integrated.enablePersistentSessions": false,
-  "workbench.productIconTheme": "icons-kamekazi-dark",
-  "git.openRepositoryInParentFolders": "never",
-  "inlineChat.enableV2": true,
-  "inlineChat.finishOnType": true,
-  "inlineChat.notebookAgent": true,
-  "chat.tools.terminal.ignoreDefaultAutoApproveRules": true,
-  "chat.tools.terminal.autoReplyToPrompts": true,
-  "chat.tools.global.autoApprove": true,
-  "chat.customAgentInSubagent.enabled": true,
-  "chat.renderRelatedFiles": true,
-  "chat.todoListTool.descriptionField": true,
-  "roo-cline.allowedCommands": [
-    "git log",
-    "git diff",
-    "git show"
-  ],
-  "roo-cline.deniedCommands": []
+    "editor.formatOnType": true,
+    "workbench.iconTheme": "vscode-icons",
+    "workbench.colorTheme": "Viow Arabian",
+    "python.analysis.typeCheckingMode": "basic",
+    "terminal.integrated.enablePersistentSessions": false,
+    "workbench.productIconTheme": "icons-kamekazi-dark",
+    "git.openRepositoryInParentFolders": "never",
+    "inlineChat.enableV2": true,
+    "inlineChat.finishOnType": true,
+    "inlineChat.notebookAgent": true,
+    "chat.tools.terminal.ignoreDefaultAutoApproveRules": true,
+    "chat.tools.terminal.autoReplyToPrompts": true,
+    "chat.tools.global.autoApprove": true,
+    "chat.customAgentInSubagent.enabled": true,
+    "chat.renderRelatedFiles": true,
+    "chat.todoListTool.descriptionField": true,
+    "roo-cline.allowedCommands": ["git log", "git diff", "git show"],
+    "roo-cline.deniedCommands": []
 }

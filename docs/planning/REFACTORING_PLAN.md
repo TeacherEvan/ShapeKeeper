@@ -12,13 +12,15 @@ This document outlines a comprehensive plan to refactor ShapeKeeper's monolithic
 ## Current State Analysis
 
 ### Monolithic Files (Before)
-| File | Lines | Responsibilities |
-|------|-------|------------------|
-| `game.js` | ~3,524 | Game class, constants, effects, animations, sound, rendering, input, UI |
-| `welcome.js` | ~600 | Welcome animation, lobby manager, screen navigation, theme, room handlers |
-| `convex-client.js` | ~350 | Convex SDK wrapper, session management, API calls |
+
+| File               | Lines  | Responsibilities                                                          |
+| ------------------ | ------ | ------------------------------------------------------------------------- |
+| `game.js`          | ~3,524 | Game class, constants, effects, animations, sound, rendering, input, UI   |
+| `welcome.js`       | ~600   | Welcome animation, lobby manager, screen navigation, theme, room handlers |
+| `convex-client.js` | ~350   | Convex SDK wrapper, session management, API calls                         |
 
 ### Problems
+
 1. **God Class**: `DotsAndBoxesGame` handles 15+ concerns
 2. **Hard to Test**: No separation between logic and rendering
 3. **Merge Conflicts**: Large files increase conflict probability
@@ -30,6 +32,7 @@ This document outlines a comprehensive plan to refactor ShapeKeeper's monolithic
 ## Target Architecture
 
 ### Directory Structure (After)
+
 ```
 ShapeKeeper/
 ├── index.html                    # Entry point (updated for modules)
@@ -155,54 +158,64 @@ index.html
 ## Implementation Phases
 
 ### Phase 1: Documentation Organization (1 hour)
+
 - [ ] Create `/docs/` folder structure
 - [ ] Move MD files to appropriate subfolders
 - [ ] Update internal links
 - [ ] Update README with new structure
 
 ### Phase 2: Core Module Extraction (2 hours)
+
 - [ ] Create `/src/core/constants.js` - Extract all static constants
 - [ ] Create `/src/core/utils.js` - Extract utility functions
 - [ ] Create `/src/core/state.js` - State management patterns
 
 ### Phase 3: Sound System (30 mins)
+
 - [ ] Create `/src/sound/SoundManager.js` - Extract from game.js
 - [ ] Export as ES6 module
 
 ### Phase 4: Animation Systems (1.5 hours)
+
 - [ ] Create `/src/animations/ParticleSystem.js`
 - [ ] Create `/src/animations/SquareAnimations.js`
 - [ ] Create `/src/animations/ScreenEffects.js`
 - [ ] Create `/src/animations/AnimationLoop.js`
 
 ### Phase 5: Effects System (1 hour)
+
 - [ ] Create `/src/effects/effects.js` - TILE_EFFECTS, HYPOTHETICALS, DARES, etc.
 - [ ] Create `/src/effects/EffectManager.js` - Effect activation
 - [ ] Create `/src/effects/EffectModal.js` - Modal DOM manipulation
 
 ### Phase 6: Game Core (2 hours)
+
 - [ ] Create `/src/game/Game.js` - Slim DotsAndBoxesGame class
 - [ ] Create `/src/game/GameRenderer.js` - Canvas drawing
 - [ ] Create `/src/game/GameInput.js` - Event handlers
 - [ ] Create `/src/game/GameMultiplayer.js` - Multiplayer hooks
 
 ### Phase 7: UI System (1 hour)
+
 - [ ] Create `/src/ui/WelcomeAnimation.js`
 - [ ] Create `/src/ui/LobbyManager.js`
 - [ ] Create `/src/ui/ScreenManager.js`
 - [ ] Create `/src/ui/ThemeManager.js`
 
 ### Phase 8: Multiplayer (30 mins)
+
 - [ ] Refactor `convex-client.js` to `/src/multiplayer/ConvexClient.js`
 - [ ] Create `/src/multiplayer/SyncManager.js`
 
 ### Phase 9: Integration (1 hour)
+
 - [ ] Create `/src/index.js` entry point
 - [ ] Update `index.html` to use `type="module"`
 - [ ] Test all functionality
 - [ ] Fix import/export issues
 
 ### Phase 10: Cleanup & Documentation (1 hour)
+
 - [ ] Delete old monolithic files
 - [ ] Update JOBCARD.md
 - [ ] Update copilot-instructions.md
@@ -213,6 +226,7 @@ index.html
 ## Module Templates
 
 ### constants.js Example
+
 ```javascript
 // src/core/constants.js
 
@@ -230,7 +244,7 @@ export const ANIMATION = {
     MULTIPLIER_DURATION: 2000,
     PULSATING_DURATION: 2000,
     LINE_DRAW_DURATION: 150,
-    INVALID_FLASH_DURATION: 300
+    INVALID_FLASH_DURATION: 300,
 };
 
 // Particle counts
@@ -239,25 +253,26 @@ export const PARTICLES = {
     MULTIPLIER_SPARKS: 30,
     MULTIPLIER_SMOKE: 10,
     TRAIL_LENGTH: 8,
-    AMBIENT_COUNT: 30
+    AMBIENT_COUNT: 30,
 };
 
 // Sound frequencies (Hz)
 export const SOUND = {
     LINE_BASE: 440,
     SQUARE_BASE: 523,
-    COMBO_BASE: 659
+    COMBO_BASE: 659,
 };
 
 // Combo thresholds
 export const COMBO = {
     FLASH_THRESHOLD: 3,
     PULSE_THRESHOLD: 5,
-    EPIC_THRESHOLD: 7
+    EPIC_THRESHOLD: 7,
 };
 ```
 
 ### utils.js Example
+
 ```javascript
 // src/core/utils.js
 
@@ -280,7 +295,7 @@ export function getLineKey(dot1, dot2) {
  * @returns {Array} [startDot, endDot]
  */
 export function parseLineKey(lineKey) {
-    const [start, end] = lineKey.split('-').map(s => {
+    const [start, end] = lineKey.split('-').map((s) => {
         const [row, col] = s.split(',').map(Number);
         return { row, col };
     });
@@ -319,6 +334,7 @@ export function generateRandomColor() {
 ```
 
 ### index.js Entry Point Example
+
 ```javascript
 // src/index.js - Main entry point
 
@@ -350,6 +366,7 @@ if (document.readyState === 'loading') {
 ```
 
 ### HTML Module Loading
+
 ```html
 <!-- Old approach -->
 <script src="game.js"></script>
@@ -364,33 +381,35 @@ if (document.readyState === 'loading') {
 ## Testing Strategy
 
 ### Unit Tests (Future)
+
 - Each module should be independently testable
 - Use Jest or Vitest for testing
 - Mock DOM and Canvas APIs
 
 ### Integration Tests
+
 1. Start local server: `npm run start`
 2. Manual testing checklist:
-   - [ ] Game loads without errors
-   - [ ] Grid renders correctly
-   - [ ] Lines can be drawn
-   - [ ] Squares complete with animations
-   - [ ] Tile effects reveal and activate
-   - [ ] Sound plays
-   - [ ] Theme toggle works
-   - [ ] Multiplayer connects and syncs
+    - [ ] Game loads without errors
+    - [ ] Grid renders correctly
+    - [ ] Lines can be drawn
+    - [ ] Squares complete with animations
+    - [ ] Tile effects reveal and activate
+    - [ ] Sound plays
+    - [ ] Theme toggle works
+    - [ ] Multiplayer connects and syncs
 
 ---
 
 ## Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Circular dependencies | Medium | High | Careful dependency graph planning |
-| Global state access | High | Medium | Explicit imports, avoid window.* |
-| Browser compatibility | Low | High | Test in Chrome, Firefox, Safari |
-| Convex CDN loading | Low | High | Keep convex bundle in separate script tag |
-| Performance regression | Low | Medium | Profile before/after |
+| Risk                   | Likelihood | Impact | Mitigation                                |
+| ---------------------- | ---------- | ------ | ----------------------------------------- |
+| Circular dependencies  | Medium     | High   | Careful dependency graph planning         |
+| Global state access    | High       | Medium | Explicit imports, avoid window.\*         |
+| Browser compatibility  | Low        | High   | Test in Chrome, Firefox, Safari           |
+| Convex CDN loading     | Low        | High   | Keep convex bundle in separate script tag |
+| Performance regression | Low        | Medium | Profile before/after                      |
 
 ---
 
@@ -416,18 +435,18 @@ if (document.readyState === 'loading') {
 
 ## Timeline Estimate
 
-| Phase | Duration | Cumulative |
-|-------|----------|------------|
-| Docs Organization | 1h | 1h |
-| Core Modules | 2h | 3h |
-| Sound System | 0.5h | 3.5h |
-| Animations | 1.5h | 5h |
-| Effects System | 1h | 6h |
-| Game Core | 2h | 8h |
-| UI System | 1h | 9h |
-| Multiplayer | 0.5h | 9.5h |
-| Integration | 1h | 10.5h |
-| Cleanup | 1h | 11.5h |
+| Phase             | Duration | Cumulative |
+| ----------------- | -------- | ---------- |
+| Docs Organization | 1h       | 1h         |
+| Core Modules      | 2h       | 3h         |
+| Sound System      | 0.5h     | 3.5h       |
+| Animations        | 1.5h     | 5h         |
+| Effects System    | 1h       | 6h         |
+| Game Core         | 2h       | 8h         |
+| UI System         | 1h       | 9h         |
+| Multiplayer       | 0.5h     | 9.5h       |
+| Integration       | 1h       | 10.5h      |
+| Cleanup           | 1h       | 11.5h      |
 
 **Total Estimated Time: ~12 hours**
 

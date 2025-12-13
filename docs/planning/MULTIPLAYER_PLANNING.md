@@ -8,11 +8,11 @@ The multiplayer system is now live using **Convex + Vercel** as planned.
 
 ### What's Deployed
 
-| Component | Status | Location |
-|-----------|--------|----------|
-| Frontend | ✅ Live | shape-keeper.vercel.app |
-| Backend | ✅ Live | oceanic-antelope-781.convex.cloud |
-| Database | ✅ Active | Convex Tables |
+| Component | Status    | Location                          |
+| --------- | --------- | --------------------------------- |
+| Frontend  | ✅ Live   | shape-keeper.vercel.app           |
+| Backend   | ✅ Live   | oceanic-antelope-781.convex.cloud |
+| Database  | ✅ Active | Convex Tables                     |
 
 ### Features Implemented
 
@@ -45,40 +45,43 @@ After evaluating multiple backend solutions for turn-based browser games, **Conv
 
 #### Why Convex?
 
-| Feature | Benefit for ShapeKeeper |
-|---------|---------------------------|
-| **Native Real-time Sync** | Game state updates propagate instantly to all connected players without extra setup |
-| **ACID Transactions** | Ensures move validity and prevents race conditions when players act simultaneously |
-| **TypeScript Support** | Strong typing prevents bugs in game logic |
-| **React Integration** | Simple hooks for subscribing to game state |
-| **Serverless Functions** | No server management required |
-| **Built-in Authentication** | Easy player identification and session management |
+| Feature                     | Benefit for ShapeKeeper                                                             |
+| --------------------------- | ----------------------------------------------------------------------------------- |
+| **Native Real-time Sync**   | Game state updates propagate instantly to all connected players without extra setup |
+| **ACID Transactions**       | Ensures move validity and prevents race conditions when players act simultaneously  |
+| **TypeScript Support**      | Strong typing prevents bugs in game logic                                           |
+| **React Integration**       | Simple hooks for subscribing to game state                                          |
+| **Serverless Functions**    | No server management required                                                       |
+| **Built-in Authentication** | Easy player identification and session management                                   |
 
 #### Why Vercel?
 
-| Feature | Benefit |
-|---------|---------|
-| **Zero-config Deployment** | Push code, auto-deploy both frontend and backend |
-| **Edge Network** | Low latency globally for players worldwide |
-| **Convex Marketplace Integration** | Seamless setup with Convex backend |
-| **CI/CD Built-in** | Automatic deployments on every commit |
-| **Free Tier** | Generous free tier for development and small-scale games |
+| Feature                            | Benefit                                                  |
+| ---------------------------------- | -------------------------------------------------------- |
+| **Zero-config Deployment**         | Push code, auto-deploy both frontend and backend         |
+| **Edge Network**                   | Low latency globally for players worldwide               |
+| **Convex Marketplace Integration** | Seamless setup with Convex backend                       |
+| **CI/CD Built-in**                 | Automatic deployments on every commit                    |
+| **Free Tier**                      | Generous free tier for development and small-scale games |
 
 ---
 
 ## Alternative Options Evaluated
 
 ### 1. Firebase Realtime Database / Firestore
+
 - **Pros**: Established, scalable, good documentation
 - **Cons**: Higher costs at scale (read/write ops), vendor lock-in with Google
 - **Verdict**: Good alternative if team has Firebase experience
 
 ### 2. Supabase (PostgreSQL + Realtime)
+
 - **Pros**: Open source, SQL power, self-hosting option, Edge Functions
 - **Cons**: More manual real-time setup, requires more backend code
 - **Verdict**: Best for teams wanting SQL/relational features or open-source preference
 
 ### 3. Socket.io + Custom Node.js Backend
+
 - **Pros**: Maximum flexibility, full control, no vendor lock-in
 - **Cons**: Significant development overhead, manual scaling, security complexity
 - **Verdict**: Only for teams with strong backend expertise and specific requirements
@@ -92,32 +95,33 @@ After evaluating multiple backend solutions for turn-based browser games, **Conv
 ```typescript
 // Convex schema example
 interface GameSession {
-  _id: Id<"games">;
-  roomCode: string;           // 6-character room code for joining
-  hostPlayerId: Id<"players">;
-  gridSize: number;
-  status: "lobby" | "playing" | "finished";
-  currentPlayerIndex: number;
-  players: PlayerState[];
-  lines: string[];            // Array of line keys ("1,2-1,3")
-  squares: Record<string, number>; // squareKey -> playerIndex
-  createdAt: number;
-  updatedAt: number;
+    _id: Id<'games'>;
+    roomCode: string; // 6-character room code for joining
+    hostPlayerId: Id<'players'>;
+    gridSize: number;
+    status: 'lobby' | 'playing' | 'finished';
+    currentPlayerIndex: number;
+    players: PlayerState[];
+    lines: string[]; // Array of line keys ("1,2-1,3")
+    squares: Record<string, number>; // squareKey -> playerIndex
+    createdAt: number;
+    updatedAt: number;
 }
 
 interface PlayerState {
-  playerId: Id<"players">;
-  name: string;
-  color: string;
-  score: number;
-  isReady: boolean;
-  isConnected: boolean;
+    playerId: Id<'players'>;
+    name: string;
+    color: string;
+    score: number;
+    isReady: boolean;
+    isConnected: boolean;
 }
 ```
 
 ### Core Multiplayer Features
 
 #### 1. Lobby System
+
 - Host creates a room with a unique 6-character code
 - Players join using the room code
 - Host selects grid size
@@ -126,12 +130,14 @@ interface PlayerState {
 - Game starts when all players are ready (2-6 players)
 
 #### 2. Player Management
+
 - 2-6 player support
 - Dynamic turn order (clockwise or random)
 - Automatic handling of disconnected players
 - Rejoin capability within timeout period
 
 #### 3. Game State Sync
+
 - Real-time line drawing updates
 - Score updates pushed to all clients
 - Turn indicator synced across devices
@@ -142,12 +148,14 @@ interface PlayerState {
 ## Implementation Phases
 
 ### Phase 1: Infrastructure Setup
+
 1. Install Convex CLI and initialize project
 2. Set up Vercel deployment pipeline
 3. Create basic database schema
 4. Configure authentication (anonymous or basic auth)
 
 ### Phase 2: Lobby Implementation
+
 1. Room creation with unique codes
 2. Room joining functionality
 3. Player list display with colors
@@ -155,6 +163,7 @@ interface PlayerState {
 5. Game start conditions
 
 ### Phase 3: Game State Migration
+
 1. Move game state to Convex tables
 2. Implement move validation on server
 3. Add real-time subscriptions
@@ -162,6 +171,7 @@ interface PlayerState {
 5. Score calculation and updates
 
 ### Phase 4: UI Updates
+
 1. Lobby screen with player list
 2. Color selection for each player
 3. Ready button functionality
@@ -170,6 +180,7 @@ interface PlayerState {
 6. Reconnection handling UI
 
 ### Phase 5: Polish & Testing
+
 1. Error handling and edge cases
 2. Disconnect/reconnect flows
 3. Game abandonment handling
@@ -183,6 +194,7 @@ interface PlayerState {
 ### New Screens Required
 
 #### 1. Main Menu Screen
+
 ```
 ┌─────────────────────────────────┐
 │       ShapeKeeper               │
@@ -203,6 +215,7 @@ interface PlayerState {
 ```
 
 #### 2. Lobby Screen
+
 ```
 ┌─────────────────────────────────┐
 │  Room: ABC123    [Copy Code]    │
@@ -227,6 +240,7 @@ interface PlayerState {
 ```
 
 #### 3. Updated Game Header (Multi-player)
+
 ```
 ┌─────────────────────────────────────────┐
 │ 🔴 P1: 5  │ 🔵 P2: 3  │ 🟢 P3: 4  │ Exit │
@@ -241,16 +255,17 @@ interface PlayerState {
 
 ### Default Color Palette (6 Players Max)
 
-| Player | Default Color | Hex Code |
-|--------|--------------|----------|
-| Player 1 | Red | #FF0000 |
-| Player 2 | Blue | #0000FF |
-| Player 3 | Green | #00FF00 |
-| Player 4 | Orange | #FF8C00 |
-| Player 5 | Purple | #8B00FF |
-| Player 6 | Cyan | #00FFFF |
+| Player   | Default Color | Hex Code |
+| -------- | ------------- | -------- |
+| Player 1 | Red           | #FF0000  |
+| Player 2 | Blue          | #0000FF  |
+| Player 3 | Green         | #00FF00  |
+| Player 4 | Orange        | #FF8C00  |
+| Player 5 | Purple        | #8B00FF  |
+| Player 6 | Cyan          | #00FFFF  |
 
 ### Color Selection Rules
+
 - No two players can have the same color
 - Colors auto-assigned on join, can be changed in lobby
 - Visual indicator if color conflicts
@@ -261,13 +276,13 @@ interface PlayerState {
 
 ```json
 {
-  "dependencies": {
-    "convex": "^1.x.x",
-    "@convex-dev/auth": "^0.x.x"
-  },
-  "devDependencies": {
-    "convex-test": "^0.x.x"
-  }
+    "dependencies": {
+        "convex": "^1.x.x",
+        "@convex-dev/auth": "^0.x.x"
+    },
+    "devDependencies": {
+        "convex-test": "^0.x.x"
+    }
 }
 ```
 
@@ -275,14 +290,14 @@ interface PlayerState {
 
 ## Estimated Timeline
 
-| Phase | Duration | Notes |
-|-------|----------|-------|
-| Phase 1: Infrastructure | 2-3 days | Convex/Vercel setup |
-| Phase 2: Lobby | 3-4 days | Room management |
-| Phase 3: Game State | 4-5 days | Core multiplayer logic |
-| Phase 4: UI Updates | 3-4 days | New screens and components |
-| Phase 5: Polish | 2-3 days | Testing and edge cases |
-| **Total** | **~3 weeks** | For full implementation |
+| Phase                   | Duration     | Notes                      |
+| ----------------------- | ------------ | -------------------------- |
+| Phase 1: Infrastructure | 2-3 days     | Convex/Vercel setup        |
+| Phase 2: Lobby          | 3-4 days     | Room management            |
+| Phase 3: Game State     | 4-5 days     | Core multiplayer logic     |
+| Phase 4: UI Updates     | 3-4 days     | New screens and components |
+| Phase 5: Polish         | 2-3 days     | Testing and edge cases     |
+| **Total**               | **~3 weeks** | For full implementation    |
 
 ---
 
@@ -319,6 +334,7 @@ interface PlayerState {
 ## Conclusion
 
 The **Convex + Vercel** stack provides the optimal balance of:
+
 - Developer experience
 - Real-time capabilities
 - Scalability

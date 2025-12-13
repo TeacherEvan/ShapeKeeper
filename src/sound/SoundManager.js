@@ -16,13 +16,13 @@ export class SoundManager {
         this.initialized = false;
         this.enabled = true;
     }
-    
+
     /**
      * Initialize audio context (must be called from user gesture)
      */
     init() {
         if (this.initialized) return;
-        
+
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (AudioContext) {
@@ -34,7 +34,7 @@ export class SoundManager {
             console.log('[Sound] Web Audio API not available');
         }
     }
-    
+
     /**
      * Ensure audio context is ready
      */
@@ -44,7 +44,7 @@ export class SoundManager {
         }
         return this.ctx !== null;
     }
-    
+
     /**
      * Toggle sound on/off
      * @returns {boolean} New enabled state
@@ -53,139 +53,139 @@ export class SoundManager {
         this.enabled = !this.enabled;
         return this.enabled;
     }
-    
+
     /**
      * Play line draw sound (rising tone)
      */
     playLineSound() {
         if (!this.enabled || !this.ctx) return;
-        
+
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        
+
         osc.type = 'sine';
         osc.frequency.setValueAtTime(SOUND_FREQ.LINE_BASE, this.ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(
-            SOUND_FREQ.LINE_BASE * 2, 
+            SOUND_FREQ.LINE_BASE * 2,
             this.ctx.currentTime + 0.1
         );
-        
+
         gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
-        
+
         osc.connect(gain).connect(this.ctx.destination);
         osc.start();
         osc.stop(this.ctx.currentTime + 0.1);
     }
-    
+
     /**
      * Play square completion sound (chord)
      * @param {number} comboCount - Current combo count for pitch variation
      */
     playSquareSound(comboCount = 1) {
         if (!this.enabled || !this.ctx) return;
-        
+
         const baseFreq = SOUND_FREQ.SQUARE_BASE * (1 + comboCount * 0.1);
-        
+
         // Play a chord (root + major third + fifth)
         [1, 1.26, 1.5].forEach((mult, i) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
-            
+
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(baseFreq * mult, this.ctx.currentTime);
-            
+
             gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
-            
+
             osc.connect(gain).connect(this.ctx.destination);
             osc.start(this.ctx.currentTime + i * 0.05);
             osc.stop(this.ctx.currentTime + 0.35);
         });
     }
-    
+
     /**
      * Play invalid move sound (dissonant buzz)
      */
     playInvalidSound() {
         if (!this.enabled || !this.ctx) return;
-        
+
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        
+
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(150, this.ctx.currentTime);
         osc.frequency.linearRampToValueAtTime(100, this.ctx.currentTime + 0.15);
-        
+
         gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-        
+
         osc.connect(gain).connect(this.ctx.destination);
         osc.start();
         osc.stop(this.ctx.currentTime + 0.15);
     }
-    
+
     /**
      * Play combo sound (escalating arpeggio)
      * @param {number} comboLevel - Current combo level
      */
     playComboSound(comboLevel) {
         if (!this.enabled || !this.ctx) return;
-        
+
         const notes = [1, 1.26, 1.5, 2]; // Major arpeggio
-        
+
         notes.slice(0, Math.min(comboLevel, 4)).forEach((mult, i) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
-            
+
             osc.type = 'sine';
             osc.frequency.setValueAtTime(
-                SOUND_FREQ.COMBO_BASE * mult * (1 + comboLevel * 0.05), 
+                SOUND_FREQ.COMBO_BASE * mult * (1 + comboLevel * 0.05),
                 this.ctx.currentTime
             );
-            
+
             gain.gain.setValueAtTime(0.1, this.ctx.currentTime + i * 0.08);
             gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.08 + 0.2);
-            
+
             osc.connect(gain).connect(this.ctx.destination);
             osc.start(this.ctx.currentTime + i * 0.08);
             osc.stop(this.ctx.currentTime + i * 0.08 + 0.25);
         });
     }
-    
+
     /**
      * Play victory fanfare
      */
     playVictorySound() {
         if (!this.enabled || !this.ctx) return;
-        
+
         const melody = [523, 659, 784, 1047]; // C5, E5, G5, C6
-        
+
         melody.forEach((freq, i) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
-            
+
             osc.type = 'square';
             osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            
+
             gain.gain.setValueAtTime(0.08, this.ctx.currentTime + i * 0.15);
             gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.15 + 0.3);
-            
+
             osc.connect(gain).connect(this.ctx.destination);
             osc.start(this.ctx.currentTime + i * 0.15);
             osc.stop(this.ctx.currentTime + i * 0.15 + 0.35);
         });
     }
-    
+
     /**
      * Play effect reveal sound
      * @param {string} type - 'trap' or 'powerup'
      */
     playEffectRevealSound(type) {
         if (!this.enabled || !this.ctx) return;
-        
+
         const now = this.ctx.currentTime;
-        
+
         if (type === 'trap') {
             // Ominous descending tone
             const osc = this.ctx.createOscillator();
@@ -214,7 +214,7 @@ export class SoundManager {
             });
         }
     }
-    
+
     /**
      * Play effect activation sound
      * @param {string} type - 'trap' or 'powerup'
@@ -222,9 +222,9 @@ export class SoundManager {
      */
     playEffectActivationSound(type, effectId) {
         if (!this.enabled || !this.ctx) return;
-        
+
         const now = this.ctx.currentTime;
-        
+
         // Special sounds for specific effects
         if (effectId === 'landmine') {
             // Explosion sound
