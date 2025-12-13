@@ -18,7 +18,7 @@
 ## Project Overview
 ShapeKeeper is a Dots and Boxes game with **local and online multiplayer** support. Vanilla JavaScript frontend with HTML5 Canvas, Convex backend for real-time multiplayer, deployed on Vercel at [shape-keeper.vercel.app](https://shape-keeper.vercel.app).
 
-**Version:** 4.3.0 | **Updated:** December 9, 2025
+**Version:** 4.4.0 | **Updated:** December 13, 2025
 
 ## Architecture
 

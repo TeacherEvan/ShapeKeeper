@@ -629,7 +629,7 @@ function handleRoomUpdate(roomState) {
         requestFullscreen();
         
         // Get player colors from room state (sorted by playerIndex)
-        const sortedPlayers = roomState.players.sort((a, b) => a.playerIndex - b.playerIndex);
+        const sortedPlayers = [...roomState.players].sort((a, b) => a.playerIndex - b.playerIndex);
         const player1Color = sortedPlayers[0]?.color || '#FF0000';
         const player2Color = sortedPlayers[1]?.color || '#0000FF';
         
@@ -742,6 +742,23 @@ function handleGameStateUpdate(gameState) {
             game.playSquareSound(game.comboCount);
         }
     });
+    
+    // Sync triangles from server
+    if (gameState.triangles) {
+        gameState.triangles.forEach(triangle => {
+            const key = triangle.triangleKey;
+            if (!game.triangles[key]) {
+                // playerIndex is 0-based, convert to 1-based player number
+                game.triangles[key] = triangle.playerIndex + 1;
+                
+                // Trigger the triangle animation
+                game.triggerTriangleAnimation(key);
+                
+                // Play square sound (triangles use same sound)
+                game.playSquareSound(game.comboCount);
+            }
+        });
+    }
     
     // Update scores from players array (playerIndex 0 = Player 1, playerIndex 1 = Player 2)
     const p1 = gameState.players?.find(p => p.playerIndex === 0);

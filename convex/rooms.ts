@@ -178,9 +178,6 @@ export const joinRoom = mutation({
       color: availableColor,
     });
 
-    // Update room timestamp
-    await ctx.db.patch(room._id, { updatedAt: Date.now() });
-
     return { roomId: room._id, playerId };
   },
 });
@@ -245,9 +242,15 @@ export const leaveRoom = mutation({
       return { success: true, roomDeleted: true };
     }
 
-    // If host left, transfer to next player
+    // Sort remaining players by current index (stable), then joinedAt for tie-break
+    const sortedRemainingPlayers = [...remainingPlayers].sort((a, b) => {
+      if (a.playerIndex !== b.playerIndex) return a.playerIndex - b.playerIndex;
+      return a.joinedAt - b.joinedAt;
+    });
+
+    // If host left, transfer to the next player in turn order
     if (room.hostPlayerId === args.sessionId) {
-      const newHost = remainingPlayers[0];
+      const newHost = sortedRemainingPlayers[0];
       await ctx.db.patch(args.roomId, {
         hostPlayerId: newHost.sessionId,
         updatedAt: Date.now(),
@@ -258,12 +261,15 @@ export const leaveRoom = mutation({
       });
     }
 
-    // Reindex remaining players
-    for (let i = 0; i < remainingPlayers.length; i++) {
-      await ctx.db.patch(remainingPlayers[i]._id, { playerIndex: i });
+    // Reindex remaining players (only patch when needed)
+    for (let i = 0; i < sortedRemainingPlayers.length; i++) {
+      const p = sortedRemainingPlayers[i];
+      if (p.playerIndex !== i) {
+        await ctx.db.patch(p._id, { playerIndex: i });
+      }
     }
 
-    console.log('[leaveRoom] Players reindexed', { count: remainingPlayers.length });
+    console.log('[leaveRoom] Players reindexed', { count: sortedRemainingPlayers.length });
 
     return { success: true };
   },
@@ -292,7 +298,6 @@ export const toggleReady = mutation({
 
     const newReadyState = !player.isReady;
     await ctx.db.patch(player._id, { isReady: newReadyState });
-    await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
 
     console.log('[toggleReady] Ready status toggled', {
       playerId: player._id,
@@ -356,7 +361,6 @@ export const updatePlayer = mutation({
     }
 
     await ctx.db.patch(player._id, updates);
-    await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
 
     console.log('[updatePlayer] Player updated successfully', {
       playerId: player._id,

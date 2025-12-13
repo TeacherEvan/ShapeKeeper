@@ -262,7 +262,7 @@ Default colors can be changed in `index.html`:
 - Parsing error in VSCode is cosmetic (ESLint configuration)
 - Portrait mode shows rotation prompt (landscape recommended)
 - Very large grids (50×50+) may impact performance on older devices
-- Triangles not yet synced in multiplayer mode (local only)
+- Game-over logic based on squares only (triangles are bonus points)
 
 ## 🔮 Future Enhancements
 
@@ -274,7 +274,7 @@ Default colors can be changed in `index.html`:
 - [x] Visual effects overhaul (CounterPlan complete) ✅
 - [x] Diagonal lines support ✅
 - [x] Triangle shape detection ✅
-- [ ] Triangle multiplayer sync
+- [x] Triangle multiplayer sync ✅
 - [ ] AI opponent with difficulty levels
 - [ ] Game replay and save/load functionality
 - [ ] Achievement system
@@ -309,7 +309,15 @@ Contributions welcome! Feel free to:
 
 ## 📝 Version History
 
-### v4.2.0 (Current)
+### v4.4.0 (Current)
+
+- **Triangle Multiplayer Sync** - Triangles now fully supported in online multiplayer
+- **Convex Schema Update** - Added `triangles` table for persistent storage
+- **Backend Triangle Detection** - Server-side validation and scoring (0.5 points each)
+- **Turn-Based Optimization** - Triangle count changes trigger state updates
+- **Real-time Synchronization** - Triangles animate and sync across all players
+
+### v4.3.0
 
 - **Party Mode 🎉** - Renamed "Hypotheticals" to "Party Mode" - ALL squares have tile effects
 - **Turn-Based Multiplayer Optimization** - Chess-like communication prevents glitches

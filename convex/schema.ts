@@ -61,4 +61,15 @@ export default defineSchema({
   })
     .index("by_room", ["roomId"])
     .index("by_room_and_key", ["roomId", "squareKey"]),
+
+  // Completed triangles
+  triangles: defineTable({
+    roomId: v.id("rooms"),
+    triangleKey: v.string(),        // Key like "tri-1,2-TR" for position and corner
+    playerId: v.id("players"),      // Who completed this triangle
+    playerIndex: v.number(),        // For quick color lookup
+    createdAt: v.number(),
+  })
+    .index("by_room", ["roomId"])
+    .index("by_room_and_key", ["roomId", "triangleKey"]),
 });

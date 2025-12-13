@@ -1,6 +1,6 @@
 {
     "name": "shapekeeper",
-    "version": "4.3.0",
+    "version": "4.4.0",
     "description": "ShapeKeeper - A modern browser-based territory capture game with turn-based multiplayer",
     "main": "index.html",
     "scripts": {
@@ -9,6 +9,11 @@
         "start": "npx http-server -p 8000 -o",
         "serve": "python -m http.server 8000",
         "verify": "echo '🔍 Verifying ShapeKeeper...' && npx convex typecheck && echo '✅ Convex types OK' && node -c game.js && echo '✅ game.js syntax OK' && node -c welcome.js && echo '✅ welcome.js syntax OK' && node -c convex-client.js && echo '✅ convex-client.js syntax OK' && echo '🎉 All verifications passed!'",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "format": "prettier --write .",
+        "test": "vitest run",
+        "test:watch": "vitest",
         "deploy": "npx convex deploy --yes",
         "deploy:prod": "npx convex deploy --cmd-url-env-var-name CONVEX_URL --yes"
     },
@@ -28,6 +33,12 @@
         "convex": "^1.30.0"
     },
     "devDependencies": {
-        "typescript": "^5.9.3"
+        "eslint": "^8.56.0",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-prettier": "^5.1.3",
+        "jsdom": "^24.0.0",
+        "prettier": "^3.2.5",
+        "typescript": "^5.9.3",
+        "vitest": "^1.2.2"
     }
 }

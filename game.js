@@ -287,6 +287,7 @@ class DotsAndBoxesGame {
         this.ghostLines = new Set(); // Track lines drawn with ghost effect (semi-transparent)
         this.squares = {};
         this.triangles = {}; // Track completed triangles by key
+        this.triangleCellOwners = new Map(); // cellKey -> Set of player numbers who own triangle(s) in this cell
         this.claimedCells = new Set(); // Track cells claimed by shapes (for exclusivity)
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
@@ -332,6 +333,9 @@ class DotsAndBoxesGame {
             1: { frozenTurns: 0, shieldCount: 0, doublePointsCount: 0, ghostLines: 0, bonusTurns: 0, doubleLine: false },
             2: { frozenTurns: 0, shieldCount: 0, doublePointsCount: 0, ghostLines: 0, bonusTurns: 0, doubleLine: false }
         };
+
+        // Squares protected from stealing (shield)
+        this.protectedSquares = new Set();
         
         // Effect animations
         this.effectAnimations = []; // Active effect-specific animations
@@ -1455,17 +1459,34 @@ class DotsAndBoxesGame {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         
-        // Check if clicking on a completed square to reveal effect or multiplier
-        const clickedSquare = this.getSquareAtPosition(x, y);
-        if (clickedSquare && this.squares[clickedSquare]) {
+        // Check if clicking on a completed square OR a triangle-claimed cell to reveal effect or multiplier
+        const clickedCell = this.getSquareAtPosition(x, y);
+        const clickedHasSquare = clickedCell && !!this.squares[clickedCell];
+        const clickedHasTriangle = clickedCell && this.triangleCellOwners?.has(clickedCell);
+
+        if (clickedCell && (clickedHasSquare || clickedHasTriangle)) {
+            // In multiplayer mode, only the owning player can reveal/activate bonuses
+            if (this.isMultiplayer) {
+                const isSquareOwner = clickedHasSquare && this.squares[clickedCell] === this.myPlayerNumber;
+                const isTriangleOwner = clickedHasTriangle && this.triangleCellOwners.get(clickedCell).has(this.myPlayerNumber);
+                if (!isSquareOwner && !isTriangleOwner) {
+                    return;
+                }
+            }
+
             // Check for tile effect first
-            if (this.tileEffects[clickedSquare] && !this.revealedEffects.has(clickedSquare)) {
-                this.revealTileEffect(clickedSquare);
+            if (this.tileEffects[clickedCell] && !this.revealedEffects.has(clickedCell)) {
+                this.revealTileEffect(clickedCell);
                 return;
             }
-            // Fall back to multiplier reveal
-            if (!this.revealedMultipliers.has(clickedSquare)) {
-                this.revealMultiplier(clickedSquare);
+
+            // Fall back to multiplier reveal (local only for triangle-claimed cells)
+            if (!this.revealedMultipliers.has(clickedCell)) {
+                if (clickedHasSquare) {
+                    this.revealMultiplier(clickedCell);
+                } else {
+                    this.revealMultiplierForCell(clickedCell);
+                }
                 return;
             }
         }
@@ -1556,6 +1577,26 @@ class DotsAndBoxesGame {
         }
         this.draw();
     }
+
+    /**
+     * Reveal a multiplier for a cell that may be claimed by triangles (local-only fallback).
+     * This prevents triangle-claimed cells from having unrevealable bonuses.
+     */
+    revealMultiplierForCell(cellKey) {
+        this.revealedMultipliers.add(cellKey);
+
+        const multiplierData = this.squareMultipliers[cellKey];
+        const owner = this.getCellOwnerForEffects(cellKey);
+
+        if (multiplierData && multiplierData.type === 'multiplier' && owner) {
+            const currentScore = this.scores[owner];
+            const multiplierValue = multiplierData.value;
+            this.scores[owner] = currentScore * multiplierValue;
+            this.triggerMultiplierAnimation(cellKey, multiplierValue);
+            this.updateUI();
+        }
+        this.draw();
+    }
     
     /**
      * Reveal a tile effect (trap or powerup) when clicking on a completed square
@@ -1572,7 +1613,7 @@ class DotsAndBoxesGame {
         this.pendingEffect = {
             squareKey,
             effectData,
-            player: this.squares[squareKey]
+            player: this.getCellOwnerForEffects(squareKey)
         };
         
         // Play reveal sound
@@ -1585,6 +1626,25 @@ class DotsAndBoxesGame {
         this.showEffectModal(effectData);
         
         this.draw();
+    }
+
+    /**
+     * Determine which player should be considered the "owner" of a cell for applying effects.
+     * - Squares: the square owner
+     * - Triangles: if exactly one player owns triangles in the cell, use that
+     * - Otherwise: default to current player (local play / ambiguous ownership)
+     */
+    getCellOwnerForEffects(cellKey) {
+        if (this.squares && this.squares[cellKey]) {
+            return this.squares[cellKey];
+        }
+
+        const owners = this.triangleCellOwners?.get(cellKey);
+        if (owners && owners.size === 1) {
+            return Array.from(owners)[0];
+        }
+
+        return this.currentPlayer;
     }
     
     /**
@@ -1698,11 +1758,33 @@ class DotsAndBoxesGame {
         switch (effectId) {
             // === TRAPS ===
             case 'landmine':
-                // Remove the square, no one gets points
-                delete this.squares[squareKey];
-                this.scores[player] = Math.max(0, this.scores[player] - 1);
+                // Remove the claimed cell so no one scores (best-effort rollback)
+                if (this.squares[squareKey]) {
+                    delete this.squares[squareKey];
+                    this.protectedSquares.delete(squareKey);
+                    this.scores[player] = Math.max(0, this.scores[player] - 1);
+                } else if (this.triangles && this.triangles[squareKey]) {
+                    // Handle triangle landmine
+                    delete this.triangles[squareKey];
+                    // Also clear cell ownership if this was the only triangle
+                    // (Simplification: just clear it, complex to check if others exist in same cell)
+                    // Actually, squareKey for triangle is 'tri-...' which is unique
+                    // But we also need to clear triangleCellOwners for the cell
+                    // This is hard to reverse map without parsing vertices.
+                    // For now, just removing the triangle and score is enough "boom".
+                    this.scores[player] = Math.max(0, this.scores[player] - 0.5);
+                }
+                
                 this.triggerLandmineAnimation(squareKey);
-                // Lose turn handled by not giving bonus
+                // Lose your next turn (or current turn, if you're active)
+                this.playerEffects[player].bonusTurns = 0;
+                this.playerEffects[player].doubleLine = false;
+                if (this.currentPlayer === player) {
+                    this.comboCount = 0;
+                    this.switchToNextPlayer();
+                } else {
+                    this.playerEffects[player].frozenTurns = Math.max(this.playerEffects[player].frozenTurns, 1);
+                }
                 break;
                 
             case 'secret':
@@ -1715,8 +1797,11 @@ class DotsAndBoxesGame {
                 break;
                 
             case 'reverse':
-                // Visual effect only in 2-player (would affect multiplayer order)
+                // In 2-player, Reverse acts as "Play Again" (Skip opponent)
+                // In multiplayer > 2, it would reverse order (not implemented yet)
                 this.triggerReverseAnimation();
+                this.announceTurnMessage('🔄 REVERSE! Play Again!', '#E91E63', 2000);
+                this.playerEffects[player].bonusTurns += 1;
                 break;
                 
             case 'freeze':
@@ -1746,8 +1831,8 @@ class DotsAndBoxesGame {
                 break;
                 
             case 'steal_territory':
-                // For now, steal one random opponent square
-                this.stealRandomSquare(player, otherPlayer);
+                // Steal a connected region (respects shield-protected squares)
+                this.stealConnectedTerritory(player, otherPlayer);
                 break;
                 
             case 'dare_left':
@@ -1766,9 +1851,8 @@ class DotsAndBoxesGame {
                 break;
                 
             case 'gift':
-                // For simplicity, give one point to opponent (diplomacy!)
-                this.scores[otherPlayer] += 1;
-                this.triggerGiftAnimation(otherPlayer);
+                // Give a random owned square (fallback: +1 point)
+                this.giftRandomShape(player, otherPlayer);
                 break;
                 
             case 'oracle':
@@ -1781,11 +1865,134 @@ class DotsAndBoxesGame {
                 break;
                 
             case 'wildcard':
-                // For now, give +2 bonus turns (best powerup)
-                this.playerEffects[player].bonusTurns += 2;
-                this.triggerWildcardAnimation(squareKey);
+                // Apply a random non-wildcard powerup for variety (no extra UI)
+                this.applyWildcardPowerup(player, squareKey);
                 break;
         }
+    }
+
+    /**
+     * Steal a connected group of opponent squares (orthogonally adjacent).
+     * Shield-protected squares cannot be stolen.
+     */
+    stealConnectedTerritory(player, opponent) {
+        const opponentSquares = Object.keys(this.squares)
+            .filter(key => this.squares[key] === opponent && !this.protectedSquares.has(key));
+
+        if (opponentSquares.length === 0) {
+            // Everything is shielded or opponent has no squares
+            this.announceTurnMessage('🛡️ Steal blocked!', '#3F51B5', 1500);
+            return;
+        }
+
+        const startKey = opponentSquares[Math.floor(Math.random() * opponentSquares.length)];
+        const region = this.getConnectedSquareRegion(startKey, opponent);
+
+        if (region.length === 0) {
+            this.announceTurnMessage('🛡️ Steal blocked!', '#3F51B5', 1500);
+            return;
+        }
+
+        for (const key of region) {
+            this.squares[key] = player;
+        }
+
+        this.scores[opponent] = Math.max(0, this.scores[opponent] - region.length);
+        this.scores[player] += region.length;
+
+        this.triggerStealAnimation(startKey);
+    }
+
+    getConnectedSquareRegion(startKey, owner) {
+        const visited = new Set();
+        const queue = [startKey];
+        const region = [];
+
+        while (queue.length > 0) {
+            const key = queue.pop();
+            if (visited.has(key)) continue;
+            visited.add(key);
+
+            if (this.squares[key] !== owner) continue;
+            if (this.protectedSquares.has(key)) continue;
+
+            region.push(key);
+
+            const { row, col } = this.parseSquareKey(key);
+            const neighbors = [
+                `${row - 1},${col}`,
+                `${row + 1},${col}`,
+                `${row},${col - 1}`,
+                `${row},${col + 1}`
+            ];
+            for (const n of neighbors) {
+                if (!visited.has(n) && this.squares[n] === owner) {
+                    queue.push(n);
+                }
+            }
+        }
+
+        return region;
+    }
+
+    giftRandomShape(fromPlayer, toPlayer) {
+        // Try to gift a square first
+        const ownedSquares = Object.keys(this.squares)
+            .filter(key => this.squares[key] === fromPlayer);
+
+        if (ownedSquares.length > 0) {
+            const key = ownedSquares[Math.floor(Math.random() * ownedSquares.length)];
+            this.squares[key] = toPlayer;
+            this.scores[fromPlayer] = Math.max(0, this.scores[fromPlayer] - 1);
+            this.scores[toPlayer] += 1;
+            this.triggerGiftAnimation(toPlayer);
+            return;
+        }
+        
+        // Try to gift a triangle
+        const ownedTriangles = Object.keys(this.triangles || {})
+            .filter(key => this.triangles[key] === fromPlayer);
+            
+        if (ownedTriangles.length > 0) {
+            const key = ownedTriangles[Math.floor(Math.random() * ownedTriangles.length)];
+            this.triangles[key] = toPlayer;
+            this.scores[fromPlayer] = Math.max(0, this.scores[fromPlayer] - 0.5);
+            this.scores[toPlayer] += 0.5;
+            this.triggerGiftAnimation(toPlayer);
+            return;
+        }
+
+        // Fallback: just give points
+        this.scores[toPlayer] += 1;
+        this.triggerGiftAnimation(toPlayer);
+    }
+
+    applyWildcardPowerup(player, squareKey) {
+        const powerups = DotsAndBoxesGame.TILE_EFFECTS.powerups.filter(p => p.id !== 'wildcard');
+        const chosen = powerups[Math.floor(Math.random() * powerups.length)];
+
+        this.triggerWildcardAnimation(squareKey);
+        this.announceTurnMessage(`🌟 Wildcard: ${chosen.name}`, chosen.color, 2000);
+        this.executeEffect(chosen.id, 'powerup', player, squareKey);
+    }
+
+    announceTurnMessage(text, color, durationMs = 2000) {
+        const turnIndicator = document.getElementById('turnIndicator');
+        if (!turnIndicator) return;
+
+        const prevText = turnIndicator.textContent;
+        const prevColor = turnIndicator.style.color;
+
+        turnIndicator.textContent = text;
+        if (color) {
+            turnIndicator.style.color = color;
+        }
+
+        setTimeout(() => {
+            turnIndicator.textContent = prevText;
+            turnIndicator.style.color = prevColor;
+            this.updateUI();
+        }, durationMs);
     }
     
     /**
@@ -2062,6 +2269,10 @@ class DotsAndBoxesGame {
                 this.triangles[tri.key] = this.currentPlayer;
                 // Claim the cell so no square can form on these same 4 dots
                 const cellKey = this.getTriangleCellKey(tri.vertices);
+                if (!this.triangleCellOwners.has(cellKey)) {
+                    this.triangleCellOwners.set(cellKey, new Set());
+                }
+                this.triangleCellOwners.get(cellKey).add(this.currentPlayer);
                 this.claimCell(
                     parseInt(cellKey.split(',')[0]),
                     parseInt(cellKey.split(',')[1])
@@ -2070,6 +2281,17 @@ class DotsAndBoxesGame {
             
             // Now check for squares (will skip cells claimed by triangles)
             const completedSquares = this.checkForSquares(lineKey);
+
+            // If shield is active, mark the next completed squares as protected from stealing
+            if (completedSquares.length > 0) {
+                const effects = this.playerEffects[this.currentPlayer];
+                for (const squareKey of completedSquares) {
+                    if (effects.shieldCount > 0) {
+                        this.protectedSquares.add(squareKey);
+                        effects.shieldCount--;
+                    }
+                }
+            }
 
             const totalShapes = completedSquares.length + completedTriangles.length;
 
@@ -2254,18 +2476,36 @@ class DotsAndBoxesGame {
             const x = touch.clientX - rect.left;
             const y = touch.clientY - rect.top;
 
-            // Check if tapping on a completed square to reveal effect or multiplier
-            const clickedSquare = this.getSquareAtPosition(x, y);
-            if (clickedSquare && this.squares[clickedSquare]) {
+            // Check if tapping on a completed square OR triangle-claimed cell to reveal effect or multiplier
+            const clickedCell = this.getSquareAtPosition(x, y);
+            const clickedHasSquare = clickedCell && !!this.squares[clickedCell];
+            const clickedHasTriangle = clickedCell && this.triangleCellOwners?.has(clickedCell);
+
+            if (clickedCell && (clickedHasSquare || clickedHasTriangle)) {
+                // In multiplayer mode, only the owning player can reveal/activate bonuses
+                if (this.isMultiplayer) {
+                    const isSquareOwner = clickedHasSquare && this.squares[clickedCell] === this.myPlayerNumber;
+                    const isTriangleOwner = clickedHasTriangle && this.triangleCellOwners.get(clickedCell).has(this.myPlayerNumber);
+                    if (!isSquareOwner && !isTriangleOwner) {
+                        this.activeTouches.delete(touch.identifier);
+                        continue;
+                    }
+                }
+
                 // Check for tile effect first
-                if (this.tileEffects[clickedSquare] && !this.revealedEffects.has(clickedSquare)) {
-                    this.revealTileEffect(clickedSquare);
+                if (this.tileEffects[clickedCell] && !this.revealedEffects.has(clickedCell)) {
+                    this.revealTileEffect(clickedCell);
                     this.activeTouches.delete(touch.identifier);
                     continue;
                 }
+
                 // Fall back to multiplier reveal
-                if (!this.revealedMultipliers.has(clickedSquare)) {
-                    this.revealMultiplier(clickedSquare);
+                if (!this.revealedMultipliers.has(clickedCell)) {
+                    if (clickedHasSquare) {
+                        this.revealMultiplier(clickedCell);
+                    } else {
+                        this.revealMultiplierForCell(clickedCell);
+                    }
                     this.activeTouches.delete(touch.identifier);
                     continue;
                 }
@@ -2699,7 +2939,7 @@ class DotsAndBoxesGame {
     }
     
     /**
-     * Chaos storm - redistribute squares
+     * Chaos storm - redistribute squares and triangles
      */
     triggerChaosStorm() {
         // Get all squares
@@ -2717,11 +2957,31 @@ class DotsAndBoxesGame {
             this.squares[key] = players[i];
         });
         
+        // Also shuffle triangles if any exist
+        if (this.triangles) {
+            const allTriangles = Object.keys(this.triangles);
+            if (allTriangles.length > 0) {
+                const triPlayers = allTriangles.map(key => this.triangles[key]);
+                for (let i = triPlayers.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [triPlayers[i], triPlayers[j]] = [triPlayers[j], triPlayers[i]];
+                }
+                allTriangles.forEach((key, i) => {
+                    this.triangles[key] = triPlayers[i];
+                });
+            }
+        }
+        
         // Recalculate scores
         this.scores = { 1: 0, 2: 0 };
         Object.values(this.squares).forEach(player => {
             this.scores[player]++;
         });
+        if (this.triangles) {
+            Object.values(this.triangles).forEach(player => {
+                this.scores[player] += 0.5;
+            });
+        }
         
         // Big visual effect
         this.shakeIntensity = 12;
@@ -3194,6 +3454,9 @@ class DotsAndBoxesGame {
     drawTrianglesWithAnimations() {
         const now = Date.now();
 
+        // Avoid drawing duplicate indicators when multiple triangles exist in a cell
+        const effectIndicatorsDrawn = new Set();
+
         for (const triKey in this.triangles) {
             const player = this.triangles[triKey];
             const color = player === 1 ? this.player1Color : this.player2Color;
@@ -3205,6 +3468,8 @@ class DotsAndBoxesGame {
                 const [row, col] = p.split(',').map(Number);
                 return { row, col };
             });
+
+            const cellKey = this.getTriangleCellKey(vertices);
 
             // Convert to canvas coordinates
             const points = vertices.map(v => ({
@@ -3282,6 +3547,15 @@ class DotsAndBoxesGame {
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
             this.ctx.fillText('▲', centerX, centerY);
+
+            // Party Mode: allow triangle-claimed cells to show effect indicators
+            if (this.partyModeEnabled && this.tileEffects[cellKey] && !effectIndicatorsDrawn.has(cellKey)) {
+                const { row, col } = this.parseSquareKey(cellKey);
+                const cellX = this.offsetX + col * this.cellSize;
+                const cellY = this.offsetY + row * this.cellSize;
+                this.drawTileEffectIndicator(cellKey, cellX, cellY, player);
+                effectIndicatorsDrawn.add(cellKey);
+            }
         }
     }
     

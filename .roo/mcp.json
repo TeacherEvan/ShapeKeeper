@@ -376,10 +376,25 @@
   "editor.wordBasedSuggestions": "matchingDocuments",
   "makefile.configureOnOpen": true,
   "cSpell.userWords": [
+    "aitk",
+    "autofetch",
+    "dockercompose",
+    "donot",
+    "esbenp",
+    "ewiebotha",
+    "geminicodeassist",
     "huggingface",
+    "kamekazi",
     "modelcontextprotocol",
+    "ollama",
+    "oswe",
+    "pytest",
+    "registrymcp",
     "sequentialthinking",
-    "Sourcery"
+    "SANGSOM",
+    "Sourcery",
+    "Viow",
+    "webui"
   ],
   "geminicodeassist.project": "gen-lang-client-0822273391",
   "[html]": {

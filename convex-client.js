@@ -38,6 +38,7 @@ let gameStateSubscription = null;
 // Turn-based optimization: Track last state to detect changes
 let lastGameState = null;
 let lastRoomState = null;
+let lastRoomSignature = null;
 let updateDebounceTimer = null;
 const UPDATE_DEBOUNCE_MS = 50; // Debounce updates to batch rapid changes
 
@@ -84,6 +85,10 @@ function stateHasChanged(newState, lastState) {
     const newSquares = newState.squares || [];
     const lastSquares = lastState.squares || [];
     if (newSquares.length !== lastSquares.length) return true;
+    
+    const newTriangles = newState.triangles || [];
+    const lastTriangles = lastState.triangles || [];
+    if (newTriangles.length !== lastTriangles.length) return true;
     
     // Score change detection
     const newPlayers = newState.players || [];
@@ -373,7 +378,7 @@ async function startGame() {
 /**
  * Draw a line (make a move)
  * @param {string} lineKey - Normalized line key like "1,2-1,3"
- * @returns {Promise<{success: boolean, completedSquares: number, keepTurn: boolean} | {error: string}>}
+ * @returns {Promise<{success: boolean, completedSquares: number, completedTriangles: number, keepTurn: boolean} | {error: string}>}
  */
 async function drawLine(lineKey) {
     if (!currentRoomId) return { error: "Not in a room" };
@@ -447,33 +452,71 @@ function subscribeToRoom(callback) {
     
     // Reset room state tracker on new subscription
     lastRoomState = null;
+    lastRoomSignature = null;
+
+    const computeRoomSignature = (roomState) => {
+        if (!roomState) return 'null';
+        const room = roomState;
+        const players = Array.isArray(roomState.players) ? roomState.players : [];
+
+        // Ensure stable ordering for comparison
+        const sortedPlayers = [...players].sort((a, b) => {
+            const ai = a?.playerIndex ?? 0;
+            const bi = b?.playerIndex ?? 0;
+            if (ai !== bi) return ai - bi;
+            const as = a?.sessionId ?? '';
+            const bs = b?.sessionId ?? '';
+            return as.localeCompare(bs);
+        });
+
+        // Include only fields that impact lobby UX
+        const playerSig = sortedPlayers
+            .map((p) => [
+                p?._id ?? '',
+                p?.sessionId ?? '',
+                p?.playerIndex ?? 0,
+                p?.name ?? '',
+                p?.color ?? '',
+                p?.isReady ? 1 : 0,
+                p?.isConnected ? 1 : 0,
+            ].join(':'))
+            .join('|');
+
+        return [
+            room._id ?? '',
+            room.roomCode ?? '',
+            room.status ?? '',
+            room.hostPlayerId ?? '',
+            room.gridSize ?? 0,
+            room.partyMode === false ? 0 : 1,
+            playerSig,
+        ].join('#');
+    };
     
     // Wrap callback with debouncing for turn-based optimization
     const debouncedCallback = (newState) => {
         // Only call callback if room state actually changed
-        if (!newState) {
+        if (newState == null) {
             lastRoomState = null;
+            lastRoomSignature = null;
             callback(newState);
             return;
         }
-        
-        // For room/lobby updates, check if meaningful state changed
-        const newPlayersLength = newState.players?.length || 0;
-        const lastPlayersLength = lastRoomState?.players?.length || 0;
-        const hasChanged = !lastRoomState || 
-            newState.status !== lastRoomState.status ||
-            newState.updatedAt !== lastRoomState.updatedAt ||
-            newPlayersLength !== lastPlayersLength;
-        
-        if (hasChanged) {
-            // Cache only the fields we compare (efficient shallow copy)
-            lastRoomState = {
-                status: newState.status,
-                updatedAt: newState.updatedAt,
-                players: { length: newPlayersLength }
-            };
-            callback(newState);
+
+        const signature = computeRoomSignature(newState);
+        if (signature === lastRoomSignature) {
+            return;
         }
+
+        lastRoomSignature = signature;
+        // Keep a light snapshot for debugging/telemetry if needed
+        lastRoomState = {
+            status: newState.status,
+            updatedAt: newState.updatedAt,
+            players: { length: (newState.players || []).length },
+        };
+
+        callback(newState);
     };
     
     currentSubscription = convexClient.onUpdate(
@@ -541,6 +584,7 @@ function subscribeToGameState(callback) {
                     } : null,
                     lines: { length: (newState.lines || []).length },
                     squares: { length: (newState.squares || []).length },
+                    triangles: { length: (newState.triangles || []).length },
                     players: (newState.players || []).map(p => ({ score: p?.score || 0 }))
                 };
             } else {

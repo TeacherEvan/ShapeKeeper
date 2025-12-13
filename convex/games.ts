@@ -105,6 +105,22 @@ export const drawLine = mutation({
       squareKeys: completedSquares,
     });
 
+    // Check for completed triangles
+    const completedTriangles = await checkForCompletedTriangles(
+      ctx,
+      args.roomId,
+      args.lineKey,
+      currentPlayer._id,
+      currentPlayer.playerIndex,
+      room.gridSize
+    );
+
+    console.log('[drawLine] Triangle check complete', {
+      lineKey: args.lineKey,
+      completedTriangles: completedTriangles.length,
+      triangleKeys: completedTriangles,
+    });
+
     // Update scores if squares were completed
     if (completedSquares.length > 0) {
       const newScore = currentPlayer.score + completedSquares.length;
@@ -112,6 +128,19 @@ export const drawLine = mutation({
       console.log('[drawLine] Score updated', {
         playerId: currentPlayer._id,
         oldScore: currentPlayer.score,
+        newScore,
+      });
+    }
+
+    // Update scores if triangles were completed (0.5 points each)
+    if (completedTriangles.length > 0) {
+      const trianglePoints = completedTriangles.length * 0.5;
+      const newScore = currentPlayer.score + trianglePoints;
+      await ctx.db.patch(currentPlayer._id, { score: newScore });
+      console.log('[drawLine] Triangle score updated', {
+        playerId: currentPlayer._id,
+        triangleCount: completedTriangles.length,
+        trianglePoints,
         newScore,
       });
     }
@@ -147,7 +176,7 @@ export const drawLine = mutation({
     }
 
     // If no squares completed, advance to next player
-    if (completedSquares.length === 0) {
+    if (completedSquares.length === 0 && completedTriangles.length === 0) {
       const nextPlayerIndex = (room.currentPlayerIndex + 1) % sortedPlayers.length;
       await ctx.db.patch(args.roomId, {
         currentPlayerIndex: nextPlayerIndex,
@@ -159,18 +188,21 @@ export const drawLine = mutation({
         nextPlayerName: sortedPlayers[nextPlayerIndex]?.name,
       });
     } else {
-      // Player completed a square, keep their turn
+      // Player completed a shape, keep their turn
       await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
-      console.log('[drawLine] Turn retained (squares completed)', {
+      console.log('[drawLine] Turn retained (shapes completed)', {
         playerIndex: currentPlayer.playerIndex,
         playerName: currentPlayer.name,
+        squares: completedSquares.length,
+        triangles: completedTriangles.length,
       });
     }
 
     return { 
       success: true, 
       completedSquares: completedSquares.length,
-      keepTurn: completedSquares.length > 0 
+      completedTriangles: completedTriangles.length,
+      keepTurn: (completedSquares.length + completedTriangles.length) > 0 
     };
   },
 });
@@ -283,6 +315,257 @@ async function checkForCompletedSquares(
   return completedSquares;
 }
 
+// Helper function to check for completed triangles after drawing a line
+async function checkForCompletedTriangles(
+  ctx: any,
+  roomId: any,
+  newLineKey: string,
+  playerId: any,
+  playerIndex: number,
+  gridSize: number
+): Promise<string[]> {
+  console.log('[checkForCompletedTriangles] Starting triangle check', {
+    newLineKey,
+    playerId,
+    playerIndex,
+    gridSize,
+  });
+
+  // Parse the line key to get coordinates
+  const [start, end] = newLineKey.split("-");
+  const [r1, c1] = start.split(",").map(Number);
+  const [r2, c2] = end.split(",").map(Number);
+
+  const completedTriangles: string[] = [];
+
+  // Get all lines in the room for checking
+  const allLines = await ctx.db
+    .query("lines")
+    .withIndex("by_room", (q: any) => q.eq("roomId", roomId))
+    .collect();
+
+  const lineSet = new Set(allLines.map((l: any) => l.lineKey));
+  console.log('[checkForCompletedTriangles] Total lines in room', { lineCount: lineSet.size });
+
+  // Determine potential triangles based on line type
+  const potentialTriangles: Array<{ key: string; vertices: Array<{row: number, col: number}> }> = [];
+
+  if (Math.abs(r1 - r2) === 1 && Math.abs(c1 - c2) === 1) {
+    // Diagonal line - can complete triangles in adjacent cells
+    const row = Math.min(r1, r2);
+    const col = Math.min(c1, c2);
+
+    // Top-left triangle
+    if (row > 0 && col > 0) {
+      potentialTriangles.push({
+        key: `tri-${row-1},${col-1}-TL`,
+        vertices: [
+          {row: row-1, col: col-1},
+          {row: row-1, col: col},
+          {row: row, col: col-1}
+        ]
+      });
+    }
+
+    // Top-right triangle
+    if (row > 0 && col < gridSize - 1) {
+      potentialTriangles.push({
+        key: `tri-${row-1},${col}-TR`,
+        vertices: [
+          {row: row-1, col: col},
+          {row: row-1, col: col+1},
+          {row: row, col: col+1}
+        ]
+      });
+    }
+
+    // Bottom-left triangle
+    if (row < gridSize - 1 && col > 0) {
+      potentialTriangles.push({
+        key: `tri-${row},${col-1}-BL`,
+        vertices: [
+          {row: row, col: col-1},
+          {row: row+1, col: col-1},
+          {row: row+1, col: col}
+        ]
+      });
+    }
+
+    // Bottom-right triangle
+    if (row < gridSize - 1 && col < gridSize - 1) {
+      potentialTriangles.push({
+        key: `tri-${row},${col}-BR`,
+        vertices: [
+          {row: row, col: col+1},
+          {row: row+1, col: col},
+          {row: row+1, col: col+1}
+        ]
+      });
+    }
+  } else if (r1 === r2) {
+    // Horizontal line - check triangles above and below
+    const row = r1;
+    const col = Math.min(c1, c2);
+
+    // Above
+    if (row > 0) {
+      // Top-left triangle
+      if (col > 0) {
+        potentialTriangles.push({
+          key: `tri-${row-1},${col-1}-TL`,
+          vertices: [
+            {row: row-1, col: col-1},
+            {row: row-1, col: col},
+            {row: row, col: col-1}
+          ]
+        });
+      }
+
+      // Top-right triangle
+      if (col < gridSize - 1) {
+        potentialTriangles.push({
+          key: `tri-${row-1},${col}-TR`,
+          vertices: [
+            {row: row-1, col: col},
+            {row: row-1, col: col+1},
+            {row: row, col: col+1}
+          ]
+        });
+      }
+    }
+
+    // Below
+    if (row < gridSize - 1) {
+      // Bottom-left triangle
+      if (col > 0) {
+        potentialTriangles.push({
+          key: `tri-${row},${col-1}-BL`,
+          vertices: [
+            {row: row, col: col-1},
+            {row: row+1, col: col-1},
+            {row: row+1, col: col}
+          ]
+        });
+      }
+
+      // Bottom-right triangle
+      if (col < gridSize - 1) {
+        potentialTriangles.push({
+          key: `tri-${row},${col}-BR`,
+          vertices: [
+            {row: row, col: col+1},
+            {row: row+1, col: col},
+            {row: row+1, col: col+1}
+          ]
+        });
+      }
+    }
+  } else {
+    // Vertical line - check triangles left and right
+    const row = Math.min(r1, r2);
+    const col = c1;
+
+    // Left
+    if (col > 0) {
+      // Top-left triangle
+      if (row > 0) {
+        potentialTriangles.push({
+          key: `tri-${row-1},${col-1}-TL`,
+          vertices: [
+            {row: row-1, col: col-1},
+            {row: row-1, col: col},
+            {row: row, col: col-1}
+          ]
+        });
+      }
+
+      // Bottom-left triangle
+      if (row < gridSize - 1) {
+        potentialTriangles.push({
+          key: `tri-${row},${col-1}-BL`,
+          vertices: [
+            {row: row, col: col-1},
+            {row: row+1, col: col-1},
+            {row: row+1, col: col}
+          ]
+        });
+      }
+    }
+
+    // Right
+    if (col < gridSize - 1) {
+      // Top-right triangle
+      if (row > 0) {
+        potentialTriangles.push({
+          key: `tri-${row-1},${col}-TR`,
+          vertices: [
+            {row: row-1, col: col},
+            {row: row-1, col: col+1},
+            {row: row, col: col+1}
+          ]
+        });
+      }
+
+      // Bottom-right triangle
+      if (row < gridSize - 1) {
+        potentialTriangles.push({
+          key: `tri-${row},${col}-BR`,
+          vertices: [
+            {row: row, col: col+1},
+            {row: row+1, col: col},
+            {row: row+1, col: col+1}
+          ]
+        });
+      }
+    }
+  }
+
+  // Check each potential triangle
+  for (const triangle of potentialTriangles) {
+    const { key, vertices } = triangle;
+
+    // Check if all 3 edges exist
+    const edge1 = normalizeLineKey(vertices[0].row, vertices[0].col, vertices[1].row, vertices[1].col);
+    const edge2 = normalizeLineKey(vertices[1].row, vertices[1].col, vertices[2].row, vertices[2].col);
+    const edge3 = normalizeLineKey(vertices[2].row, vertices[2].col, vertices[0].row, vertices[0].col);
+
+    if (lineSet.has(edge1) && lineSet.has(edge2) && lineSet.has(edge3)) {
+      // Check if triangle already recorded
+      const existingTriangle = await ctx.db
+        .query("triangles")
+        .withIndex("by_room_and_key", (q: any) =>
+          q.eq("roomId", roomId).eq("triangleKey", key)
+        )
+        .first();
+
+      if (!existingTriangle) {
+        await ctx.db.insert("triangles", {
+          roomId,
+          triangleKey: key,
+          playerId,
+          playerIndex,
+          createdAt: Date.now(),
+        });
+
+        console.log('[checkForCompletedTriangles] Triangle completed!', {
+          triangleKey: key,
+          playerId,
+          playerIndex,
+        });
+
+        completedTriangles.push(key);
+      }
+    }
+  }
+
+  console.log('[checkForCompletedTriangles] Check complete', {
+    completedTriangles: completedTriangles.length,
+    triangleKeys: completedTriangles,
+  });
+
+  return completedTriangles;
+}
+
 // Helper to normalize line keys (sorted coordinates)
 function normalizeLineKey(r1: number, c1: number, r2: number, c2: number): string {
   if (r1 < r2 || (r1 === r2 && c1 < c2)) {
@@ -331,11 +614,17 @@ export const getGameState = query({
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
+    const triangles = await ctx.db
+      .query("triangles")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+
     return {
       room,
       players: players.sort((a, b) => a.playerIndex - b.playerIndex),
       lines,
       squares,
+      triangles,
     };
   },
 });
@@ -478,6 +767,16 @@ export const resetGame = mutation({
     }
     console.log('[resetGame] Squares deleted', { count: squares.length });
 
+    // Delete all triangles
+    const triangles = await ctx.db
+      .query("triangles")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+    for (const triangle of triangles) {
+      await ctx.db.delete(triangle._id);
+    }
+    console.log('[resetGame] Triangles deleted', { count: triangles.length });
+
     // Reset player scores and ready status
     const players = await ctx.db
       .query("players")
@@ -499,6 +798,7 @@ export const resetGame = mutation({
       roomId: args.roomId,
       linesDeleted: lines.length,
       squaresDeleted: squares.length,
+      trianglesDeleted: triangles.length,
       playersReset: players.length,
     });
 

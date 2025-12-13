@@ -1,5 +1,40 @@
 # ShapeKeeper Development Jobcard
 
+## Session: December 13, 2025
+
+### 🔄 Current Work: Triangle Multiplayer Sync
+
+---
+
+### ✅ Completed This Session
+
+#### 1. Triangle Multiplayer Sync Implementation
+Added full backend and frontend support for triangles in multiplayer mode:
+
+| Change | File | Impact |
+|--------|------|--------|
+| Added `triangles` table to schema | `convex/schema.ts` | Stores completed triangles with player ownership |
+| Triangle detection function | `convex/games.ts` | `checkForCompletedTriangles()` with diagonal logic |
+| Triangle score updates | `convex/games.ts` | 0.5 points per triangle added to player score |
+| Turn retention logic | `convex/games.ts` | Triangles keep turn like squares |
+| Triangle syncing | `welcome.js` | `handleGameStateUpdate()` syncs triangles from server |
+| State change detection | `convex-client.js` | Detects triangle count changes for optimization |
+| Reset game support | `convex/games.ts` | Deletes triangles on game reset |
+| Game state query | `convex/games.ts` | Returns triangles array in `getGameState()` |
+
+**Triangle Detection Logic:**
+- Helper functions: `getLineType()`, `getTrianglesForDiagonal()`, `getTrianglesForOrthogonal()`
+- Diagonal lines check 2 adjacent triangles they could complete
+- Orthogonal lines check up to 4 adjacent triangles
+- Each triangle verified with `checkSingleTriangle()` - all 3 edges must exist
+
+**Frontend Integration:**
+- Triangles synced via subscription with animations
+- Turn-based optimization includes triangle count detection
+- Game state updates trigger triangle animations and sounds
+
+---
+
 ## Session: December 9, 2025
 
 ### 🔄 Current Work: Performance Optimization & Animation Loop Refactor
@@ -8,7 +43,24 @@
 
 ### ✅ Completed This Session
 
-#### 1. Animation Loop Performance Optimization
+#### 1. Triangle Multiplayer Sync (P0) ✅
+**Status:** COMPLETE - Triangles now fully synced in online multiplayer
+
+| Change | File | Impact |
+|--------|------|--------|
+| Resolved merge conflicts in schema | `convex/schema.ts` | Clean triangle table definition |
+| Resolved merge conflicts in games | `convex/games.ts` | Triangle detection working server-side |
+| Added triangle cache tracking | `convex-client.js` | Turn-based optimization includes triangles |
+| Verified triangle syncing | `welcome.js` | Already implemented in `handleGameStateUpdate()` |
+
+**Triangle Multiplayer Features:**
+- Server-side detection when diagonal + orthogonal lines complete triangle
+- 0.5 points awarded to player who completes triangle
+- Turn retention: completing triangles keeps your turn (like squares)
+- Real-time sync: all players see triangles appear with animations
+- Score updates: triangle points properly synced across all clients
+
+#### 2. Animation Loop Performance Optimization
 Refactored the `animate()` method for better performance on 60fps rendering:
 
 | Change | File | Impact |
@@ -146,7 +198,9 @@ this.triangles = {}  // New state object parallel to this.squares
 | Dark mode background | ✅ Works | Both canvases respond to theme toggle |
 | Diagonal lines | ✅ Works | 45° lines between adjacent dots |
 | Triangle detection | ✅ Works | Live testing confirmed |
-| Multiplayer sync | ❓ Pending | Triangles not yet synced to Convex |
+| Multiplayer sync | ✅ Works | Triangles synced via Convex |
+| Triangle scoring | ✅ Works | 0.5 points per triangle |
+| Turn retention | ✅ Works | Triangles keep turn like squares |
 
 ---
 
@@ -154,11 +208,11 @@ this.triangles = {}  // New state object parallel to this.squares
 
 #### Immediate (P0)
 
-| Task | Priority |
-|------|----------|
-| Add triangles to Convex schema | High |
-| Sync triangles in multiplayer | High |
-| Update game-over logic for triangles | Medium |
+| Task | Priority | Status |
+|------|----------|--------|
+| Add triangles to Convex schema | High | ✅ Complete |
+| Sync triangles in multiplayer | High | ✅ Complete |
+| Update game-over logic for triangles | Medium | Pending |
 
 #### Future (P2)
 
@@ -201,9 +255,8 @@ drawLine() → Convex mutation → Server validates turn
 
 ### 🐛 Known Issues
 
-1. **Triangles not in multiplayer** - Only local state, no Convex sync yet
-2. **Game-over unchanged** - Still based on squares only (triangles are bonus)
-3. **ES6 modules** - Still not integrated with main game.js
+1. **Game-over logic** - Still based on squares only (triangles are bonus, not counted for completion)
+2. **ES6 modules** - Still not integrated with main game.js
 
 ---
 
