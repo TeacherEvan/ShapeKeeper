@@ -1,90 +1,30 @@
 # Copilot Instructions: ShapeKeeper
 
-## Table of Contents
-
-1. [Project Overview](#project-overview)
-2. [Architecture](#architecture)
-3. [Critical Conventions](#critical-conventions)
-4. [Development Commands](#development-commands)
-5. [Convex Backend Patterns](#convex-backend-patterns)
-6. [Game Logic Details](#game-logic-details)
-7. [Animation System](#animation-system)
-8. [Sound System](#sound-system)
-9. [Theme System](#theme-system)
-10. [Common Modifications](#common-modifications)
-11. [Device Handling](#device-handling)
-
----
+## 🚨 CRITICAL ARCHITECTURE WARNING 🚨
+**This project is in a hybrid state.**
+- **Active Production Code:** `game.js`, `welcome.js`, `convex-client.js`. These are loaded directly in `index.html`. **Edit these files to make changes.**
+- **Future/Inactive Code:** `src/` directory. These are ES6 modules for a future refactor. **DO NOT EDIT** `src/` files unless explicitly working on the migration. They are NOT loaded by the application.
 
 ## Project Overview
+ShapeKeeper is a Dots and Boxes game with local and online multiplayer.
+- **Frontend:** Vanilla JavaScript (No build step), HTML5 Canvas.
+- **Backend:** Convex (TypeScript) for real-time state.
+- **Hosting:** Vercel.
 
-ShapeKeeper is a Dots and Boxes game with **local and online multiplayer** support. Vanilla JavaScript frontend with HTML5 Canvas, Convex backend for real-time multiplayer, deployed on Vercel at [shape-keeper.vercel.app](https://shape-keeper.vercel.app).
-
-**Version:** 4.3.0 | **Updated:** December 9, 2025
-
-## Architecture
-
-### Frontend (ES6 Modules - In Progress)
-
-```
-src/
-├── core/           # Constants and utilities
-│   ├── constants.js    # GAME, ANIMATION, PARTICLES, SOUND_FREQ, TILE_EFFECTS
-│   └── utils.js        # getLineKey, parseSquareKey, clamp, lerp, hexToRgba
-├── sound/          # Audio system
-│   └── SoundManager.js # Web Audio API wrapper
-├── effects/        # Visual effects
-│   ├── ParticleSystem.js   # Burst and ambient particles
-│   └── TileEffects.js      # Traps and powerups
-├── animations/     # Animation systems
-│   ├── KissEmojiSystem.js  # Emoji burst effects
-│   └── SquareAnimations.js # Square completion animations
-├── game/           # Game logic
-│   ├── InputHandler.js     # Touch/mouse input
-│   ├── MultiplierSystem.js # Score multipliers
-│   └── GameState.js        # State management
-├── ui/             # UI components
-│   └── ThemeManager.js     # Dark/light theme
-└── multiplayer/    # (Future) Convex integration
-```
-
-### Legacy Files (Being Modularized)
-
-- `game.js` - `DotsAndBoxesGame` class: canvas rendering, game logic, animations, sound
-- `welcome.js` - Screen navigation, lobby UI, Convex integration, theme management
-- `convex-client.js` - Wrapper around Convex browser SDK exposing `window.ShapeKeeperConvex`
-- `styles.css` - CSS custom properties for dark/light theming
-
-### Documentation Structure
-
-```
-docs/
-├── development/    # QUICKSTART.md, CODE_AUDIT.md, MERGE_CONFLICT_GUIDE.md
-├── planning/       # JOBCARD.md, CounterPlan.md, MULTIPLAYER_PLANNING.md, REFACTORING_PLAN.md
-├── history/        # DEPLOYMENT_STATUS.md
-└── technical/      # BENQ_FIX.md, FEATURE_SUMMARY.md, PERFORMANCE_IMPROVEMENTS.md
-```
-
-### Backend (Convex)
-
-- `convex/schema.ts` - Tables: `rooms`, `players`, `lines`, `squares`
-- `convex/rooms.ts` - Room lifecycle: create, join, leave, ready, start game
-- `convex/games.ts` - Game mutations: `drawLine`, `revealMultiplier`, `getGameState`
-
-### Key Data Flow
-
-```
-Local: handleClick() → drawLine() → checkForSquares() → updateUI()
-Multiplayer: handleClick() → ShapeKeeperConvex.drawLine() → Convex mutation →
-             subscription callback → handleGameStateUpdate() → sync local state
-```
+## Key Files & Components
+- **`game.js`**: The monolith. Contains `DotsAndBoxesGame` class, rendering loop, game logic, input handling, and `SoundManager`.
+- **`welcome.js`**: Handles UI navigation, lobby creation, theme management, and `ShapeKeeperConvex` integration.
+- **`convex/`**: Backend logic.
+  - `schema.ts`: Defines `rooms`, `players`, `lines`, `squares`.
+  - `games.ts`: Core game mutations (`drawLine`, `revealMultiplier`).
+  - `rooms.ts`: Room lifecycle management.
 
 ## Critical Conventions
-
-### Line Key Normalization (MUST match frontend & backend)
-
+### 1. Line Key Normalization
+Line keys MUST be normalized to prevent duplicates. Always sort coordinates:
 ```javascript
-// Always sort coordinates to prevent duplicates
+// Correct: "1,2-1,3"
+// Incorrect: "1,3-1,2"
 getLineKey(dot1, dot2) {
     const [first, second] = [dot1, dot2].sort((a, b) =>
         a.row === b.row ? a.col - b.col : a.row - b.row
@@ -93,162 +33,28 @@ getLineKey(dot1, dot2) {
 }
 ```
 
-### Screen Transitions
+### 2. Multiplayer State Sync
+- **Local**: Optimistic updates apply immediately for responsiveness.
+- **Remote**: `ShapeKeeperConvex.drawLine()` sends mutation.
+- **Reconciliation**: `handleGameStateUpdate` (in `welcome.js`) receives the authoritative state from Convex and updates the local `game` instance.
 
-```javascript
-showScreen('gameScreen'); // Sets .active class, removes from others
-```
+### 3. Coordinate System
+- Grid is 0-indexed.
+- `lines` are stored as a Set of keys.
+- `squares` are stored as a Map/Object.
 
-### Multiplayer Mode Detection
+## Development Workflow
+- **Start Dev Server**: `npm run dev` (Runs `convex dev` and serves frontend).
+- **Verify Code**: `npm run verify` (Typechecks Convex and validates JS syntax).
+- **Deploy**: `npm run deploy`.
 
-```javascript
-if (this.isMultiplayer) {
-    // Send to Convex, wait for subscription update
-    await window.ShapeKeeperConvex.drawLine(lineKey);
-} else {
-    // Local logic only
-    this.lines.add(lineKey);
-}
-```
-
-## Development Commands
-
-```bash
-npm run dev         # Start Convex dev server (required for multiplayer testing)
-npm run start       # Local HTTP server on port 8000
-npm run serve       # Alternative: Python HTTP server
-npm run verify      # Type-check Convex + validate JS syntax
-npm run deploy      # Deploy Convex functions to production
-npm run deploy:prod # Deploy with explicit URL env var
-```
-
-**File Load Order:** `game.js` must load before `welcome.js` (DotsAndBoxesGame class dependency)
-
-## Convex Backend Patterns
-
-### Session-Based Auth
-
-Players identified by `sessionId` stored in `localStorage`. No user accounts—session persists across page reloads.
-
-### Turn-Based Optimized Subscriptions
-
-Multiplayer uses turn-based optimization to minimize network traffic (like chess):
-
-```javascript
-// Room updates (lobby state) - debounced
-window.ShapeKeeperConvex.subscribeToRoom(handleRoomUpdate);
-
-// Game state updates (lines, squares, scores) - turn-based optimized
-// Only triggers callback when:
-// - Turn changes (currentPlayerIndex changes)
-// - Lines/squares count changes (actual game state change)
-// - Scores change
-// - Game status changes (playing → finished)
-window.ShapeKeeperConvex.subscribeToGameState(handleGameStateUpdate);
-```
-
-### Mutation Pattern (rooms.ts, games.ts)
-
-1. Validate session owns the action (turn check, host check)
-2. Perform database operations
-3. Return result (subscription auto-broadcasts changes with turn-based optimization)
-
-## Game Logic Details
-
-### Square Detection
-
-After each line draw, check 2-4 adjacent squares (horizontal lines check above/below, vertical check left/right). Square complete when all 4 sides exist in `lines` Set/table.
-
-### Shape Exclusivity
-
-Cells can only be claimed by ONE shape type. If a triangle claims a cell, no square can be formed there (and vice versa). Tracked via `claimedCells` Set with keys like `"row,col"`.
-
-### AOE Click Detection
-
-Dot selection uses area-of-effect detection: searches 3×3 grid around click point and selects the nearest valid dot within 1.5× the base radius. Makes touch input more forgiving.
-
-### Multiplier Distribution
-
-65% ×2, 20% ×3, 10% ×4, 4% ×5, 1% ×10. Revealed on tap—**multiplies total score**, not adds.
-
-### Party Mode (Tile Effects System)
-
-When Party Mode is enabled, **ALL squares** have tile effects (traps or powerups):
-
-- **Traps (red/50%)**: Landmine, Freeze, Score Swap, Chaos Storm, Hypotheticals, Dares, Secrets, **Truth**
-- **Powerups (blue/50%)**: Extra turns, Steal territory, Shield, Lightning, Oracle's Vision, Double Points
-- Effects stored in `tileEffects` object, revealed via `revealTileEffect()`
-- Effect modal shows description and activation button
-- `playerEffects` tracks status effects (frozen turns, shield count, etc.)
-- Toggle via "Enable Party Mode 🎉" checkbox on local setup screen
-- **Dares**: Simplified to 2 options - "Be Dared" or "Dare Right"
-- **Truths**: New system with "Receive a Truth" or "Give a Truth" options
-
-### Landscape Grid Adaptation
-
-When `aspectRatio > 1.5`, grid reshapes: 30×30 selection becomes ~50×18 grid (same total squares).
-
-## Animation System
-
-All in `animate()` requestAnimationFrame loop:
-
-- `squareAnimations[]` - 600ms scale-in on completion
-- `particles[]` - Colored bursts with trails and physics
-- `kissEmojis[]` - 5-8 💋 emojis per square with stagger
-- `pulsatingLines[]` - 2s glow on new lines
-- `ambientParticles[]` - Floating background particles
-- `comboCount` - Streak tracking for visual escalation
-- `screenShake` - Camera shake on multi-square completions
-
-## Sound System (Web Audio API)
-
-Procedural sounds via `SoundManager` class (no audio files):
-
-- `playLineSound()` - Ascending tone on line draw
-- `playSquareSound()` - Harmonic chord on square completion
-- `playComboSound(count)` - Arpeggio escalation for streaks
-- `playVictorySound()` - Fanfare on game end
-- `playInvalidSound()` - Error feedback
-- Sound toggle persists in localStorage (`shapekeeper-sound-enabled`)
-
-## Theme System
-
-CSS custom properties with localStorage persistence:
-
-- `:root` - Light theme defaults
-- `[data-theme="dark"]` - Dark theme overrides
-- `initializeTheme()` / `toggleTheme()` in welcome.js
-- Key variables: `--bg-primary`, `--bg-secondary`, `--text-primary`, `--border-color`
+## Game Logic Reference
+- **Square Detection**: Checked after every line draw. A square is formed when all 4 surrounding lines exist.
+- **Multipliers**: Hidden in squares. Distribution: 65% (x2), 20% (x3), 10% (x4), 4% (x5), 1% (x10).
+- **Party Mode**: Enables "Tile Effects" (Traps/Powerups) on squares.
+- **Animations**: Handled in `game.js` `animate()` loop. Includes particles, emojis, and line pulses.
 
 ## Common Modifications
-
-| Task               | Location                                               |
-| ------------------ | ------------------------------------------------------ |
-| Add grid size      | `index.html` buttons + `setupCanvas()` thresholds      |
-| Change animations  | `src/core/constants.js` ANIMATION object               |
-| Modify multipliers | `src/game/MultiplierSystem.js` or `convex/games.ts`    |
-| Game rules         | `src/game/GameState.js` or `game.js checkForSquares()` |
-| Add sounds         | `src/sound/SoundManager.js`                            |
-| Theme colors       | `src/ui/ThemeManager.js` or CSS custom properties      |
-| Particle effects   | `src/effects/ParticleSystem.js`                        |
-| Tile effects       | `src/effects/TileEffects.js`                           |
-
-## Module Import Pattern
-
-```javascript
-// ES6 module imports (when type="module" is added)
-import { GAME, ANIMATION, PARTICLES } from './src/core/constants.js';
-import { getLineKey, parseSquareKey } from './src/core/utils.js';
-import { SoundManager } from './src/sound/SoundManager.js';
-import { ParticleSystem } from './src/effects/ParticleSystem.js';
-import { TileEffectsManager } from './src/effects/TileEffects.js';
-import { InputHandler } from './src/game/InputHandler.js';
-import { GameState } from './src/game/GameState.js';
-```
-
-## Device Handling
-
-- **Landscape-only**: CSS overlay in portrait mode
-- **Touch debouncing**: `lastTouchTime` prevents mouse/touch conflicts
-- **High-DPI**: Canvas scales by `devicePixelRatio`
-- **Selection locking**: `selectionLocked` flag prevents Chrome extension interference
+- **Adjust Grid/Canvas**: `DotsAndBoxesGame` constructor and `setupCanvas` in `game.js`.
+- **Change Colors/Theme**: CSS variables in `styles.css` (e.g., `--bg-primary`, `--text-primary`).
+- **Update Sounds**: `SoundManager` class in `game.js` (uses Web Audio API).
