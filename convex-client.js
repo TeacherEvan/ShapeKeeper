@@ -890,3 +890,21 @@ window.ShapeKeeperConvex = {
     getConnectionState,
     onConnectionStateChange,
 };
+
+// Cleanup connection on page unload to prevent resource leaks
+if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', () => {
+        console.log('[Convex] Page unloading, cleaning up connection');
+        closeConnection();
+    });
+
+    // Also handle visibility change for mobile/tablet browsers
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && convexClient) {
+            console.log('[Convex] Page hidden, connection will remain active for reconnection');
+            // Don't close connection on hidden - allow reconnection when page becomes visible
+            // Only log the state for monitoring
+        }
+    });
+}
+
