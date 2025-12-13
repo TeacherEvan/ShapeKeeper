@@ -42,7 +42,7 @@ let updateDebounceTimer = null;
 const UPDATE_DEBOUNCE_MS = 50; // Debounce updates to batch rapid changes
 
 // Error messages
-const CONVEX_CONNECTION_ERROR = CONVEX_CONNECTION_ERROR;
+const CONVEX_CONNECTION_ERROR = "Convex backend not available. Please check your connection.";
 
 /**
  * Check if game state has meaningfully changed (turn-based optimization)
