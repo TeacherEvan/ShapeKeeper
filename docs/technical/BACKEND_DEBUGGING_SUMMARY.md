@@ -369,7 +369,7 @@ Filter by Request ID: `abc123def456`
 **Test Scenarios Documented**: 8
 **Common Issues Documented**: 5
 
-**Time Investment**: ~2 hours
+<!-- Time Investment statistic removed due to lack of precise tracking and to avoid underestimating effort. -->
 **Debugging Time Saved**: Estimated 80%+ reduction
 
 ---
