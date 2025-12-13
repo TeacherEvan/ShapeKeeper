@@ -7,12 +7,8 @@ import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 
 describe('Connection Pooling', () => {
     let mockConvexClient;
-    let originalWindow;
 
     beforeEach(() => {
-        // Save original window state
-        originalWindow = { ...window };
-
         // Mock localStorage
         global.localStorage = {
             getItem: vi.fn(),
