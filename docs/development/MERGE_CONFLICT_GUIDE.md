@@ -66,17 +66,20 @@ git push origin feature/code-cleanup
 ## Recommended: Option 1 (Step-by-Step)
 
 1. **Save your work:**
+
    ```bash
    git reset --soft HEAD~1
    git stash save "Code cleanup: consolidation and documentation"
    ```
 
 2. **Get latest from remote:**
+
    ```bash
    git pull origin main
    ```
 
 3. **Re-apply your cleanup:**
+
    ```bash
    git stash pop
    ```
@@ -88,12 +91,14 @@ git push origin feature/code-cleanup
    - Your documentation improvements
 
 5. **Commit combined work:**
+
    ```bash
    git add .
    git commit -m "Code cleanup integrated with latest zoom features"
    ```
 
 6. **Push to remote:**
+
    ```bash
    git push origin main
    ```
@@ -114,6 +119,7 @@ git push origin feature/code-cleanup
 ## After Resolution
 
 Continue with branch cleanup:
+
 ```bash
 # Delete merged remote branches
 git push origin --delete copilot/enhance-welcome-screen-display

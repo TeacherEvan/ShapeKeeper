@@ -373,7 +373,7 @@ async function startGame() {
 /**
  * Draw a line (make a move)
  * @param {string} lineKey - Normalized line key like "1,2-1,3"
- * @returns {Promise<{success: boolean, completedSquares: number, keepTurn: boolean} | {error: string}>}
+ * @returns {Promise<{success: boolean, completedSquares: number, completedTriangles: number, keepTurn: boolean} | {error: string}>}
  */
 async function drawLine(lineKey) {
     if (!currentRoomId) return { error: "Not in a room" };
