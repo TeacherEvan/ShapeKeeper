@@ -238,18 +238,6 @@ async function checkForCompletedSquares(
 
     const hasAllSides = lineSet.has(topLine) && lineSet.has(bottomLine) && lineSet.has(leftLine) && lineSet.has(rightLine);
 
-    console.log('[checkForCompletedSquares] Checking square', {
-      squarePos: `${row},${col}`,
-      sides: { topLine, bottomLine, leftLine, rightLine },
-      present: {
-        top: lineSet.has(topLine),
-        bottom: lineSet.has(bottomLine),
-        left: lineSet.has(leftLine),
-        right: lineSet.has(rightLine),
-      },
-      hasAllSides,
-    });
-
     // Check if all four sides exist
     if (hasAllSides) {
       const squareKey = `${row},${col}`;
@@ -283,11 +271,6 @@ async function checkForCompletedSquares(
         });
 
         completedSquares.push(squareKey);
-      } else {
-        console.log('[checkForCompletedSquares] Square already exists', {
-          squareKey,
-          existingSquareId: existingSquare._id,
-        });
       }
     }
   }
