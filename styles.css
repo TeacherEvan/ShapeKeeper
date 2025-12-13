@@ -1663,7 +1663,7 @@ canvas {
     50% { opacity: 1; }
 }
 
-/* Powerup theme (blue/green) */
+/* Power-up theme (blue/green) */
 .effect-modal.powerup-theme .effect-modal-content {
     border-color: #4CAF50;
     background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(76, 175, 80, 0.1) 100%);

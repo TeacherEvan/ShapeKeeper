@@ -59,6 +59,19 @@ class DotsAndBoxesGame {
     static SOUND_LINE_BASE = 440;
     static SOUND_SQUARE_BASE = 523;
     static SOUND_COMBO_BASE = 659;
+
+    static SHAPE_MESSAGES = [
+        "Triangle Power! 🔺",
+        "Three sides, infinite possibilities!",
+        "Acute move! 😉",
+        "You're looking sharp!",
+        "Pyramid scheme? No, just points!",
+        "Tri-umphant!",
+        "Isosceles what you did there!",
+        "Equilateral excellence!",
+        "Pointy business!",
+        "Geometry rules!"
+    ];
     
     // Tile Effects System - Traps (negative) and Powerups (positive)
     static TILE_EFFECTS = {
@@ -697,6 +710,16 @@ class DotsAndBoxesGame {
         // Scale context to match device pixel ratio (dpr already declared above)
         this.ctx.scale(dpr, dpr);
 
+        // Create offscreen canvas for static dots
+        this.dotsCanvas = document.createElement('canvas');
+        this.dotsCanvas.width = this.canvas.width;
+        this.dotsCanvas.height = this.canvas.height;
+        this.dotsCtx = this.dotsCanvas.getContext('2d');
+        this.dotsCtx.scale(dpr, dpr);
+        
+        // Render static dots once
+        this.renderStaticDots();
+
         // Multi-touch event listeners
         this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
         this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
@@ -709,6 +732,30 @@ class DotsAndBoxesGame {
 
         // Add populate button listener
         this.setupPopulateButton();
+    }
+
+    renderStaticDots() {
+        if (!this.dotsCtx) return;
+        
+        this.dotsCtx.clearRect(0, 0, this.dotsCanvas.width, this.dotsCanvas.height);
+        
+        // Use theme colors
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        this.dotsCtx.fillStyle = isDark ? '#4a5568' : '#cbd5e0';
+
+        for (let r = 0; r < this.gridRows; r++) {
+            for (let c = 0; c < this.gridCols; c++) {
+                this.dotsCtx.beginPath();
+                this.dotsCtx.arc(
+                    this.offsetX + c * this.cellSize,
+                    this.offsetY + r * this.cellSize,
+                    DotsAndBoxesGame.DOT_RADIUS,
+                    0,
+                    Math.PI * 2
+                );
+                this.dotsCtx.fill();
+            }
+        }
     }
 
     initializeMultipliers() {
@@ -1485,8 +1532,18 @@ class DotsAndBoxesGame {
                 if (clickedHasSquare) {
                     this.revealMultiplier(clickedCell);
                 } else {
-                    this.revealMultiplierForCell(clickedCell);
+                    // For triangles, check if there's a multiplier or effect
+                    if (this.squareMultipliers[clickedCell]) {
+                        this.revealMultiplierForCell(clickedCell);
+                    } else {
+                        // No multiplier, show shape message!
+                        this.showShapeMessage(clickedCell);
+                    }
                 }
+                return;
+            } else if (clickedHasTriangle && !this.squareMultipliers[clickedCell] && !this.tileEffects[clickedCell]) {
+                // Already revealed (or nothing to reveal), show message again
+                this.showShapeMessage(clickedCell);
                 return;
             }
         }
@@ -1586,7 +1643,54 @@ class DotsAndBoxesGame {
         this.revealedMultipliers.add(cellKey);
 
         const multiplierData = this.squareMultipliers[cellKey];
-        const owner = this.getCellOwnerForEffects(cellKey);
+     
+
+    /**
+     * Show a fun message when clicking a shape (especially triangles)
+     */
+    showShapeMessage(cellKey) {
+        const messages = DotsAndBoxesGame.SHAPE_MESSAGES;
+        const message = messages[Math.floor(Math.random() * messages.length)];
+        
+        // Use the effect modal to show the message
+        if (!this.effectModal) {
+            this.createEffectModal();
+        }
+        
+        const modal = this.effectModal;
+        const content = modal.querySelector('.effect-modal-content');
+        const title = modal.querySelector('.effect-title');
+        const desc = modal.querySelector('.effect-description');
+        const icon = modal.querySelector('.effect-icon');
+        const prompt = modal.querySelector('.effect-prompt');
+        const primaryBtn = modal.querySelector('.effect-btn-primary');
+        const secondaryBtn = modal.querySelector('.effect-btn-secondary');
+        
+        // Reset classes
+        modal.className = 'effect-modal show powerup-theme'; // Use powerup theme for positive vibes
+        
+        icon.textContent = '🔺';
+        title.textContent = 'Triangle Wisdom';
+        desc.textContent = message;
+        prompt.innerHTML = '';
+        
+        primaryBtn.textContent = 'Awesome!';
+        primaryBtn.onclick = () => this.closeEffectModal();
+        secondaryBtn.style.display = 'none';
+    }
+    
+    /**
+     * Get the owner of a cell (square or triangle) for effect application
+     */
+    getCellOwnerForEffects(cellKey) {
+        if (this.squares[cellKey]) return this.squares[cellKey];
+        if (this.triangleCellOwners && this.triangleCellOwners.has(cellKey)) {
+            // Return the first owner found (simplification)
+            const owners = Array.from(this.triangleCellOwners.get(cellKey));
+            return owners[0];
+        }
+        return null;
+    }   const owner = this.getCellOwnerForEffects(cellKey);
 
         if (multiplierData && multiplierData.type === 'multiplier' && owner) {
             const currentScore = this.scores[owner];
@@ -3298,19 +3402,24 @@ class DotsAndBoxesGame {
         this.drawMultiplierAnimations();
 
         // Draw all dots AFTER lines so they appear on top
-        // Use theme-aware color for dark mode visibility
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const dotColor = isDark ? '#CCCCCC' : '#333333';
-        
-        for (let row = 0; row < this.gridRows; row++) {
-            for (let col = 0; col < this.gridCols; col++) {
-                const x = this.offsetX + col * this.cellSize;
-                const y = this.offsetY + row * this.cellSize;
+        // Use offscreen canvas for performance
+        if (this.dotsCanvas) {
+            this.ctx.drawImage(this.dotsCanvas, 0, 0, this.logicalWidth, this.logicalHeight);
+        } else {
+            // Fallback if offscreen canvas not ready
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const dotColor = isDark ? '#CCCCCC' : '#333333';
+            
+            for (let row = 0; row < this.gridRows; row++) {
+                for (let col = 0; col < this.gridCols; col++) {
+                    const x = this.offsetX + col * this.cellSize;
+                    const y = this.offsetY + row * this.cellSize;
 
-                this.ctx.fillStyle = dotColor;
-                this.ctx.beginPath();
-                this.ctx.arc(x, y, this.dotRadius, 0, Math.PI * 2);
-                this.ctx.fill();
+                    this.ctx.fillStyle = dotColor;
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, this.dotRadius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
             }
         }
 

@@ -336,6 +336,19 @@ export const PHYSICAL_CHALLENGES = [
     "Do a victory dance right now!"
 ];
 
+export const SHAPE_MESSAGES = [
+    "Triangle Power! 🔺",
+    "Three sides, infinite possibilities!",
+    "Acute move! 😉",
+    "You're looking sharp!",
+    "Pyramid scheme? No, just points!",
+    "Tri-umphant!",
+    "Isosceles what you did there!",
+    "Equilateral excellence!",
+    "Pointy business!",
+    "Geometry rules!"
+];
+
 // =============================================================================
 // DEFAULT PLAYER COLORS
 // =============================================================================
