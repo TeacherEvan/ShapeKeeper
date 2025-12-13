@@ -14,12 +14,23 @@ export const drawLine = mutation({
     lineKey: v.string(), // Normalized line key like "1,2-1,3"
   },
   handler: async (ctx, args) => {
+    console.log('[drawLine] Line draw request', {
+      roomId: args.roomId,
+      sessionId: args.sessionId,
+      lineKey: args.lineKey,
+    });
+
     const room = await ctx.db.get(args.roomId);
     if (!room) {
+      console.log('[drawLine] Error: Room not found', { roomId: args.roomId });
       return { error: "Room not found" };
     }
 
     if (room.status !== "playing") {
+      console.log('[drawLine] Error: Game not in progress', {
+        roomId: args.roomId,
+        status: room.status,
+      });
       return { error: "Game not in progress" };
     }
 
@@ -32,7 +43,18 @@ export const drawLine = mutation({
     const sortedPlayers = players.sort((a, b) => a.playerIndex - b.playerIndex);
     const currentPlayer = sortedPlayers[room.currentPlayerIndex];
 
+    console.log('[drawLine] Turn validation', {
+      currentPlayerIndex: room.currentPlayerIndex,
+      currentPlayerSession: currentPlayer?.sessionId,
+      requestingSession: args.sessionId,
+      isValidTurn: currentPlayer?.sessionId === args.sessionId,
+    });
+
     if (!currentPlayer || currentPlayer.sessionId !== args.sessionId) {
+      console.log('[drawLine] Error: Not player turn', {
+        expectedSession: currentPlayer?.sessionId,
+        receivedSession: args.sessionId,
+      });
       return { error: "Not your turn" };
     }
 
@@ -45,6 +67,10 @@ export const drawLine = mutation({
       .first();
 
     if (existingLine) {
+      console.log('[drawLine] Error: Line already drawn', {
+        lineKey: args.lineKey,
+        existingLineId: existingLine._id,
+      });
       return { error: "Line already drawn" };
     }
 
@@ -57,6 +83,12 @@ export const drawLine = mutation({
       createdAt: Date.now(),
     });
 
+    console.log('[drawLine] Line drawn successfully', {
+      lineKey: args.lineKey,
+      playerId: currentPlayer._id,
+      playerIndex: currentPlayer.playerIndex,
+    });
+
     // Check for completed squares
     const completedSquares = await checkForCompletedSquares(
       ctx,
@@ -67,10 +99,21 @@ export const drawLine = mutation({
       room.gridSize
     );
 
+    console.log('[drawLine] Square check complete', {
+      lineKey: args.lineKey,
+      completedSquares: completedSquares.length,
+      squareKeys: completedSquares,
+    });
+
     // Update scores if squares were completed
     if (completedSquares.length > 0) {
       const newScore = currentPlayer.score + completedSquares.length;
       await ctx.db.patch(currentPlayer._id, { score: newScore });
+      console.log('[drawLine] Score updated', {
+        playerId: currentPlayer._id,
+        oldScore: currentPlayer.score,
+        newScore,
+      });
     }
 
     // Check if game is over
@@ -80,11 +123,21 @@ export const drawLine = mutation({
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .collect();
 
+    console.log('[drawLine] Game progress', {
+      completedSquares: allSquares.length,
+      totalSquares,
+      isGameOver: allSquares.length >= totalSquares,
+    });
+
     if (allSquares.length >= totalSquares) {
       // Game over!
       await ctx.db.patch(args.roomId, {
         status: "finished",
         updatedAt: Date.now(),
+      });
+      console.log('[drawLine] Game over', {
+        roomId: args.roomId,
+        finalScores: sortedPlayers.map(p => ({ name: p.name, score: p.score })),
       });
       return { 
         success: true, 
@@ -100,9 +153,18 @@ export const drawLine = mutation({
         currentPlayerIndex: nextPlayerIndex,
         updatedAt: Date.now(),
       });
+      console.log('[drawLine] Turn advanced', {
+        fromPlayerIndex: room.currentPlayerIndex,
+        toPlayerIndex: nextPlayerIndex,
+        nextPlayerName: sortedPlayers[nextPlayerIndex]?.name,
+      });
     } else {
       // Player completed a square, keep their turn
       await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
+      console.log('[drawLine] Turn retained (squares completed)', {
+        playerIndex: currentPlayer.playerIndex,
+        playerName: currentPlayer.name,
+      });
     }
 
     return { 
@@ -122,6 +184,13 @@ async function checkForCompletedSquares(
   playerIndex: number,
   gridSize: number
 ): Promise<string[]> {
+  console.log('[checkForCompletedSquares] Starting square check', {
+    newLineKey,
+    playerId,
+    playerIndex,
+    gridSize,
+  });
+
   // Parse the line key to get coordinates
   const [start, end] = newLineKey.split("-");
   const [r1, c1] = start.split(",").map(Number);
@@ -143,6 +212,11 @@ async function checkForCompletedSquares(
     if (c1 < gridSize - 1) potentialSquares.push({ row, col: c1 }); // Square right
   }
 
+  console.log('[checkForCompletedSquares] Potential squares to check', {
+    lineType: r1 === r2 ? 'horizontal' : 'vertical',
+    potentialSquares,
+  });
+
   // Get all lines in the room for checking
   const allLines = await ctx.db
     .query("lines")
@@ -150,6 +224,7 @@ async function checkForCompletedSquares(
     .collect();
 
   const lineSet = new Set(allLines.map((l: any) => l.lineKey));
+  console.log('[checkForCompletedSquares] Total lines in room', { lineCount: lineSet.size });
 
   // Check each potential square
   for (const square of potentialSquares) {
@@ -161,13 +236,22 @@ async function checkForCompletedSquares(
     const leftLine = normalizeLineKey(row, col, row + 1, col);
     const rightLine = normalizeLineKey(row, col + 1, row + 1, col + 1);
 
+    const hasAllSides = lineSet.has(topLine) && lineSet.has(bottomLine) && lineSet.has(leftLine) && lineSet.has(rightLine);
+
+    console.log('[checkForCompletedSquares] Checking square', {
+      squarePos: `${row},${col}`,
+      sides: { topLine, bottomLine, leftLine, rightLine },
+      present: {
+        top: lineSet.has(topLine),
+        bottom: lineSet.has(bottomLine),
+        left: lineSet.has(leftLine),
+        right: lineSet.has(rightLine),
+      },
+      hasAllSides,
+    });
+
     // Check if all four sides exist
-    if (
-      lineSet.has(topLine) &&
-      lineSet.has(bottomLine) &&
-      lineSet.has(leftLine) &&
-      lineSet.has(rightLine)
-    ) {
+    if (hasAllSides) {
       const squareKey = `${row},${col}`;
       
       // Check if square already recorded
@@ -191,10 +275,27 @@ async function checkForCompletedSquares(
           createdAt: Date.now(),
         });
         
+        console.log('[checkForCompletedSquares] Square completed!', {
+          squareKey,
+          playerId,
+          playerIndex,
+          multiplier,
+        });
+
         completedSquares.push(squareKey);
+      } else {
+        console.log('[checkForCompletedSquares] Square already exists', {
+          squareKey,
+          existingSquareId: existingSquare._id,
+        });
       }
     }
   }
+
+  console.log('[checkForCompletedSquares] Check complete', {
+    completedSquares: completedSquares.length,
+    squareKeys: completedSquares,
+  });
 
   return completedSquares;
 }
@@ -264,6 +365,12 @@ export const revealMultiplier = mutation({
     squareKey: v.string(),
   },
   handler: async (ctx, args) => {
+    console.log('[revealMultiplier] Reveal request', {
+      roomId: args.roomId,
+      sessionId: args.sessionId,
+      squareKey: args.squareKey,
+    });
+
     const square = await ctx.db
       .query("squares")
       .withIndex("by_room_and_key", (q) =>
@@ -272,22 +379,45 @@ export const revealMultiplier = mutation({
       .first();
 
     if (!square) {
+      console.log('[revealMultiplier] Error: Square not found', {
+        roomId: args.roomId,
+        squareKey: args.squareKey,
+      });
       return { error: "Square not found" };
     }
 
     const player = await ctx.db.get(square.playerId);
     if (!player || player.sessionId !== args.sessionId) {
+      console.log('[revealMultiplier] Error: Not player square', {
+        squarePlayerId: square.playerId,
+        squarePlayerSession: player?.sessionId,
+        requestingSession: args.sessionId,
+      });
       return { error: "Not your square" };
     }
 
     if (!square.multiplier) {
+      console.log('[revealMultiplier] Error: No multiplier', { squareKey: args.squareKey });
       return { error: "No multiplier on this square" };
     }
+
+    console.log('[revealMultiplier] Multiplier found', {
+      squareKey: args.squareKey,
+      multiplier: square.multiplier,
+      currentScore: player.score,
+    });
 
     // Apply multiplier to score
     if (square.multiplier.type === "multiplier" && square.multiplier.value) {
       const bonus = square.multiplier.value;
-      await ctx.db.patch(player._id, { score: player.score * bonus });
+      const newScore = player.score * bonus;
+      await ctx.db.patch(player._id, { score: newScore });
+      console.log('[revealMultiplier] Score multiplied', {
+        playerId: player._id,
+        oldScore: player.score,
+        newScore,
+        multiplier: bonus,
+      });
     }
 
     return { 
@@ -329,12 +459,19 @@ export const resetGame = mutation({
     sessionId: v.string(),
   },
   handler: async (ctx, args) => {
+    console.log('[resetGame] Reset request', { roomId: args.roomId, sessionId: args.sessionId });
+
     const room = await ctx.db.get(args.roomId);
     if (!room) {
+      console.log('[resetGame] Error: Room not found', { roomId: args.roomId });
       return { error: "Room not found" };
     }
 
     if (room.hostPlayerId !== args.sessionId) {
+      console.log('[resetGame] Error: Not host', {
+        requestingSession: args.sessionId,
+        hostSession: room.hostPlayerId,
+      });
       return { error: "Only the host can reset the game" };
     }
 
@@ -346,6 +483,7 @@ export const resetGame = mutation({
     for (const line of lines) {
       await ctx.db.delete(line._id);
     }
+    console.log('[resetGame] Lines deleted', { count: lines.length });
 
     // Delete all squares
     const squares = await ctx.db
@@ -355,6 +493,7 @@ export const resetGame = mutation({
     for (const square of squares) {
       await ctx.db.delete(square._id);
     }
+    console.log('[resetGame] Squares deleted', { count: squares.length });
 
     // Reset player scores and ready status
     const players = await ctx.db
@@ -364,12 +503,20 @@ export const resetGame = mutation({
     for (const player of players) {
       await ctx.db.patch(player._id, { score: 0, isReady: false });
     }
+    console.log('[resetGame] Player scores reset', { playerCount: players.length });
 
     // Reset room status
     await ctx.db.patch(args.roomId, {
       status: "lobby",
       currentPlayerIndex: 0,
       updatedAt: Date.now(),
+    });
+
+    console.log('[resetGame] Game reset complete', {
+      roomId: args.roomId,
+      linesDeleted: lines.length,
+      squaresDeleted: squares.length,
+      playersReset: players.length,
     });
 
     return { success: true };
@@ -396,19 +543,34 @@ export const populateLines = mutation({
     lineKeys: v.array(v.string()), // Array of normalized line keys (e.g., ["1,2-1,3", "2,3-3,3"])
   },
   handler: async (ctx, args) => {
+    console.log('[populateLines] Populate request', {
+      roomId: args.roomId,
+      sessionId: args.sessionId,
+      lineCount: args.lineKeys.length,
+    });
+
     // Validate room exists and is in playing state
     const room = await ctx.db.get(args.roomId);
     if (!room) {
+      console.log('[populateLines] Error: Room not found', { roomId: args.roomId });
       return { error: "Room not found" };
     }
 
     if (room.status !== "playing") {
+      console.log('[populateLines] Error: Game not in progress', {
+        roomId: args.roomId,
+        status: room.status,
+      });
       return { error: "Game not in progress" };
     }
 
     // Server-side authorization: Only host can populate lines
     // This prevents non-hosts from using the populate feature via API manipulation
     if (room.hostPlayerId !== args.sessionId) {
+      console.log('[populateLines] Error: Not host', {
+        requestingSession: args.sessionId,
+        hostSession: room.hostPlayerId,
+      });
       return { error: "Only the host can populate lines" };
     }
 
@@ -421,8 +583,20 @@ export const populateLines = mutation({
       .first();
 
     if (!hostPlayer) {
+      console.log('[populateLines] Error: Host player not found', {
+        roomId: args.roomId,
+        sessionId: args.sessionId,
+      });
       return { error: "Host player not found" };
     }
+
+    console.log('[populateLines] Starting line insertion', {
+      hostPlayerId: hostPlayer._id,
+      linesToInsert: args.lineKeys.length,
+    });
+
+    let insertedCount = 0;
+    let skippedCount = 0;
 
     // Insert all the requested lines into the database
     // Each line is associated with a special "populate" player ID for visual distinction
@@ -446,17 +620,28 @@ export const populateLines = mutation({
           playerIndex: POPULATE_PLAYER_INDEX,
           createdAt: Date.now(),
         });
+        insertedCount++;
+      } else {
+        skippedCount++;
       }
     }
+
+    console.log('[populateLines] Line insertion complete', {
+      requestedLines: args.lineKeys.length,
+      inserted: insertedCount,
+      skipped: skippedCount,
+    });
 
     // Update room timestamp to trigger subscription updates
     // This ensures all players receive the new lines via real-time sync
     // Note: We don't change currentPlayerIndex, keeping the turn with the same player
     await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
 
+    console.log('[populateLines] Populate complete', { linesPopulated: insertedCount });
+
     return { 
       success: true, 
-      linesPopulated: args.lineKeys.length 
+      linesPopulated: insertedCount 
     };
   },
 });
