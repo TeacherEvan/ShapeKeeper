@@ -41,7 +41,7 @@ Added full backend and frontend support for triangles in multiplayer mode:
 
 ---
 
-### ✅ Completed This Session
+### ✅ Completed - December 9, 2025
 
 #### 1. Triangle Multiplayer Sync (P0) ✅
 **Status:** COMPLETE - Triangles now fully synced in online multiplayer
@@ -96,7 +96,7 @@ Extended `src/core/utils.js` with reusable helpers:
 
 ---
 
-### ✅ Completed This Session
+### ✅ Completed - December 5, 2025
 
 #### 1. Party Mode Feature
 Renamed "Hypotheticals" to "Party Mode" - now ALL squares have tile effects:
