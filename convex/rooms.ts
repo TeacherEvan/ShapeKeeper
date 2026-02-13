@@ -1,7 +1,6 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
-
 // Create a new room
 export { createRoom } from './mutations/createRoom';
 
@@ -180,7 +179,7 @@ export const updatePartyMode = mutation({
 });
 
 // Get room by code (for joining)
-export { getRoomByCode, getRoom } from './queries/roomQueries';
+export { getRoomByCode } from './queries/roomQueries';
 
 // Get room state (for subscriptions)
 export const getRoom = query({
