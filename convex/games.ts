@@ -4,7 +4,6 @@ import { mutation, query } from './_generated/server';
 // Utilities & services (extracted)
 import { checkForCompletedSquares } from './services/squareDetection';
 import { checkForCompletedTriangles } from './services/triangleDetection';
-import { normalizeLineKey } from './utils/lineKeyNormalizer';
 
 // Constants for populate feature
 // Must match frontend DotsAndBoxesGame.POPULATE_PLAYER_ID = 3
@@ -12,32 +11,7 @@ const POPULATE_PLAYER_ID = 3; // Display player ID for populate lines
 const POPULATE_PLAYER_INDEX = 2; // Backend player index (0=Player1, 1=Player2, 2=Populate)
 
 // Draw a line (make a move)
-export const drawLine = mutation({
-    args: {
-        roomId: v.id('rooms'),
-        sessionId: v.string(),
-        lineKey: v.string(), // Normalized line key like "1,2-1,3"
-    },
-    handler: async (ctx, args) => {
-        console.log('[drawLine] Line draw request', {
-            roomId: args.roomId,
-            sessionId: args.sessionId,
-            lineKey: args.lineKey,
-        });
-
-        const room = await ctx.db.get(args.roomId);
-        if (!room) {
-            console.log('[drawLine] Error: Room not found', { roomId: args.roomId });
-            return { error: 'Room not found' };
-        }
-
-        if (room.status !== 'playing') {
-            console.log('[drawLine] Error: Game not in progress', {
-                roomId: args.roomId,
-                status: room.status,
-            });
-            return { error: 'Game not in progress' };
-        }
+export { drawLine } from './mutations/drawLine';
 
         // Get the current player
         const players = await ctx.db
