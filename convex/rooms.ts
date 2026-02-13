@@ -180,41 +180,7 @@ export const updatePartyMode = mutation({
 });
 
 // Get room by code (for joining)
-export const getRoomByCode = query({
-    args: {
-        roomCode: v.string(),
-    },
-    handler: async (ctx, args) => {
-        console.log('[getRoomByCode] Query room by code', { roomCode: args.roomCode });
-
-        const room = await ctx.db
-            .query('rooms')
-            .withIndex('by_code', (q) => q.eq('roomCode', args.roomCode.toUpperCase()))
-            .first();
-
-        if (!room) {
-            console.log('[getRoomByCode] Room not found', { roomCode: args.roomCode });
-            return null;
-        }
-
-        const players = await ctx.db
-            .query('players')
-            .withIndex('by_room', (q) => q.eq('roomId', room._id))
-            .collect();
-
-        console.log('[getRoomByCode] Room found', {
-            roomId: room._id,
-            roomCode: room.roomCode,
-            status: room.status,
-            playerCount: players.length,
-        });
-
-        return {
-            ...room,
-            players: players.sort((a, b) => a.playerIndex - b.playerIndex),
-        };
-    },
-});
+export { getRoomByCode, getRoom } from './queries/roomQueries';
 
 // Get room state (for subscriptions)
 export const getRoom = query({
