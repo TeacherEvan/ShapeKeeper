@@ -1,6 +1,10 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
+// Utilities & services (extracted)
+import { normalizeLineKey } from './utils/lineKeyNormalizer';
+import { checkForCompletedSquares } from './services/squareDetection';
+
 // Constants for populate feature
 // Must match frontend DotsAndBoxesGame.POPULATE_PLAYER_ID = 3
 const POPULATE_PLAYER_ID = 3; // Display player ID for populate lines
@@ -176,116 +180,7 @@ export const drawLine = mutation({
 });
 
 // Helper function to check for completed squares after drawing a line
-async function checkForCompletedSquares(
-    ctx: any,
-    roomId: any,
-    newLineKey: string,
-    playerId: any,
-    playerIndex: number,
-    gridSize: number
-): Promise<string[]> {
-    console.log('[checkForCompletedSquares] Starting square check', {
-        newLineKey,
-        playerId,
-        playerIndex,
-        gridSize,
-    });
-
-    // Parse the line key to get coordinates
-    const [start, end] = newLineKey.split('-');
-    const [r1, c1] = start.split(',').map(Number);
-    const [r2, c2] = end.split(',').map(Number);
-
-    const completedSquares: string[] = [];
-    const potentialSquares: Array<{ row: number; col: number }> = [];
-
-    // Determine which squares this line could complete
-    if (r1 === r2) {
-        // Horizontal line - check squares above and below
-        const col = Math.min(c1, c2);
-        if (r1 > 0) potentialSquares.push({ row: r1 - 1, col }); // Square above
-        if (r1 < gridSize - 1) potentialSquares.push({ row: r1, col }); // Square below
-    } else {
-        // Vertical line - check squares left and right
-        const row = Math.min(r1, r2);
-        if (c1 > 0) potentialSquares.push({ row, col: c1 - 1 }); // Square left
-        if (c1 < gridSize - 1) potentialSquares.push({ row, col: c1 }); // Square right
-    }
-
-    console.log('[checkForCompletedSquares] Potential squares to check', {
-        lineType: r1 === r2 ? 'horizontal' : 'vertical',
-        potentialSquares,
-    });
-
-    // Get all lines in the room for checking
-    const allLines = await ctx.db
-        .query('lines')
-        .withIndex('by_room', (q: any) => q.eq('roomId', roomId))
-        .collect();
-
-    const lineSet = new Set(allLines.map((l: any) => l.lineKey));
-    console.log('[checkForCompletedSquares] Total lines in room', { lineCount: lineSet.size });
-
-    // Check each potential square
-    for (const square of potentialSquares) {
-        const { row, col } = square;
-
-        // Generate the four line keys for this square
-        const topLine = normalizeLineKey(row, col, row, col + 1);
-        const bottomLine = normalizeLineKey(row + 1, col, row + 1, col + 1);
-        const leftLine = normalizeLineKey(row, col, row + 1, col);
-        const rightLine = normalizeLineKey(row, col + 1, row + 1, col + 1);
-
-        const hasAllSides =
-            lineSet.has(topLine) &&
-            lineSet.has(bottomLine) &&
-            lineSet.has(leftLine) &&
-            lineSet.has(rightLine);
-
-        // Check if all four sides exist
-        if (hasAllSides) {
-            const squareKey = `${row},${col}`;
-
-            // Check if square already recorded
-            const existingSquare = await ctx.db
-                .query('squares')
-                .withIndex('by_room_and_key', (q: any) =>
-                    q.eq('roomId', roomId).eq('squareKey', squareKey)
-                )
-                .first();
-
-            if (!existingSquare) {
-                // Generate random multiplier
-                const multiplier = generateMultiplier();
-
-                await ctx.db.insert('squares', {
-                    roomId,
-                    squareKey,
-                    playerId,
-                    playerIndex,
-                    multiplier,
-                    createdAt: Date.now(),
-                });
-
-                console.log('[checkForCompletedSquares] Square completed!', {
-                    squareKey,
-                    playerId,
-                    playerIndex,
-                    multiplier,
-                });
-
-                completedSquares.push(squareKey);
-            }
-        }
-    }
-
-    console.log('[checkForCompletedSquares] Check complete', {
-        completedSquares: completedSquares.length,
-        squareKeys: completedSquares,
-    });
-
-    return completedSquares;
-}
+// checkForCompletedSquares delegated to `convex/services/squareDetection.ts` (keeps behavior identical)
 
 // Helper function to check for completed triangles after drawing a line
 async function checkForCompletedTriangles(
@@ -555,27 +450,9 @@ async function checkForCompletedTriangles(
     return completedTriangles;
 }
 
-// Helper to normalize line keys (sorted coordinates)
-function normalizeLineKey(r1: number, c1: number, r2: number, c2: number): string {
-    if (r1 < r2 || (r1 === r2 && c1 < c2)) {
-        return `${r1},${c1}-${r2},${c2}`;
-    }
-    return `${r2},${c2}-${r1},${c1}`;
-}
+// normalizeLineKey delegated to `convex/utils/lineKeyNormalizer.ts` (keeps behavior unchanged)
 
-// Generate random multiplier based on distribution
-function generateMultiplier(): { type: 'multiplier' | 'truthOrDare'; value?: number } | undefined {
-    const rand = Math.random() * 100;
-
-    if (rand < 60) return { type: 'multiplier', value: 2 };
-    if (rand < 80) return { type: 'multiplier', value: 3 };
-    if (rand < 90) return { type: 'multiplier', value: 4 };
-    if (rand < 95) return { type: 'multiplier', value: 5 };
-    if (rand < 96) return { type: 'multiplier', value: 10 };
-    if (rand < 100) return { type: 'truthOrDare' };
-
-    return undefined;
-}
+// generateMultiplier delegated to `convex/services/multiplierGenerator.ts` (keeps behavior unchanged)
 
 // Get game state (lines and squares)
 export const getGameState = query({
