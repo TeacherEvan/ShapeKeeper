@@ -47,15 +47,15 @@
 
     <body>
         <!-- Main Menu Screen -->
-        <div id="mainMenuScreen" class="screen active">
+        <div id="mainMenuScreen" class="screen active" data-testid="main-menu-screen">
             <canvas id="welcomeCanvas" aria-hidden="true"></canvas>
             <div class="welcome-container">
                 <h1>ShapeKeeper</h1>
                 <p class="credit">Created by Teacher Evan</p>
 
                 <div class="menu-options">
-                    <button id="createGameBtn" class="menu-btn">Create Game</button>
-                    <button id="joinGameBtn" class="menu-btn">Join Game</button>
+                    <button id="createGameBtn" class="menu-btn" data-testid="create-game-button">Create Game</button>
+                    <button id="joinGameBtn" class="menu-btn" data-testid="join-game-button">Join Game</button>
                     <button id="localPlayBtn" class="menu-btn secondary">
                         Local Play (2 Players)
                     </button>
@@ -123,14 +123,14 @@
         </div>
 
         <!-- Create Game / Lobby Screen -->
-        <div id="lobbyScreen" class="screen">
+        <div id="lobbyScreen" class="screen" data-testid="lobby-screen">
             <canvas id="lobbyCanvas"></canvas>
             <div class="lobby-container">
                 <div class="lobby-header">
                     <h1>Game Lobby</h1>
                     <div class="room-code-section">
                         <span class="room-label">Room Code:</span>
-                        <span class="room-code" id="roomCode">------</span>
+                        <span class="room-code" id="roomCode" data-testid="room-code">------</span>
                         <button id="copyCodeBtn" class="copy-btn" title="Copy room code">📋</button>
                     </div>
                 </div>
@@ -162,7 +162,7 @@
 
                 <div class="players-section">
                     <h2>Players (<span id="playerCount">1</span>/6)</h2>
-                    <div class="players-list" id="playersList">
+                    <div class="players-list" id="playersList" data-testid="players-list">
                         <!-- Player entries will be added here dynamically -->
                     </div>
                 </div>
@@ -191,8 +191,15 @@
                 </div>
 
                 <div class="lobby-actions">
-                    <button id="readyBtn" class="ready-btn">Ready</button>
-                    <button id="startMultiplayerGame" class="start-btn" disabled>Start Game</button>
+                    <button id="readyBtn" class="ready-btn" data-testid="ready-button">Ready</button>
+                    <button
+                        id="startMultiplayerGame"
+                        class="start-btn"
+                        data-testid="start-multiplayer-game"
+                        disabled
+                    >
+                        Start Game
+                    </button>
                 </div>
 
                 <button id="leaveLobby" class="leave-btn">Leave Room</button>
@@ -200,7 +207,7 @@
         </div>
 
         <!-- Join Game Screen -->
-        <div id="joinScreen" class="screen">
+        <div id="joinScreen" class="screen" data-testid="join-screen">
             <canvas id="joinCanvas"></canvas>
             <div class="welcome-container">
                 <h1>Join Game</h1>
@@ -212,6 +219,7 @@
                         type="text"
                         id="joinRoomCode"
                         class="room-code-input"
+                        data-testid="join-room-code-input"
                         placeholder="Enter code"
                         maxlength="6"
                         aria-label="Room code"
@@ -224,6 +232,7 @@
                         type="text"
                         id="joinPlayerName"
                         class="name-input"
+                        data-testid="join-player-name-input"
                         placeholder="Your name"
                         maxlength="15"
                         aria-label="Your name"
@@ -232,13 +241,15 @@
 
                 <div class="button-row">
                     <button id="backToMenuFromJoin" class="back-btn">← Back</button>
-                    <button id="joinRoomBtn" class="start-btn" disabled>Join Room</button>
+                    <button id="joinRoomBtn" class="start-btn" data-testid="join-room-button" disabled>
+                        Join Room
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Game Screen -->
-        <div id="gameScreen" class="screen">
+        <div id="gameScreen" class="screen" data-testid="game-screen">
             <canvas id="gameBackgroundCanvas"></canvas>
             <div class="game-header" id="gameHeader">
                 <!-- Player info will be dynamically generated for 2-6 players -->
@@ -255,7 +266,12 @@
 
             <div class="game-container">
                 <!-- Loading skeleton shown while game initializes -->
-                <div id="gameLoadingSkeleton" class="canvas-skeleton">
+                <div
+                    id="gameLoadingSkeleton"
+                    class="canvas-skeleton"
+                    data-testid="startup-overlay"
+                    data-startup-phase="idle"
+                >
                     <div class="loading-spinner"></div>
                     <div class="skeleton-text" style="width: 120px"></div>
                     <p id="gameLoadingMessage" class="canvas-loading-message">
@@ -265,10 +281,20 @@
                         Waiting for the first authoritative board state.
                     </p>
                     <div id="gameLoadingActions" class="canvas-loading-actions" hidden>
-                        <button id="retryGameStartup" class="loading-action-btn primary" type="button">
+                        <button
+                            id="retryGameStartup"
+                            class="loading-action-btn primary"
+                            data-testid="startup-retry-button"
+                            type="button"
+                        >
                             Retry Sync
                         </button>
-                        <button id="leaveFailedStartup" class="loading-action-btn secondary" type="button">
+                        <button
+                            id="leaveFailedStartup"
+                            class="loading-action-btn secondary"
+                            data-testid="startup-leave-button"
+                            type="button"
+                        >
                             Leave Match
                         </button>
                     </div>

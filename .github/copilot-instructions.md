@@ -31,6 +31,8 @@ ShapeKeeper is a Dots and Boxes game with local and online multiplayer.
 - **`welcome.js`**: ES module entry script for menu bootstrapping, theme initialization, and Convex update wiring.
 - **`src/ui/MenuNavigation.js`**: Active multiplayer menu and startup-flow orchestration used by `welcome.js`.
 - **`src/ui/MultiplayerStartup.js`**: Startup state controller for multiplayer match boot, timeout handling, and first-authoritative-state tracking.
+- **`playwright.config.js`**: Browser regression configuration for the no-build runtime, serving the app over local HTTP during Playwright runs.
+- **`tests/e2e/`**: Playwright smoke and multiplayer regression coverage, including startup recovery and host/guest startup validation.
 - **`src/ui/`**: Active UI support modules currently used by `welcome.js`.
 - **`utils.js`**: Shared root-level runtime utilities used by active gameplay modules.
 
@@ -63,8 +65,14 @@ getLineKey(dot1, dot2) {
 - The loading skeleton must remain visible for multiplayer startup until the first authoritative game-state payload is applied successfully.
 - Startup timeout and retry behavior are orchestrated through `src/ui/MultiplayerStartup.js`; prefer extending that controller rather than scattering new startup flags through the UI.
 - When changing multiplayer startup or reconnect behavior, keep subscription setup/cleanup explicit in `src/ui/MenuNavigation.js` and avoid relying on ad hoc globals.
+- Browser regression coverage should assert observable startup phases through the loading overlay rather than relying only on console timing or implicit animation state.
 
-### 4. Coordinate System
+### 4. UI Helper Ownership
+
+- UI refresh helpers such as `updatePopulateButtonVisibility()` and `updateUI()` live on `game.uiManager`, not on the `DotsAndBoxesGame` instance itself.
+- When reconciling authoritative multiplayer state in `src/ui/MenuNavigation.js`, call UI refresh methods through `game.uiManager` after mutating the `game` model.
+
+### 5. Coordinate System
 
 - Grid is 0-indexed.
 - `lines` are stored as a Set of keys.
@@ -75,7 +83,8 @@ getLineKey(dot1, dot2) {
 - **Start Dev Server**: `npm run dev` (Runs `convex dev` and serves frontend).
 - **Serve Frontend Over HTTP**: Use `npm run start`, `python -m http.server 8000`, or equivalent. Do **not** open `index.html` with `file://` because the app boots with browser ES modules.
 - **Verify Code**: `npm run verify` (Typechecks Convex and validates JS syntax).
-- **Run Tests**: `npm test`
+- **Run Unit Tests**: `npm test`
+- **Run Browser Regression Tests**: `npm run test:e2e`
 - **Deploy**: `npm run deploy`.
 
 ## Runtime Contract
@@ -96,8 +105,11 @@ getLineKey(dot1, dot2) {
 - For runtime changes, validate in this order:
     1. `npm run verify`
     2. `npm test`
-    3. browser boot over local HTTP
+    3. `npm run test:e2e` when browser flows, startup, lobby, sync, or reconnect behavior is touched
+    4. browser boot over local HTTP when validating the live runtime manually
 - For multiplayer startup changes, also verify that the loading overlay copy renders, the recovery controls exist, and the supported create/join flow still reaches the lobby or match screen as expected.
+- For browser automation changes, prefer stable `data-testid` selectors and test observable startup phases such as `awaiting_first_authoritative_state`, `fatal_startup_failure`, and `in_match`.
+- When a new browser regression test exposes a production-path bug, fix the runtime path first and preserve the test; do not “solve” the problem by weakening the assertion unless the assertion is genuinely incorrect.
 - Do not consider a runtime change complete if syntax passes but the browser
     entry modules fail to initialize.
 - Prefer fixing explicit dependency edges over reintroducing broad globals.
@@ -115,14 +127,18 @@ getLineKey(dot1, dot2) {
 - **Change Colors/Theme**: CSS variables in `styles.css` and theme wiring in `src/ui/ThemeManager.js`.
 - **Update Menu/Lobby Flow**: `welcome.js` and active `src/ui/` modules, especially `MenuNavigation.js`.
 - **Update Multiplayer Startup / Recovery**: `src/ui/MenuNavigation.js`, `src/ui/MultiplayerStartup.js`, `index.html`, and `styles.css`.
+- **Update Browser Regression Coverage**: `playwright.config.js`, `tests/e2e/`, and any stable DOM hooks in `index.html` required for supported runtime flows.
 - **Update Sounds**: `sound-manager.js` and any related root runtime integration.
 
-## Phase 2 / Phase 3 Documentation Notes
+## Phase 2 / Phase 3 / Phase 5 Documentation Notes
 
 - The classic-script/module mismatch at boot has been removed.
 - If the browser loads but nothing initializes, inspect the module graph for missing exports or old global assumptions before changing architecture.
 - For runtime stabilization tasks, prefer small explicit imports over broad refactors.
 - Phase 3 has started with a dedicated multiplayer startup controller, first-authoritative-state gating, timeout recovery UI, and unit coverage for the startup state machine.
+- Phase 5 has now started with a working Playwright configuration, smoke coverage, startup timeout/retry/leave coverage, and a two-client host/guest startup check using a shared browser-side multiplayer fixture.
+- The first two-client browser tests exposed real runtime regressions in `src/ui/MenuNavigation.js`; use browser coverage to validate object ownership and runtime call paths rather than assuming parity with local/unit-only checks.
+- The shared browser-side multiplayer fixture in `tests/e2e/helpers/bootstrap.js` should be extended for reconnect, sync, and lobby edge cases instead of duplicating ad hoc mocks across new specs.
 - The current startup hardening lives in active `src/ui/` code, but it still participates in the approved runtime path through `welcome.js`; treat it as production runtime code, not speculative refactor space.
 - Use the competition roadmap in `docs/planning/COMPETITION_PRODUCTION_ROADMAP.md`
     as the source of truth for phase sequencing and go/no-go criteria.

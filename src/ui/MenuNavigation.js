@@ -20,7 +20,11 @@ import {
 import { toggleTheme } from './ThemeManager.js';
 import { showToast } from './Toast.js';
 
-const STARTUP_TIMEOUT_MS = 8000;
+const configuredStartupTimeoutMs = Number(globalThis.window?.__SHAPEKEEPER_STARTUP_TIMEOUT_MS);
+const STARTUP_TIMEOUT_MS =
+    Number.isFinite(configuredStartupTimeoutMs) && configuredStartupTimeoutMs > 0
+        ? configuredStartupTimeoutMs
+        : 8000;
 
 const multiplayerStartup = createMultiplayerStartupController({
     timeoutMs: STARTUP_TIMEOUT_MS,
@@ -63,6 +67,7 @@ function updateStartupOverlay({
 
     skeleton.classList.toggle('hidden', !visible);
     skeleton.dataset.state = state;
+    skeleton.dataset.startupPhase = state;
 
     if (messageEl) {
         messageEl.textContent = message;
@@ -515,7 +520,7 @@ export function handleGameStateUpdate(gameState) {
     game.scores[2] = p2?.score || 0;
 
     // Update populate button visibility (host-only in multiplayer)
-    game.updatePopulateButtonVisibility();
+    game.uiManager.updatePopulateButtonVisibility();
 
     // Check for game over
     if (gameState.room?.status === 'finished' && !game.isGameOver) {
@@ -525,7 +530,7 @@ export function handleGameStateUpdate(gameState) {
 
     // Redraw and update UI
     game.draw();
-    game.updateUI();
+    game.uiManager.updateUI();
 
     if (isFirstAuthoritativeState) {
         game.uiManager.displayLoadingSkeleton(false);

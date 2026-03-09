@@ -18,6 +18,32 @@ The goal is not to describe every nice idea. The goal is to decide:
 **No gameplay or backend production code is to be modified until this roadmap is
 approved.**
 
+## Implementation checkpoint — March 9, 2026
+
+This roadmap remains the strategic source of truth, but the repository has now
+progressed beyond the original approval-only state.
+
+Current execution snapshot:
+
+- **Phase 2:** first runtime-stabilization slice complete
+- **Phase 3:** first startup/loading hardening slice complete
+- **Phase 5:** first Playwright regression-gate slice complete
+
+What is now verified in the repository:
+
+- `index.html` loads `convex-client.js` as a classic script and loads `game.js`
+  and `welcome.js` as browser ES modules
+- a browser-level smoke check exists
+- startup timeout / retry / leave recovery is automation-detectable
+- a two-client host/guest startup path now verifies first-authoritative-state
+  arrival on both clients
+
+What is still missing before a competition go decision:
+
+- reconnect and desync recovery coverage
+- live move propagation / duplicate-move regression coverage
+- security and input hardening completion
+
 ## Brutally honest assessment
 
 ShapeKeeper is not a clean greenfield app. It is a strong prototype in a
@@ -94,26 +120,38 @@ In short:
 Current runtime loading in `index.html`:
 
 - `convex-client.js`
-- `game.js`
-- `welcome.js`
+- `game.js` as `type="module"`
+- `welcome.js` as `type="module"`
 
 Current deployment assumptions:
 
 - `vercel.json` uses static output with no framework and no build command
 - `package.json` confirms a no-build frontend expectation
 
-Current contradiction:
+Current stabilized reality:
 
-- `game.js` contains ES module imports
-- `welcome.js` contains ES module imports
-- `index.html` currently loads them as classic scripts
+- the classic-script / module mismatch at boot has been removed
+- the approved runtime path is now explicit and browser-valid over local HTTP
+- root runtime files remain authoritative while active `src/ui/` modules
+  participate through `welcome.js`
 
 ### Testing facts
 
-Current test posture is not competition-ready.
+Current test posture has improved materially, but is still not
+competition-ready.
 
-The clearest example is `convex-client.test.js`, which is mostly placeholder
-coverage rather than behavioral verification.
+What now exists:
+
+- unit coverage for the startup controller in `src/ui/MultiplayerStartup.test.js`
+- a Playwright smoke test for boot on the real browser entrypoint
+- a Playwright startup recovery regression for timeout / retry / leave
+- a Playwright two-client host/guest startup check using a shared browser-side
+  multiplayer fixture
+
+Key remaining gap:
+
+- browser coverage does not yet validate reconnect, move propagation,
+  duplicate-move handling, host-leave behavior, or input hardening paths
 
 ### Refactor facts
 
@@ -254,6 +292,16 @@ regressions.
 - network-throttled regression scenarios
 - preview-deployment smoke coverage
 
+#### Current checkpoint
+
+- `playwright.config.js` now exists and serves the no-build app over local HTTP
+- `tests/e2e/smoke.spec.js` validates browser boot
+- `tests/e2e/loading-state.spec.js` validates timeout / retry / leave recovery
+- `tests/e2e/multiplayer-startup.spec.js` validates host/guest startup and
+  first-authoritative-state application
+- the current Playwright project is intentionally conservative: Chromium only
+  for now, with expansion to Firefox/WebKit still pending
+
 #### Likely files added later
 
 - `playwright.config.js` or `playwright.config.ts`
@@ -270,6 +318,12 @@ regressions.
 - a two-player match can be created and validated in automation
 - startup and reconnect failures emit traceable artifacts
 - the loading-state regression becomes machine-detectable
+
+#### Progress note
+
+The first and third acceptance criteria are now partially satisfied: two-player
+startup is browser-validated and the loading-state regression is now
+machine-detectable. Reconnect artifact-driven coverage remains open.
 
 ### Agent Delta — netcode, match startup, and online state recovery
 
@@ -398,6 +452,13 @@ Expected effect:
 
 - browser-level confidence for every high-risk online flow
 
+Current status:
+
+- started, first slice complete
+- browser confidence now exists for smoke boot, startup recovery, and two-client
+  startup only
+- reconnect, sync, and security coverage remain follow-on work
+
 ### Slice 5 — security and UX completion pass
 
 Primary target files:
@@ -426,6 +487,11 @@ Use `@playwright/test` with a multi-project setup.
 3. `webkit`
 4. optional `chromium-slow-network`
 
+Current implementation note:
+
+- the repository currently runs a conservative first slice with `chromium`
+  only; expand to `firefox` and `webkit` after reconnect/sync flows stabilize
+
 ### Reporters and artifacts
 
 Required:
@@ -449,6 +515,12 @@ Recommended structure:
 - `tests/fixtures/network.fixture.*`
 - `tests/utils/console-capture.*`
 - `tests/utils/match-helpers.*`
+
+Current implementation note:
+
+- the repository currently uses `tests/e2e/helpers/bootstrap.js` as the shared
+  browser-side fixture layer for smoke, startup recovery, and host/guest
+  startup tests
 
 ### Required browser scenarios
 
@@ -598,6 +670,13 @@ Exit rule:
 - critical online regressions become automation-detectable
 - preview environment can be smoke-validated before release
 
+### Current status
+
+- started, first slice complete
+- startup timeout/retry/leave is automation-detectable
+- two-client startup is automation-detectable
+- reconnect, sync, and security smoke paths are still pending
+
 ## Phase 6 — security and UX completion pass
 
 ### Scope
@@ -631,6 +710,14 @@ The competition build becomes **go** only when:
 - reconnect and loading-state regressions are covered in Playwright
 - core abuse and input hardening is in place
 - UX communicates sync state, turn ownership, and failure recovery clearly
+
+Current posture as of March 9, 2026:
+
+- the runtime contract is singular and documented
+- startup handshake is now browser-validated for timeout recovery and two-client
+  host/guest startup
+- the build remains **no-go** because reconnect, sync, and security criteria are
+  still incomplete
 
 ## Risks and mitigation
 
