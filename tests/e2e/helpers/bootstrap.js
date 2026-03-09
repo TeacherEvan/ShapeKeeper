@@ -282,8 +282,12 @@ export async function installSharedMockMultiplayer(
 
             const roomSubscribers = new Set();
             const gameSubscribers = new Set();
+            const connectionStateListeners = new Set();
             let currentRoomId = null;
+            let connectionState = 'connected';
             let leaveRoomCalls = 0;
+            let lastDeliveredGameState = null;
+            let lastDeliveredRoomState = null;
 
             const ensureSharedState = () => {
                 const parsed = JSON.parse(localStorage.getItem(storageKey) || '{"rooms":{}}');
@@ -323,6 +327,75 @@ export async function installSharedMockMultiplayer(
                 return clone(roomState);
             };
 
+            const getLocalPlayer = (room) => {
+                if (!room) {
+                    return null;
+                }
+
+                return room.players.find((player) => player.sessionId === initialSessionId) || null;
+            };
+
+            const getSquareKeysCompletedByLine = (existingLines, lineKey, gridSize) => {
+                const parseDot = (value) => {
+                    const [row, col] = value.split(',').map(Number);
+                    return { row, col };
+                };
+
+                const getLineKey = (dot1, dot2) => {
+                    const [first, second] = [dot1, dot2].sort((a, b) =>
+                        a.row === b.row ? a.col - b.col : a.row - b.row
+                    );
+
+                    return `${first.row},${first.col}-${second.row},${second.col}`;
+                };
+
+                const [rawStart, rawEnd] = lineKey.split('-');
+                const start = parseDot(rawStart);
+                const end = parseDot(rawEnd);
+                const normalizedLines = new Set(existingLines);
+                normalizedLines.add(lineKey);
+
+                const completedSquares = [];
+                const isHorizontal = start.row === end.row;
+
+                const maybeAddCompletedSquare = (row, col) => {
+                    if (row < 0 || col < 0 || row >= gridSize - 1 || col >= gridSize - 1) {
+                        return;
+                    }
+
+                    const squareKey = `${row},${col}`;
+                    const top = getLineKey({ row, col }, { row, col: col + 1 });
+                    const bottom = getLineKey(
+                        { row: row + 1, col },
+                        { row: row + 1, col: col + 1 }
+                    );
+                    const left = getLineKey({ row, col }, { row: row + 1, col });
+                    const right = getLineKey(
+                        { row, col: col + 1 },
+                        { row: row + 1, col: col + 1 }
+                    );
+
+                    if (
+                        normalizedLines.has(top) &&
+                        normalizedLines.has(bottom) &&
+                        normalizedLines.has(left) &&
+                        normalizedLines.has(right)
+                    ) {
+                        completedSquares.push(squareKey);
+                    }
+                };
+
+                if (isHorizontal) {
+                    maybeAddCompletedSquare(start.row - 1, Math.min(start.col, end.col));
+                    maybeAddCompletedSquare(start.row, Math.min(start.col, end.col));
+                } else {
+                    maybeAddCompletedSquare(Math.min(start.row, end.row), start.col - 1);
+                    maybeAddCompletedSquare(Math.min(start.row, end.row), start.col);
+                }
+
+                return completedSquares;
+            };
+
             const createPlayer = ({
                 name,
                 sessionId,
@@ -341,15 +414,36 @@ export async function installSharedMockMultiplayer(
             });
 
             const notifySubscribers = () => {
+                if (connectionState !== 'connected') {
+                    return;
+                }
+
                 const sharedState = ensureSharedState();
                 const room = getActiveRoom(sharedState);
                 const roomPayload = toRoomPayload(room);
                 const gamePayload = clone(room?.gameState || null);
 
+                lastDeliveredRoomState = clone(roomPayload);
+
                 roomSubscribers.forEach((callback) => callback(roomPayload));
 
                 if (gamePayload) {
+                    lastDeliveredGameState = clone(gamePayload);
                     gameSubscribers.forEach((callback) => callback(gamePayload));
+                }
+            };
+
+            const setConnectionState = (nextState) => {
+                if (connectionState === nextState) {
+                    return;
+                }
+
+                const previousState = connectionState;
+                connectionState = nextState;
+                connectionStateListeners.forEach((listener) => listener(nextState, previousState));
+
+                if (nextState === 'connected') {
+                    notifySubscribers();
                 }
             };
 
@@ -367,13 +461,17 @@ export async function installSharedMockMultiplayer(
                 getSnapshot() {
                     const sharedState = ensureSharedState();
                     return {
+                        connectionState,
                         currentRoomId,
+                        lastDeliveredGameState: clone(lastDeliveredGameState),
+                        lastDeliveredRoomState: clone(lastDeliveredRoomState),
                         leaveRoomCalls,
                         room: clone(getActiveRoom(sharedState)),
                         rooms: clone(sharedState.rooms),
                         sessionId: initialSessionId,
                     };
                 },
+                setConnectionState,
             };
 
             window.ShapeKeeperConvex = {
@@ -411,7 +509,7 @@ export async function installSharedMockMultiplayer(
                     return clone(getActiveRoom()?.gameState || null);
                 },
                 getConnectionState() {
-                    return 'connected';
+                    return connectionState;
                 },
                 getCurrentRoomId() {
                     return currentRoomId;
@@ -485,8 +583,11 @@ export async function installSharedMockMultiplayer(
                     return { success: true };
                 },
                 onConnectionStateChange(listener) {
-                    listener('connected', 'connected');
-                    return () => {};
+                    connectionStateListeners.add(listener);
+                    listener(connectionState, connectionState);
+                    return () => {
+                        connectionStateListeners.delete(listener);
+                    };
                 },
                 async startGame() {
                     const sharedState = ensureSharedState();
@@ -517,11 +618,92 @@ export async function installSharedMockMultiplayer(
 
                     return { success: true };
                 },
+                async drawLine(lineKey) {
+                    const sharedState = ensureSharedState();
+                    const room = getActiveRoom(sharedState);
+
+                    if (!room) {
+                        return { error: 'Not in a room' };
+                    }
+
+                    if (!room.gameState) {
+                        return { error: 'Game has not started' };
+                    }
+
+                    const player = getLocalPlayer(room);
+                    if (!player || player.playerIndex > 1) {
+                        return { error: 'Player not found' };
+                    }
+
+                    if (room.gameState.room.currentPlayerIndex !== player.playerIndex) {
+                        return { error: 'Not your turn' };
+                    }
+
+                    const existingLines = room.gameState.lines || [];
+                    if (existingLines.some((line) => line.lineKey === lineKey)) {
+                        return { error: 'Line already drawn' };
+                    }
+
+                    const completedSquareKeys = getSquareKeysCompletedByLine(
+                        existingLines.map((line) => line.lineKey),
+                        lineKey,
+                        room.gridSize
+                    ).filter(
+                        (squareKey) =>
+                            !(room.gameState.squares || []).some(
+                                (square) => square.squareKey === squareKey
+                            )
+                    );
+
+                    room.gameState.lines = [
+                        ...existingLines,
+                        {
+                            lineKey,
+                            playerIndex: player.playerIndex,
+                        },
+                    ];
+
+                    if (completedSquareKeys.length > 0) {
+                        room.gameState.squares = [
+                            ...(room.gameState.squares || []),
+                            ...completedSquareKeys.map((squareKey) => ({
+                                squareKey,
+                                playerIndex: player.playerIndex,
+                            })),
+                        ];
+
+                        room.gameState.players = (room.gameState.players || []).map((entry) =>
+                            entry.playerIndex === player.playerIndex
+                                ? {
+                                      ...entry,
+                                      score: entry.score + completedSquareKeys.length,
+                                  }
+                                : entry
+                        );
+                    } else {
+                        room.gameState.room.currentPlayerIndex = player.playerIndex === 0 ? 1 : 0;
+                    }
+
+                    room.updatedAt = Date.now();
+                    room.gameState.room.status = room.status;
+                    room.gameState.room.updatedAt = room.updatedAt;
+
+                    writeSharedState(sharedState);
+                    notifySubscribers();
+
+                    return {
+                        success: true,
+                        completedSquares: completedSquareKeys.length,
+                        completedTriangles: 0,
+                        keepTurn: completedSquareKeys.length > 0,
+                    };
+                },
                 subscribeToGameState(callback) {
                     gameSubscribers.add(callback);
 
                     const gameState = clone(getActiveRoom()?.gameState || null);
                     if (gameState) {
+                        lastDeliveredGameState = clone(gameState);
                         callback(gameState);
                     }
 
@@ -531,7 +713,9 @@ export async function installSharedMockMultiplayer(
                 },
                 subscribeToRoom(callback) {
                     roomSubscribers.add(callback);
-                    callback(toRoomPayload(getActiveRoom()));
+                    const roomPayload = toRoomPayload(getActiveRoom());
+                    lastDeliveredRoomState = clone(roomPayload);
+                    callback(roomPayload);
                     return () => {
                         roomSubscribers.delete(callback);
                     };

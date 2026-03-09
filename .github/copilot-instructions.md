@@ -32,7 +32,7 @@ ShapeKeeper is a Dots and Boxes game with local and online multiplayer.
 - **`src/ui/MenuNavigation.js`**: Active multiplayer menu and startup-flow orchestration used by `welcome.js`.
 - **`src/ui/MultiplayerStartup.js`**: Startup state controller for multiplayer match boot, timeout handling, and first-authoritative-state tracking.
 - **`playwright.config.js`**: Browser regression configuration for the no-build runtime, serving the app over local HTTP during Playwright runs.
-- **`tests/e2e/`**: Playwright smoke and multiplayer regression coverage, including startup recovery and host/guest startup validation.
+- **`tests/e2e/`**: Playwright smoke and multiplayer regression coverage, including startup recovery, host/guest startup validation, reconnect-turn recovery, duplicate-move sync checks, and lobby host-transfer validation.
 - **`src/ui/`**: Active UI support modules currently used by `welcome.js`.
 - **`utils.js`**: Shared root-level runtime utilities used by active gameplay modules.
 
@@ -139,6 +139,8 @@ getLineKey(dot1, dot2) {
 - Phase 5 has now started with a working Playwright configuration, smoke coverage, startup timeout/retry/leave coverage, and a two-client host/guest startup check using a shared browser-side multiplayer fixture.
 - The first two-client browser tests exposed real runtime regressions in `src/ui/MenuNavigation.js`; use browser coverage to validate object ownership and runtime call paths rather than assuming parity with local/unit-only checks.
 - The shared browser-side multiplayer fixture in `tests/e2e/helpers/bootstrap.js` should be extended for reconnect, sync, and lobby edge cases instead of duplicating ad hoc mocks across new specs.
+- `tests/e2e/multiplayer-sync.spec.js` now validates reconnect recovery through the visible turn indicator, duplicate-line rejection without UI drift, and lobby host transfer when the original host leaves.
+- Treat the browser-visible turn indicator and loading overlay phases as part of the regression contract for multiplayer reliability; if they drift during sync or reconnect flows, treat it as a real product bug.
 - The current startup hardening lives in active `src/ui/` code, but it still participates in the approved runtime path through `welcome.js`; treat it as production runtime code, not speculative refactor space.
 - Use the competition roadmap in `docs/planning/COMPETITION_PRODUCTION_ROADMAP.md`
     as the source of truth for phase sequencing and go/no-go criteria.

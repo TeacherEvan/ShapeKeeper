@@ -32,6 +32,18 @@ export class DotsAndBoxesGame {
         this.renderer = new Renderer(this);
         this.inputHandler = new InputHandler(this.canvas, this);
 
+        this.linkSystemState(this.animationSystem, [
+            'effectAnimations',
+            'invalidLineFlash',
+            'lineDrawings',
+            'multiplierAnimations',
+            'pulsatingLines',
+            'sparkleEmojis',
+            'squareAnimations',
+            'touchVisuals',
+        ]);
+        this.linkSystemState(this.particleSystem, ['ambientParticles', 'particles']);
+
         // Setup canvas and initialize game
         this.gameState.setupCanvas();
         this.effectSystem.initializeMultipliers();
@@ -52,6 +64,62 @@ export class DotsAndBoxesGame {
         if (!this.options.deferInitialReady) {
             this.uiManager.displayLoadingSkeleton(false);
         }
+    }
+
+    linkSystemState(system, properties) {
+        properties.forEach((property) => {
+            if (typeof system[property] === 'undefined') {
+                system[property] = this[property];
+            }
+
+            Object.defineProperty(this, property, {
+                configurable: true,
+                enumerable: true,
+                get: () => system[property],
+                set: (value) => {
+                    system[property] = value;
+                },
+            });
+        });
+    }
+
+    getLineKey(dot1, dot2) {
+        return this.gameLogic.getLineKey(dot1, dot2);
+    }
+
+    parseLineKey(lineKey) {
+        return this.gameLogic.parseLineKey(lineKey);
+    }
+
+    parseSquareKey(squareKey) {
+        return this.gameLogic.parseSquareKey(squareKey);
+    }
+
+    playLineSound() {
+        this.soundManager.playLineSound();
+    }
+
+    playSquareSound(comboCount = 1) {
+        this.soundManager.playSquareSound(comboCount);
+    }
+
+    triggerSquareAnimation(squareKey, playerNumber = this.currentPlayer) {
+        const playerColor = playerNumber === 1 ? this.player1Color : this.player2Color;
+
+        this.animationSystem.triggerSquareAnimation(
+            squareKey,
+            this.gameLogic.parseSquareKey,
+            this.offsetX,
+            this.offsetY,
+            this.cellSize,
+            playerColor,
+            this.particleSystem.spawnParticles.bind(this.particleSystem),
+            this.particleSystem.spawnSparkleEmojis?.bind(this.particleSystem)
+        );
+    }
+
+    showWinner() {
+        this.uiManager.showWinner();
     }
 
     /**

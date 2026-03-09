@@ -123,6 +123,8 @@ function replaceSubscription(currentCleanup, nextCleanup) {
 }
 
 function subscribeToRoomUpdates() {
+    refreshConnectionStateMonitoring();
+
     if (!window.ShapeKeeperConvex?.subscribeToRoom) {
         return;
     }
@@ -134,6 +136,8 @@ function subscribeToRoomUpdates() {
 }
 
 function subscribeToGameUpdates() {
+    refreshConnectionStateMonitoring();
+
     if (!window.ShapeKeeperConvex?.subscribeToGameState) {
         return;
     }
@@ -200,6 +204,12 @@ function ensureConnectionStateMonitoring() {
             }
         }
     );
+}
+
+function refreshConnectionStateMonitoring() {
+    connectionStateCleanup?.();
+    connectionStateCleanup = null;
+    ensureConnectionStateMonitoring();
 }
 
 function resetStartupState({ preserveLastRoomState = false } = {}) {
@@ -313,12 +323,12 @@ async function retryGameStartupSync(reason = 'manual-retry') {
         game.uiManager.displayLoadingSkeleton(true);
     }
 
-    subscribeToGameUpdates();
     const { retryCount } = multiplayerStartup.getSnapshot();
     setStartupState(STARTUP_STATES.AWAITING_FIRST_AUTHORITATIVE_STATE, {
         hint: `Retry attempt ${retryCount}. Waiting for the latest board state.`,
     });
     multiplayerStartup.startAwaitingFirstState();
+    subscribeToGameUpdates();
     await primeAuthoritativeGameState(reason);
 }
 
@@ -506,7 +516,7 @@ export function handleGameStateUpdate(gameState) {
             }
 
             // Trigger the square animation (which handles particles and kiss emojis)
-            game.triggerSquareAnimation(key);
+            game.triggerSquareAnimation(key, square.playerIndex + 1);
 
             // Play square sound
             game.playSquareSound(game.comboCount);
