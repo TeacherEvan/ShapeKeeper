@@ -4,8 +4,16 @@
 
 **This project is in a hybrid state.**
 
-- **Active Production Code:** `game.js`, `welcome.js`, `convex-client.js`. These are loaded directly in `index.html`. **Edit these files to make changes.**
-- **Future/Inactive Code:** `src/` directory. These are ES6 modules for a future refactor. **DO NOT EDIT** `src/` files unless explicitly working on the migration. They are NOT loaded by the application.
+- **Browser entrypoint:** `index.html`
+- **Loaded at runtime:** `convex-client.js` as a classic script, then `game.js` and `welcome.js` as browser ES module entry scripts
+- **Authoritative runtime shell for the competition branch:** root-level runtime files (`game.js`, `welcome.js`, `convex-client.js`, `dots-and-boxes-game.js`, and the root modules they import)
+- **Important nuance:** `src/` is **not globally inactive**. `welcome.js` currently imports active `src/ui/` modules, so those files are part of the live runtime path. Do **not** treat the whole `src/` tree as safe speculative refactor territory.
+
+### Practical edit rule
+
+- **Edit root runtime files first** when changing gameplay, boot flow, Convex integration, or rendering behavior.
+- **Edit active `src/ui/` modules only when the current runtime already imports them** (for example `MenuNavigation.js`, `ThemeManager.js`, `LobbyManager.js`, `WelcomeAnimation.js`).
+- **Do not perform broad `src/` migration work** unless the task is explicitly about the refactor.
 
 ## Project Overview
 
@@ -17,12 +25,14 @@ ShapeKeeper is a Dots and Boxes game with local and online multiplayer.
 
 ## Key Files & Components
 
-- **`game.js`**: The monolith. Contains `DotsAndBoxesGame` class, rendering loop, game logic, input handling, and `SoundManager`.
-- **`welcome.js`**: Handles UI navigation, lobby creation, theme management, and `ShapeKeeperConvex` integration.
-- **`convex/`**: Backend logic.
-    - `schema.ts`: Defines `rooms`, `players`, `lines`, `squares`.
-    - `games.ts`: Core game mutations (`drawLine`, `revealMultiplier`).
-    - `rooms.ts`: Room lifecycle management.
+- **`index.html`**: Browser entrypoint. Loads Convex first, then the runtime entry scripts.
+- **`game.js`**: Thin ES module entry script that exposes `DotsAndBoxesGame` to the browser runtime.
+- **`dots-and-boxes-game.js`**: Main `DotsAndBoxesGame` class and orchestrator for root-level game systems.
+- **`welcome.js`**: ES module entry script for menu bootstrapping, theme initialization, and Convex update wiring.
+- **`src/ui/MenuNavigation.js`**: Active multiplayer menu and startup-flow orchestration used by `welcome.js`.
+- **`src/ui/MultiplayerStartup.js`**: Startup state controller for multiplayer match boot, timeout handling, and first-authoritative-state tracking.
+- **`src/ui/`**: Active UI support modules currently used by `welcome.js`.
+- **`utils.js`**: Shared root-level runtime utilities used by active gameplay modules.
 
 ## Critical Conventions
 
@@ -45,9 +55,16 @@ getLineKey(dot1, dot2) {
 
 - **Local**: Optimistic updates apply immediately for responsiveness.
 - **Remote**: `ShapeKeeperConvex.drawLine()` sends mutation.
-- **Reconciliation**: `handleGameStateUpdate` (in `welcome.js`) receives the authoritative state from Convex and updates the local `game` instance.
+- **Reconciliation**: `handleGameStateUpdate` (implemented in `src/ui/MenuNavigation.js` and exposed by `welcome.js`) receives the authoritative state from Convex and updates the local `game` instance.
 
-### 3. Coordinate System
+### 3. Multiplayer Startup Contract
+
+- Startup should progress through explicit client states rather than loosely ordered side effects.
+- The loading skeleton must remain visible for multiplayer startup until the first authoritative game-state payload is applied successfully.
+- Startup timeout and retry behavior are orchestrated through `src/ui/MultiplayerStartup.js`; prefer extending that controller rather than scattering new startup flags through the UI.
+- When changing multiplayer startup or reconnect behavior, keep subscription setup/cleanup explicit in `src/ui/MenuNavigation.js` and avoid relying on ad hoc globals.
+
+### 4. Coordinate System
 
 - Grid is 0-indexed.
 - `lines` are stored as a Set of keys.
@@ -56,8 +73,34 @@ getLineKey(dot1, dot2) {
 ## Development Workflow
 
 - **Start Dev Server**: `npm run dev` (Runs `convex dev` and serves frontend).
+- **Serve Frontend Over HTTP**: Use `npm run start`, `python -m http.server 8000`, or equivalent. Do **not** open `index.html` with `file://` because the app boots with browser ES modules.
 - **Verify Code**: `npm run verify` (Typechecks Convex and validates JS syntax).
+- **Run Tests**: `npm test`
 - **Deploy**: `npm run deploy`.
+
+## Runtime Contract
+
+- `index.html` is the only supported browser entrypoint.
+- `convex-client.js` remains a classic script because it exposes
+    `window.ShapeKeeperConvex`.
+- `game.js` and `welcome.js` are explicit browser ES module entry scripts.
+- `window.DotsAndBoxesGame`, `window.handleRoomUpdate`, and
+    `window.handleGameStateUpdate` are still part of the current runtime
+    contract.
+- If a browser load appears blank after a change, inspect the module graph for
+    missing exports, stale global assumptions, or import path errors before
+    changing architecture.
+
+## Validation Expectations
+
+- For runtime changes, validate in this order:
+    1. `npm run verify`
+    2. `npm test`
+    3. browser boot over local HTTP
+- For multiplayer startup changes, also verify that the loading overlay copy renders, the recovery controls exist, and the supported create/join flow still reaches the lobby or match screen as expected.
+- Do not consider a runtime change complete if syntax passes but the browser
+    entry modules fail to initialize.
+- Prefer fixing explicit dependency edges over reintroducing broad globals.
 
 ## Game Logic Reference
 
@@ -68,6 +111,18 @@ getLineKey(dot1, dot2) {
 
 ## Common Modifications
 
-- **Adjust Grid/Canvas**: `DotsAndBoxesGame` constructor and `setupCanvas` in `game.js`.
-- **Change Colors/Theme**: CSS variables in `styles.css` (e.g., `--bg-primary`, `--text-primary`).
-- **Update Sounds**: `SoundManager` class in `game.js` (uses Web Audio API).
+- **Adjust Grid/Canvas**: `DotsAndBoxesGame` constructor and `setupCanvas` in `dots-and-boxes-game.js` / root runtime modules.
+- **Change Colors/Theme**: CSS variables in `styles.css` and theme wiring in `src/ui/ThemeManager.js`.
+- **Update Menu/Lobby Flow**: `welcome.js` and active `src/ui/` modules, especially `MenuNavigation.js`.
+- **Update Multiplayer Startup / Recovery**: `src/ui/MenuNavigation.js`, `src/ui/MultiplayerStartup.js`, `index.html`, and `styles.css`.
+- **Update Sounds**: `sound-manager.js` and any related root runtime integration.
+
+## Phase 2 / Phase 3 Documentation Notes
+
+- The classic-script/module mismatch at boot has been removed.
+- If the browser loads but nothing initializes, inspect the module graph for missing exports or old global assumptions before changing architecture.
+- For runtime stabilization tasks, prefer small explicit imports over broad refactors.
+- Phase 3 has started with a dedicated multiplayer startup controller, first-authoritative-state gating, timeout recovery UI, and unit coverage for the startup state machine.
+- The current startup hardening lives in active `src/ui/` code, but it still participates in the approved runtime path through `welcome.js`; treat it as production runtime code, not speculative refactor space.
+- Use the competition roadmap in `docs/planning/COMPETITION_PRODUCTION_ROADMAP.md`
+    as the source of truth for phase sequencing and go/no-go criteria.

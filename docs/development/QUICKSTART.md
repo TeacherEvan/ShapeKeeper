@@ -35,6 +35,9 @@ npm run start
 
 Then open `http://localhost:8000`
 
+> The frontend boots with browser ES modules. Do not open `index.html`
+> directly from disk with `file://`; use a local web server instead.
+
 ---
 
 ## 🎮 How to Play

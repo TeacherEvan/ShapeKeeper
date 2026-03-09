@@ -3,9 +3,324 @@
  * @module ui/MenuNavigation
  */
 
-import { requestFullscreen } from './Fullscreen.js';
-import { getSelectedGridSize, isFullscreenTriggered, setFullscreenTriggered, setSelectedGridSize, showScreen } from './ScreenTransition.js';
+import { DotsAndBoxesGame } from '../../dots-and-boxes-game.js';
+import { exitFullscreen, requestFullscreen } from './Fullscreen.js';
+import {
+    STARTUP_COPY,
+    STARTUP_STATES,
+    createMultiplayerStartupController,
+} from './MultiplayerStartup.js';
+import {
+    getSelectedGridSize,
+    isFullscreenTriggered,
+    setFullscreenTriggered,
+    setSelectedGridSize,
+    showScreen,
+} from './ScreenTransition.js';
+import { toggleTheme } from './ThemeManager.js';
 import { showToast } from './Toast.js';
+
+const STARTUP_TIMEOUT_MS = 8000;
+
+const multiplayerStartup = createMultiplayerStartupController({
+    timeoutMs: STARTUP_TIMEOUT_MS,
+    onTimeout: () => {
+        console.warn('[Startup] Timed out waiting for first authoritative state');
+        if (game?.uiManager) {
+            game.uiManager.displayLoadingSkeleton(true);
+        }
+        setStartupState(STARTUP_STATES.FATAL_STARTUP_FAILURE, { showActions: true });
+    },
+});
+
+let roomSubscriptionCleanup = null;
+let gameStateSubscriptionCleanup = null;
+let connectionStateCleanup = null;
+
+function getStartupOverlayElements() {
+    return {
+        skeleton: document.getElementById('gameLoadingSkeleton'),
+        message: document.getElementById('gameLoadingMessage'),
+        hint: document.getElementById('gameLoadingHint'),
+        actions: document.getElementById('gameLoadingActions'),
+        retryButton: document.getElementById('retryGameStartup'),
+        leaveButton: document.getElementById('leaveFailedStartup'),
+    };
+}
+
+function updateStartupOverlay({
+    visible,
+    state = multiplayerStartup.getSnapshot().phase,
+    message,
+    hint,
+    showActions = false,
+}) {
+    const { skeleton, message: messageEl, hint: hintEl, actions } = getStartupOverlayElements();
+
+    if (!skeleton) {
+        return;
+    }
+
+    skeleton.classList.toggle('hidden', !visible);
+    skeleton.dataset.state = state;
+
+    if (messageEl) {
+        messageEl.textContent = message;
+    }
+
+    if (hintEl) {
+        hintEl.textContent = hint;
+    }
+
+    if (actions) {
+        actions.hidden = !showActions;
+    }
+}
+
+function setStartupState(nextState, overrides = {}) {
+    const { previousPhase } = multiplayerStartup.setPhase(nextState);
+    const snapshot = multiplayerStartup.getSnapshot();
+
+    const copy = STARTUP_COPY[nextState] || STARTUP_COPY[STARTUP_STATES.IDLE] || {};
+    const message = overrides.message || copy.message || 'Preparing match...';
+    const hint = overrides.hint || copy.hint || '';
+    const showActions = overrides.showActions || false;
+    const visible =
+        overrides.visible ??
+        (nextState !== STARTUP_STATES.IDLE && nextState !== STARTUP_STATES.IN_MATCH);
+
+    console.log('[Startup]', `${previousPhase} → ${nextState}`, {
+        retryCount: snapshot.retryCount,
+        firstAuthoritativeStateReceived: snapshot.firstAuthoritativeStateReceived,
+    });
+
+    updateStartupOverlay({
+        visible,
+        state: nextState,
+        message,
+        hint,
+        showActions,
+    });
+}
+
+function setActiveGame(nextGame) {
+    game = nextGame;
+    setMenuNavigationDependencies({
+        lobbyManager,
+        welcomeAnimation,
+        game,
+    });
+}
+
+function replaceSubscription(currentCleanup, nextCleanup) {
+    currentCleanup?.();
+    return nextCleanup || null;
+}
+
+function subscribeToRoomUpdates() {
+    if (!window.ShapeKeeperConvex?.subscribeToRoom) {
+        return;
+    }
+
+    roomSubscriptionCleanup = replaceSubscription(
+        roomSubscriptionCleanup,
+        window.ShapeKeeperConvex.subscribeToRoom(handleRoomUpdate)
+    );
+}
+
+function subscribeToGameUpdates() {
+    if (!window.ShapeKeeperConvex?.subscribeToGameState) {
+        return;
+    }
+
+    gameStateSubscriptionCleanup = replaceSubscription(
+        gameStateSubscriptionCleanup,
+        window.ShapeKeeperConvex.subscribeToGameState(handleGameStateUpdate)
+    );
+}
+
+function clearSubscriptions({ room = false, gameState = false } = {}) {
+    if (room) {
+        roomSubscriptionCleanup?.();
+        roomSubscriptionCleanup = null;
+    }
+
+    if (gameState) {
+        gameStateSubscriptionCleanup?.();
+        gameStateSubscriptionCleanup = null;
+    }
+}
+
+function hasActiveMultiplayerSession() {
+    return Boolean(
+        game?.isMultiplayer ||
+        multiplayerStartup.getSnapshot().lastRoomState?.status === 'playing' ||
+        window.ShapeKeeperConvex?.getCurrentRoomId?.()
+    );
+}
+
+function ensureConnectionStateMonitoring() {
+    if (connectionStateCleanup || !window.ShapeKeeperConvex?.onConnectionStateChange) {
+        return;
+    }
+
+    connectionStateCleanup = window.ShapeKeeperConvex.onConnectionStateChange(
+        async (newState, oldState) => {
+            if (newState === oldState || !hasActiveMultiplayerSession()) {
+                return;
+            }
+
+            const { phase } = multiplayerStartup.getSnapshot();
+
+            if (newState === 'reconnecting') {
+                game?.uiManager?.displayLoadingSkeleton(true);
+                setStartupState(STARTUP_STATES.RECONNECTING);
+                return;
+            }
+
+            if (newState === 'disconnected' && phase === STARTUP_STATES.IN_MATCH) {
+                game?.uiManager?.displayLoadingSkeleton(true);
+                setStartupState(STARTUP_STATES.DESYNCED, {
+                    visible: true,
+                    hint: 'Connection dropped. Waiting to recover the live board state.',
+                });
+                return;
+            }
+
+            if (
+                newState === 'connected' &&
+                (phase === STARTUP_STATES.RECONNECTING || phase === STARTUP_STATES.DESYNCED)
+            ) {
+                await retryGameStartupSync('connection-recovered');
+            }
+        }
+    );
+}
+
+function resetStartupState({ preserveLastRoomState = false } = {}) {
+    multiplayerStartup.reset({ preserveLastRoomState });
+
+    setStartupState(STARTUP_STATES.IDLE, {
+        visible: false,
+        message: 'Preparing live match...',
+        hint: 'Waiting for the first authoritative board state.',
+    });
+}
+
+async function primeAuthoritativeGameState(reason = 'startup') {
+    if (!window.ShapeKeeperConvex?.getGameState) {
+        return;
+    }
+
+    try {
+        console.log('[Startup] Requesting authoritative game snapshot', { reason });
+        const snapshot = await window.ShapeKeeperConvex.getGameState();
+        if (snapshot) {
+            handleGameStateUpdate(snapshot);
+        }
+    } catch (error) {
+        console.error('[Startup] Failed to fetch authoritative game snapshot:', error);
+    }
+}
+
+async function teardownMultiplayerSession({
+    leaveRoom = false,
+    targetScreen = 'mainMenuScreen',
+    preserveLastRoomState = false,
+} = {}) {
+    multiplayerStartup.clearAwaitingTimeout();
+    clearSubscriptions({ room: true, gameState: true });
+
+    if (
+        leaveRoom &&
+        window.ShapeKeeperConvex?.leaveRoom &&
+        window.ShapeKeeperConvex.getCurrentRoomId()
+    ) {
+        await window.ShapeKeeperConvex.leaveRoom();
+    }
+
+    lobbyManager.leaveRoom();
+    setActiveGame(null);
+    resetStartupState({ preserveLastRoomState });
+    showScreen(targetScreen);
+
+    if (welcomeAnimation) {
+        welcomeAnimation.moveBackToMainMenu();
+    }
+}
+
+function initializeMultiplayerGame(roomState) {
+    multiplayerStartup.beginGameShell(roomState);
+
+    setStartupState(STARTUP_STATES.INITIALIZING_GAME_SHELL);
+
+    if (welcomeAnimation) {
+        welcomeAnimation.moveToGameScreen();
+    }
+
+    showScreen('gameScreen');
+    requestFullscreen();
+
+    // Get player colors from room state (sorted by playerIndex)
+    const sortedPlayers = [...roomState.players].sort((a, b) => a.playerIndex - b.playerIndex);
+    const player1Color = sortedPlayers[0]?.color || '#FF0000';
+    const player2Color = sortedPlayers[1]?.color || '#0000FF';
+
+    // Find my player in the room
+    const mySessionId = window.ShapeKeeperConvex?.getSessionId();
+    const meInRoom = roomState.players.find((p) => p.sessionId === mySessionId);
+
+    // Initialize game with room settings and multiplayer mode.
+    const partyModeEnabled = roomState.partyMode !== false;
+    const multiplayerGame = new DotsAndBoxesGame(roomState.gridSize, player1Color, player2Color, {
+        partyModeEnabled,
+        deferInitialReady: true,
+    });
+    multiplayerGame.isMultiplayer = true;
+    multiplayerGame.myPlayerNumber = (meInRoom?.playerIndex ?? 0) + 1;
+    multiplayerGame.isHost = roomState.hostPlayerId === mySessionId;
+    setActiveGame(multiplayerGame);
+    game.uiManager.displayLoadingSkeleton(true);
+
+    console.log('[Startup] Game shell initialized', {
+        myPlayerNumber: game.myPlayerNumber,
+        isHost: game.isHost,
+        roomCode: roomState.roomCode,
+    });
+
+    setStartupState(STARTUP_STATES.AWAITING_FIRST_AUTHORITATIVE_STATE);
+    multiplayerStartup.startAwaitingFirstState();
+
+    subscribeToGameUpdates();
+    primeAuthoritativeGameState('room-playing-transition');
+}
+
+async function retryGameStartupSync(reason = 'manual-retry') {
+    if (!multiplayerStartup.getSnapshot().lastRoomState || !window.ShapeKeeperConvex) {
+        return;
+    }
+
+    multiplayerStartup.markRetry();
+
+    setStartupState(STARTUP_STATES.RECONNECTING);
+
+    if (game?.uiManager) {
+        game.uiManager.displayLoadingSkeleton(true);
+    }
+
+    subscribeToGameUpdates();
+    const { retryCount } = multiplayerStartup.getSnapshot();
+    setStartupState(STARTUP_STATES.AWAITING_FIRST_AUTHORITATIVE_STATE, {
+        hint: `Retry attempt ${retryCount}. Waiting for the latest board state.`,
+    });
+    multiplayerStartup.startAwaitingFirstState();
+    await primeAuthoritativeGameState(reason);
+}
+
+async function leaveFailedStartup() {
+    await teardownMultiplayerSession({ leaveRoom: true });
+    showToast('Left multiplayer match.', 'info', 2000);
+}
 
 /**
  * Handle room state updates from Convex subscription
@@ -15,11 +330,16 @@ import { showToast } from './Toast.js';
 export function handleRoomUpdate(roomState) {
     if (!roomState) {
         // Room was deleted or doesn't exist
+        resetStartupState();
+        clearSubscriptions({ room: true, gameState: true });
+        setActiveGame(null);
         showToast('Room no longer exists', 'warning');
         lobbyManager.leaveRoom();
         showScreen('mainMenuScreen');
         return;
     }
+
+    multiplayerStartup.setLastRoomState(roomState);
 
     // Update local lobby manager state from server
     lobbyManager.roomCode = roomState.roomCode;
@@ -69,48 +389,21 @@ export function handleRoomUpdate(roomState) {
 
     // Check if game has started
     if (roomState.status === 'playing') {
-        // Transition to game screen
-        if (welcomeAnimation) {
-            welcomeAnimation.moveToGameScreen();
+        if (
+            multiplayerStartup.getSnapshot().phase !== STARTUP_STATES.IN_MATCH &&
+            !multiplayerStartup.getSnapshot().startupBeganAt
+        ) {
+            initializeMultiplayerGame(roomState);
         }
-
-        showScreen('gameScreen');
-        requestFullscreen();
-
-        // Get player colors from room state (sorted by playerIndex)
-        const sortedPlayers = roomState.players.sort((a, b) => a.playerIndex - b.playerIndex);
-        const player1Color = sortedPlayers[0]?.color || '#FF0000';
-        const player2Color = sortedPlayers[1]?.color || '#0000FF';
-
-        // Find my player in the room
-        const mySessionId = window.ShapeKeeperConvex?.getSessionId();
-        const meInRoom = roomState.players.find((p) => p.sessionId === mySessionId);
-
-        // Initialize game with room settings and multiplayer mode
-        const partyModeEnabled = roomState.partyMode !== false; // Default to true
-        game = new DotsAndBoxesGame(roomState.gridSize, player1Color, player2Color, {
-            partyModeEnabled,
-        });
-        game.isMultiplayer = true;
-        // playerIndex is 0-based, convert to 1-based player number (1 or 2)
-        game.myPlayerNumber = (meInRoom?.playerIndex ?? 0) + 1;
-        // Set if this player is the host
-        game.isHost = roomState.hostPlayerId === mySessionId;
-
-        console.log(
-            '[Game] Started as Player',
-            game.myPlayerNumber,
-            'isHost:',
-            game.isHost,
-            'sessionId:',
-            mySessionId
-        );
-
-        // Subscribe to game state updates
-        window.ShapeKeeperConvex.subscribeToGameState(handleGameStateUpdate);
-
-        showToast('Game started! You are Player ' + game.myPlayerNumber, 'success', 2000);
         return;
+    }
+
+    if (roomState.status === 'lobby') {
+        if (lobbyManager.canStartGame()) {
+            setStartupState(STARTUP_STATES.ROOM_READY_TO_START, { visible: false });
+        } else if (multiplayerStartup.getSnapshot().phase !== STARTUP_STATES.IDLE) {
+            setStartupState(STARTUP_STATES.ROOM_SUBSCRIBED, { visible: false });
+        }
     }
 
     // Update UI if still in lobby
@@ -124,6 +417,15 @@ export function handleRoomUpdate(roomState) {
  */
 export function handleGameStateUpdate(gameState) {
     if (!gameState || !game) return;
+
+    const firstStateResult = multiplayerStartup.markFirstAuthoritativeState();
+    const { isFirstAuthoritativeState } = firstStateResult;
+    if (isFirstAuthoritativeState) {
+        console.log('[Startup] First authoritative game state received', {
+            startupDurationMs: firstStateResult.startupDurationMs,
+            retryCount: firstStateResult.retryCount,
+        });
+    }
 
     // Update current player turn (server uses 0-based index, game uses 1-based player number)
     // currentPlayerIndex 0 = Player 1, currentPlayerIndex 1 = Player 2
@@ -224,12 +526,20 @@ export function handleGameStateUpdate(gameState) {
     // Redraw and update UI
     game.draw();
     game.updateUI();
+
+    if (isFirstAuthoritativeState) {
+        game.uiManager.displayLoadingSkeleton(false);
+        setStartupState(STARTUP_STATES.IN_MATCH, { visible: false });
+        showToast('Live match synchronized!', 'success', 2000);
+    }
 }
 
 /**
  * Initialize all menu navigation and event listeners
  */
 export function initializeMenuNavigation() {
+    ensureConnectionStateMonitoring();
+
     // ========================================
     // Theme Toggle
     // ========================================
@@ -247,6 +557,7 @@ export function initializeMenuNavigation() {
 
         // Use Convex backend if available
         if (window.ShapeKeeperConvex) {
+            setStartupState(STARTUP_STATES.CREATING_OR_JOINING_ROOM, { visible: false });
             showToast('Creating room...', 'info', 2000);
             const partyMode = true; // Default to true, will be controlled in lobby
             const result = await window.ShapeKeeperConvex.createRoom(
@@ -261,7 +572,8 @@ export function initializeMenuNavigation() {
             }
 
             // Subscribe to room updates
-            window.ShapeKeeperConvex.subscribeToRoom(handleRoomUpdate);
+            subscribeToRoomUpdates();
+            setStartupState(STARTUP_STATES.ROOM_SUBSCRIBED, { visible: false });
 
             lobbyManager.roomCode = result.roomCode;
             lobbyManager.isHost = true;
@@ -363,6 +675,7 @@ export function initializeMenuNavigation() {
 
         // Use Convex backend if available
         if (window.ShapeKeeperConvex) {
+            setStartupState(STARTUP_STATES.CREATING_OR_JOINING_ROOM, { visible: false });
             showToast('Joining room...', 'info', 2000);
             const result = await window.ShapeKeeperConvex.joinRoom(roomCode, playerName);
 
@@ -372,7 +685,8 @@ export function initializeMenuNavigation() {
             }
 
             // Subscribe to room updates
-            window.ShapeKeeperConvex.subscribeToRoom(handleRoomUpdate);
+            subscribeToRoomUpdates();
+            setStartupState(STARTUP_STATES.ROOM_SUBSCRIBED, { visible: false });
 
             lobbyManager.roomCode = roomCode.toUpperCase();
             lobbyManager.isHost = false;
@@ -526,10 +840,20 @@ export function initializeMenuNavigation() {
     // Leave lobby
     document.getElementById('leaveLobby').addEventListener('click', async () => {
         if (window.ShapeKeeperConvex) {
-            await window.ShapeKeeperConvex.leaveRoom();
+            await teardownMultiplayerSession({ leaveRoom: true });
+        } else {
+            lobbyManager.leaveRoom();
+            resetStartupState();
+            showScreen('mainMenuScreen');
         }
-        lobbyManager.leaveRoom();
-        showScreen('mainMenuScreen');
+    });
+
+    document.getElementById('retryGameStartup')?.addEventListener('click', () => {
+        retryGameStartupSync();
+    });
+
+    document.getElementById('leaveFailedStartup')?.addEventListener('click', () => {
+        leaveFailedStartup();
     });
 
     // ========================================
@@ -537,10 +861,16 @@ export function initializeMenuNavigation() {
     // ========================================
 
     // Exit game
-    document.getElementById('exitGame').addEventListener('click', () => {
+    document.getElementById('exitGame').addEventListener('click', async () => {
         exitFullscreen();
+        if (game?.isMultiplayer && window.ShapeKeeperConvex?.getCurrentRoomId?.()) {
+            await teardownMultiplayerSession({ leaveRoom: true });
+            return;
+        }
+
         showScreen('mainMenuScreen');
-        game = null;
+        setActiveGame(null);
+        resetStartupState();
 
         if (welcomeAnimation) {
             welcomeAnimation.moveBackToMainMenu();
@@ -554,6 +884,8 @@ export function initializeMenuNavigation() {
     // Play again
     document.getElementById('playAgain').addEventListener('click', () => {
         showScreen('mainMenuScreen');
+        setActiveGame(null);
+        resetStartupState();
 
         if (welcomeAnimation) {
             welcomeAnimation.moveBackToMainMenu();
@@ -575,7 +907,7 @@ export function updateLobbyUI() {
     const playersList = document.getElementById('playersList');
     playersList.innerHTML = '';
 
-    lobbyManager.players.forEach((player, index) => {
+    lobbyManager.players.forEach((player) => {
         const entry = document.createElement('div');
         entry.className = 'player-entry';
         if (player.isReady) entry.classList.add('ready');

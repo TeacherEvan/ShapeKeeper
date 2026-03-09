@@ -47,8 +47,11 @@ export class DotsAndBoxesGame {
         this.uiManager.updateUI();
         this.animate();
 
-        // Hide loading skeleton
-        this.uiManager.displayLoadingSkeleton(false);
+        // Hide loading skeleton unless startup flow is waiting on an
+        // authoritative multiplayer payload.
+        if (!this.options.deferInitialReady) {
+            this.uiManager.displayLoadingSkeleton(false);
+        }
     }
 
     /**

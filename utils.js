@@ -112,6 +112,32 @@ export function parseSquareKey(squareKey) {
 }
 
 /**
+ * Get the nearest dot to a screen position if it is within selection range
+ * @param {number} x - Screen x coordinate relative to the canvas
+ * @param {number} y - Screen y coordinate relative to the canvas
+ * @param {number} offsetX - Grid horizontal offset
+ * @param {number} offsetY - Grid vertical offset
+ * @param {number} cellSize - Grid cell size in pixels
+ * @param {number} gridRows - Number of grid rows
+ * @param {number} gridCols - Number of grid columns
+ * @returns {{row: number, col: number} | null} The nearest dot or null
+ */
+export function getNearestDot(x, y, offsetX, offsetY, cellSize, gridRows, gridCols) {
+    const col = Math.round((x - offsetX) / cellSize);
+    const row = Math.round((y - offsetY) / cellSize);
+
+    if (row < 0 || row >= gridRows || col < 0 || col >= gridCols) {
+        return null;
+    }
+
+    const dotX = offsetX + col * cellSize;
+    const dotY = offsetY + row * cellSize;
+    const distance = Math.hypot(x - dotX, y - dotY);
+
+    return distance <= cellSize * 0.5 ? { row, col } : null;
+}
+
+/**
  * Get the cell key for a triangle based on its vertices
  * A triangle claims the cell containing its vertices
  * @param {Array} vertices - Array of 3 vertex objects {row, col}

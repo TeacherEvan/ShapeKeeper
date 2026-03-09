@@ -258,6 +258,20 @@
                 <div id="gameLoadingSkeleton" class="canvas-skeleton">
                     <div class="loading-spinner"></div>
                     <div class="skeleton-text" style="width: 120px"></div>
+                    <p id="gameLoadingMessage" class="canvas-loading-message">
+                        Preparing live match...
+                    </p>
+                    <p id="gameLoadingHint" class="canvas-loading-hint">
+                        Waiting for the first authoritative board state.
+                    </p>
+                    <div id="gameLoadingActions" class="canvas-loading-actions" hidden>
+                        <button id="retryGameStartup" class="loading-action-btn primary" type="button">
+                            Retry Sync
+                        </button>
+                        <button id="leaveFailedStartup" class="loading-action-btn secondary" type="button">
+                            Leave Match
+                        </button>
+                    </div>
                 </div>
                 <canvas id="gameCanvas"></canvas>
             </div>
@@ -293,7 +307,7 @@
 
         <script src="https://unpkg.com/convex@1.29.3/dist/browser.bundle.js"></script>
         <script src="convex-client.js"></script>
-        <script src="game.js"></script>
-        <script src="welcome.js"></script>
+        <script type="module" src="game.js"></script>
+        <script type="module" src="welcome.js"></script>
     </body>
 </html>

@@ -17,12 +17,13 @@
 
 ### Planning (`/docs/planning/`)
 
-| Document                                                    | Description                            |
-| ----------------------------------------------------------- | -------------------------------------- |
-| [JOBCARD.md](planning/JOBCARD.md)                           | Current session work tracking          |
-| [CounterPlan.md](planning/CounterPlan.md)                   | Visual evolution roadmap (✅ Complete) |
-| [MULTIPLAYER_PLANNING.md](planning/MULTIPLAYER_PLANNING.md) | Online multiplayer architecture        |
-| [REFACTORING_PLAN.md](planning/REFACTORING_PLAN.md)         | ES6 module refactoring plan            |
+| Document                                                                  | Description                            |
+| ------------------------------------------------------------------------- | -------------------------------------- |
+| [JOBCARD.md](planning/JOBCARD.md)                                         | Current session work tracking          |
+| [CounterPlan.md](planning/CounterPlan.md)                                 | Visual evolution roadmap (✅ Complete) |
+| [MULTIPLAYER_PLANNING.md](planning/MULTIPLAYER_PLANNING.md)               | Online multiplayer architecture        |
+| [COMPETITION_ROADMAP.md](planning/COMPETITION_PRODUCTION_ROADMAP.md)      | Competition production roadmap         |
+| [REFACTORING_PLAN.md](planning/REFACTORING_PLAN.md)                       | ES6 module refactoring plan            |
 
 ### Technical (`/docs/technical/`)
 

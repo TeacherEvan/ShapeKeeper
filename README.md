@@ -62,14 +62,7 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 
 ## 🚀 Quick Start
 
-### Option 1: Direct Browser Access
-
-1. Clone or download this repository
-2. Open `index.html` in your web browser
-3. Select grid size and player colors
-4. Click "Start Game" and enjoy!
-
-### Option 2: Local Web Server
+### Option 1: Local Web Server (Recommended)
 
 ```bash
 # Using Python 3
@@ -83,6 +76,13 @@ php -S localhost:8000
 ```
 
 Then visit `http://localhost:8000` in your browser.
+
+> `game.js` and `welcome.js` are loaded as browser ES modules, so opening
+> `index.html` directly with `file://` is no longer a supported startup path.
+
+### Option 2: Live Deployment
+
+Visit [https://shape-keeper.vercel.app](https://shape-keeper.vercel.app).
 
 ## 📐 Grid Sizes
 
@@ -129,10 +129,11 @@ The game offers four preset grid sizes that automatically adapt to your display:
 ShapeKeeper/
 ├── index.html              # Main HTML structure (3-screen layout)
 ├── styles.css              # Styling and responsive design
-├── game.js                 # Core game logic and canvas rendering (~3,900 lines)
-├── welcome.js              # Screen navigation and Convex integration (~1,000 lines)
+├── game.js                 # Browser module entry for the game runtime
+├── welcome.js              # Browser module entry for lobby/UI bootstrapping
+├── dots-and-boxes-game.js  # Main DotsAndBoxesGame class and orchestrator
 ├── convex-client.js        # Convex browser API wrapper (~450 lines)
-├── src/                    # ES6 modules (partial refactoring)
+├── src/                    # Shared ES6 modules used by the current runtime
 │   ├── core/               # Constants, utilities
 │   ├── game/               # Game state, input, multipliers
 │   ├── effects/            # Particles, tile effects
@@ -160,7 +161,12 @@ ShapeKeeper/
 
 ### Core Components
 
-#### DotsAndBoxesGame Class (`game.js`)
+`index.html` is the browser entrypoint. `convex-client.js` is loaded as a
+classic script so it can expose `window.ShapeKeeperConvex`, while `game.js`
+and `welcome.js` are loaded as ES modules and serve as the authoritative
+runtime entry scripts for the competition branch.
+
+#### DotsAndBoxesGame Class (`dots-and-boxes-game.js`)
 
 - **State Management**: Lines (Set), Squares (Object), Triangles (Object), Scores (Object)
 - **Rendering Engine**: HTML5 Canvas with 60fps animation loop
@@ -259,6 +265,8 @@ Default colors can be changed in `index.html`:
 
 ## 🐛 Known Issues & Limitations
 
+- Opening `index.html` directly via `file://` is not supported because the app
+    boots with browser ES modules
 - Parsing error in VSCode is cosmetic (ESLint configuration)
 - Portrait mode shows rotation prompt (landscape recommended)
 - Very large grids (50×50+) may impact performance on older devices

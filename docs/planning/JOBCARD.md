@@ -1,315 +1,195 @@
-#
-## Session: January 28, 2026
-
-### ✅ Completed This Session
-
-#### 1. Modularization of game.js
-
-**Refactored the monolithic `game.js` (~275 lines) into a modular structure:**
-
-| Original File | New Structure |
-| ------------- | ------------- |
-| `game.js`     | `game.js` (entry/export only), `dots-and-boxes-game.js` (main class) |
-
-**Integration Notes:**
-- All core logic for the `DotsAndBoxesGame` class moved to `dots-and-boxes-game.js`.
-- `game.js` now only imports and exports the class, and handles DOM initialization.
-- All imports in the codebase referencing the main game class should now use `dots-and-boxes-game.js`.
-- No breaking changes to the HTML or global API (window.DotsAndBoxesGame still available).
-- This keeps the main entry file ≤300 lines and improves maintainability.
-
-**Rationale:**
-- Prepares for further modularization and ES6 migration.
-- Reduces risk of merge conflicts and improves code clarity.
-- Aligns with ongoing architecture plans for maintainable, testable code.
-
----
 # ShapeKeeper Development Jobcard
 
-## Session: December 9, 2025
-
-### 🔄 Current Work: Performance Optimization & Animation Loop Refactor
-
----
-
-### ✅ Completed This Session
-
-#### 1. Animation Loop Performance Optimization
-
-Refactored the `animate()` method for better performance on 60fps rendering:
-
-| Change                            | File      | Impact                               |
-| --------------------------------- | --------- | ------------------------------------ |
-| In-place array compaction         | `game.js` | Eliminates GC pressure from filter() |
-| Single-pass particle physics      | `game.js` | Reduces iterations by 50%            |
-| Ambient particle frame skip       | `game.js` | Renders every 3rd frame (48ms)       |
-| Cached dimension lookups          | `game.js` | Avoids repeated property access      |
-| `_compactAnimationArray()` helper | `game.js` | Reusable hot-path optimization       |
-
-**Performance Gains:**
-
-- Particle cleanup: From 6 separate `filter()` calls → 1 batch operation
-- Ambient particles: 60fps → 20fps (imperceptible, saves ~66% CPU)
-- Memory: Reduced GC pauses from array allocations
-
-#### 2. Utility Functions Added
-
-Extended `src/core/utils.js` with reusable helpers:
-
-| Function                    | Purpose                                      |
-| --------------------------- | -------------------------------------------- |
-| `distributeOverPositions()` | Generic distribution for multipliers/effects |
-| `clamp()`                   | Value clamping utility                       |
-| `lerp()`                    | Linear interpolation for animations          |
-
-#### 3. Version Bump
-
-- `package.json`: 4.3.0
-- `game.js` header: 4.3.0 with optimization changelog
-- `.github/copilot-instructions.md`: Already at 4.3.0
-
----
-
-### 📋 Session: January 27, 2026
-
----
-
-### ✅ Completed This Session
-
-#### 1. Welcome.js Refactoring
-
-Refactored the monolithic `welcome.js` file (~1,013 lines) into smaller, modular components:
-
-| Module | File | Purpose |
-|--------|------|---------|
-| `WelcomeAnimation` | `src/ui/WelcomeAnimation.js` | Flocking particle animation system |
-| `LobbyManager` | `src/ui/LobbyManager.js` | Multiplayer lobby state management |
-| `Toast` | `src/ui/Toast.js` | Notification system |
-| `Fullscreen` | `src/ui/Fullscreen.js` | Fullscreen utilities |
-| `ScreenTransition` | `src/ui/ScreenTransition.js` | Screen navigation helpers |
-| `MenuNavigation` | `src/ui/MenuNavigation.js` | Event handlers and UI logic |
-
-**Refactoring Benefits:**
-- Reduced `welcome.js` from ~1,013 lines to ~30 lines
-- Improved maintainability and testability
-- Better separation of concerns
-- Easier to extend individual features
-
-**Integration Notes:**
-- All modules exported through `src/ui/index.js`
-- Dependencies injected via `setMenuNavigationDependencies()`
-- Global functions exported for Convex integration
-- Maintains backward compatibility with existing HTML
-
----
-
-### 📋 Previous Session: December 5, 2025
-
----
-
-### ✅ Completed Previously
-
-#### 1. Party Mode Feature
-
-Renamed "Hypotheticals" to "Party Mode" - now ALL squares have tile effects:
-
-| Change                                   | File                    |
-| ---------------------------------------- | ----------------------- |
-| Renamed toggle: "Enable Party Mode 🎉"   | `index.html`            |
-| Updated element ID: `partyModeToggle`    | `index.html`            |
-| Updated game options: `partyModeEnabled` | `welcome.js`, `game.js` |
-| 100% tile coverage when enabled          | `game.js`               |
-
-**Party Mode Behavior:**
-
-- When enabled: ALL squares have either a trap or powerup
-- 50% traps (red): Landmine, Freeze, Score Swap, Dares, Hypotheticals, etc.
-- 50% powerups (blue): Extra turns, Shield, Lightning, Oracle's Vision, etc.
-- When disabled: No tile effects (clean gameplay)
-
-#### 2. Turn-Based Multiplayer Optimization
-
-Implemented chess-like communication to fix "constant live state" glitches:
-
-| Change                     | File               |
-| -------------------------- | ------------------ |
-| State change detection     | `convex-client.js` |
-| Debounced updates (50ms)   | `convex-client.js` |
-| Turn-based optimization    | `convex-client.js` |
-| Clean subscription cleanup | `convex-client.js` |
-
-**Optimization Details:**
-
-- `stateHasChanged()` - Compares key state fields before triggering callbacks
-- Only updates on: turn change, new lines/squares, score changes, game status change
-- Debounce timer prevents rapid-fire updates
-- State trackers reset on room leave
-
-#### 3. Documentation Updates
-
-| Update                             | File                                              |
-| ---------------------------------- | ------------------------------------------------- |
-| Added Table of Contents            | `.github/copilot-instructions.md`                 |
-| Updated version to 4.2.0           | `.github/copilot-instructions.md`, `package.json` |
-| Added turn-based subscription docs | `.github/copilot-instructions.md`                 |
-| Updated Party Mode documentation   | `.github/copilot-instructions.md`                 |
-| Created docs index                 | `docs/README.md`                                  |
-
----
-
-### 📋 Previous Session: November 30, 2025 (Evening)
-
-#### ✅ Completed Previously
-
-##### 1. Dark Mode Fix
-
-Canvas backgrounds were hardcoded white - now properly read `data-theme` attribute:
-
-| File         | Fix                                                        |
-| ------------ | ---------------------------------------------------------- |
-| `welcome.js` | `draw()` method checks theme, uses `#1a1a2e` in dark mode  |
-| `game.js`    | `drawDynamicBackground()` uses dark gradients in dark mode |
-| `game.js`    | Dot colors: `#CCC` (dark) / `#333` (light)                 |
-
-##### 2. Diagonal Lines (45°)
-
-Added support for diagonal line drawing between adjacent dots:
-
-| Change             | Location                                                 |
-| ------------------ | -------------------------------------------------------- |
-| `areAdjacent()`    | Now allows `rowDiff === 1 && colDiff === 1`              |
-| `isDiagonalLine()` | New helper function                                      |
-| Line rendering     | Diagonal lines drawn at 50% width for visual distinction |
-
-##### 3. Triangle Detection System
-
-Complete triangle shape detection (3 lines: 2 orthogonal + 1 diagonal):
-
-```javascript
-// New methods in game.js
-checkForTriangles(lineKey); // Main detection entry
-getLineType(dot1, dot2); // 'horizontal'|'vertical'|'diagonal'|'invalid'
-_checkTrianglesForDiagonal(); // Check when diagonal drawn
-_checkTrianglesForOrthogonal(); // Check when orthogonal drawn
-_checkSingleTriangle(v1, v2, v3); // Verify 3 edges exist
-triggerTriangleAnimation(); // Visual feedback
-drawTrianglesWithAnimations(); // Render with striped pattern
-```
-
-**Triangle Geometry:**
-
-- Each grid cell can contain 4 possible triangles (TL, TR, BL, BR corners)
-- Triangle = 2 orthogonal edges + 1 diagonal edge
-- Scoring: Triangles = 0.5 points (Squares = 1 point)
-- Visual: Striped pattern fill + ▲ symbol at center
-
-##### 4. State Management
-
-```javascript
-this.triangles = {}; // New state object parallel to this.squares
-```
-
----
-
-### 🧪 Testing Status
-
-| Feature              | Status     | Notes                                 |
-| -------------------- | ---------- | ------------------------------------- |
-| Dark mode background | ✅ Works   | Both canvases respond to theme toggle |
-| Diagonal lines       | ✅ Works   | 45° lines between adjacent dots       |
-| Triangle detection   | ✅ Works   | Live testing confirmed                |
-| Multiplayer sync     | ❓ Pending | Triangles not yet synced to Convex    |
-
----
-
-### 📋 Next Steps
-
-#### Immediate (P0)
-
-| Task                                 | Priority |
-| ------------------------------------ | -------- |
-| Add triangles to Convex schema       | High     |
-| Sync triangles in multiplayer        | High     |
-| Update game-over logic for triangles | Medium   |
-
-#### Future (P2)
-
-| Task                                | Priority |
-| ----------------------------------- | -------- |
-| Triangle-specific sound effects     | Low      |
-| Different colors for triangle types | Low      |
-| Triangle achievements/badges        | Low      |
-
----
-
-### 🏗️ Architecture
-
-**Current Flow:**
-
-```
-Lines → checkForSquares() → squares{} ─┐
-      → checkForTriangles() → triangles{} ─┴→ combined scoring
-```
-
-**Multiplayer Communication (Turn-Based):**
-
-```
-drawLine() → Convex mutation → Server validates turn
-          → Updates DB → Subscription triggers
-          → stateHasChanged() check → Debounce
-          → handleGameStateUpdate() only if meaningful change
-```
-
----
-
-### 📊 Code Metrics
-
-| Metric                   | Value  |
-| ------------------------ | ------ |
-| `game.js` lines          | ~3,940 |
-| `welcome.js` lines       | ~1,013 |
-| `convex-client.js` lines | ~520   |
-| Total main files         | ~5,500 |
-
----
-
-### 🐛 Known Issues
-
-1. **Triangles not in multiplayer** - Only local state, no Convex sync yet
-2. **Game-over unchanged** - Still based on squares only (triangles are bonus)
-3. **ES6 modules** - Still not integrated with main game.js
-
----
-
-### 📁 ES6 Module Structure (In Progress)
-
-```
-src/
-├── core/           # Constants and utilities
-├── game/           # Game state, input, multipliers
-├── effects/        # Particles, tile effects
-├── animations/     # Kiss emojis, square animations
-├── sound/          # SoundManager
-└── ui/             # ThemeManager
-```
-
----
-
-### 🚀 Live Site
-
-- **URL:** https://shape-keeper.vercel.app
-- **Status:** Deployed
-- **Version:** 4.3.0
-
----
-
-### 📚 Related Docs
-
-- `Triangle/canvasBonusFeature.md` - Full triangle feature planning
-- `docs/planning/REFACTORING_PLAN.md` - ES6 module refactoring plan
-- `docs/planning/CounterPlan.md` - Original feature roadmap
-- `docs/technical/PERFORMANCE_IMPROVEMENTS.md` - Animation loop optimizations
-
----
-
-_Last updated: December 9, 2025_
+## Session: March 9, 2026
+
+### Executive status
+
+- **Phase addressed:** Phase 3 — startup state-machine and loading-state hardening
+- **Status:** In progress, with the first meaningful hardening slice completed
+- **Outcome:** multiplayer startup now has explicit client-side state control,
+  first-authoritative-state gating, timeout recovery UI, and unit coverage for
+  the startup controller
+- **Competition impact:** reduces the risk of silent static loading during live
+  match startup and gives the runtime a more diagnosable recovery path
+
+### Release posture
+
+- **Current recommendation:** **No-go** for competition deployment
+- **Why:** startup hardening has begun, but the release still lacks full
+  two-client startup validation, reconnect coverage, browser automation, and
+  security/input completion work required by the roadmap.
+- **Earliest realistic go condition:** after the remaining Phase 3/4 work and
+  Phase 5 critical criteria are met on the approved browser path.
+
+### Focus
+
+Phase 3 startup handshake hardening for the competition roadmap, plus updated
+runtime guidance and planning notes.
+
+### Work completed
+
+- **Startup state machine slice:** added `src/ui/MultiplayerStartup.js` to own
+  multiplayer startup phases, timeout lifecycle, retry tracking, and reset
+  behavior.
+- **Handshake gating:** multiplayer game boot now keeps the loading skeleton
+  visible until the first authoritative game state is applied successfully.
+- **Recovery UI:** `index.html` and `styles.css` now surface startup status
+  copy, timeout messaging, and recovery actions (`Retry Sync`, `Leave Match`).
+- **Flow orchestration:** `src/ui/MenuNavigation.js` now owns explicit room/game
+  subscription wiring, startup teardown, and connection-state-aware recovery.
+- **Game-shell fix:** `dots-and-boxes-game.js` no longer hides the loading
+  skeleton unconditionally during multiplayer startup.
+- **Test coverage:** added unit tests for the startup controller covering first
+  authoritative state success, timeout failure, and retry/reset behavior.
+- **Docs refresh:** `.github/copilot-instructions.md` is being updated to match
+  the current Phase 3 runtime reality.
+
+### Files changed
+
+- `src/ui/MultiplayerStartup.js`
+- `src/ui/MultiplayerStartup.test.js`
+- `src/ui/MenuNavigation.js`
+- `dots-and-boxes-game.js`
+- `index.html`
+- `styles.css`
+- `.github/copilot-instructions.md`
+- `docs/planning/JOBCARD.md`
+
+### Verification completed
+
+- **`npm run verify`** — passed
+- **`npm test`** — passed (`18` tests)
+- **Browser boot over local HTTP** — passed on a fresh local origin
+- **Startup recovery DOM** — present in browser validation
+- **Create-room to lobby path** — passed in browser validation
+
+### Decisions made
+
+- Keep the competition branch on browser-native ES modules with no bundler.
+- Treat root runtime files as authoritative for gameplay and boot flow.
+- Treat active `src/ui/` modules in the `welcome.js` path as production runtime
+  code, not speculative refactor space.
+- Keep multiplayer startup state orchestration centralized in
+  `src/ui/MultiplayerStartup.js` rather than scattering startup flags across UI
+  code.
+- Prefer explicit subscription ownership and teardown over implicit globals when
+  hardening multiplayer startup and reconnect behavior.
+
+### Remaining risks
+
+- Two-client startup has not yet been browser-automated or validated as a
+  full host/guest handshake.
+- Reconnect and desync recovery are improved structurally but not yet proven by
+  end-to-end multiplayer automation.
+- Browser automation coverage is still missing for boot, lobby, reconnect, and
+  sync regressions.
+- Security/input hardening work remains a later-phase requirement.
+
+### Open blockers
+
+1. No Playwright regression gate exists yet for startup timeout, retry, or
+   reconnect behavior.
+2. Two-player startup and recovery paths are not yet validated in automation.
+3. Go/no-go deployment criteria from the roadmap are not yet satisfied.
+
+### Workstream ownership
+
+- **Agent Alpha — Architecture**
+  - maintain the runtime contract
+  - keep root runtime files authoritative
+  - prevent entrypoint ambiguity from returning
+- **Agent Beta — Research & Security**
+  - harden player-controlled input handling
+  - review session identity strategy and mutation abuse controls
+  - define safe rendering expectations for UI updates
+- **Agent Gamma — QA Automation**
+  - build Playwright config and smoke coverage
+  - add artifact capture for failures and reconnect scenarios
+  - establish browser-level regression gates before competition release
+- **Agent Delta — Netcode**
+  - implement startup state machine and first-state handshake
+  - add recovery path for loading-state timeout
+  - harden reconnect, subscription lifecycle, and desync handling
+- **Agent Epsilon — UX/UI**
+  - surface connection/sync state clearly
+  - improve recovery messaging and turn ownership cues
+  - make host-only controls and failure states obvious under pressure
+
+### Phase completion snapshot
+
+- **Phase 1 — approval artifact:** complete
+- **Phase 2 — runtime stabilization:** started, first slice complete
+- **Phase 3 — startup/loading hardening:** started, first slice complete
+- **Phase 4 — multiplayer reliability:** not started
+- **Phase 5 — Playwright regression gates:** not started
+- **Phase 6 — security and UX completion:** not started
+
+### Recommendations
+
+#### Immediate
+
+1. Build a browser-level two-client check for host start, guest join, and first
+  authoritative state arrival.
+2. Extend the current startup controller to cover reconnect and resubscribe
+  timing explicitly under degraded connection conditions.
+3. Add structured validation for the timeout and retry controls so they become
+  machine-detectable regressions.
+
+#### Near-term
+
+1. Add Playwright smoke coverage for homepage boot, local play start, lobby
+  create/join, loading-state timeout, and retry regression.
+2. Add multiplayer sync and reconnect regression coverage before deepening
+  further netcode changes.
+3. Continue removing implicit globals from the active runtime only when they are
+  encountered in the supported boot path.
+
+#### Strategic
+
+1. Use the roadmap go/no-go criteria as the release gate for competition builds.
+2. Avoid merging Phase 3+ work without browser-level regression coverage.
+3. Keep the no-build deployment model unless a future change proves it is the
+  bottleneck rather than the runtime contract.
+
+### Notes
+
+- The repository remains hybrid, but the runtime contract is now clearer:
+  `index.html` loads `convex-client.js` as a classic script and loads
+  `game.js` and `welcome.js` as browser ES modules.
+- `src/` is not fully inactive. `welcome.js` currently depends on active
+  `src/ui/` modules.
+- The Phase 3 slice introduced a dedicated startup controller in active
+  `src/ui/` code, but it remains part of the approved runtime path through
+  `welcome.js`.
+- Browser module caching on the original local origin obscured one validation
+  pass; a fresh local origin confirmed the updated runtime path and recovery DOM.
+- Current validation proved clean browser boot and lobby entry, but not yet a
+  full automated host/guest gameplay handshake.
+
+### Next steps
+
+#### P0
+
+1. Add Playwright coverage for the startup timeout, retry action, and recovery
+  exit path.
+2. Validate a two-player host/guest startup path so the first-authoritative-state
+  handshake is exercised beyond single-client smoke checks.
+3. Extend startup/reconnect handling so desync and resubscribe paths are
+  verified under network disruption, not just coded structurally.
+
+#### P1
+
+1. Build the broader Playwright configuration and smoke suite for runtime
+  startup and multiplayer sync.
+2. Add reconnect and desync regression coverage with failure artifacts.
+3. Review player-controlled text rendering and input validation for Phase 6
+  hardening prep.
+
+### Summary
+
+Phase 3 startup hardening has now started meaningfully. ShapeKeeper has a
+dedicated multiplayer startup controller, first-authoritative-state gating,
+timeout recovery UI, and unit tests for the startup-state core. Local verify,
+tests, and browser validation passed. The next milestone is to turn this
+structural hardening into browser-automated, two-client proof for startup,
+retry, reconnect, and sync reliability.
