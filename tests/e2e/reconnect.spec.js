@@ -344,4 +344,148 @@ test.describe('degraded reconnect recovery', () => {
             await session.cleanup();
         }
     });
+
+    test('stays in recovery until a later reconnect rebroadcast replaces a stale first reconnect delivery', async ({
+        browser,
+    }) => {
+        const session = await bootstrapLiveMatch(browser, { roomCode: 'RETRY1' });
+        const { hostPage, guestPage, hostErrors, guestErrors } = session;
+        let guestNetworkClient = null;
+
+        try {
+            guestNetworkClient = await emulateSlowNetwork(guestPage);
+
+            await guestPage.evaluate(() => {
+                window.__shapeKeeperSharedTest.configureTransport({
+                    roomDeliveryDelayMs: 100,
+                    gameDeliveryDelayMs: 1400,
+                    snapshotDelayMs: 3000,
+                });
+            });
+
+            await guestPage.evaluate(() => {
+                window.__shapeKeeperSharedTest.setConnectionState('disconnected');
+            });
+
+            await expect(guestPage.getByTestId('startup-overlay')).toHaveAttribute(
+                'data-startup-phase',
+                'desynced'
+            );
+
+            const hostMoveResult = await hostPage.evaluate(async () => {
+                return await window.ShapeKeeperConvex.drawLine('0,0-0,1');
+            });
+
+            expect(hostMoveResult).toMatchObject({ success: true, keepTurn: false });
+
+            await guestPage.evaluate(() => {
+                window.__shapeKeeperSharedTest.setConnectionState('reconnecting');
+            });
+
+            await expect(guestPage.getByTestId('startup-overlay')).toHaveAttribute(
+                'data-startup-phase',
+                'reconnecting'
+            );
+
+            await guestPage.evaluate(() => {
+                window.__shapeKeeperSharedTest.setConnectionState('connected');
+            });
+
+            await expect(guestPage.getByTestId('startup-overlay')).toHaveAttribute(
+                'data-startup-phase',
+                'awaiting_first_authoritative_state'
+            );
+
+            await guestPage.waitForTimeout(250);
+
+            await guestPage.evaluate(() => {
+                window.__shapeKeeperSharedTest.rebroadcastCurrentState('reconnect');
+            });
+
+            await guestPage.waitForTimeout(1200);
+
+            const staleRecoverySnapshot = await guestPage.evaluate(() => {
+                return window.__shapeKeeperSharedTest.getSnapshot();
+            });
+
+            expect(staleRecoverySnapshot.lastDeliveredGameState?.lines || []).toHaveLength(0);
+            expect(staleRecoverySnapshot.droppedGameDeliveries).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        source: 'reconnect',
+                        reason: 'stale_generation',
+                        lineCount: 1,
+                    }),
+                ])
+            );
+
+            await expect(guestPage.getByTestId('startup-overlay')).toHaveAttribute(
+                'data-startup-phase',
+                'awaiting_first_authoritative_state'
+            );
+
+            await expect(guestPage.getByTestId('startup-overlay')).toHaveAttribute(
+                'data-startup-phase',
+                'in_match',
+                { timeout: 8000 }
+            );
+
+            await expect
+                .poll(async () => {
+                    const snapshot = await guestPage.evaluate(() => {
+                        return window.__shapeKeeperSharedTest.getSnapshot();
+                    });
+
+                    return {
+                        connectionTransitions: snapshot.connectionTransitions.map(
+                            ({ from, to }) => `${from}->${to}`
+                        ),
+                        droppedReconnectGameDeliveries: snapshot.droppedGameDeliveries.filter(
+                            (entry) =>
+                                entry.source === 'reconnect' && entry.reason === 'stale_generation'
+                        ).length,
+                        deliveredReconnectGameDeliveries: snapshot.gameDeliveries.filter(
+                            (entry) => entry.source === 'reconnect'
+                        ).length,
+                        deliveryGeneration: snapshot.deliveryGeneration,
+                        deliveredLineCount:
+                            snapshot.lastDeliveredGameState?.lines?.length || 0,
+                        deliveredLineKey:
+                            snapshot.lastDeliveredGameState?.lines?.[0]?.lineKey || null,
+                        currentPlayerIndex:
+                            snapshot.lastDeliveredGameState?.room?.currentPlayerIndex ?? null,
+                    };
+                })
+                .toEqual({
+                    connectionTransitions: [
+                        'connected->disconnected',
+                        'disconnected->reconnecting',
+                        'reconnecting->connected',
+                    ],
+                    droppedReconnectGameDeliveries: 1,
+                    deliveredReconnectGameDeliveries: 1,
+                    deliveryGeneration: expect.any(Number),
+                    deliveredLineCount: 1,
+                    deliveredLineKey: '0,0-0,1',
+                    currentPlayerIndex: 1,
+                });
+
+            const finalRecoverySnapshot = await guestPage.evaluate(() => {
+                return window.__shapeKeeperSharedTest.getSnapshot();
+            });
+
+            expect(finalRecoverySnapshot.deliveryGeneration).toBeGreaterThanOrEqual(3);
+
+            await expect(guestPage.locator('#turnIndicator')).toHaveText('Your Turn');
+
+            expectNoBrowserErrors(hostErrors);
+            expectNoBrowserErrors(guestErrors);
+        } finally {
+            if (guestNetworkClient) {
+                await guestNetworkClient.send('Network.disable');
+            }
+
+            await session.cleanup();
+        }
+    });
 });

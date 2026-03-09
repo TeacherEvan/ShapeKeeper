@@ -288,6 +288,8 @@ export async function installSharedMockMultiplayer(
             let connectionTransitions = [];
             let roomDeliveries = [];
             let gameDeliveries = [];
+            let droppedRoomDeliveries = [];
+            let droppedGameDeliveries = [];
             let leaveRoomCalls = 0;
             let lastDeliveredGameState = null;
             let lastDeliveredRoomState = null;
@@ -351,11 +353,13 @@ export async function installSharedMockMultiplayer(
                 source = 'unknown',
                 scheduledAt = null,
                 configuredDelayMs = 0,
+                reason = null,
             }) => ({
                 kind,
                 source,
                 scheduledAt,
                 configuredDelayMs,
+                reason,
                 deliveredAt: Date.now(),
                 connectionState,
                 roomStatus: roomPayload?.status || gamePayload?.room?.status || null,
@@ -384,6 +388,26 @@ export async function installSharedMockMultiplayer(
                 );
             };
 
+            const recordDroppedRoomDelivery = (roomPayload, metadata = {}) => {
+                droppedRoomDeliveries.push(
+                    createDeliveryEntry({
+                        kind: 'room',
+                        roomPayload,
+                        ...metadata,
+                    })
+                );
+            };
+
+            const recordDroppedGameDelivery = (gamePayload, metadata = {}) => {
+                droppedGameDeliveries.push(
+                    createDeliveryEntry({
+                        kind: 'game',
+                        gamePayload,
+                        ...metadata,
+                    })
+                );
+            };
+
             const waitForTransportDelay = (delayMs) => {
                 if (!delayMs || delayMs <= 0) {
                     return Promise.resolve();
@@ -398,9 +422,26 @@ export async function installSharedMockMultiplayer(
 
             const dispatchRoomPayload = async (roomPayload, { source = 'notify' } = {}) => {
                 const scheduledAt = Date.now();
+                const scheduledGeneration = deliveryGeneration;
                 await waitForTransportDelay(transportConfig.roomDeliveryDelayMs);
 
                 if (connectionState !== 'connected') {
+                    recordDroppedRoomDelivery(roomPayload, {
+                        source,
+                        scheduledAt,
+                        configuredDelayMs: transportConfig.roomDeliveryDelayMs,
+                        reason: 'disconnected_before_delivery',
+                    });
+                    return;
+                }
+
+                if (scheduledGeneration !== deliveryGeneration) {
+                    recordDroppedRoomDelivery(roomPayload, {
+                        source,
+                        scheduledAt,
+                        configuredDelayMs: transportConfig.roomDeliveryDelayMs,
+                        reason: 'stale_generation',
+                    });
                     return;
                 }
 
@@ -415,9 +456,26 @@ export async function installSharedMockMultiplayer(
 
             const dispatchGamePayload = async (gamePayload, { source = 'notify' } = {}) => {
                 const scheduledAt = Date.now();
+                const scheduledGeneration = deliveryGeneration;
                 await waitForTransportDelay(transportConfig.gameDeliveryDelayMs);
 
                 if (connectionState !== 'connected') {
+                    recordDroppedGameDelivery(gamePayload, {
+                        source,
+                        scheduledAt,
+                        configuredDelayMs: transportConfig.gameDeliveryDelayMs,
+                        reason: 'disconnected_before_delivery',
+                    });
+                    return;
+                }
+
+                if (scheduledGeneration !== deliveryGeneration) {
+                    recordDroppedGameDelivery(gamePayload, {
+                        source,
+                        scheduledAt,
+                        configuredDelayMs: transportConfig.gameDeliveryDelayMs,
+                        reason: 'stale_generation',
+                    });
                     return;
                 }
 
@@ -579,6 +637,9 @@ export async function installSharedMockMultiplayer(
                         connectionTransitions: clone(connectionTransitions),
                         connectionState,
                         currentRoomId,
+                        deliveryGeneration,
+                        droppedGameDeliveries: clone(droppedGameDeliveries),
+                        droppedRoomDeliveries: clone(droppedRoomDeliveries),
                         gameDeliveries: clone(gameDeliveries),
                         lastDeliveredGameState: clone(lastDeliveredGameState),
                         lastDeliveredRoomState: clone(lastDeliveredRoomState),
@@ -623,6 +684,10 @@ export async function installSharedMockMultiplayer(
                     notifySubscribers('seed');
 
                     return clone(room.gameState);
+                },
+                rebroadcastCurrentState(source = 'notify') {
+                    notifySubscribers(source);
+                    return true;
                 },
                 setConnectionState,
             };
