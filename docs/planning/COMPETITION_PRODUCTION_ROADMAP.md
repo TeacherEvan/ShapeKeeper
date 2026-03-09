@@ -28,7 +28,8 @@ Current execution snapshot:
 - **Phase 2:** first runtime-stabilization slice complete
 - **Phase 3:** first startup/loading hardening slice complete
 - **Phase 4:** multiplayer reliability now partially browser-validated
-- **Phase 5:** first Playwright regression-gate slice complete and extended
+- **Phase 5:** first Playwright regression-gate slice complete, extended, and
+  now started on degraded reconnect coverage
 
 What is now verified in the repository:
 
@@ -44,10 +45,14 @@ What is now verified in the repository:
 - repeated reconnect-cycle recovery is browser-validated on the shared
   multiplayer fixture
 - host transfer is browser-validated in both lobby and live-match exit paths
+- degraded reconnect coverage now verifies both delayed recovery visibility and
+  repeated slowed reconnect cycles with delivery artifact evidence on a
+  throttled browser path
 
 What is still missing before a competition go decision:
 
-- degraded-network recovery coverage
+- broader degraded-network recovery coverage beyond the first delayed reconnect
+  slice
 - security and input hardening completion
 
 ## Brutally honest assessment
@@ -157,11 +162,16 @@ What now exists:
   recovery, longer reconnect outage recovery, repeated reconnect-cycle
   recovery, duplicate-line rejection, in-match host-leave recovery, and lobby
   host transfer
+- a stronger Playwright degraded reconnect slice that uses throttled Chromium
+  plus shared-fixture transport delays to keep the recovery UI visible until
+  delayed authoritative state lands and to verify repeated slowed reconnect
+  cycles through recorded delivery artifacts
 
 Key remaining gap:
 
-- browser coverage still does not validate degraded-network artifact
-  collection or input hardening paths
+- browser coverage now has a stronger degraded reconnect slice, but it still
+  does not validate broader degraded-network cases against the real transport
+  path or input hardening paths
 
 ### Refactor facts
 
@@ -313,11 +323,17 @@ regressions.
   longer reconnect outage recovery, repeated reconnect-cycle recovery,
   duplicate-line rejection, in-match host-leave recovery, and lobby host
   transfer
-- `tests/e2e/helpers/bootstrap.js` now records lightweight connection
-  transitions and delivery events for reconnect assertions in the shared mock
+- `tests/e2e/reconnect.spec.js` now adds a first degraded reconnect slice using
+  throttled Chromium plus shared-fixture transport delay controls
+- `tests/e2e/helpers/bootstrap.js` now records connection transitions plus
+  delivery source/timing metadata for reconnect assertions in the shared mock
   fixture
 - the current Playwright project is intentionally conservative: Chromium only
   for now, with expansion to Firefox/WebKit still pending
+
+The degraded reconnect slice is intentionally conservative: it proves the UI
+contract under slower recovery and repeated delayed cycles, but it still builds
+on the shared mock transport and is not yet a full real-network failure model.
 
 #### Likely files added later
 
@@ -341,8 +357,9 @@ regressions.
 The first and third acceptance criteria are now materially stronger: two-player
 startup is browser-validated, the loading-state regression is
 machine-detectable, and the multiplayer sync suite now covers multiple
-observable reconnect and host-recovery paths. Reconnect artifact-driven
-coverage remains open.
+observable reconnect and host-recovery paths. A first degraded reconnect slice
+now adds artifact-driven delayed recovery coverage, but broader degraded-
+network coverage still remains open.
 
 ### Agent Delta — netcode, match startup, and online state recovery
 
@@ -696,8 +713,9 @@ Exit rule:
 - started, first slice complete
 - startup timeout/retry/leave is automation-detectable
 - two-client startup is automation-detectable
-- reconnect and sync coverage are now materially stronger, but degraded-network
-  and security smoke paths are still pending
+- reconnect and sync coverage are now materially stronger, including a first
+  degraded reconnect slice, but broader degraded-network and security smoke
+  paths are still pending
 
 ## Phase 6 — security and UX completion pass
 
@@ -740,9 +758,9 @@ Current posture as of March 9, 2026:
   host/guest startup
 - reconnect and sync behavior are partially browser-validated, including
   duplicate rejection, longer reconnect outage recovery, repeated reconnect
-  recovery, and live host-leave recovery
-- the build remains **no-go** because degraded-network and security criteria
-  are still incomplete
+  recovery, live host-leave recovery, and the first degraded reconnect slice
+- the build remains **no-go** because broader degraded-network and security
+  criteria are still incomplete
 
 ## Risks and mitigation
 

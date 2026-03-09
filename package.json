@@ -18,6 +18,8 @@
         "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.js --project=chromium",
         "test:e2e:startup": "playwright test tests/e2e/loading-state.spec.js --project=chromium",
         "test:e2e:multiplayer": "playwright test tests/e2e/multiplayer-startup.spec.js --project=chromium",
+        "test:e2e:reconnect": "playwright test tests/e2e/reconnect.spec.js --project=chromium",
+        "test:e2e:reliability": "playwright test tests/e2e/multiplayer-sync.spec.js tests/e2e/reconnect.spec.js --project=chromium",
         "deploy": "npx convex deploy --yes",
         "deploy:prod": "npx convex deploy --cmd-url-env-var-name CONVEX_URL --yes"
     },

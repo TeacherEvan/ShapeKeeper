@@ -32,7 +32,9 @@ ShapeKeeper is a Dots and Boxes game with local and online multiplayer.
 - **`src/ui/MenuNavigation.js`**: Active multiplayer menu and startup-flow orchestration used by `welcome.js`.
 - **`src/ui/MultiplayerStartup.js`**: Startup state controller for multiplayer match boot, timeout handling, and first-authoritative-state tracking.
 - **`playwright.config.js`**: Browser regression configuration for the no-build runtime, serving the app over local HTTP during Playwright runs.
-- **`tests/e2e/`**: Playwright smoke and multiplayer regression coverage, including startup recovery, host/guest startup validation, reconnect-turn recovery, longer reconnect outage recovery, repeated reconnect-cycle recovery, duplicate-move sync checks, in-match host-leave recovery, and lobby host-transfer validation.
+- **`tests/e2e/`**: Playwright smoke and multiplayer regression coverage, including startup recovery, host/guest startup validation, reconnect-turn recovery, longer reconnect outage recovery, repeated reconnect-cycle recovery, degraded reconnect recovery, duplicate-move sync checks, in-match host-leave recovery, and lobby host-transfer validation.
+- **`tests/e2e/reconnect.spec.js`**: Focused degraded reconnect browser coverage using throttled Chromium plus shared-fixture transport delays.
+- **`tests/e2e/helpers/bootstrap.js`**: Shared browser-side multiplayer fixture and reconnect artifact source for connection transitions plus room/game delivery logs.
 - **`src/ui/`**: Active UI support modules currently used by `welcome.js`.
 - **`utils.js`**: Shared root-level runtime utilities used by active gameplay modules.
 
@@ -86,6 +88,8 @@ getLineKey(dot1, dot2) {
 - **Verify Code**: `npm run verify` (Typechecks Convex and validates JS syntax).
 - **Run Unit Tests**: `npm test`
 - **Run Browser Regression Tests**: `npm run test:e2e`
+- **Run Reconnect Slice**: `npm run test:e2e:reconnect`
+- **Run Reliability Slice**: `npm run test:e2e:reliability`
 - **Deploy**: `npm run deploy`.
 
 ## Runtime Contract
@@ -111,6 +115,8 @@ getLineKey(dot1, dot2) {
 - For multiplayer startup changes, also verify that the loading overlay copy renders, the recovery controls exist, and the supported create/join flow still reaches the lobby or match screen as expected.
 - For browser automation changes, prefer stable `data-testid` selectors and test observable startup phases such as `awaiting_first_authoritative_state`, `fatal_startup_failure`, and `in_match`.
 - For reconnect-path browser changes, prefer assertions that combine visible UI state (`desynced`, `reconnecting`, `in_match`, turn indicator, host-only controls) with shared-fixture evidence such as connection transitions or delivery logs.
+- For degraded reconnect work, prefer extending `tests/e2e/reconnect.spec.js` and `tests/e2e/helpers/bootstrap.js` instead of adding one-off network mocks to unrelated specs.
+- For reconnect or recovery changes, run `npm run test:e2e:reconnect` or `npm run test:e2e:reliability` before broadening to the full Playwright suite.
 - When a new browser regression test exposes a production-path bug, fix the runtime path first and preserve the test; do not “solve” the problem by weakening the assertion unless the assertion is genuinely incorrect.
 - Do not consider a runtime change complete if syntax passes but the browser
     entry modules fail to initialize.
@@ -130,6 +136,7 @@ getLineKey(dot1, dot2) {
 - **Update Menu/Lobby Flow**: `welcome.js` and active `src/ui/` modules, especially `MenuNavigation.js`.
 - **Update Multiplayer Startup / Recovery**: `src/ui/MenuNavigation.js`, `src/ui/MultiplayerStartup.js`, `index.html`, and `styles.css`.
 - **Update Browser Regression Coverage**: `playwright.config.js`, `tests/e2e/`, `tests/e2e/helpers/bootstrap.js`, and any stable DOM hooks in `index.html` required for supported runtime flows.
+- **Update Degraded Reconnect Coverage**: `tests/e2e/reconnect.spec.js`, `tests/e2e/multiplayer-sync.spec.js`, `tests/e2e/helpers/bootstrap.js`, and any startup/recovery DOM hooks in `index.html`.
 - **Update Sounds**: `sound-manager.js` and any related root runtime integration.
 
 ## Phase 2 / Phase 3 / Phase 5 Documentation Notes
@@ -142,8 +149,11 @@ getLineKey(dot1, dot2) {
 - The first two-client browser tests exposed real runtime regressions in `src/ui/MenuNavigation.js`; use browser coverage to validate object ownership and runtime call paths rather than assuming parity with local/unit-only checks.
 - The shared browser-side multiplayer fixture in `tests/e2e/helpers/bootstrap.js` should be extended for reconnect, sync, host-leave, and artifact-logging edge cases instead of duplicating ad hoc mocks across new specs.
 - `tests/e2e/multiplayer-sync.spec.js` now validates reconnect recovery through the visible turn indicator, longer outage recovery, repeated reconnect-cycle recovery, duplicate-line rejection without UI drift, in-match host-leave recovery, and lobby host transfer when the original host leaves.
+- `tests/e2e/reconnect.spec.js` now adds the first degraded reconnect slice, using throttled Chromium plus shared-fixture transport delays to keep recovery UI visible until delayed authoritative state arrives.
 - The shared fixture now records lightweight reconnect artifacts such as connection transitions and room/game delivery events; prefer building on those hooks before adding one-off debug state to the runtime.
+- The degraded reconnect slice is intentionally conservative: extend it toward broader real-transport failure coverage before treating the reliability phase as complete.
 - Treat the browser-visible turn indicator and loading overlay phases as part of the regression contract for multiplayer reliability; if they drift during sync or reconnect flows, treat it as a real product bug.
 - The current startup hardening lives in active `src/ui/` code, but it still participates in the approved runtime path through `welcome.js`; treat it as production runtime code, not speculative refactor space.
+- The next practical browser-hardening move after the current reconnect slice is broader degraded-network coverage plus security/input browser coverage.
 - Use the competition roadmap in `docs/planning/COMPETITION_PRODUCTION_ROADMAP.md`
     as the source of truth for phase sequencing and go/no-go criteria.

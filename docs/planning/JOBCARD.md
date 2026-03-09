@@ -7,14 +7,17 @@
 - **Phase addressed:** Phase 5 — browser regression gates, building on the Phase
   3 startup hardening slice
 - **Status:** In progress, with the first practical browser automation slice now
-  completed and extended with stronger multiplayer reliability coverage
+  completed, extended with stronger multiplayer reliability coverage, and now
+  advanced with stronger degraded reconnect coverage and artifact validation
 - **Outcome:** ShapeKeeper now has Playwright scaffolding, browser smoke
   coverage, startup timeout/retry/leave coverage, a two-client host/guest
   startup test that exercises first-authoritative-state arrival on both clients,
   plus a stronger multiplayer sync suite that validates reconnect-turn
   recovery, multi-move outage recovery, repeated reconnect-cycle recovery,
   duplicate-line rejection, lobby host transfer, and in-match host-leave
-  recovery
+  recovery, plus degraded reconnect tests that keep the recovery UI visible
+  until delayed authoritative state arrives and verify repeated slowed recovery
+  cycles with artifact evidence
 - **Competition impact:** startup and recovery behavior is no longer only a
   structural code claim; the approved browser path now has machine-detectable
   regression coverage for smoke boot, timeout recovery, host/guest startup,
@@ -25,8 +28,9 @@
 
 - **Current recommendation:** **No-go** for competition deployment
 - **Why:** the browser-level regression gate is meaningfully stronger now, but
-  desync under repeated disruption and security/input hardening coverage are
-  still incomplete, and the full Phase 4 reliability bar is not yet proven in
+  degraded-network coverage has only started and still leans on the shared
+  browser-side transport fixture, security/input hardening coverage is still
+  incomplete, and the full Phase 4 reliability bar is not yet proven in
   automation.
 - **Earliest realistic go condition:** after the remaining Phase 3/4 work and
   Phase 5 critical criteria are met on the approved browser path.
@@ -85,12 +89,17 @@ transfer coverage on the approved browser path.
 - **Repeated reconnect proof:** added a repeated disconnect / reconnect browser
   scenario that proves the same client can recover authoritative state across
   multiple live-match interruption cycles without losing turn or score sync.
+- **Degraded reconnect proof:** added `tests/e2e/reconnect.spec.js` plus
+  shared-fixture transport delay controls so Playwright can emulate a slower
+  reconnect path, assert that the recovery overlay stays visible until the
+  delayed authoritative state is actually applied, and verify repeated delayed
+  reconnect cycles through recorded delivery artifacts.
 - **In-match host-leave proof:** added browser coverage that validates host and
   turn recovery when the original host exits during live play, while the guest
   remains in the match and regains host-only controls.
 - **Fixture artifact logging:** extended the shared Playwright multiplayer
-  fixture with lightweight connection-transition and delivery logs so reconnect
-  recovery assertions can verify more than a final end state.
+  fixture with connection-transition plus delivery-source and timing logs so
+  reconnect recovery assertions can verify more than a final end state.
 - **Runtime bug fixes discovered by automation:** corrected `src/ui/MenuNavigation.js`
   to call `updatePopulateButtonVisibility()` and `updateUI()` through
   `game.uiManager`, where those helpers actually live.
@@ -108,6 +117,7 @@ transfer coverage on the approved browser path.
 - `tests/e2e/loading-state.spec.js`
 - `tests/e2e/multiplayer-startup.spec.js`
 - `tests/e2e/multiplayer-sync.spec.js`
+- `tests/e2e/reconnect.spec.js`
 - `convex/rooms.ts`
 - `package.json`
 - `vitest.config.js`
@@ -125,6 +135,9 @@ transfer coverage on the approved browser path.
 - **`npm test`** — passed (`18` tests)
 - **`npx playwright test tests/e2e/multiplayer-sync.spec.js --project=chromium`**
   — passed (`6` strengthened Playwright specs)
+- **`npm run test:e2e:reconnect`** — passed (`2` degraded reconnect specs)
+- **`npm run test:e2e:reliability`** — passed (`8` multiplayer reliability
+  Playwright specs)
 - **Browser boot over local HTTP** — passed on a fresh local origin
 - **Startup recovery DOM** — present and asserted in browser validation
 - **Create-room to lobby path** — passed in browser validation
@@ -133,6 +146,9 @@ transfer coverage on the approved browser path.
 - **Multi-move reconnect outage recovery path** — passed in Playwright
   validation
 - **Repeated reconnect-cycle recovery path** — passed in Playwright validation
+- **Degraded reconnect recovery path** — passed in Playwright validation
+- **Repeated degraded reconnect recovery path with artifact assertions** —
+  passed in Playwright validation
 - **Duplicate-line rejection with synchronized turn UI** — passed in Playwright
   validation
 - **Lobby host-transfer path after host leave** — passed in Playwright
@@ -162,19 +178,20 @@ transfer coverage on the approved browser path.
 
 - Browser automation now covers smoke, startup recovery, host/guest startup,
   reconnect turn recovery, multi-move outage recovery, repeated reconnect
-  recovery, duplicate-line rejection, in-match host-leave recovery, and lobby
-  host transfer, but it still lacks degraded-network coverage and
-  security/input hardening scenarios.
+  recovery, degraded reconnect recovery with repeated slowed cycles and
+  artifact assertions, duplicate-line rejection,
+  in-match host-leave recovery, and lobby host transfer, but it still lacks
+  broader degraded-network coverage and security/input hardening scenarios.
 - The current shared browser-side multiplayer fixture now proves meaningful
   sync and lobby behavior, and it now exposes lightweight reconnect artifacts,
-  but it still does not validate degraded-network behavior against the real
-  browser transport.
+  but it still does not validate degraded-network behavior against the full
+  real browser transport path.
 - Security/input hardening work remains a later-phase requirement.
 
 ### Open blockers
 
-1. Degraded-network reconnect behavior is not yet covered with browser-level
-  throttling or failure artifacts.
+1. Degraded-network reconnect coverage has started, but it is still limited to
+  a first browser-throttled slice backed by the shared mock transport.
 2. The reconnect suite still relies on the shared mock transport rather than
   true browser network emulation.
 3. Go/no-go deployment criteria from the roadmap are not yet satisfied.
@@ -219,30 +236,34 @@ transfer coverage on the approved browser path.
 
 #### Immediate
 
-1. Add degraded-network reconnect coverage using the new shared multiplayer
-  fixture and browser emulation as the next base.
+1. Expand the current degraded reconnect slice beyond delayed shared-fixture
+  delivery into broader real-transport failure modes, while keeping
+  browser-visible recovery UI and artifact evidence as the contract.
 2. Use the lightweight fixture artifact logs (`connectionTransitions`, room and
-  game deliveries) as the default evidence layer for reconnect assertions
-  before introducing runtime-only debug hooks.
+  game deliveries, delivery timing) as the default evidence layer for reconnect
+  assertions before introducing runtime-only debug hooks.
 3. Keep extending multiplayer sync assertions around move propagation, turn
-  ownership, host transfer, and duplicate rejection across host and guest
-  clients.
+  ownership, host transfer, duplicate rejection, and delayed recovery ordering
+  across host and guest clients.
 4. Keep using browser automation to flush out production-path object ownership
   and runtime call mismatches in `src/ui/MenuNavigation.js` and adjacent active
   runtime modules.
-5. Update strategic docs whenever a roadmap assumption becomes stale, especially
-   around runtime loading facts and current QA posture.
+5. Update strategic docs whenever a roadmap assumption becomes stale,
+  especially around runtime loading facts, QA posture, and what is genuinely
+  left in the reliability phase.
 
 #### Near-term
 
-1. Expand Playwright coverage to degraded-network reconnect behavior and richer
-  failure-artifact capture.
+1. Expand Playwright coverage from the first degraded reconnect slice into
+  broader degraded-network reconnect behavior and richer failure-artifact
+  capture.
 2. Add security/input browser coverage before deepening further netcode
   changes.
-3. Consider splitting the multiplayer sync suite into clearer reconnect /
-  recovery groupings once coverage grows beyond the current six browser specs.
-4. Continue removing implicit globals from the active runtime only when they are
-  encountered in the supported boot path.
+3. Consider splitting the multiplayer reliability coverage into clearer
+  reconnect / recovery groupings if the current `multiplayer-sync` plus
+  `reconnect` split becomes harder to navigate.
+4. Continue removing implicit globals from the active runtime only when they
+  are encountered in the supported boot path.
 
 #### Strategic
 
@@ -269,6 +290,9 @@ transfer coverage on the approved browser path.
 - That fixture now also records reconnect artifact breadcrumbs, which makes it
   suitable for proving recovery sequences instead of only asserting final board
   state.
+- The new degraded reconnect slice proves the recovery overlay and delayed
+  authoritative-state contract under throttled conditions, but it should be
+  treated as the start of degraded-network validation, not the finish line.
 - The first two-client startup spec exposed two real runtime bugs in
   `src/ui/MenuNavigation.js`, confirming that browser-level startup coverage is
   already paying for itself.
@@ -283,13 +307,13 @@ transfer coverage on the approved browser path.
 
 #### P0
 
-1. Add Playwright reconnect and resubscribe coverage using the two-client
-  browser fixture plus browser-level throttling so reconnect behavior is proven
-  under degraded transport, not just shared-state interruption.
-2. Add degraded-network and artifact-driven reconnect coverage so Phase 4
-  reliability work has evidence for the nastier disruption paths.
-3. Extend startup/reconnect handling so longer desync and resubscribe paths are
-  verified under repeated network disruption, not just coded structurally.
+1. Expand the current degraded reconnect slice into broader browser-level
+  throttling and resubscribe coverage so reconnect behavior is proven under
+  nastier transport conditions than delayed shared-fixture delivery alone.
+2. Add deeper degraded-network and artifact-driven reconnect coverage so Phase
+  4 reliability work has evidence for the harder disruption paths.
+3. Add browser-visible assertions for longer desync and resubscribe paths under
+  repeated network disruption, not just steady-state recovery.
 4. Keep preserving new reconnect regressions once found; the browser suite is
   now part of the runtime contract, not optional QA garnish.
 
@@ -297,10 +321,19 @@ transfer coverage on the approved browser path.
 
 1. Add more lobby lifecycle edge-case coverage, including host-only controls
   beyond the current host-leave proof.
-2. Add reconnect and desync regression coverage with failure artifacts and
-  repeated network disruption.
+2. Add reconnect and desync regression coverage with richer failure artifacts
+  and repeated network disruption.
 3. Review player-controlled text rendering and input validation for Phase 6
   hardening prep.
+
+### Documentation refresh in this pass
+
+- Refreshed `.github/copilot-instructions.md` so the repo guidance now mentions
+  the dedicated degraded reconnect slice, the shared reconnect artifact hooks,
+  and the targeted validation commands that already exist in `package.json`.
+- Refreshed this jobcard so recommendations and next steps now start from the
+  work that is already complete instead of re-requesting the first degraded
+  reconnect slice.
 
 ### Summary
 
