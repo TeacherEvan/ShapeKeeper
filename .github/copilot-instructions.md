@@ -32,7 +32,7 @@ ShapeKeeper is a Dots and Boxes game with local and online multiplayer.
 - **`src/ui/MenuNavigation.js`**: Active multiplayer menu and startup-flow orchestration used by `welcome.js`.
 - **`src/ui/MultiplayerStartup.js`**: Startup state controller for multiplayer match boot, timeout handling, and first-authoritative-state tracking.
 - **`playwright.config.js`**: Browser regression configuration for the no-build runtime, serving the app over local HTTP during Playwright runs.
-- **`tests/e2e/`**: Playwright smoke and multiplayer regression coverage, including startup recovery, host/guest startup validation, reconnect-turn recovery, duplicate-move sync checks, and lobby host-transfer validation.
+- **`tests/e2e/`**: Playwright smoke and multiplayer regression coverage, including startup recovery, host/guest startup validation, reconnect-turn recovery, longer reconnect outage recovery, repeated reconnect-cycle recovery, duplicate-move sync checks, in-match host-leave recovery, and lobby host-transfer validation.
 - **`src/ui/`**: Active UI support modules currently used by `welcome.js`.
 - **`utils.js`**: Shared root-level runtime utilities used by active gameplay modules.
 
@@ -66,6 +66,7 @@ getLineKey(dot1, dot2) {
 - Startup timeout and retry behavior are orchestrated through `src/ui/MultiplayerStartup.js`; prefer extending that controller rather than scattering new startup flags through the UI.
 - When changing multiplayer startup or reconnect behavior, keep subscription setup/cleanup explicit in `src/ui/MenuNavigation.js` and avoid relying on ad hoc globals.
 - Browser regression coverage should assert observable startup phases through the loading overlay rather than relying only on console timing or implicit animation state.
+- Treat reconnect recovery as a sequence, not just a final state; when possible, assert recovery through visible phase transitions and fixture-side artifact logs rather than only the last synchronized board snapshot.
 
 ### 4. UI Helper Ownership
 
@@ -109,6 +110,7 @@ getLineKey(dot1, dot2) {
     4. browser boot over local HTTP when validating the live runtime manually
 - For multiplayer startup changes, also verify that the loading overlay copy renders, the recovery controls exist, and the supported create/join flow still reaches the lobby or match screen as expected.
 - For browser automation changes, prefer stable `data-testid` selectors and test observable startup phases such as `awaiting_first_authoritative_state`, `fatal_startup_failure`, and `in_match`.
+- For reconnect-path browser changes, prefer assertions that combine visible UI state (`desynced`, `reconnecting`, `in_match`, turn indicator, host-only controls) with shared-fixture evidence such as connection transitions or delivery logs.
 - When a new browser regression test exposes a production-path bug, fix the runtime path first and preserve the test; do not “solve” the problem by weakening the assertion unless the assertion is genuinely incorrect.
 - Do not consider a runtime change complete if syntax passes but the browser
     entry modules fail to initialize.
@@ -127,7 +129,7 @@ getLineKey(dot1, dot2) {
 - **Change Colors/Theme**: CSS variables in `styles.css` and theme wiring in `src/ui/ThemeManager.js`.
 - **Update Menu/Lobby Flow**: `welcome.js` and active `src/ui/` modules, especially `MenuNavigation.js`.
 - **Update Multiplayer Startup / Recovery**: `src/ui/MenuNavigation.js`, `src/ui/MultiplayerStartup.js`, `index.html`, and `styles.css`.
-- **Update Browser Regression Coverage**: `playwright.config.js`, `tests/e2e/`, and any stable DOM hooks in `index.html` required for supported runtime flows.
+- **Update Browser Regression Coverage**: `playwright.config.js`, `tests/e2e/`, `tests/e2e/helpers/bootstrap.js`, and any stable DOM hooks in `index.html` required for supported runtime flows.
 - **Update Sounds**: `sound-manager.js` and any related root runtime integration.
 
 ## Phase 2 / Phase 3 / Phase 5 Documentation Notes
@@ -138,8 +140,9 @@ getLineKey(dot1, dot2) {
 - Phase 3 has started with a dedicated multiplayer startup controller, first-authoritative-state gating, timeout recovery UI, and unit coverage for the startup state machine.
 - Phase 5 has now started with a working Playwright configuration, smoke coverage, startup timeout/retry/leave coverage, and a two-client host/guest startup check using a shared browser-side multiplayer fixture.
 - The first two-client browser tests exposed real runtime regressions in `src/ui/MenuNavigation.js`; use browser coverage to validate object ownership and runtime call paths rather than assuming parity with local/unit-only checks.
-- The shared browser-side multiplayer fixture in `tests/e2e/helpers/bootstrap.js` should be extended for reconnect, sync, and lobby edge cases instead of duplicating ad hoc mocks across new specs.
-- `tests/e2e/multiplayer-sync.spec.js` now validates reconnect recovery through the visible turn indicator, duplicate-line rejection without UI drift, and lobby host transfer when the original host leaves.
+- The shared browser-side multiplayer fixture in `tests/e2e/helpers/bootstrap.js` should be extended for reconnect, sync, host-leave, and artifact-logging edge cases instead of duplicating ad hoc mocks across new specs.
+- `tests/e2e/multiplayer-sync.spec.js` now validates reconnect recovery through the visible turn indicator, longer outage recovery, repeated reconnect-cycle recovery, duplicate-line rejection without UI drift, in-match host-leave recovery, and lobby host transfer when the original host leaves.
+- The shared fixture now records lightweight reconnect artifacts such as connection transitions and room/game delivery events; prefer building on those hooks before adding one-off debug state to the runtime.
 - Treat the browser-visible turn indicator and loading overlay phases as part of the regression contract for multiplayer reliability; if they drift during sync or reconnect flows, treat it as a real product bug.
 - The current startup hardening lives in active `src/ui/` code, but it still participates in the approved runtime path through `welcome.js`; treat it as production runtime code, not speculative refactor space.
 - Use the competition roadmap in `docs/planning/COMPETITION_PRODUCTION_ROADMAP.md`

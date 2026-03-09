@@ -221,12 +221,16 @@ transfer coverage on the approved browser path.
 
 1. Add degraded-network reconnect coverage using the new shared multiplayer
   fixture and browser emulation as the next base.
-2. Keep extending multiplayer sync assertions around move propagation, turn
-  ownership, and duplicate rejection across host and guest clients.
-3. Keep using browser automation to flush out production-path object ownership
+2. Use the lightweight fixture artifact logs (`connectionTransitions`, room and
+  game deliveries) as the default evidence layer for reconnect assertions
+  before introducing runtime-only debug hooks.
+3. Keep extending multiplayer sync assertions around move propagation, turn
+  ownership, host transfer, and duplicate rejection across host and guest
+  clients.
+4. Keep using browser automation to flush out production-path object ownership
   and runtime call mismatches in `src/ui/MenuNavigation.js` and adjacent active
   runtime modules.
-4. Update strategic docs whenever a roadmap assumption becomes stale, especially
+5. Update strategic docs whenever a roadmap assumption becomes stale, especially
    around runtime loading facts and current QA posture.
 
 #### Near-term
@@ -235,7 +239,9 @@ transfer coverage on the approved browser path.
   failure-artifact capture.
 2. Add security/input browser coverage before deepening further netcode
   changes.
-3. Continue removing implicit globals from the active runtime only when they are
+3. Consider splitting the multiplayer sync suite into clearer reconnect /
+  recovery groupings once coverage grows beyond the current six browser specs.
+4. Continue removing implicit globals from the active runtime only when they are
   encountered in the supported boot path.
 
 #### Strategic
@@ -260,12 +266,16 @@ transfer coverage on the approved browser path.
 - A shared browser-side multiplayer fixture now exists for host/guest browser
   automation, which should be reused for reconnect and sync scenarios rather
   than creating one-off mocks per spec.
+- That fixture now also records reconnect artifact breadcrumbs, which makes it
+  suitable for proving recovery sequences instead of only asserting final board
+  state.
 - The first two-client startup spec exposed two real runtime bugs in
   `src/ui/MenuNavigation.js`, confirming that browser-level startup coverage is
   already paying for itself.
 - The newer multiplayer sync spec now also proves user-visible turn ownership
-  recovery, longer reconnect resync, in-match host-leave recovery, and lobby
-  host transfer, which raises confidence beyond pure shared-state assertions.
+  recovery, longer reconnect resync, repeated reconnect-cycle recovery,
+  in-match host-leave recovery, and lobby host transfer, which raises
+  confidence beyond pure shared-state assertions.
 - The roadmap previously contained stale runtime-loading and QA-state details;
   those have now been refreshed so strategy and execution are back in sync.
 
@@ -280,6 +290,8 @@ transfer coverage on the approved browser path.
   reliability work has evidence for the nastier disruption paths.
 3. Extend startup/reconnect handling so longer desync and resubscribe paths are
   verified under repeated network disruption, not just coded structurally.
+4. Keep preserving new reconnect regressions once found; the browser suite is
+  now part of the runtime contract, not optional QA garnish.
 
 #### P1
 
@@ -299,5 +311,6 @@ host/guest startup flow, reconnect-turn recovery coverage, multi-move outage
 recovery coverage, repeated reconnect recovery coverage, duplicate-line sync
 coverage, in-match host-leave recovery, and lobby host-transfer validation.
 Full verify, unit tests, and the strengthened multiplayer browser suite passed.
-The next milestone is to extend this shared browser harness into degraded-
-network artifact capture and security/input hardening coverage.
+The most valuable next milestone is to extend this shared browser harness into
+degraded-network artifact capture and security/input hardening coverage without
+loosening the current runtime-visible assertions.
