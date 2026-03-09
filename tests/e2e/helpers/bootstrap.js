@@ -285,6 +285,9 @@ export async function installSharedMockMultiplayer(
             const connectionStateListeners = new Set();
             let currentRoomId = null;
             let connectionState = 'connected';
+            let connectionTransitions = [];
+            let roomDeliveries = [];
+            let gameDeliveries = [];
             let leaveRoomCalls = 0;
             let lastDeliveredGameState = null;
             let lastDeliveredRoomState = null;
@@ -333,6 +336,34 @@ export async function installSharedMockMultiplayer(
                 }
 
                 return room.players.find((player) => player.sessionId === initialSessionId) || null;
+            };
+
+            const createDeliveryEntry = ({ kind, roomPayload = null, gamePayload = null }) => ({
+                kind,
+                timestamp: Date.now(),
+                connectionState,
+                roomStatus: roomPayload?.status || gamePayload?.room?.status || null,
+                currentPlayerIndex: gamePayload?.room?.currentPlayerIndex ?? null,
+                lineCount: gamePayload?.lines?.length || 0,
+                squareCount: gamePayload?.squares?.length || 0,
+            });
+
+            const recordRoomDelivery = (roomPayload) => {
+                roomDeliveries.push(
+                    createDeliveryEntry({
+                        kind: 'room',
+                        roomPayload,
+                    })
+                );
+            };
+
+            const recordGameDelivery = (gamePayload) => {
+                gameDeliveries.push(
+                    createDeliveryEntry({
+                        kind: 'game',
+                        gamePayload,
+                    })
+                );
             };
 
             const getSquareKeysCompletedByLine = (existingLines, lineKey, gridSize) => {
@@ -405,6 +436,7 @@ export async function installSharedMockMultiplayer(
             }) => ({
                 _id: `player_${sessionId}`,
                 color: palette[playerIndex % palette.length],
+                isConnected: true,
                 isReady,
                 name,
                 playerIndex,
@@ -424,11 +456,13 @@ export async function installSharedMockMultiplayer(
                 const gamePayload = clone(room?.gameState || null);
 
                 lastDeliveredRoomState = clone(roomPayload);
+                recordRoomDelivery(roomPayload);
 
                 roomSubscribers.forEach((callback) => callback(roomPayload));
 
                 if (gamePayload) {
                     lastDeliveredGameState = clone(gamePayload);
+                    recordGameDelivery(gamePayload);
                     gameSubscribers.forEach((callback) => callback(gamePayload));
                 }
             };
@@ -440,6 +474,11 @@ export async function installSharedMockMultiplayer(
 
                 const previousState = connectionState;
                 connectionState = nextState;
+                connectionTransitions.push({
+                    from: previousState,
+                    to: nextState,
+                    timestamp: Date.now(),
+                });
                 connectionStateListeners.forEach((listener) => listener(nextState, previousState));
 
                 if (nextState === 'connected') {
@@ -461,15 +500,52 @@ export async function installSharedMockMultiplayer(
                 getSnapshot() {
                     const sharedState = ensureSharedState();
                     return {
+                        connectionTransitions: clone(connectionTransitions),
                         connectionState,
                         currentRoomId,
+                        gameDeliveries: clone(gameDeliveries),
                         lastDeliveredGameState: clone(lastDeliveredGameState),
                         lastDeliveredRoomState: clone(lastDeliveredRoomState),
                         leaveRoomCalls,
+                        roomDeliveries: clone(roomDeliveries),
                         room: clone(getActiveRoom(sharedState)),
                         rooms: clone(sharedState.rooms),
                         sessionId: initialSessionId,
                     };
+                },
+                seedActiveMatchState({
+                    lines = [],
+                    playerScores = [0, 0],
+                    currentPlayerIndex = 0,
+                    squares = [],
+                } = {}) {
+                    const sharedState = ensureSharedState();
+                    const room = getActiveRoom(sharedState);
+
+                    if (!room) {
+                        return null;
+                    }
+
+                    room.status = 'playing';
+                    room.updatedAt = Date.now();
+                    room.gameState = {
+                        lines: clone(lines),
+                        players: room.players.slice(0, 2).map((player, index) => ({
+                            playerIndex: index,
+                            score: playerScores[index] || 0,
+                        })),
+                        room: {
+                            currentPlayerIndex,
+                            status: 'playing',
+                            updatedAt: room.updatedAt,
+                        },
+                        squares: clone(squares),
+                    };
+
+                    writeSharedState(sharedState);
+                    notifySubscribers();
+
+                    return clone(room.gameState);
                 },
                 setConnectionState,
             };
@@ -556,23 +632,67 @@ export async function installSharedMockMultiplayer(
                     leaveRoomCalls += 1;
 
                     if (room) {
-                        room.players = room.players.filter(
-                            (player) => player.sessionId !== initialSessionId
-                        );
+                        if (room.status === 'playing') {
+                            room.players = room.players.map((player) =>
+                                player.sessionId === initialSessionId
+                                    ? { ...player, isConnected: false }
+                                    : player
+                            );
 
-                        if (room.players.length === 0) {
-                            delete sharedState.rooms[room.roomId];
-                        } else {
-                            if (room.hostPlayerId === initialSessionId) {
-                                room.hostPlayerId = room.players[0].sessionId;
+                            const remainingConnectedPlayers = room.players
+                                .filter(
+                                    (player) =>
+                                        player.sessionId !== initialSessionId &&
+                                        player.isConnected !== false
+                                )
+                                .sort((a, b) => a.playerIndex - b.playerIndex);
+
+                            const leavingPlayer = room.players.find(
+                                (player) => player.sessionId === initialSessionId
+                            );
+
+                            const nextTurnPlayer =
+                                remainingConnectedPlayers.find(
+                                    (player) =>
+                                        player.playerIndex > (leavingPlayer?.playerIndex ?? -1)
+                                ) || remainingConnectedPlayers[0] || null;
+
+                            if (room.hostPlayerId === initialSessionId && remainingConnectedPlayers[0]) {
+                                room.hostPlayerId = remainingConnectedPlayers[0].sessionId;
                             }
 
-                            room.players = room.players.map((player, index) => ({
-                                ...player,
-                                playerIndex: index,
-                                playerNumber: index + 1,
-                            }));
+                            if (
+                                room.gameState?.room?.currentPlayerIndex ===
+                                    leavingPlayer?.playerIndex &&
+                                nextTurnPlayer
+                            ) {
+                                room.gameState.room.currentPlayerIndex = nextTurnPlayer.playerIndex;
+                            }
+
                             room.updatedAt = Date.now();
+
+                            if (room.gameState?.room) {
+                                room.gameState.room.updatedAt = room.updatedAt;
+                            }
+                        } else {
+                            room.players = room.players.filter(
+                                (player) => player.sessionId !== initialSessionId
+                            );
+
+                            if (room.players.length === 0) {
+                                delete sharedState.rooms[room.roomId];
+                            } else {
+                                if (room.hostPlayerId === initialSessionId) {
+                                    room.hostPlayerId = room.players[0].sessionId;
+                                }
+
+                                room.players = room.players.map((player, index) => ({
+                                    ...player,
+                                    playerIndex: index,
+                                    playerNumber: index + 1,
+                                }));
+                                room.updatedAt = Date.now();
+                            }
                         }
                     }
 
@@ -704,6 +824,7 @@ export async function installSharedMockMultiplayer(
                     const gameState = clone(getActiveRoom()?.gameState || null);
                     if (gameState) {
                         lastDeliveredGameState = clone(gameState);
+                        recordGameDelivery(gameState);
                         callback(gameState);
                     }
 
@@ -715,6 +836,7 @@ export async function installSharedMockMultiplayer(
                     roomSubscribers.add(callback);
                     const roomPayload = toRoomPayload(getActiveRoom());
                     lastDeliveredRoomState = clone(roomPayload);
+                    recordRoomDelivery(roomPayload);
                     callback(roomPayload);
                     return () => {
                         roomSubscribers.delete(callback);

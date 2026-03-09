@@ -27,7 +27,8 @@ Current execution snapshot:
 
 - **Phase 2:** first runtime-stabilization slice complete
 - **Phase 3:** first startup/loading hardening slice complete
-- **Phase 5:** first Playwright regression-gate slice complete
+- **Phase 4:** multiplayer reliability now partially browser-validated
+- **Phase 5:** first Playwright regression-gate slice complete and extended
 
 What is now verified in the repository:
 
@@ -37,11 +38,16 @@ What is now verified in the repository:
 - startup timeout / retry / leave recovery is automation-detectable
 - a two-client host/guest startup path now verifies first-authoritative-state
   arrival on both clients
+- duplicate-line rejection is browser-validated
+- reconnect recovery now includes both a simple turn-recovery case and a
+  longer outage where the returning client misses multiple scoring moves
+- repeated reconnect-cycle recovery is browser-validated on the shared
+  multiplayer fixture
+- host transfer is browser-validated in both lobby and live-match exit paths
 
 What is still missing before a competition go decision:
 
-- reconnect and desync recovery coverage
-- live move propagation / duplicate-move regression coverage
+- degraded-network recovery coverage
 - security and input hardening completion
 
 ## Brutally honest assessment
@@ -147,11 +153,15 @@ What now exists:
 - a Playwright startup recovery regression for timeout / retry / leave
 - a Playwright two-client host/guest startup check using a shared browser-side
   multiplayer fixture
+- a strengthened Playwright multiplayer sync suite covering reconnect turn
+  recovery, longer reconnect outage recovery, repeated reconnect-cycle
+  recovery, duplicate-line rejection, in-match host-leave recovery, and lobby
+  host transfer
 
 Key remaining gap:
 
-- browser coverage does not yet validate reconnect, move propagation,
-  duplicate-move handling, host-leave behavior, or input hardening paths
+- browser coverage still does not validate degraded-network artifact
+  collection or input hardening paths
 
 ### Refactor facts
 
@@ -299,6 +309,13 @@ regressions.
 - `tests/e2e/loading-state.spec.js` validates timeout / retry / leave recovery
 - `tests/e2e/multiplayer-startup.spec.js` validates host/guest startup and
   first-authoritative-state application
+- `tests/e2e/multiplayer-sync.spec.js` now validates reconnect turn recovery,
+  longer reconnect outage recovery, repeated reconnect-cycle recovery,
+  duplicate-line rejection, in-match host-leave recovery, and lobby host
+  transfer
+- `tests/e2e/helpers/bootstrap.js` now records lightweight connection
+  transitions and delivery events for reconnect assertions in the shared mock
+  fixture
 - the current Playwright project is intentionally conservative: Chromium only
   for now, with expansion to Firefox/WebKit still pending
 
@@ -321,9 +338,11 @@ regressions.
 
 #### Progress note
 
-The first and third acceptance criteria are now partially satisfied: two-player
-startup is browser-validated and the loading-state regression is now
-machine-detectable. Reconnect artifact-driven coverage remains open.
+The first and third acceptance criteria are now materially stronger: two-player
+startup is browser-validated, the loading-state regression is
+machine-detectable, and the multiplayer sync suite now covers multiple
+observable reconnect and host-recovery paths. Reconnect artifact-driven
+coverage remains open.
 
 ### Agent Delta — netcode, match startup, and online state recovery
 
@@ -455,9 +474,11 @@ Expected effect:
 Current status:
 
 - started, first slice complete
-- browser confidence now exists for smoke boot, startup recovery, and two-client
-  startup only
-- reconnect, sync, and security coverage remain follow-on work
+- browser confidence now exists for smoke boot, startup recovery, two-client
+  startup, reconnect recovery, repeated reconnect recovery, duplicate
+  rejection, longer outage recovery, live host-leave recovery, and lobby host
+  transfer
+- degraded-network coverage and security remain follow-on work
 
 ### Slice 5 — security and UX completion pass
 
@@ -675,7 +696,8 @@ Exit rule:
 - started, first slice complete
 - startup timeout/retry/leave is automation-detectable
 - two-client startup is automation-detectable
-- reconnect, sync, and security smoke paths are still pending
+- reconnect and sync coverage are now materially stronger, but degraded-network
+  and security smoke paths are still pending
 
 ## Phase 6 — security and UX completion pass
 
@@ -716,8 +738,11 @@ Current posture as of March 9, 2026:
 - the runtime contract is singular and documented
 - startup handshake is now browser-validated for timeout recovery and two-client
   host/guest startup
-- the build remains **no-go** because reconnect, sync, and security criteria are
-  still incomplete
+- reconnect and sync behavior are partially browser-validated, including
+  duplicate rejection, longer reconnect outage recovery, repeated reconnect
+  recovery, and live host-leave recovery
+- the build remains **no-go** because degraded-network and security criteria
+  are still incomplete
 
 ## Risks and mitigation
 

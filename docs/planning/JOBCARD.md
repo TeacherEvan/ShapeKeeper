@@ -12,20 +12,22 @@
   coverage, startup timeout/retry/leave coverage, a two-client host/guest
   startup test that exercises first-authoritative-state arrival on both clients,
   plus a stronger multiplayer sync suite that validates reconnect-turn
-  recovery, duplicate-line rejection, and lobby host transfer
+  recovery, multi-move outage recovery, repeated reconnect-cycle recovery,
+  duplicate-line rejection, lobby host transfer, and in-match host-leave
+  recovery
 - **Competition impact:** startup and recovery behavior is no longer only a
   structural code claim; the approved browser path now has machine-detectable
   regression coverage for smoke boot, timeout recovery, host/guest startup,
-  reconnect recovery, duplicate-move integrity, and host-role transfer in the
-  lobby
+  reconnect recovery, repeated reconnect resync, duplicate-move integrity,
+  in-match host-role recovery, and host-role transfer in the lobby
 
 ### Release posture
 
 - **Current recommendation:** **No-go** for competition deployment
 - **Why:** the browser-level regression gate is meaningfully stronger now, but
-  multi-move reconnect, in-match host-leave behavior, desync under repeated
-  disruption, and security/input hardening coverage are still incomplete, and
-  the full Phase 4 reliability bar is not yet proven in automation.
+  desync under repeated disruption and security/input hardening coverage are
+  still incomplete, and the full Phase 4 reliability bar is not yet proven in
+  automation.
 - **Earliest realistic go condition:** after the remaining Phase 3/4 work and
   Phase 5 critical criteria are met on the approved browser path.
 
@@ -77,9 +79,24 @@ transfer coverage on the approved browser path.
   validate reconnect recovery through the visible turn indicator, duplicate-line
   rejection without synchronized UI drift, and lobby host transfer when the
   original host leaves.
+- **Longer reconnect proof:** extended the shared browser fixture with seeded
+  in-progress match state so Playwright can validate recovery from a longer
+  outage where the disconnected client misses multiple scoring moves.
+- **Repeated reconnect proof:** added a repeated disconnect / reconnect browser
+  scenario that proves the same client can recover authoritative state across
+  multiple live-match interruption cycles without losing turn or score sync.
+- **In-match host-leave proof:** added browser coverage that validates host and
+  turn recovery when the original host exits during live play, while the guest
+  remains in the match and regains host-only controls.
+- **Fixture artifact logging:** extended the shared Playwright multiplayer
+  fixture with lightweight connection-transition and delivery logs so reconnect
+  recovery assertions can verify more than a final end state.
 - **Runtime bug fixes discovered by automation:** corrected `src/ui/MenuNavigation.js`
   to call `updatePopulateButtonVisibility()` and `updateUI()` through
   `game.uiManager`, where those helpers actually live.
+- **Runtime authority fix:** updated `convex/rooms.ts` and active UI sync logic
+  so a live-match leave now bumps room authority, transfers host ownership when
+  needed, and advances the turn away from the disconnected player.
 - **Docs refresh:** updated `.github/copilot-instructions.md` and this jobcard
   to match the current runtime and QA posture.
 
@@ -91,6 +108,7 @@ transfer coverage on the approved browser path.
 - `tests/e2e/loading-state.spec.js`
 - `tests/e2e/multiplayer-startup.spec.js`
 - `tests/e2e/multiplayer-sync.spec.js`
+- `convex/rooms.ts`
 - `package.json`
 - `vitest.config.js`
 - `src/ui/MultiplayerStartup.js`
@@ -106,16 +124,20 @@ transfer coverage on the approved browser path.
 - **`npm run verify`** — passed
 - **`npm test`** — passed (`18` tests)
 - **`npx playwright test tests/e2e/multiplayer-sync.spec.js --project=chromium`**
-  — passed (`3` strengthened Playwright specs)
+  — passed (`6` strengthened Playwright specs)
 - **Browser boot over local HTTP** — passed on a fresh local origin
 - **Startup recovery DOM** — present and asserted in browser validation
 - **Create-room to lobby path** — passed in browser validation
 - **Two-client host/guest startup path** — passed in Playwright validation
 - **Reconnect turn recovery path** — passed in Playwright validation
+- **Multi-move reconnect outage recovery path** — passed in Playwright
+  validation
+- **Repeated reconnect-cycle recovery path** — passed in Playwright validation
 - **Duplicate-line rejection with synchronized turn UI** — passed in Playwright
   validation
 - **Lobby host-transfer path after host leave** — passed in Playwright
   validation
+- **In-match host-leave recovery path** — passed in Playwright validation
 
 ### Decisions made
 
@@ -138,23 +160,23 @@ transfer coverage on the approved browser path.
 
 ### Remaining risks
 
-- Multi-move reconnect and repeated disruption scenarios are still not proven in
-  browser automation.
 - Browser automation now covers smoke, startup recovery, host/guest startup,
-  reconnect turn recovery, duplicate-line rejection, and lobby host transfer,
-  but it still lacks multi-move outage recovery, in-match host-leave behavior,
-  and security/input hardening scenarios.
+  reconnect turn recovery, multi-move outage recovery, repeated reconnect
+  recovery, duplicate-line rejection, in-match host-leave recovery, and lobby
+  host transfer, but it still lacks degraded-network coverage and
+  security/input hardening scenarios.
 - The current shared browser-side multiplayer fixture now proves meaningful
-  sync and lobby behavior, but it still does not validate the nastier active-
-  match disruption edges.
+  sync and lobby behavior, and it now exposes lightweight reconnect artifacts,
+  but it still does not validate degraded-network behavior against the real
+  browser transport.
 - Security/input hardening work remains a later-phase requirement.
 
 ### Open blockers
 
-1. Multi-move reconnect/resubscribe flows under longer disruption are not yet
-  covered in Playwright.
-2. In-match host-leave / role-recovery behavior is not yet validated in browser
-  automation.
+1. Degraded-network reconnect behavior is not yet covered with browser-level
+  throttling or failure artifacts.
+2. The reconnect suite still relies on the shared mock transport rather than
+  true browser network emulation.
 3. Go/no-go deployment criteria from the roadmap are not yet satisfied.
 
 ### Workstream ownership
@@ -187,7 +209,8 @@ transfer coverage on the approved browser path.
 - **Phase 2 — runtime stabilization:** started, first slice complete
 - **Phase 3 — startup/loading hardening:** started, first slice complete
 - **Phase 4 — multiplayer reliability:** partially started through browser-
-  validated reconnect, duplicate-line, and lobby host-transfer scenarios
+  validated reconnect, multi-move outage, duplicate-line, in-match host-leave,
+  and lobby host-transfer scenarios
 - **Phase 5 — Playwright regression gates:** started, first slice complete and
   materially strengthened
 - **Phase 6 — security and UX completion:** not started
@@ -196,8 +219,8 @@ transfer coverage on the approved browser path.
 
 #### Immediate
 
-1. Add reconnect and resubscribe browser coverage using the new shared
-  multiplayer fixture as the base.
+1. Add degraded-network reconnect coverage using the new shared multiplayer
+  fixture and browser emulation as the next base.
 2. Keep extending multiplayer sync assertions around move propagation, turn
   ownership, and duplicate rejection across host and guest clients.
 3. Keep using browser automation to flush out production-path object ownership
@@ -208,8 +231,8 @@ transfer coverage on the approved browser path.
 
 #### Near-term
 
-1. Expand Playwright coverage to multi-move reconnect, in-match host-leave,
-  and repeated desync recovery.
+1. Expand Playwright coverage to degraded-network reconnect behavior and richer
+  failure-artifact capture.
 2. Add security/input browser coverage before deepening further netcode
   changes.
 3. Continue removing implicit globals from the active runtime only when they are
@@ -241,8 +264,8 @@ transfer coverage on the approved browser path.
   `src/ui/MenuNavigation.js`, confirming that browser-level startup coverage is
   already paying for itself.
 - The newer multiplayer sync spec now also proves user-visible turn ownership
-  recovery and lobby host transfer, which raises confidence beyond pure shared-
-  state assertions.
+  recovery, longer reconnect resync, in-match host-leave recovery, and lobby
+  host transfer, which raises confidence beyond pure shared-state assertions.
 - The roadmap previously contained stale runtime-loading and QA-state details;
   those have now been refreshed so strategy and execution are back in sync.
 
@@ -251,11 +274,12 @@ transfer coverage on the approved browser path.
 #### P0
 
 1. Add Playwright reconnect and resubscribe coverage using the two-client
-  browser fixture for multi-move outage recovery, not just single-move cases.
-2. Add in-match host-leave and role-recovery regression coverage so Phase 4
-  reliability work has a browser safety net for the nastier disruption path.
+  browser fixture plus browser-level throttling so reconnect behavior is proven
+  under degraded transport, not just shared-state interruption.
+2. Add degraded-network and artifact-driven reconnect coverage so Phase 4
+  reliability work has evidence for the nastier disruption paths.
 3. Extend startup/reconnect handling so longer desync and resubscribe paths are
-  verified under network disruption, not just coded structurally.
+  verified under repeated network disruption, not just coded structurally.
 
 #### P1
 
@@ -271,8 +295,9 @@ transfer coverage on the approved browser path.
 ShapeKeeper now has a stronger Phase 5 regression-gate slice on top of the
 Phase 3 startup hardening work. The repo has Playwright configuration, browser
 smoke coverage, startup timeout/retry/leave coverage, a validated two-client
-host/guest startup flow, reconnect-turn recovery coverage, duplicate-line sync
-coverage, and lobby host-transfer validation. Full verify, unit tests, and the
-strengthened multiplayer browser suite passed. The next milestone is to extend
-this shared browser harness into multi-move reconnect disruption, in-match
-host-leave recovery, and security/input hardening coverage.
+host/guest startup flow, reconnect-turn recovery coverage, multi-move outage
+recovery coverage, repeated reconnect recovery coverage, duplicate-line sync
+coverage, in-match host-leave recovery, and lobby host-transfer validation.
+Full verify, unit tests, and the strengthened multiplayer browser suite passed.
+The next milestone is to extend this shared browser harness into degraded-
+network artifact capture and security/input hardening coverage.

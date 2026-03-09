@@ -239,9 +239,54 @@ export const leaveRoom = mutation({
 
         // If game is in progress, just mark as disconnected
         if (room.status === 'playing') {
+            const roomPlayers = await ctx.db
+                .query('players')
+                .withIndex('by_room', (q) => q.eq('roomId', args.roomId))
+                .collect();
+
+            const remainingConnectedPlayers = roomPlayers
+                .filter(
+                    (entry) => entry.sessionId !== args.sessionId && entry.isConnected
+                )
+                .sort((a, b) => a.playerIndex - b.playerIndex);
+
+            const nextTurnPlayer =
+                remainingConnectedPlayers.find((entry) => entry.playerIndex > player.playerIndex) ||
+                remainingConnectedPlayers[0] ||
+                null;
+
+            const roomUpdates: {
+                updatedAt: number;
+                currentPlayerIndex?: number;
+                hostPlayerId?: string;
+            } = {
+                updatedAt: Date.now(),
+            };
+
+            if (room.hostPlayerId === args.sessionId && remainingConnectedPlayers.length > 0) {
+                roomUpdates.hostPlayerId = remainingConnectedPlayers[0].sessionId;
+            }
+
+            if (room.currentPlayerIndex === player.playerIndex && nextTurnPlayer) {
+                roomUpdates.currentPlayerIndex = nextTurnPlayer.playerIndex;
+            }
+
             await ctx.db.patch(player._id, { isConnected: false });
-            console.log('[leaveRoom] Player marked as disconnected', { playerId: player._id });
-            return { success: true, disconnected: true };
+            await ctx.db.patch(args.roomId, roomUpdates);
+
+            console.log('[leaveRoom] In-match leave processed', {
+                playerId: player._id,
+                transferredHostTo: roomUpdates.hostPlayerId || null,
+                transferredTurnTo: roomUpdates.currentPlayerIndex ?? null,
+                remainingConnectedPlayers: remainingConnectedPlayers.length,
+            });
+
+            return {
+                success: true,
+                disconnected: true,
+                transferredHostTo: roomUpdates.hostPlayerId || null,
+                transferredTurnTo: roomUpdates.currentPlayerIndex ?? null,
+            };
         }
 
         // In lobby, remove the player

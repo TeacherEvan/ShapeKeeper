@@ -364,12 +364,28 @@ export function handleRoomUpdate(roomState) {
     const mySessionId = window.ShapeKeeperConvex?.getSessionId();
 
     // Check if I'm the host (hostPlayerId is on room, not player)
-    lobbyManager.isHost = roomState.hostPlayerId === mySessionId;
+    const nextIsHost = roomState.hostPlayerId === mySessionId;
+    const previousGameIsHost = game?.isMultiplayer ? game.isHost : null;
+    lobbyManager.isHost = nextIsHost;
 
     // Find my player ID
     const myPlayer = roomState.players.find((p) => p.sessionId === mySessionId);
     lobbyManager.myPlayerId = myPlayer?._id || null;
     lobbyManager.isReady = myPlayer?.isReady || false;
+
+    if (game?.isMultiplayer) {
+        game.isHost = nextIsHost;
+        game.uiManager?.updatePopulateButtonVisibility();
+
+        if (
+            roomState.status === 'playing' &&
+            previousGameIsHost !== null &&
+            previousGameIsHost !== nextIsHost &&
+            nextIsHost
+        ) {
+            showToast('Host left the match. You are now the host.', 'info', 2500);
+        }
+    }
 
     // Update players list with server data
     // Add isHost by comparing sessionId with room's hostPlayerId
