@@ -30,7 +30,6 @@ export class DotsAndBoxesGame {
         this.effectSystem = new EffectSystem(this);
         this.uiManager = new UIManager(this);
         this.renderer = new Renderer(this);
-        this.inputHandler = new InputHandler(this.canvas, this);
 
         this.linkSystemState(this.animationSystem, [
             'effectAnimations',
@@ -46,6 +45,7 @@ export class DotsAndBoxesGame {
 
         // Setup canvas and initialize game
         this.gameState.setupCanvas();
+    this.inputHandler = new InputHandler(this.canvas, this);
         this.effectSystem.initializeMultipliers();
         this.effectSystem.initializeTileEffects();
         this.particleSystem.initializeAmbientParticles();

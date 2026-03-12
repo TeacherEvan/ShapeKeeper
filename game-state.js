@@ -180,6 +180,7 @@ export class GameState {
         this.game.ctx = newCanvas.getContext('2d');
 
         this.game.ctx.scale(dpr, dpr);
+        this.game.inputHandler?.rebindCanvas(newCanvas);
 
         this.game.dotsCanvas = document.createElement('canvas');
         this.game.dotsCanvas.width = this.game.canvas.width;

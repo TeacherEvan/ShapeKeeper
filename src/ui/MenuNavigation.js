@@ -110,6 +110,7 @@ function setStartupState(nextState, overrides = {}) {
 
 function setActiveGame(nextGame) {
     game = nextGame;
+    window.__shapeKeeperActiveGame = nextGame;
     setMenuNavigationDependencies({
         lobbyManager,
         welcomeAnimation,
@@ -667,9 +668,11 @@ export function initializeMenuNavigation() {
         showScreen('gameScreen');
         requestFullscreen();
 
-        game = new DotsAndBoxesGame(getSelectedGridSize(), player1Color, player2Color, {
-            partyModeEnabled,
-        });
+        setActiveGame(
+            new DotsAndBoxesGame(getSelectedGridSize(), player1Color, player2Color, {
+                partyModeEnabled,
+            })
+        );
     });
 
     // ========================================

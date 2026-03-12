@@ -19,6 +19,15 @@ export class InputHandler {
         this.selectionLocked = false;
         this.hoveredDot = null;
         this.selectionRibbon = null;
+        this._listenersAttached = false;
+        this._boundHandlers = {
+            touchStart: this.handleTouchStart.bind(this),
+            touchMove: this.handleTouchMove.bind(this),
+            touchEnd: this.handleTouchEnd.bind(this),
+            click: this.handleClick.bind(this),
+            mouseMove: this.handleMouseMove.bind(this),
+            contextMenu: this.handleContextMenu.bind(this),
+        };
 
         this.setupEventListeners();
     }
@@ -27,23 +36,94 @@ export class InputHandler {
      * Setup all input event listeners
      */
     setupEventListeners() {
+        this.attachEventListeners();
+    }
+
+    /**
+     * Attach input listeners to the current canvas
+     */
+    attachEventListeners() {
+        if (!this.canvas || this._listenersAttached) {
+            return;
+        }
+
         // Multi-touch event listeners
-        this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this), {
+        this.canvas.addEventListener('touchstart', this._boundHandlers.touchStart, {
             passive: false,
         });
-        this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this), {
+        this.canvas.addEventListener('touchmove', this._boundHandlers.touchMove, {
             passive: false,
         });
-        this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this), {
+        this.canvas.addEventListener('touchend', this._boundHandlers.touchEnd, {
             passive: false,
         });
-        this.canvas.addEventListener('touchcancel', this.handleTouchEnd.bind(this), {
+        this.canvas.addEventListener('touchcancel', this._boundHandlers.touchEnd, {
             passive: false,
         });
 
         // Keep mouse support
-        this.canvas.addEventListener('click', this.handleClick.bind(this));
-        this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
+        this.canvas.addEventListener('click', this._boundHandlers.click);
+        this.canvas.addEventListener('mousemove', this._boundHandlers.mouseMove);
+        this.canvas.addEventListener('contextmenu', this._boundHandlers.contextMenu);
+
+        this._listenersAttached = true;
+    }
+
+    /**
+     * Detach input listeners from the current canvas
+     */
+    detachEventListeners() {
+        if (!this.canvas || !this._listenersAttached) {
+            return;
+        }
+
+        this.canvas.removeEventListener('touchstart', this._boundHandlers.touchStart);
+        this.canvas.removeEventListener('touchmove', this._boundHandlers.touchMove);
+        this.canvas.removeEventListener('touchend', this._boundHandlers.touchEnd);
+        this.canvas.removeEventListener('touchcancel', this._boundHandlers.touchEnd);
+        this.canvas.removeEventListener('click', this._boundHandlers.click);
+        this.canvas.removeEventListener('mousemove', this._boundHandlers.mouseMove);
+        this.canvas.removeEventListener('contextmenu', this._boundHandlers.contextMenu);
+
+        this._listenersAttached = false;
+    }
+
+    /**
+     * Reset transient input state during lifecycle changes
+     */
+    resetTransientState() {
+        this.activeTouches.clear();
+        this.touchStartDot = null;
+        this.selectionLocked = false;
+        this.hoveredDot = null;
+        this.selectionRibbon = null;
+
+        this.game.touchStartDot = null;
+        this.game.hoveredDot = null;
+        this.game.selectionRibbon = null;
+    }
+
+    /**
+     * Move the handler to a replacement canvas without duplicating listeners
+     * @param {HTMLCanvasElement} nextCanvas
+     */
+    rebindCanvas(nextCanvas) {
+        if (!nextCanvas || nextCanvas === this.canvas) {
+            return;
+        }
+
+        this.detachEventListeners();
+        this.resetTransientState();
+        this.canvas = nextCanvas;
+        this.attachEventListeners();
+    }
+
+    /**
+     * Prevent context menu on the canvas
+     * @param {Event} e
+     */
+    handleContextMenu(e) {
+        e.preventDefault();
     }
 
     /**
@@ -439,5 +519,13 @@ export class InputHandler {
             hoveredDot: this.hoveredDot,
             selectionRibbon: this.selectionRibbon,
         };
+    }
+
+    /**
+     * Cleanup listeners for teardown/tests
+     */
+    destroy() {
+        this.detachEventListeners();
+        this.resetTransientState();
     }
 }
