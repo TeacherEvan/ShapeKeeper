@@ -141,7 +141,7 @@ export class MultiplierSystem {
     getStats() {
         const counts = { 2: 0, 3: 0, 4: 0, 5: 0, 10: 0 };
         for (const mult of Object.values(this.multipliers)) {
-            if (counts.hasOwnProperty(mult)) {
+            if (Object.prototype.hasOwnProperty.call(counts, mult)) {
                 counts[mult]++;
             }
         }

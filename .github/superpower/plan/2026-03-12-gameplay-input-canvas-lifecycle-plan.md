@@ -44,12 +44,12 @@ Changes:
 - Add explicit listener management methods so the root runtime handler
   can detach from an old canvas and attach to a replacement canvas.
 - Add a `rebindCanvas(nextCanvas)` method that:
-  - no-ops when the canvas is unchanged,
-  - detaches listeners from the previous canvas,
-  - updates `this.canvas`,
-  - attaches listeners to the new canvas,
-  - preserves input state safety by clearing transient selection/gesture
-    state when needed.
+    - no-ops when the canvas is unchanged,
+    - detaches listeners from the previous canvas,
+    - updates `this.canvas`,
+    - attaches listeners to the new canvas,
+    - preserves input state safety by clearing transient selection/gesture
+      state when needed.
 - Add a `destroy()` method or equivalent cleanup helper for testability
   and future lifecycle safety.
 
@@ -67,6 +67,7 @@ Files:
 - `game-state.js`
 
 Changes:
+
 - Initialize the first canvas before creating the root `InputHandler`,
   or immediately rebind after the first `setupCanvas()` call.
 - In `GameState.setupCanvas()`, after cloning/replacing the canvas and
@@ -92,21 +93,22 @@ Files:
   selectors first
 
 Changes:
+
 - Add a jsdom/Vitest test that verifies root
   `InputHandler.rebindCanvas()` moves listeners to a replacement canvas
   and that the handler tracks the current canvas reference.
 - Add a Playwright local gameplay regression that:
-  - launches the app,
-  - enters local play,
-  - starts a small game,
-  - clicks/taps adjacent dots on the real `#gameCanvas`,
-  - verifies local game state changes (selected dot/line count/current
-    player progression) via browser evaluation.
+    - launches the app,
+    - enters local play,
+    - starts a small game,
+    - clicks/taps adjacent dots on the real `#gameCanvas`,
+    - verifies local game state changes (selected dot/line count/current
+      player progression) via browser evaluation.
 - Run validation in this order:
-  1. `npm run verify`
-  2. `npm test`
-  3. targeted browser regression for the new local gameplay spec (and
-     broaden if needed)
+    1. `npm run verify`
+    2. `npm test`
+    3. targeted browser regression for the new local gameplay spec (and
+       broaden if needed)
 
 Acceptance criteria:
 

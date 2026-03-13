@@ -1,0 +1,148 @@
+.canvas-skeleton {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    z-index: 5;
+    opacity: 1;
+    transition: opacity var(--transition-medium) var(--easing-smooth);
+}
+
+.canvas-skeleton.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.canvas-loading-message,
+.canvas-loading-hint {
+    margin: 0;
+    text-align: center;
+    max-width: 320px;
+    overflow-wrap: anywhere;
+}
+
+.canvas-loading-message {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.canvas-loading-hint {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+}
+
+.canvas-loading-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.loading-action-btn {
+    border: none;
+    border-radius: 999px;
+    min-height: 44px;
+    padding: 10px 18px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        transform var(--transition-fast) var(--easing-smooth),
+        box-shadow var(--transition-fast) var(--easing-smooth),
+        background-color var(--transition-fast) var(--easing-smooth);
+}
+
+.loading-action-btn:hover {
+    transform: translateY(-1px);
+}
+
+.loading-action-btn.primary {
+    background: var(--accent-secondary);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(21, 101, 192, 0.25);
+}
+
+.loading-action-btn.secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.canvas-skeleton[data-state='fatal_startup_failure'] .loading-spinner,
+.canvas-skeleton[data-state='desynced'] .loading-spinner {
+    border-top-color: var(--accent-danger);
+}
+
+.skeleton-grid {
+    display: grid;
+    gap: 8px;
+    opacity: 0.6;
+}
+
+.skeleton-dot,
+.skeleton-text {
+    background: linear-gradient(
+        90deg,
+        var(--bg-tertiary) 25%,
+        var(--bg-secondary) 50%,
+        var(--bg-tertiary) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.5s infinite;
+}
+
+.skeleton-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.skeleton-text {
+    height: 20px;
+    width: 150px;
+    border-radius: 4px;
+}
+
+@keyframes skeletonShimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.skeleton-pulse {
+    animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spinnerRotate 1s linear infinite;
+}
+
+@keyframes spinnerRotate {
+    100% {
+        transform: rotate(360deg);
+    }
+}

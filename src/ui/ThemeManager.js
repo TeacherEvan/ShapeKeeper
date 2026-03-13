@@ -35,6 +35,11 @@ export function updateThemeButton(theme) {
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
+        themeToggle.setAttribute(
+            'aria-label',
+            theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
+        );
+        themeToggle.title = theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
     }
 }
 

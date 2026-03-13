@@ -299,7 +299,7 @@ export class TileEffectsManager {
      * @returns {boolean}
      */
     hasEffect(squareKey) {
-        return this.tileEffects.hasOwnProperty(squareKey);
+        return Object.prototype.hasOwnProperty.call(this.tileEffects, squareKey);
     }
 
     /**

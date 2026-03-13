@@ -72,7 +72,16 @@ export class AnimationSystem {
     /**
      * Trigger square animation
      */
-    triggerSquareAnimation(squareKey, parseSquareKey, offsetX, offsetY, cellSize, playerColor, spawnParticles, spawnSparkleEmojis) {
+    triggerSquareAnimation(
+        squareKey,
+        parseSquareKey,
+        offsetX,
+        offsetY,
+        cellSize,
+        playerColor,
+        spawnParticles,
+        spawnSparkleEmojis
+    ) {
         const { row, col } = parseSquareKey(squareKey);
         const centerX = offsetX + (col + 0.5) * cellSize;
         const centerY = offsetY + (row + 0.5) * cellSize;
@@ -145,7 +154,15 @@ export class AnimationSystem {
     /**
      * Trigger multiplier animation
      */
-    triggerMultiplierAnimation(squareKey, multiplierValue, parseSquareKey, offsetX, offsetY, cellSize, createMultiplierParticles) {
+    triggerMultiplierAnimation(
+        squareKey,
+        multiplierValue,
+        parseSquareKey,
+        offsetX,
+        offsetY,
+        cellSize,
+        createMultiplierParticles
+    ) {
         const { row, col } = parseSquareKey(squareKey);
         const centerX = offsetX + (col + 0.5) * cellSize;
         const centerY = offsetY + (row + 0.5) * cellSize;

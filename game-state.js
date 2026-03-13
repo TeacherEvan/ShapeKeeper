@@ -19,9 +19,6 @@ export class GameState {
      * Initialize game state
      */
     initializeGameState() {
-        this.game.gridSize = this.game.gridSize;
-        this.game.player1Color = this.game.player1Color;
-        this.game.player2Color = this.game.player2Color;
         this.game.populateColor = generateRandomColor();
         this.game.currentPlayer = 1;
         this.game.scores = { 1: 0, 2: 0 };
@@ -32,6 +29,7 @@ export class GameState {
         this.game.triangleCellOwners = new Map();
         this.game.claimedCells = new Set();
         this.game.selectedDot = null;
+        this.game.keyboardFocusDot = null;
         this.game.pulsatingLines = [];
         this.game.lineOwners = new Map();
 
@@ -131,15 +129,27 @@ export class GameState {
                 this.game.gridCols = Math.ceil(Math.sqrt(totalSquares * aspectRatio));
                 this.game.gridRows = Math.ceil(totalSquares / (this.game.gridCols - 1)) + 1;
 
-                this.game.gridCols = Math.max(this.game.gridCols, Math.ceil(this.game.gridSize * 1.2));
-                this.game.gridRows = Math.max(this.game.gridRows, Math.ceil(this.game.gridSize * 0.6));
+                this.game.gridCols = Math.max(
+                    this.game.gridCols,
+                    Math.ceil(this.game.gridSize * 1.2)
+                );
+                this.game.gridRows = Math.max(
+                    this.game.gridRows,
+                    Math.ceil(this.game.gridSize * 0.6)
+                );
             } else if (aspectRatio < 0.75) {
                 const totalSquares = (this.game.gridSize - 1) * (this.game.gridSize - 1);
                 this.game.gridRows = Math.ceil(Math.sqrt(totalSquares / aspectRatio));
                 this.game.gridCols = Math.ceil(totalSquares / (this.game.gridRows - 1)) + 1;
 
-                this.game.gridRows = Math.max(this.game.gridRows, Math.ceil(this.game.gridSize * 1.2));
-                this.game.gridCols = Math.max(this.game.gridCols, Math.ceil(this.game.gridSize * 0.6));
+                this.game.gridRows = Math.max(
+                    this.game.gridRows,
+                    Math.ceil(this.game.gridSize * 1.2)
+                );
+                this.game.gridCols = Math.max(
+                    this.game.gridCols,
+                    Math.ceil(this.game.gridSize * 0.6)
+                );
             } else {
                 this.game.gridCols = this.game.gridSize;
                 this.game.gridRows = this.game.gridSize;
@@ -157,7 +167,8 @@ export class GameState {
             GAME_CONSTANTS.CELL_SIZE_MIN,
             Math.min(cellSize, GAME_CONSTANTS.CELL_SIZE_MAX)
         );
-        const logicalWidth = (this.game.gridCols - 1) * this.game.cellSize + GAME_CONSTANTS.GRID_OFFSET * 2;
+        const logicalWidth =
+            (this.game.gridCols - 1) * this.game.cellSize + GAME_CONSTANTS.GRID_OFFSET * 2;
         const logicalHeight =
             (this.game.gridRows - 1) * this.game.cellSize + GAME_CONSTANTS.GRID_OFFSET * 2;
 
@@ -174,6 +185,7 @@ export class GameState {
         this.game.offsetY = GAME_CONSTANTS.GRID_OFFSET;
 
         const oldCanvas = this.game.canvas;
+        const hadFocus = oldCanvas === document.activeElement;
         const newCanvas = oldCanvas.cloneNode(true);
         oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
         this.game.canvas = newCanvas;
@@ -181,6 +193,10 @@ export class GameState {
 
         this.game.ctx.scale(dpr, dpr);
         this.game.inputHandler?.rebindCanvas(newCanvas);
+
+        if (hadFocus) {
+            newCanvas.focus({ preventScroll: true });
+        }
 
         this.game.dotsCanvas = document.createElement('canvas');
         this.game.dotsCanvas.width = this.game.canvas.width;
@@ -326,11 +342,13 @@ export class GameState {
         }
 
         selectedLines.forEach((lineKey) => {
-            const [dot1, dot2] = this.game.gameLogic.parseLineKey(lineKey);
-
             this.game.lines.add(lineKey);
             this.game.lineOwners.set(lineKey, GAME_CONSTANTS.POPULATE_PLAYER_ID);
-            this.game.animationSystem.addPulsatingLine(lineKey, GAME_CONSTANTS.POPULATE_PLAYER_ID, false);
+            this.game.animationSystem.addPulsatingLine(
+                lineKey,
+                GAME_CONSTANTS.POPULATE_PLAYER_ID,
+                false
+            );
         });
 
         this.game.draw();

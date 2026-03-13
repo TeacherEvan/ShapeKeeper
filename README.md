@@ -266,7 +266,7 @@ Default colors can be changed in `index.html`:
 ## 🐛 Known Issues & Limitations
 
 - Opening `index.html` directly via `file://` is not supported because the app
-    boots with browser ES modules
+  boots with browser ES modules
 - Parsing error in VSCode is cosmetic (ESLint configuration)
 - Portrait mode shows rotation prompt (landscape recommended)
 - Very large grids (50×50+) may impact performance on older devices

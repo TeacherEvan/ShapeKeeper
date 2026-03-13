@@ -296,7 +296,11 @@ export class GameLogic {
         const edge3 = getLineKey(v3, v1);
 
         // Check if all 3 edges exist
-        if (!this.game.lines.has(edge1) || !this.game.lines.has(edge2) || !this.game.lines.has(edge3)) {
+        if (
+            !this.game.lines.has(edge1) ||
+            !this.game.lines.has(edge2) ||
+            !this.game.lines.has(edge3)
+        ) {
             return null;
         }
 

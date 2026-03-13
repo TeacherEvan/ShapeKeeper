@@ -175,8 +175,7 @@ test.describe('degraded reconnect recovery', () => {
                         ),
                         currentPlayerIndex:
                             snapshot.lastDeliveredGameState?.room?.currentPlayerIndex ?? null,
-                        deliveredLineCount:
-                            snapshot.lastDeliveredGameState?.lines?.length || 0,
+                        deliveredLineCount: snapshot.lastDeliveredGameState?.lines?.length || 0,
                         deliveredLineKey:
                             snapshot.lastDeliveredGameState?.lines?.[0]?.lineKey || null,
                     };
@@ -234,14 +233,17 @@ test.describe('degraded reconnect recovery', () => {
                 { lineKey: '1,1-2,1', playerIndex: 1 },
             ];
 
-            await hostPage.evaluate((payload) => {
-                window.__shapeKeeperSharedTest.seedActiveMatchState(payload);
-            }, {
-                lines: seededLines,
-                playerScores: [0, 0],
-                currentPlayerIndex: 0,
-                squares: [],
-            });
+            await hostPage.evaluate(
+                (payload) => {
+                    window.__shapeKeeperSharedTest.seedActiveMatchState(payload);
+                },
+                {
+                    lines: seededLines,
+                    playerScores: [0, 0],
+                    currentPlayerIndex: 0,
+                    squares: [],
+                }
+            );
 
             await expect
                 .poll(async () => {
@@ -448,8 +450,7 @@ test.describe('degraded reconnect recovery', () => {
                             (entry) => entry.source === 'reconnect'
                         ).length,
                         deliveryGeneration: snapshot.deliveryGeneration,
-                        deliveredLineCount:
-                            snapshot.lastDeliveredGameState?.lines?.length || 0,
+                        deliveredLineCount: snapshot.lastDeliveredGameState?.lines?.length || 0,
                         deliveredLineKey:
                             snapshot.lastDeliveredGameState?.lines?.[0]?.lineKey || null,
                         currentPlayerIndex:

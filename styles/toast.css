@@ -1,0 +1,110 @@
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    max-width: 90%;
+    min-width: 300px;
+    padding: 15px 20px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    opacity: 0;
+    transition:
+        transform 0.3s ease,
+        opacity 0.3s ease;
+    animation: toastSlideIn 0.3s var(--easing-bounce);
+}
+
+.toast-notification.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.toast-notification:not(.show) {
+    animation: toastSlideOut 0.3s var(--easing-smooth) forwards;
+}
+
+.toast-message {
+    flex: 1;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.toast-close {
+    background: transparent;
+    border: none;
+    color: currentColor;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    padding: 0;
+    line-height: 1;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+.toast-close:hover {
+    opacity: 1;
+}
+
+.toast-info {
+    background: var(--accent-secondary);
+    color: #fff;
+}
+
+.toast-success {
+    background: var(--accent-primary);
+    color: #fff;
+}
+
+.toast-warning {
+    background: var(--accent-warning);
+    color: #fff;
+}
+
+.toast-error {
+    background: var(--accent-danger);
+    color: #fff;
+}
+
+@keyframes toastSlideIn {
+    0% {
+        transform: translateX(-50%) translateY(-100px) scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes toastSlideOut {
+    0% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-50%) translateY(-100px) scale(0.8);
+        opacity: 0;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .toast-notification {
+        min-width: 250px;
+        top: 10px;
+        padding: 12px 15px;
+    }
+
+    .toast-message {
+        font-size: 0.85rem;
+    }
+}

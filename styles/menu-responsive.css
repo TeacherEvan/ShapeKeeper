@@ -1,0 +1,205 @@
+@media screen and (max-width: 768px) {
+    .welcome-container {
+        padding: 20px;
+        min-height: auto;
+    }
+
+    .welcome-container h1 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .credit {
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+    }
+
+    .setup-section {
+        margin: 20px 0;
+    }
+
+    .setup-section h2 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    .grid-options {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .grid-btn {
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+
+    input[type='color'] {
+        width: 80px;
+        height: 40px;
+    }
+
+    .start-btn,
+    .menu-btn {
+        width: 100%;
+        max-width: 22rem;
+        align-self: center;
+        margin-top: 20px;
+        padding: 15px 40px;
+        font-size: 1.2rem;
+    }
+
+    .lobby-container {
+        padding: 15px;
+    }
+
+    .lobby-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .room-code {
+        font-size: 1.5rem;
+    }
+
+    .name-input,
+    .room-code-input {
+        width: 100%;
+        max-width: 250px;
+    }
+
+    .button-row,
+    .lobby-actions {
+        flex-direction: column;
+    }
+
+    .setting-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .grid-options.small {
+        flex-wrap: wrap;
+    }
+}
+
+@media screen and (max-width: 768px) and (orientation: portrait) {
+    body::before {
+        display: none;
+    }
+
+    .welcome-container {
+        padding: 20px 15px;
+        min-height: auto;
+    }
+
+    .welcome-container h1 {
+        font-size: 2.2rem;
+        margin-bottom: 15px;
+    }
+
+    .credit {
+        margin-bottom: 20px;
+        font-size: 0.95rem;
+    }
+
+    .setup-section {
+        margin: 15px 0;
+    }
+
+    .setup-section h2 {
+        font-size: 1.3rem;
+        margin-bottom: 12px;
+    }
+
+    .grid-options {
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .grid-btn {
+        min-width: 70px;
+        padding: 12px 20px;
+        font-size: 1rem;
+    }
+}
+
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    .welcome-container {
+        padding: 10px 20px;
+        min-height: auto;
+    }
+
+    .welcome-container h1 {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+    }
+
+    .credit {
+        margin-bottom: 10px;
+        font-size: 0.8rem;
+    }
+
+    .setup-section {
+        margin: 10px 0;
+    }
+
+    .setup-section h2 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+
+    .grid-options {
+        gap: 8px;
+    }
+
+    .grid-btn {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+
+    input[type='color'] {
+        width: 60px;
+        height: 35px;
+    }
+
+    .start-btn {
+        margin-top: 10px;
+        padding: 10px 30px;
+        font-size: 1rem;
+    }
+
+    .lobby-container {
+        padding: 10px 20px;
+        min-height: auto;
+    }
+
+    .lobby-header h1 {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+
+    .room-code-section {
+        padding: 10px 15px;
+    }
+
+    .room-code {
+        font-size: 1.2rem;
+    }
+
+    .menu-options {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 15px;
+    }
+
+    .menu-btn {
+        padding: 12px 25px;
+        font-size: 1rem;
+    }
+
+    .players-list {
+        max-height: 120px;
+    }
+}

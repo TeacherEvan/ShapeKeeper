@@ -1,0 +1,106 @@
+@keyframes focusPulse {
+    0%,
+    100% {
+        outline-offset: 4px;
+    }
+    50% {
+        outline-offset: 6px;
+    }
+}
+
+.menu-btn::before,
+.ready-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition:
+        width 0.5s ease,
+        height 0.5s ease;
+}
+
+.menu-btn:hover::before,
+.ready-btn:hover::before {
+    width: 300%;
+    height: 300%;
+}
+
+.menu-btn:focus-visible,
+.grid-btn:focus-visible,
+.start-btn:focus-visible,
+.ready-btn:focus-visible,
+.back-btn:focus-visible,
+.copy-btn:focus-visible,
+.leave-btn:focus-visible,
+.sound-btn:focus-visible,
+.populate-btn:focus-visible,
+.theme-toggle:focus-visible,
+.loading-action-btn:focus-visible,
+.name-input:focus-visible,
+.room-code-input:focus-visible {
+    outline: 3px solid var(--accent-primary);
+    outline-offset: 4px;
+    animation: focusPulse 1.5s ease-in-out infinite;
+}
+
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: btnSpinner 0.8s linear infinite;
+}
+
+@keyframes btnSpinner {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@supports (scroll-snap-type: y mandatory) {
+    .screen.active {
+        scroll-snap-type: y proximity;
+        overflow-y: auto;
+    }
+
+    .setup-section {
+        scroll-snap-align: start;
+    }
+}
+
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #000000;
+        --text-secondary: #333333;
+    }
+
+    [data-theme='dark'] {
+        --border-color: #ffffff;
+        --text-secondary: #cccccc;
+    }
+
+    .grid-btn,
+    .menu-btn,
+    .start-btn {
+        border-width: 3px;
+    }
+}
+
+/* TODO: [UX] Consider adding haptic feedback hints via CSS. */

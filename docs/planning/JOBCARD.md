@@ -191,34 +191,34 @@ transfer coverage on the approved browser path.
 ### Open blockers
 
 1. Degraded-network reconnect coverage has started, but it is still limited to
-  a first browser-throttled slice backed by the shared mock transport.
+   a first browser-throttled slice backed by the shared mock transport.
 2. The reconnect suite still relies on the shared mock transport rather than
-  true browser network emulation.
+   true browser network emulation.
 3. Go/no-go deployment criteria from the roadmap are not yet satisfied.
 
 ### Workstream ownership
 
 - **Agent Alpha — Architecture**
-  - maintain the runtime contract
-  - keep root runtime files authoritative
-  - prevent entrypoint ambiguity from returning
+    - maintain the runtime contract
+    - keep root runtime files authoritative
+    - prevent entrypoint ambiguity from returning
 - **Agent Beta — Research & Security**
-  - harden player-controlled input handling
-  - review session identity strategy and mutation abuse controls
-  - define safe rendering expectations for UI updates
+    - harden player-controlled input handling
+    - review session identity strategy and mutation abuse controls
+    - define safe rendering expectations for UI updates
 - **Agent Gamma — QA Automation**
-  - expand the new Playwright foundation into reconnect, sync, and security
-    regression gates
-  - add artifact capture for failures and reconnect scenarios
-  - establish browser-level regression gates before competition release
+    - expand the new Playwright foundation into reconnect, sync, and security
+      regression gates
+    - add artifact capture for failures and reconnect scenarios
+    - establish browser-level regression gates before competition release
 - **Agent Delta — Netcode**
-  - implement startup state machine and first-state handshake
-  - add recovery path for loading-state timeout
-  - harden reconnect, subscription lifecycle, and desync handling
+    - implement startup state machine and first-state handshake
+    - add recovery path for loading-state timeout
+    - harden reconnect, subscription lifecycle, and desync handling
 - **Agent Epsilon — UX/UI**
-  - surface connection/sync state clearly
-  - improve recovery messaging and turn ownership cues
-  - make host-only controls and failure states obvious under pressure
+    - surface connection/sync state clearly
+    - improve recovery messaging and turn ownership cues
+    - make host-only controls and failure states obvious under pressure
 
 ### Phase completion snapshot
 
@@ -237,40 +237,40 @@ transfer coverage on the approved browser path.
 #### Immediate
 
 1. Expand the current degraded reconnect slice beyond delayed shared-fixture
-  delivery into broader real-transport failure modes, while keeping
-  browser-visible recovery UI and artifact evidence as the contract.
+   delivery into broader real-transport failure modes, while keeping
+   browser-visible recovery UI and artifact evidence as the contract.
 2. Use the lightweight fixture artifact logs (`connectionTransitions`, room and
-  game deliveries, delivery timing) as the default evidence layer for reconnect
-  assertions before introducing runtime-only debug hooks.
+   game deliveries, delivery timing) as the default evidence layer for reconnect
+   assertions before introducing runtime-only debug hooks.
 3. Keep extending multiplayer sync assertions around move propagation, turn
-  ownership, host transfer, duplicate rejection, and delayed recovery ordering
-  across host and guest clients.
+   ownership, host transfer, duplicate rejection, and delayed recovery ordering
+   across host and guest clients.
 4. Keep using browser automation to flush out production-path object ownership
-  and runtime call mismatches in `src/ui/MenuNavigation.js` and adjacent active
-  runtime modules.
+   and runtime call mismatches in `src/ui/MenuNavigation.js` and adjacent active
+   runtime modules.
 5. Update strategic docs whenever a roadmap assumption becomes stale,
-  especially around runtime loading facts, QA posture, and what is genuinely
-  left in the reliability phase.
+   especially around runtime loading facts, QA posture, and what is genuinely
+   left in the reliability phase.
 
 #### Near-term
 
 1. Expand Playwright coverage from the first degraded reconnect slice into
-  broader degraded-network reconnect behavior and richer failure-artifact
-  capture.
+   broader degraded-network reconnect behavior and richer failure-artifact
+   capture.
 2. Add security/input browser coverage before deepening further netcode
-  changes.
+   changes.
 3. Consider splitting the multiplayer reliability coverage into clearer
-  reconnect / recovery groupings if the current `multiplayer-sync` plus
-  `reconnect` split becomes harder to navigate.
+   reconnect / recovery groupings if the current `multiplayer-sync` plus
+   `reconnect` split becomes harder to navigate.
 4. Continue removing implicit globals from the active runtime only when they
-  are encountered in the supported boot path.
+   are encountered in the supported boot path.
 
 #### Strategic
 
 1. Use the roadmap go/no-go criteria as the release gate for competition builds.
 2. Avoid merging Phase 3+ work without browser-level regression coverage.
 3. Keep the no-build deployment model unless a future change proves it is the
-  bottleneck rather than the runtime contract.
+   bottleneck rather than the runtime contract.
 
 ### Notes
 
@@ -308,23 +308,23 @@ transfer coverage on the approved browser path.
 #### P0
 
 1. Expand the current degraded reconnect slice into broader browser-level
-  throttling and resubscribe coverage so reconnect behavior is proven under
-  nastier transport conditions than delayed shared-fixture delivery alone.
+   throttling and resubscribe coverage so reconnect behavior is proven under
+   nastier transport conditions than delayed shared-fixture delivery alone.
 2. Add deeper degraded-network and artifact-driven reconnect coverage so Phase
-  4 reliability work has evidence for the harder disruption paths.
+   4 reliability work has evidence for the harder disruption paths.
 3. Add browser-visible assertions for longer desync and resubscribe paths under
-  repeated network disruption, not just steady-state recovery.
+   repeated network disruption, not just steady-state recovery.
 4. Keep preserving new reconnect regressions once found; the browser suite is
-  now part of the runtime contract, not optional QA garnish.
+   now part of the runtime contract, not optional QA garnish.
 
 #### P1
 
 1. Add more lobby lifecycle edge-case coverage, including host-only controls
-  beyond the current host-leave proof.
+   beyond the current host-leave proof.
 2. Add reconnect and desync regression coverage with richer failure artifacts
-  and repeated network disruption.
+   and repeated network disruption.
 3. Review player-controlled text rendering and input validation for Phase 6
-  hardening prep.
+   hardening prep.
 
 ### Documentation refresh in this pass
 

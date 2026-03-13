@@ -29,6 +29,16 @@ function dispatchCanvasClick(canvas, x, y) {
     );
 }
 
+function dispatchCanvasKey(canvas, key) {
+    canvas.dispatchEvent(
+        new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            key,
+        })
+    );
+}
+
 describe('Root InputHandler canvas lifecycle', () => {
     let game;
 
@@ -92,6 +102,39 @@ describe('Root InputHandler canvas lifecycle', () => {
         handler.lastInteractionTime = 0;
         dispatchCanvasClick(replacementCanvas, 20, 20);
         expect(game.selectedDot).toEqual({ row: 0, col: 0 });
+
+        handler.destroy();
+    });
+
+    it('supports keyboard navigation across board dots', () => {
+        const canvas = createCanvas();
+        const handler = new InputHandler(canvas, game);
+
+        canvas.dispatchEvent(new FocusEvent('focus'));
+        expect(game.keyboardFocusDot).toEqual({ row: 0, col: 0 });
+
+        dispatchCanvasKey(canvas, 'ArrowRight');
+        expect(game.keyboardFocusDot).toEqual({ row: 0, col: 1 });
+
+        dispatchCanvasKey(canvas, 'ArrowDown');
+        expect(game.keyboardFocusDot).toEqual({ row: 1, col: 1 });
+
+        handler.destroy();
+    });
+
+    it('draws an adjacent line with keyboard selection controls', () => {
+        const canvas = createCanvas();
+        const handler = new InputHandler(canvas, game);
+
+        canvas.dispatchEvent(new FocusEvent('focus'));
+
+        dispatchCanvasKey(canvas, 'Enter');
+        expect(game.selectedDot).toEqual({ row: 0, col: 0 });
+
+        dispatchCanvasKey(canvas, 'ArrowRight');
+        dispatchCanvasKey(canvas, 'Enter');
+
+        expect(game.drawLine).toHaveBeenCalledWith({ row: 0, col: 0 }, { row: 0, col: 1 });
 
         handler.destroy();
     });

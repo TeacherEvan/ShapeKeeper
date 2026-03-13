@@ -4,7 +4,12 @@
  */
 
 import { LobbyManager } from './src/ui/LobbyManager.js';
-import { handleGameStateUpdate, handleRoomUpdate, initializeMenuNavigation, setMenuNavigationDependencies } from './src/ui/MenuNavigation.js';
+import {
+    handleGameStateUpdate,
+    handleRoomUpdate,
+    initializeMenuNavigation,
+    setMenuNavigationDependencies,
+} from './src/ui/MenuNavigation.js';
 import { initializeTheme } from './src/ui/ThemeManager.js';
 import { WelcomeAnimation } from './src/ui/WelcomeAnimation.js';
 
@@ -17,7 +22,7 @@ let game = null;
 setMenuNavigationDependencies({
     lobbyManager,
     welcomeAnimation,
-    game
+    game,
 });
 
 // Initialize when DOM is ready
@@ -38,7 +43,7 @@ function initializeApp() {
     setMenuNavigationDependencies({
         lobbyManager,
         welcomeAnimation,
-        game
+        game,
     });
 
     // Initialize menu navigation

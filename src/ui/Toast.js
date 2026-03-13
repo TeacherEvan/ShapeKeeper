@@ -19,10 +19,24 @@ export function showToast(message, type = 'info', duration = 4000) {
     // Create toast element
     const toast = document.createElement('div');
     toast.className = `toast-notification toast-${type}`;
-    toast.innerHTML = `
-        <span class="toast-message">${message}</span>
-        <button class="toast-close">×</button>
-    `;
+    toast.setAttribute('role', type === 'error' || type === 'warning' ? 'alert' : 'status');
+    toast.setAttribute(
+        'aria-live',
+        type === 'error' || type === 'warning' ? 'assertive' : 'polite'
+    );
+    toast.setAttribute('aria-atomic', 'true');
+
+    const messageEl = document.createElement('span');
+    messageEl.className = 'toast-message';
+    messageEl.textContent = message;
+
+    const closeButton = document.createElement('button');
+    closeButton.className = 'toast-close';
+    closeButton.type = 'button';
+    closeButton.setAttribute('aria-label', 'Dismiss notification');
+    closeButton.textContent = '×';
+
+    toast.append(messageEl, closeButton);
 
     // Add to body
     document.body.appendChild(toast);
@@ -31,7 +45,7 @@ export function showToast(message, type = 'info', duration = 4000) {
     setTimeout(() => toast.classList.add('show'), 10);
 
     // Close button handler
-    toast.querySelector('.toast-close').addEventListener('click', () => {
+    closeButton.addEventListener('click', () => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     });

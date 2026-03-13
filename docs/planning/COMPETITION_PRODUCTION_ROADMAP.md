@@ -196,8 +196,8 @@ branch should be:
 3. `game.js` and `welcome.js` become explicit module entry scripts
 4. root-level runtime modules remain authoritative for the competition branch
 5. `src/` is treated as:
-   - active only where already imported by the approved runtime path
-   - otherwise non-authoritative until after competition hardening is complete
+    - active only where already imported by the approved runtime path
+    - otherwise non-authoritative until after competition hardening is complete
 
 This is intentionally conservative.
 
@@ -765,16 +765,16 @@ Current posture as of March 9, 2026:
 ## Risks and mitigation
 
 - **Risk: Over-refactoring under deadline**
-  - Mitigation: freeze broad architecture cleanup until after runtime
-    stabilization and test scaffolding.
+    - Mitigation: freeze broad architecture cleanup until after runtime
+      stabilization and test scaffolding.
 - **Risk: Fixing sync bugs without browser automation**
-  - Mitigation: add Playwright before deep multiplayer changes spread.
+    - Mitigation: add Playwright before deep multiplayer changes spread.
 - **Risk: Static no-build deployment constrains options**
-  - Mitigation: prefer browser-native module fixes over toolchain churn.
+    - Mitigation: prefer browser-native module fixes over toolchain churn.
 - **Risk: Security hardening causes UI regressions**
-  - Mitigation: pair hardening work with browser-level input tests.
+    - Mitigation: pair hardening work with browser-level input tests.
 - **Risk: Preview environment diverges from local assumptions**
-  - Mitigation: require preview smoke validation before competition use.
+    - Mitigation: require preview smoke validation before competition use.
 
 ## What changed from the first roadmap draft
 

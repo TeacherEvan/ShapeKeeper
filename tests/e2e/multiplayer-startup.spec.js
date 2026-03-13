@@ -62,30 +62,32 @@ test.describe('multiplayer host-guest startup', () => {
 
             await hostPage.getByTestId('start-multiplayer-game').click();
 
-            await expect.poll(
-                async () => ({
-                    guestConsoleErrors,
-                    guestPageErrors,
-                    guestPhase: await guestPage
-                        .getByTestId('startup-overlay')
-                        .getAttribute('data-startup-phase'),
-                    hostConsoleErrors,
-                    hostPageErrors,
-                    hostPhase: await hostPage
-                        .getByTestId('startup-overlay')
-                        .getAttribute('data-startup-phase'),
-                }),
-                {
-                    timeout: 5000,
-                }
-            ).toEqual({
-                guestConsoleErrors: [],
-                guestPageErrors: [],
-                guestPhase: 'in_match',
-                hostConsoleErrors: [],
-                hostPageErrors: [],
-                hostPhase: 'in_match',
-            });
+            await expect
+                .poll(
+                    async () => ({
+                        guestConsoleErrors,
+                        guestPageErrors,
+                        guestPhase: await guestPage
+                            .getByTestId('startup-overlay')
+                            .getAttribute('data-startup-phase'),
+                        hostConsoleErrors,
+                        hostPageErrors,
+                        hostPhase: await hostPage
+                            .getByTestId('startup-overlay')
+                            .getAttribute('data-startup-phase'),
+                    }),
+                    {
+                        timeout: 5000,
+                    }
+                )
+                .toEqual({
+                    guestConsoleErrors: [],
+                    guestPageErrors: [],
+                    guestPhase: 'in_match',
+                    hostConsoleErrors: [],
+                    hostPageErrors: [],
+                    hostPhase: 'in_match',
+                });
 
             await expect(hostPage.getByTestId('game-screen')).toHaveClass(/active/);
             await expect(guestPage.getByTestId('game-screen')).toHaveClass(/active/);
@@ -98,8 +100,12 @@ test.describe('multiplayer host-guest startup', () => {
                 'in_match'
             );
 
-            const hostSnapshot = await hostPage.evaluate(() => window.__shapeKeeperSharedTest.getSnapshot());
-            const guestSnapshot = await guestPage.evaluate(() => window.__shapeKeeperSharedTest.getSnapshot());
+            const hostSnapshot = await hostPage.evaluate(() =>
+                window.__shapeKeeperSharedTest.getSnapshot()
+            );
+            const guestSnapshot = await guestPage.evaluate(() =>
+                window.__shapeKeeperSharedTest.getSnapshot()
+            );
 
             expect(hostSnapshot.room.status).toBe('playing');
             expect(guestSnapshot.room.status).toBe('playing');

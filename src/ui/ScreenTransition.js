@@ -11,8 +11,13 @@ let fullscreenTriggered = false;
  * @param {string} screenId - The ID of the screen to show
  */
 export function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
-    document.getElementById(screenId).classList.add('active');
+    document.querySelectorAll('.screen').forEach((screen) => {
+        const isActive = screen.id === screenId;
+        screen.classList.toggle('active', isActive);
+        screen.hidden = !isActive;
+        screen.setAttribute('aria-hidden', String(!isActive));
+        screen.inert = !isActive;
+    });
 }
 
 /**

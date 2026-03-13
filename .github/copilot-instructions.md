@@ -96,14 +96,14 @@ getLineKey(dot1, dot2) {
 
 - `index.html` is the only supported browser entrypoint.
 - `convex-client.js` remains a classic script because it exposes
-    `window.ShapeKeeperConvex`.
+  `window.ShapeKeeperConvex`.
 - `game.js` and `welcome.js` are explicit browser ES module entry scripts.
 - `window.DotsAndBoxesGame`, `window.handleRoomUpdate`, and
-    `window.handleGameStateUpdate` are still part of the current runtime
-    contract.
+  `window.handleGameStateUpdate` are still part of the current runtime
+  contract.
 - If a browser load appears blank after a change, inspect the module graph for
-    missing exports, stale global assumptions, or import path errors before
-    changing architecture.
+  missing exports, stale global assumptions, or import path errors before
+  changing architecture.
 
 ## Validation Expectations
 
@@ -119,7 +119,7 @@ getLineKey(dot1, dot2) {
 - For reconnect or recovery changes, run `npm run test:e2e:reconnect` or `npm run test:e2e:reliability` before broadening to the full Playwright suite.
 - When a new browser regression test exposes a production-path bug, fix the runtime path first and preserve the test; do not “solve” the problem by weakening the assertion unless the assertion is genuinely incorrect.
 - Do not consider a runtime change complete if syntax passes but the browser
-    entry modules fail to initialize.
+  entry modules fail to initialize.
 - Prefer fixing explicit dependency edges over reintroducing broad globals.
 
 ## Game Logic Reference
@@ -156,4 +156,4 @@ getLineKey(dot1, dot2) {
 - The current startup hardening lives in active `src/ui/` code, but it still participates in the approved runtime path through `welcome.js`; treat it as production runtime code, not speculative refactor space.
 - The next practical browser-hardening move after the current reconnect slice is broader degraded-network coverage plus security/input browser coverage.
 - Use the competition roadmap in `docs/planning/COMPETITION_PRODUCTION_ROADMAP.md`
-    as the source of truth for phase sequencing and go/no-go criteria.
+  as the source of truth for phase sequencing and go/no-go criteria.

@@ -45,7 +45,7 @@ export class DotsAndBoxesGame {
 
         // Setup canvas and initialize game
         this.gameState.setupCanvas();
-    this.inputHandler = new InputHandler(this.canvas, this);
+        this.inputHandler = new InputHandler(this.canvas, this);
         this.effectSystem.initializeMultipliers();
         this.effectSystem.initializeTileEffects();
         this.particleSystem.initializeAmbientParticles();
@@ -53,6 +53,10 @@ export class DotsAndBoxesGame {
         // Setup event listeners
         this.gameState.setupEventListeners();
         this.setupPopulateButton();
+
+        requestAnimationFrame(() => {
+            this.canvas?.focus({ preventScroll: true });
+        });
 
         // Start the game
         this.renderer.draw();
@@ -177,7 +181,16 @@ export class DotsAndBoxesGame {
 
             this.lineOwners.set(lineKey, this.currentPlayer);
             this.animationSystem.addPulsatingLine(lineKey, this.currentPlayer, isGhostLine);
-            this.animationSystem.addLineDrawing(lineKey, dot1, dot2, this.currentPlayer, isGhostLine, this.offsetX, this.offsetY, this.cellSize);
+            this.animationSystem.addLineDrawing(
+                lineKey,
+                dot1,
+                dot2,
+                this.currentPlayer,
+                isGhostLine,
+                this.offsetX,
+                this.offsetY,
+                this.cellSize
+            );
 
             this.soundManager.playLineSound();
 
@@ -189,7 +202,10 @@ export class DotsAndBoxesGame {
                     this.triangleCellOwners.set(cellKey, new Set());
                 }
                 this.triangleCellOwners.get(cellKey).add(this.currentPlayer);
-                this.gameLogic.claimCell(parseInt(cellKey.split(',')[0]), parseInt(cellKey.split(',')[1]));
+                this.gameLogic.claimCell(
+                    parseInt(cellKey.split(',')[0]),
+                    parseInt(cellKey.split(',')[1])
+                );
             });
 
             const completedSquares = this.gameLogic.checkForSquares(lineKey);
@@ -244,11 +260,25 @@ export class DotsAndBoxesGame {
                 }
 
                 completedSquares.forEach((squareKey) => {
-                    this.animationSystem.triggerSquareAnimation(squareKey, this.gameLogic.parseSquareKey, this.offsetX, this.offsetY, this.cellSize, this.currentPlayer === 1 ? this.player1Color : this.player2Color, this.particleSystem.spawnParticles, this.particleSystem.spawnSparkleEmojis);
+                    this.animationSystem.triggerSquareAnimation(
+                        squareKey,
+                        this.gameLogic.parseSquareKey,
+                        this.offsetX,
+                        this.offsetY,
+                        this.cellSize,
+                        this.currentPlayer === 1 ? this.player1Color : this.player2Color,
+                        this.particleSystem.spawnParticles,
+                        this.particleSystem.spawnSparkleEmojis
+                    );
                 });
 
                 completedTriangles.forEach((tri) => {
-                    this.animationSystem.triggerTriangleAnimation(tri.key, tri, this.currentPlayer === 1 ? this.player1Color : this.player2Color, this.particleSystem.spawnParticles);
+                    this.animationSystem.triggerTriangleAnimation(
+                        tri.key,
+                        tri,
+                        this.currentPlayer === 1 ? this.player1Color : this.player2Color,
+                        this.particleSystem.spawnParticles
+                    );
                 });
 
                 this.soundManager.playSquareSound(this.comboCount);

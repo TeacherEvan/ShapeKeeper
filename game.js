@@ -6,7 +6,6 @@
  * @author Teacher Evan
  */
 
-
 import { DotsAndBoxesGame } from './dots-and-boxes-game.js';
 
 // Export for use in HTML
