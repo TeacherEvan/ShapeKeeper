@@ -1,3 +1,5 @@
+import { GAME_CONSTANTS } from './constants.js';
+
 /**
  * ShapeKeeper - Utility Functions
  * Common utility functions for the Dots and Boxes game
@@ -43,7 +45,7 @@ export function lerp(start, end, t) {
 }
 
 /**
- * Check if two dots are adjacent (orthogonal or diagonal)
+ * Check if two dots are adjacent orthogonally
  * @param {Object} dot1 - First dot {row, col}
  * @param {Object} dot2 - Second dot {row, col}
  * @returns {boolean} True if adjacent
@@ -51,19 +53,14 @@ export function lerp(start, end, t) {
 export function areAdjacent(dot1, dot2) {
     const rowDiff = Math.abs(dot1.row - dot2.row);
     const colDiff = Math.abs(dot1.col - dot2.col);
-    // Orthogonal (horizontal/vertical) OR diagonal (45°)
-    return (
-        (rowDiff === 1 && colDiff === 0) ||
-        (rowDiff === 0 && colDiff === 1) ||
-        (rowDiff === 1 && colDiff === 1)
-    ); // Diagonal!
+    return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
 }
 
 /**
  * Get the type of line between two dots
  * @param {Object} dot1 - First dot {row, col}
  * @param {Object} dot2 - Second dot {row, col}
- * @returns {'horizontal' | 'vertical' | 'diagonal' | 'invalid'}
+ * @returns {'horizontal' | 'vertical' | 'invalid'}
  */
 export function getLineType(dot1, dot2) {
     const rowDiff = Math.abs(dot1.row - dot2.row);
@@ -71,7 +68,6 @@ export function getLineType(dot1, dot2) {
 
     if (rowDiff === 0 && colDiff === 1) return 'horizontal';
     if (rowDiff === 1 && colDiff === 0) return 'vertical';
-    if (rowDiff === 1 && colDiff === 1) return 'diagonal';
     return 'invalid';
 }
 
@@ -122,7 +118,16 @@ export function parseSquareKey(squareKey) {
  * @param {number} gridCols - Number of grid columns
  * @returns {{row: number, col: number} | null} The nearest dot or null
  */
-export function getNearestDot(x, y, offsetX, offsetY, cellSize, gridRows, gridCols) {
+export function getNearestDot(
+    x,
+    y,
+    offsetX,
+    offsetY,
+    cellSize,
+    gridRows,
+    gridCols,
+    selectionRadiusMultiplier = 0.5
+) {
     const col = Math.round((x - offsetX) / cellSize);
     const row = Math.round((y - offsetY) / cellSize);
 
@@ -134,7 +139,22 @@ export function getNearestDot(x, y, offsetX, offsetY, cellSize, gridRows, gridCo
     const dotY = offsetY + row * cellSize;
     const distance = Math.hypot(x - dotX, y - dotY);
 
-    return distance <= cellSize * 0.5 ? { row, col } : null;
+    return distance <= cellSize * selectionRadiusMultiplier ? { row, col } : null;
+}
+
+export function getDotSelectionRadiusMultiplier(isTouchDevice = false) {
+    return isTouchDevice ? 0.68 : 0.5;
+}
+
+export function getDotRenderRadius(cellSize, isTouchDevice = false) {
+    const scaledRadius = cellSize * (isTouchDevice ? 0.12 : 0.08);
+    const minimumRadius = isTouchDevice ? 4 : 2.6;
+    const maximumRadius = isTouchDevice ? 6.5 : 4;
+
+    return Math.max(
+        GAME_CONSTANTS.DOT_RADIUS,
+        Math.max(minimumRadius, Math.min(scaledRadius, maximumRadius))
+    );
 }
 
 /**

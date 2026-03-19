@@ -71,7 +71,9 @@ export class Renderer {
 
         this.drawSquares();
         this.drawSquaresWithAnimations();
-        this.drawTrianglesWithAnimations();
+        if (!this.game.disableTriangles) {
+            this.drawTrianglesWithAnimations();
+        }
 
         this.drawParticles();
         this.drawSparkleEmojis();

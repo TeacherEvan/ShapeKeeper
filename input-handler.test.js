@@ -175,4 +175,23 @@ describe('Root InputHandler canvas lifecycle', () => {
 
         handler.destroy();
     });
+
+    it('uses the larger mobile selection radius for touch targeting', () => {
+        game.isTouchDevice = true;
+        game.selectionRadiusMultiplier = 0.68;
+
+        const canvas = createCanvas();
+        const handler = new InputHandler(canvas, game);
+
+        dispatchCanvasTouchEvent(canvas, 'touchstart', [
+            { clientX: 36, clientY: 36, identifier: 1 },
+        ]);
+        dispatchCanvasTouchEvent(canvas, 'touchend', [
+            { clientX: 36, clientY: 36, identifier: 1 },
+        ]);
+
+        expect(game.selectedDot).toEqual({ row: 0, col: 0 });
+
+        handler.destroy();
+    });
 });

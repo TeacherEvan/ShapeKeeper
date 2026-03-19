@@ -24,7 +24,7 @@ import {
     processClick,
     updateSelectionRibbon,
 } from './input-handler/pointer-controls.js';
-import { getNearestDot } from './utils.js';
+import { getDotSelectionRadiusMultiplier, getNearestDot } from './utils.js';
 
 export class InputHandler {
     constructor(canvas, game) {
@@ -37,6 +37,7 @@ export class InputHandler {
         this.selectionLocked = false;
         this.hoveredDot = null;
         this.selectionRibbon = null;
+        this.lastTouchMoveTime = 0;
         this._listenersAttached = false;
         this._boundHandlers = {
             touchStart: this.handleTouchStart.bind(this),
@@ -125,6 +126,7 @@ export class InputHandler {
         this.selectionLocked = false;
         this.hoveredDot = null;
         this.selectionRibbon = null;
+        this.lastTouchMoveTime = 0;
         this.game.keyboardFocusDot = null;
 
         this.game.touchStartDot = null;
@@ -195,7 +197,9 @@ export class InputHandler {
             this.game.offsetY,
             this.game.cellSize,
             this.game.gridRows,
-            this.game.gridCols
+            this.game.gridCols,
+            this.game.selectionRadiusMultiplier ||
+                getDotSelectionRadiusMultiplier(this.game.isTouchDevice)
         );
     }
 

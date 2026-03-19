@@ -1,5 +1,12 @@
 import { areAdjacent } from '../utils.js';
 
+function isDiagonalNeighbor(startDot, endDot) {
+    return (
+        Math.abs(startDot.row - endDot.row) === 1 &&
+        Math.abs(startDot.col - endDot.col) === 1
+    );
+}
+
 function getTouchCoordinates(handler, touch) {
     const rect = handler.canvas.getBoundingClientRect();
     return {
@@ -79,7 +86,10 @@ function handleCellInteraction(handler, clickedCell) {
 
 export function handleClick(handler, event) {
     const now = Date.now();
-    if (now - handler.lastTouchTime < 500 || now - handler.lastInteractionTime < 50) {
+    if (
+        now - handler.lastTouchTime < 500 ||
+        now - handler.lastInteractionTime < (handler.game.pointerInteractionThrottleMs || 50)
+    ) {
         return;
     }
 
@@ -124,7 +134,7 @@ export function handleTouchStart(handler, event) {
     handler.game.soundManager.ensureAudioContext();
 
     const now = Date.now();
-    if (now - handler.lastInteractionTime < 50) {
+    if (now - handler.lastInteractionTime < (handler.game.touchInteractionThrottleMs || 50)) {
         return;
     }
     handler.lastInteractionTime = now;
@@ -140,6 +150,11 @@ export function handleTouchStart(handler, event) {
 
 export function handleTouchMove(handler, event) {
     event.preventDefault();
+    const now = Date.now();
+    if (now - handler.lastTouchMoveTime < (handler.game.touchMoveThrottleMs || 16)) {
+        return;
+    }
+    handler.lastTouchMoveTime = now;
 
     for (const touch of event.changedTouches) {
         const { x, y } = getTouchCoordinates(handler, touch);
@@ -207,7 +222,7 @@ export function handleTouchEnd(handler, event) {
                     Math.pow(y - (handler.game.offsetY + endDot.row * handler.game.cellSize), 2)
             );
 
-            if (distance <= handler.game.cellSize * 0.5) {
+            if (distance <= handler.game.cellSize * (handler.game.selectionRadiusMultiplier || 0.5)) {
                 if (
                     handler.game.selectedDot &&
                     (handler.game.selectedDot.row !== endDot.row ||
@@ -223,8 +238,13 @@ export function handleTouchEnd(handler, event) {
                             handler.game.offsetY,
                             handler.game.cellSize
                         );
-                        handler.game.selectedDot = endDot;
-                        handler.touchStartDot = endDot;
+                        if (
+                            !handler.game.disableTriangles ||
+                            !isDiagonalNeighbor(handler.game.selectedDot, endDot)
+                        ) {
+                            handler.game.selectedDot = endDot;
+                            handler.touchStartDot = endDot;
+                        }
                         handler.selectionLocked = true;
                     }
                 } else if (!handler.game.selectedDot) {
@@ -294,7 +314,9 @@ export function processClick(handler, x, y) {
             handler.game.offsetY,
             handler.game.cellSize
         );
-        handler.game.selectedDot = dot;
+        if (!handler.game.disableTriangles || !isDiagonalNeighbor(handler.game.selectedDot, dot)) {
+            handler.game.selectedDot = dot;
+        }
         handler.selectionLocked = true;
     }
 

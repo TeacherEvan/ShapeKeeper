@@ -7,7 +7,7 @@
         return;
     }
 
-    async function createRoom(playerName, gridSize, partyMode = true) {
+    async function createRoom(playerName, gridSize, partyMode = false) {
         const result = await shared.runMutation(
             shared.api.rooms.createRoom,
             {

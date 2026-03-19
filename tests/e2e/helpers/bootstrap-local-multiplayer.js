@@ -1,6 +1,6 @@
 export async function installMockMultiplayer(
     page,
-    { roomCode = 'ABC123', gridSize = 5, partyMode = true, autoEmitGameState = false } = {}
+    { roomCode = 'ABC123', gridSize = 5, partyMode = false, autoEmitGameState = false } = {}
 ) {
     await page.evaluate(
         ({

@@ -81,6 +81,12 @@ getLineKey(dot1, dot2) {
 - `lines` are stored as a Set of keys.
 - `squares` are stored as a Map/Object.
 
+### 6. Temporary gameplay flags
+
+- **Triangles are temporarily disabled in the live runtime.** Do not re-enable diagonal line input, triangle scoring, or triangle rendering unless the task explicitly restores that feature end-to-end.
+- **Party Mode is temporarily hidden and forced off in the live runtime.** Keep local setup, lobby setup, startup wiring, and test defaults aligned with `partyModeEnabled: false` unless the task is specifically to restore Party Mode.
+- When changing local gameplay input, preserve the stronger mobile/touch affordances: larger touch hit radius, clearer selected-dot visuals, and the current touch-move throttling behavior.
+
 ## Development Workflow
 
 - **Start Dev Server**: `npm run dev` (Runs `convex dev` and serves frontend).
@@ -88,6 +94,7 @@ getLineKey(dot1, dot2) {
 - **Verify Code**: `npm run verify` (Typechecks Convex and validates JS syntax).
 - **Run Unit Tests**: `npm test`
 - **Run Browser Regression Tests**: `npm run test:e2e`
+- **Run Desktop/Mobile Compatibility Matrix**: `npm run test:e2e:compat`
 - **Run Reconnect Slice**: `npm run test:e2e:reconnect`
 - **Run Reliability Slice**: `npm run test:e2e:reliability`
 - **Deploy**: `npm run deploy`.
@@ -110,9 +117,11 @@ getLineKey(dot1, dot2) {
 - For runtime changes, validate in this order:
     1. `npm run verify`
     2. `npm test`
-    3. `npm run test:e2e` when browser flows, startup, lobby, sync, or reconnect behavior is touched
-    4. browser boot over local HTTP when validating the live runtime manually
+    3. `npm run test:e2e:compat` when gameplay, input, or cross-device browser behavior is touched
+    4. `npm run test:e2e` when browser flows, startup, lobby, sync, or reconnect behavior is touched
+    5. browser boot over local HTTP when validating the live runtime manually
 - For multiplayer startup changes, also verify that the loading overlay copy renders, the recovery controls exist, and the supported create/join flow still reaches the lobby or match screen as expected.
+- For touch/gameplay changes, prefer extending `tests/e2e/local-gameplay.spec.js`, `tests/e2e/browser-compatibility.spec.js`, and `input-handler.test.js` so mobile affordance regressions are caught before broader suites fail.
 - For browser automation changes, prefer stable `data-testid` selectors and test observable startup phases such as `awaiting_first_authoritative_state`, `fatal_startup_failure`, and `in_match`.
 - For reconnect-path browser changes, prefer assertions that combine visible UI state (`desynced`, `reconnecting`, `in_match`, turn indicator, host-only controls) with shared-fixture evidence such as connection transitions or delivery logs.
 - For degraded reconnect work, prefer extending `tests/e2e/reconnect.spec.js` and `tests/e2e/helpers/bootstrap.js` instead of adding one-off network mocks to unrelated specs.
@@ -132,8 +141,11 @@ getLineKey(dot1, dot2) {
 ## Common Modifications
 
 - **Adjust Grid/Canvas**: `DotsAndBoxesGame` constructor and `setupCanvas` in `dots-and-boxes-game.js` / root runtime modules.
+- **Adjust Mobile Input / Dot Visibility**: `utils.js`, `input-handler.js`, `input-handler/pointer-controls.js`, `game-state.js`, and `renderer/markers.js`.
 - **Change Colors/Theme**: CSS variables in `styles.css` and theme wiring in `src/ui/ThemeManager.js`.
 - **Update Menu/Lobby Flow**: `welcome.js` and active `src/ui/` modules, especially `MenuNavigation.js`.
+- **Keep Triangles Disabled**: `utils.js`, `dots-and-boxes-game.js`, `renderer.js`, and gameplay input paths that determine valid line selection.
+- **Keep Party Mode Hidden/Off**: `index.html`, `src/ui/menu/eventBindings.js`, `src/ui/menu/syncHandlers.js`, `src/ui/MenuNavigation.js`, and `convex-client/room-operations.js`.
 - **Update Multiplayer Startup / Recovery**: `src/ui/MenuNavigation.js`, `src/ui/MultiplayerStartup.js`, `index.html`, and `styles.css`.
 - **Update Browser Regression Coverage**: `playwright.config.js`, `tests/e2e/`, `tests/e2e/helpers/bootstrap.js`, and any stable DOM hooks in `index.html` required for supported runtime flows.
 - **Update Degraded Reconnect Coverage**: `tests/e2e/reconnect.spec.js`, `tests/e2e/multiplayer-sync.spec.js`, `tests/e2e/helpers/bootstrap.js`, and any startup/recovery DOM hooks in `index.html`.
@@ -148,6 +160,9 @@ getLineKey(dot1, dot2) {
 - Phase 5 has now started with a working Playwright configuration, smoke coverage, startup timeout/retry/leave coverage, and a two-client host/guest startup check using a shared browser-side multiplayer fixture.
 - The first two-client browser tests exposed real runtime regressions in `src/ui/MenuNavigation.js`; use browser coverage to validate object ownership and runtime call paths rather than assuming parity with local/unit-only checks.
 - The shared browser-side multiplayer fixture in `tests/e2e/helpers/bootstrap.js` should be extended for reconnect, sync, host-leave, and artifact-logging edge cases instead of duplicating ad hoc mocks across new specs.
+- The live runtime is now hardened for touch devices with a larger dot-selection radius, stronger selected-dot contrast, and touch-move throttling; preserve those affordances unless a task explicitly revisits mobile gameplay UX.
+- Triangles are currently intentionally off in the supported runtime path, so diagonal line browser coverage should continue asserting rejection until the product decision changes.
+- Party Mode is currently intentionally hidden/off in the supported runtime path, so browser coverage should continue asserting that the related controls are absent and that game boot forces `partyModeEnabled: false`.
 - `tests/e2e/multiplayer-sync.spec.js` now validates reconnect recovery through the visible turn indicator, longer outage recovery, repeated reconnect-cycle recovery, duplicate-line rejection without UI drift, in-match host-leave recovery, and lobby host transfer when the original host leaves.
 - `tests/e2e/reconnect.spec.js` now adds the first degraded reconnect slice, using throttled Chromium plus shared-fixture transport delays to keep recovery UI visible until delayed authoritative state arrives.
 - The shared fixture now records lightweight reconnect artifacts such as connection transitions and room/game delivery events; prefer building on those hooks before adding one-off debug state to the runtime.

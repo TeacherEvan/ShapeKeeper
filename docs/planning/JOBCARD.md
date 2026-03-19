@@ -1,23 +1,19 @@
 # ShapeKeeper Development Jobcard
 
-## Session: March 9, 2026
+## Session: March 19, 2026
 
 ### Executive status
 
 - **Phase addressed:** Phase 5 — browser regression gates, building on the Phase
   3 startup hardening slice
-- **Status:** In progress, with the first practical browser automation slice now
-  completed, extended with stronger multiplayer reliability coverage, and now
-  advanced with stronger degraded reconnect coverage and artifact validation
-- **Outcome:** ShapeKeeper now has Playwright scaffolding, browser smoke
-  coverage, startup timeout/retry/leave coverage, a two-client host/guest
-  startup test that exercises first-authoritative-state arrival on both clients,
-  plus a stronger multiplayer sync suite that validates reconnect-turn
-  recovery, multi-move outage recovery, repeated reconnect-cycle recovery,
-  duplicate-line rejection, lobby host transfer, and in-match host-leave
-  recovery, plus degraded reconnect tests that keep the recovery UI visible
-  until delayed authoritative state arrives and verify repeated slowed recovery
-  cycles with artifact evidence
+- **Status:** In progress, with browser automation materially stronger and a new
+  runtime-hardening slice completed for mobile gameplay affordance, temporary
+  triangle disablement, and temporary Party Mode removal
+- **Outcome:** ShapeKeeper now has stronger browser regression coverage across
+  desktop/mobile compatibility plus multiplayer reliability, and the live
+  runtime is more touch-friendly on Android/mobile through larger selection
+  affordances, clearer dot visibility, diagonal/triangle shutdown, and a
+  product-consistent no-party-mode path
 - **Competition impact:** startup and recovery behavior is no longer only a
   structural code claim; the approved browser path now has machine-detectable
   regression coverage for smoke boot, timeout recovery, host/guest startup,
@@ -27,19 +23,20 @@
 ### Release posture
 
 - **Current recommendation:** **No-go** for competition deployment
-- **Why:** the browser-level regression gate is meaningfully stronger now, but
-  degraded-network coverage has only started and still leans on the shared
-  browser-side transport fixture, security/input hardening coverage is still
-  incomplete, and the full Phase 4 reliability bar is not yet proven in
-  automation.
+- **Why:** the browser-level regression gate is meaningfully stronger now and
+  the mobile gameplay path is healthier, but degraded-network coverage still
+  leans on the shared browser-side transport fixture, security/input hardening
+  coverage is still incomplete, and the full Phase 4 reliability bar is not yet
+  proven in automation.
 - **Earliest realistic go condition:** after the remaining Phase 3/4 work and
   Phase 5 critical criteria are met on the approved browser path.
 
 ### Focus
 
-Phase 5 regression-gate expansion for the competition roadmap, extending the
-existing startup/browser slice into visible sync, reconnect, and lobby role
-transfer coverage on the approved browser path.
+Phase 5 regression-gate expansion for the competition roadmap, extended with a
+runtime-hardening pass that fixes mobile gameplay affordance issues and keeps
+temporarily disabled features internally consistent across runtime, UI, and
+tests.
 
 ### Quality checkpoint
 
@@ -100,6 +97,18 @@ transfer coverage on the approved browser path.
 - **Fixture artifact logging:** extended the shared Playwright multiplayer
   fixture with connection-transition plus delivery-source and timing logs so
   reconnect recovery assertions can verify more than a final end state.
+- **Mobile gameplay hardening:** increased touch dot-selection tolerance, added
+  stronger visible dot/selection rendering for touch devices, and throttled
+  touch-move updates in the active runtime input path.
+- **Triangle shutdown:** temporarily disabled diagonal/triangle gameplay in the
+  supported runtime path by rejecting diagonal input, skipping triangle
+  scoring, and gating triangle rendering.
+- **Party Mode shutdown:** temporarily removed Party Mode from the visible local
+  and lobby flows and forced runtime startup down the non-party branch for
+  local and multiplayer sessions.
+- **Mobile/browser regression additions:** added browser and unit coverage for
+  stronger mobile affordances, Party Mode absence, and diagonal rejection while
+  triangles remain disabled.
 - **Runtime bug fixes discovered by automation:** corrected `src/ui/MenuNavigation.js`
   to call `updatePopulateButtonVisibility()` and `updateUI()` through
   `game.uiManager`, where those helpers actually live.
@@ -126,17 +135,32 @@ transfer coverage on the approved browser path.
 - `src/ui/MenuNavigation.js`
 - `dots-and-boxes-game.js`
 - `index.html`
+- `utils.js`
+- `input-handler.js`
+- `input-handler/pointer-controls.js`
+- `game-state.js`
+- `renderer.js`
+- `renderer/markers.js`
+- `tests/e2e/browser-compatibility.spec.js`
+- `tests/e2e/local-gameplay.spec.js`
+- `tests/e2e/multiplayer-sync-host-transfer.spec.js`
+- `input-handler.test.js`
+- `convex-client/room-operations.js`
 - `.github/copilot-instructions.md`
 - `docs/planning/JOBCARD.md`
+- `docs/planning/COMPETITION_PRODUCTION_ROADMAP.md`
 
 ### Verification completed
 
 - **`npm run verify`** — passed
-- **`npm test`** — passed (`18` tests)
+- **`npm test`** — passed (`23` tests)
+- **`npx playwright test tests/e2e/local-gameplay.spec.js tests/e2e/browser-compatibility.spec.js tests/e2e/multiplayer-sync-host-transfer.spec.js`**
+  — passed (`50` project-expanded Playwright checks with expected touch-only skips)
+- **`npm run test:e2e:compat`** — passed (`44` passed, `6` expected skips)
 - **`npx playwright test tests/e2e/multiplayer-sync.spec.js --project=chromium`**
   — passed (`6` strengthened Playwright specs)
 - **`npm run test:e2e:reconnect`** — passed (`2` degraded reconnect specs)
-- **`npm run test:e2e:reliability`** — passed (`8` multiplayer reliability
+- **`npm run test:e2e:reliability`** — passed (`6` multiplayer reliability
   Playwright specs)
 - **Browser boot over local HTTP** — passed on a fresh local origin
 - **Startup recovery DOM** — present and asserted in browser validation
@@ -168,6 +192,8 @@ transfer coverage on the approved browser path.
   hardening multiplayer startup and reconnect behavior.
 - Prefer stable `data-testid` hooks and observable startup-phase attributes over
   brittle DOM-shape assertions in browser automation.
+- Keep temporary product shutdowns honest: if triangles or Party Mode are off,
+  the live UI, runtime flags, and regression tests should all agree.
 - Use browser automation as a runtime correctness check, not just a QA nicety;
   the first two-client spec already exposed real production-path method-call
   bugs that unit tests and syntax checks did not catch.
@@ -179,7 +205,8 @@ transfer coverage on the approved browser path.
 - Browser automation now covers smoke, startup recovery, host/guest startup,
   reconnect turn recovery, multi-move outage recovery, repeated reconnect
   recovery, degraded reconnect recovery with repeated slowed cycles and
-  artifact assertions, duplicate-line rejection,
+  artifact assertions, duplicate-line rejection, mobile gameplay affordance,
+  temporary triangle shutdown, and Party Mode absence,
   in-match host-leave recovery, and lobby host transfer, but it still lacks
   broader degraded-network coverage and security/input hardening scenarios.
 - The current shared browser-side multiplayer fixture now proves meaningful
@@ -194,7 +221,9 @@ transfer coverage on the approved browser path.
    a first browser-throttled slice backed by the shared mock transport.
 2. The reconnect suite still relies on the shared mock transport rather than
    true browser network emulation.
-3. Go/no-go deployment criteria from the roadmap are not yet satisfied.
+3. Temporary feature shutdowns (triangles and Party Mode) will need an explicit
+   product decision before any competition release that intends to restore them.
+4. Go/no-go deployment criteria from the roadmap are not yet satisfied.
 
 ### Workstream ownership
 
@@ -251,6 +280,8 @@ transfer coverage on the approved browser path.
 5. Update strategic docs whenever a roadmap assumption becomes stale,
    especially around runtime loading facts, QA posture, and what is genuinely
    left in the reliability phase.
+6. Keep the new mobile-touch affordance coverage active when iterating on local
+   gameplay input so Android regressions are detected before release.
 
 #### Near-term
 
@@ -262,7 +293,9 @@ transfer coverage on the approved browser path.
 3. Consider splitting the multiplayer reliability coverage into clearer
    reconnect / recovery groupings if the current `multiplayer-sync` plus
    `reconnect` split becomes harder to navigate.
-4. Continue removing implicit globals from the active runtime only when they
+4. Decide explicitly whether triangles and Party Mode will return before
+   competition stabilization leaves the hardening phase.
+5. Continue removing implicit globals from the active runtime only when they
    are encountered in the supported boot path.
 
 #### Strategic
@@ -284,6 +317,8 @@ transfer coverage on the approved browser path.
   `welcome.js`.
 - The first Phase 5 slice now adds Playwright coverage on the real browser
   entrypoint without changing the no-build deployment model.
+- The latest runtime-hardening slice also fixed a real mobile UX problem: on
+  touch devices the interactive dots are now easier to see and easier to hit.
 - A shared browser-side multiplayer fixture now exists for host/guest browser
   automation, which should be reused for reconnect and sync scenarios rather
   than creating one-off mocks per spec.
@@ -300,6 +335,9 @@ transfer coverage on the approved browser path.
   recovery, longer reconnect resync, repeated reconnect-cycle recovery,
   in-match host-leave recovery, and lobby host transfer, which raises
   confidence beyond pure shared-state assertions.
+- Triangles and Party Mode are intentionally off in the current supported
+  runtime path; docs, UI, and browser coverage now match that temporary product
+  decision.
 - The roadmap previously contained stale runtime-loading and QA-state details;
   those have now been refreshed so strategy and execution are back in sync.
 
@@ -312,9 +350,12 @@ transfer coverage on the approved browser path.
    nastier transport conditions than delayed shared-fixture delivery alone.
 2. Add deeper degraded-network and artifact-driven reconnect coverage so Phase
    4 reliability work has evidence for the harder disruption paths.
-3. Add browser-visible assertions for longer desync and resubscribe paths under
+3. Decide whether the temporary triangle/Party Mode shutdown remains the
+   intended competition posture or whether a later guarded restoration slice is
+   required.
+4. Add browser-visible assertions for longer desync and resubscribe paths under
    repeated network disruption, not just steady-state recovery.
-4. Keep preserving new reconnect regressions once found; the browser suite is
+5. Keep preserving new reconnect regressions once found; the browser suite is
    now part of the runtime contract, not optional QA garnish.
 
 #### P1
@@ -338,12 +379,15 @@ transfer coverage on the approved browser path.
 ### Summary
 
 ShapeKeeper now has a stronger Phase 5 regression-gate slice on top of the
-Phase 3 startup hardening work. The repo has Playwright configuration, browser
-smoke coverage, startup timeout/retry/leave coverage, a validated two-client
+Phase 3 startup hardening work and a new mobile runtime-hardening slice on the
+approved gameplay path. The repo has Playwright configuration, browser smoke
+coverage, startup timeout/retry/leave coverage, a validated two-client
 host/guest startup flow, reconnect-turn recovery coverage, multi-move outage
 recovery coverage, repeated reconnect recovery coverage, duplicate-line sync
-coverage, in-match host-leave recovery, and lobby host-transfer validation.
-Full verify, unit tests, and the strengthened multiplayer browser suite passed.
-The most valuable next milestone is to extend this shared browser harness into
-degraded-network artifact capture and security/input hardening coverage without
-loosening the current runtime-visible assertions.
+coverage, in-match host-leave recovery, lobby host-transfer validation, and new
+mobile/browser assertions for stronger touch affordances plus the temporary
+triangle/Party Mode shutdown state. Full verify, unit tests, the compatibility
+matrix, and the reliability browser suite passed. The most valuable next
+milestone is to extend this shared browser harness into degraded-network
+artifact capture and security/input hardening coverage without loosening the
+current runtime-visible assertions.

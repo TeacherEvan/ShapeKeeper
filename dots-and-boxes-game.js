@@ -8,6 +8,7 @@ import { ParticleSystem } from './particle-system.js';
 import { Renderer } from './renderer.js';
 import { SoundManager } from './sound-manager.js';
 import { UIManager } from './ui-manager.js';
+import { getDotRenderRadius } from './utils.js';
 
 export class DotsAndBoxesGame {
     constructor(gridSize, player1Color, player2Color, options = {}) {
@@ -194,19 +195,9 @@ export class DotsAndBoxesGame {
 
             this.soundManager.playLineSound();
 
-            const completedTriangles = this.gameLogic.checkForTriangles(lineKey);
-            completedTriangles.forEach((tri) => {
-                this.triangles[tri.key] = this.currentPlayer;
-                const cellKey = this.gameLogic.getTriangleCellKey(tri.vertices);
-                if (!this.triangleCellOwners.has(cellKey)) {
-                    this.triangleCellOwners.set(cellKey, new Set());
-                }
-                this.triangleCellOwners.get(cellKey).add(this.currentPlayer);
-                this.gameLogic.claimCell(
-                    parseInt(cellKey.split(',')[0]),
-                    parseInt(cellKey.split(',')[1])
-                );
-            });
+            const completedTriangles = this.disableTriangles
+                ? []
+                : this.gameLogic.checkForTriangles(lineKey);
 
             const completedSquares = this.gameLogic.checkForSquares(lineKey);
 
@@ -231,7 +222,7 @@ export class DotsAndBoxesGame {
                     this.gameState.switchToNextPlayer();
                 }
             } else {
-                let basePoints = completedSquares.length + completedTriangles.length * 0.5;
+                let basePoints = completedSquares.length;
 
                 if (this.playerEffects[this.currentPlayer].doublePointsCount > 0) {
                     basePoints *= 2;
@@ -269,15 +260,6 @@ export class DotsAndBoxesGame {
                         this.currentPlayer === 1 ? this.player1Color : this.player2Color,
                         this.particleSystem.spawnParticles,
                         this.particleSystem.spawnSparkleEmojis
-                    );
-                });
-
-                completedTriangles.forEach((tri) => {
-                    this.animationSystem.triggerTriangleAnimation(
-                        tri.key,
-                        tri,
-                        this.currentPlayer === 1 ? this.player1Color : this.player2Color,
-                        this.particleSystem.spawnParticles
                     );
                 });
 
@@ -354,5 +336,19 @@ export class DotsAndBoxesGame {
      */
     draw() {
         this.renderer.draw();
+    }
+
+    getInteractionDiagnostics() {
+        return {
+            disableTriangles: this.disableTriangles,
+            isTouchDevice: this.isTouchDevice,
+            partyModeEnabled: this.partyModeEnabled,
+            selectionRadiusMultiplier: this.selectionRadiusMultiplier,
+            selectionRadiusPx: this.cellSize * this.selectionRadiusMultiplier,
+            staticDotRadiusPx: getDotRenderRadius(this.cellSize, this.isTouchDevice),
+            selectedDot: this.selectedDot,
+            selectionRibbonActive: Boolean(this.selectionRibbon),
+            trianglesCount: Object.keys(this.triangles || {}).length,
+        };
     }
 }

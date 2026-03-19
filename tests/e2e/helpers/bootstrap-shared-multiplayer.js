@@ -8,7 +8,7 @@ export async function installSharedMockMultiplayer(
         defaultPlayerName,
         roomCode = 'ABC123',
         gridSize = 5,
-        partyMode = true,
+        partyMode = false,
         resetSharedState = false,
     }
 ) {
@@ -596,7 +596,7 @@ export async function installSharedMockMultiplayer(
 
 export async function createSharedMockMultiplayerPages(
     browser,
-    { roomCode = 'ABC123', gridSize = 5, partyMode = true, startupTimeoutMs = 1000 } = {}
+    { roomCode = 'ABC123', gridSize = 5, partyMode = false, startupTimeoutMs = 1000 } = {}
 ) {
     const { gotoApp } = await import('./bootstrap-app.js');
     const context = await browser.newContext();

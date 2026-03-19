@@ -7,7 +7,11 @@
  */
 
 import { GAME_CONSTANTS } from './constants.js';
-import { generateRandomColor } from './utils.js';
+import {
+    generateRandomColor,
+    getDotRenderRadius,
+    getDotSelectionRadiusMultiplier,
+} from './utils.js';
 
 export class GameState {
     constructor(game) {
@@ -33,7 +37,17 @@ export class GameState {
         this.game.pulsatingLines = [];
         this.game.lineOwners = new Map();
 
-        this.game.partyModeEnabled = this.game.options.partyModeEnabled !== false;
+        this.game.isTouchDevice =
+            navigator.maxTouchPoints > 0 ||
+            window.matchMedia?.('(pointer: coarse)')?.matches === true;
+        this.game.disableTriangles = true;
+        this.game.partyModeEnabled = false;
+        this.game.selectionRadiusMultiplier = getDotSelectionRadiusMultiplier(
+            this.game.isTouchDevice
+        );
+        this.game.touchInteractionThrottleMs = this.game.isTouchDevice ? 24 : 50;
+        this.game.pointerInteractionThrottleMs = 50;
+        this.game.touchMoveThrottleMs = this.game.isTouchDevice ? 24 : 16;
 
         this.game.activeTouches = new Map();
         this.game.touchVisuals = [];
@@ -186,7 +200,18 @@ export class GameState {
 
         const oldCanvas = this.game.canvas;
         const hadFocus = oldCanvas === document.activeElement;
-        const newCanvas = oldCanvas.cloneNode(true);
+        const newCanvas = document.createElement('canvas');
+        newCanvas.id = oldCanvas.id;
+        newCanvas.className = oldCanvas.className;
+        if (oldCanvas.getAttribute('tabindex')) {
+            newCanvas.setAttribute('tabindex', oldCanvas.getAttribute('tabindex'));
+        }
+        if (oldCanvas.getAttribute('aria-describedby')) {
+            newCanvas.setAttribute('aria-describedby', oldCanvas.getAttribute('aria-describedby'));
+        }
+        if (oldCanvas.getAttribute('aria-label')) {
+            newCanvas.setAttribute('aria-label', oldCanvas.getAttribute('aria-label'));
+        }
         oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
         this.game.canvas = newCanvas;
         this.game.ctx = newCanvas.getContext('2d');
@@ -216,7 +241,8 @@ export class GameState {
         this.game.dotsCtx.clearRect(0, 0, this.game.dotsCanvas.width, this.game.dotsCanvas.height);
 
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        this.game.dotsCtx.fillStyle = isDark ? '#4a5568' : '#cbd5e0';
+        this.game.dotsCtx.fillStyle = isDark ? '#e2e8f0' : '#475569';
+        const dotRadius = getDotRenderRadius(this.game.cellSize, this.game.isTouchDevice);
 
         for (let r = 0; r < this.game.gridRows; r++) {
             for (let c = 0; c < this.game.gridCols; c++) {
@@ -224,7 +250,7 @@ export class GameState {
                 this.game.dotsCtx.arc(
                     this.game.offsetX + c * this.game.cellSize,
                     this.game.offsetY + r * this.game.cellSize,
-                    GAME_CONSTANTS.DOT_RADIUS,
+                    dotRadius,
                     0,
                     Math.PI * 2
                 );

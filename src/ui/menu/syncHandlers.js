@@ -70,8 +70,8 @@ export function handleRoomStateUpdate(roomState, deps) {
 
     const lobbyPartyModeToggle = document.getElementById('lobbyPartyModeToggle');
     if (lobbyPartyModeToggle) {
-        lobbyPartyModeToggle.checked = roomState.partyMode !== false;
-        lobbyPartyModeToggle.disabled = !lobbyManager.isHost;
+        lobbyPartyModeToggle.checked = false;
+        lobbyPartyModeToggle.disabled = true;
     }
 
     document.querySelectorAll('.lobby-grid-btn').forEach((btn) => {

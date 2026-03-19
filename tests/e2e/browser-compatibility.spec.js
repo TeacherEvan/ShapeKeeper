@@ -61,4 +61,15 @@ test.describe('browser compatibility matrix', () => {
 
         await expect(page.getByTestId('main-menu-screen')).toHaveClass(/active/);
     });
+
+    test('keeps Party Mode hidden in local and lobby setup flows', async ({ page }) => {
+        await gotoApp(page);
+
+        await page.locator('#localPlayBtn').click();
+        await expect(page.locator('#partyModeToggle')).toHaveCount(0);
+
+        await page.locator('#backToMenuFromLocal').click();
+        await page.getByTestId('create-game-button').click();
+        await expect(page.locator('#lobbyPartyModeToggle')).toHaveCount(0);
+    });
 });

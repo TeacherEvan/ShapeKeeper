@@ -46,7 +46,8 @@ test.describe('multiplayer sync host transfer', () => {
             await expect(guestPage.locator('#playersList .player-entry')).toHaveCount(1);
             await expect(guestPage.locator('#playersList .player-entry-name')).toHaveText('Guest');
             await expect(guestPage.locator('#playersList .host-badge')).toHaveText('Host');
-            await expect(guestPage.locator('#lobbyPartyModeToggle')).toBeEnabled();
+            await expect(guestPage.locator('#lobbyPartyModeToggle')).toHaveCount(0);
+            await expect(guestPage.locator('.lobby-grid-btn').first()).toBeEnabled();
             await expect(guestPage.getByTestId('start-multiplayer-game')).toBeDisabled();
 
             expectNoBrowserErrors(hostErrors);

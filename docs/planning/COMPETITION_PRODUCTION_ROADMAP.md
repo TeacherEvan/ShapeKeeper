@@ -18,7 +18,7 @@ The goal is not to describe every nice idea. The goal is to decide:
 **No gameplay or backend production code is to be modified until this roadmap is
 approved.**
 
-## Implementation checkpoint — March 9, 2026
+## Implementation checkpoint — March 19, 2026
 
 This roadmap remains the strategic source of truth, but the repository has now
 progressed beyond the original approval-only state.
@@ -30,6 +30,8 @@ Current execution snapshot:
 - **Phase 4:** multiplayer reliability now partially browser-validated
 - **Phase 5:** first Playwright regression-gate slice complete, extended, and
   now started on degraded reconnect coverage
+- **Current runtime gameplay posture:** mobile input/dot visibility hardened,
+  triangles temporarily disabled, Party Mode temporarily hidden and forced off
 
 What is now verified in the repository:
 
@@ -48,12 +50,19 @@ What is now verified in the repository:
 - degraded reconnect coverage now verifies both delayed recovery visibility and
   repeated slowed reconnect cycles with delivery artifact evidence on a
   throttled browser path
+- local gameplay on touch devices now has stronger browser-validated selection
+  affordance, clearer visible dot states, and diagonal rejection while
+  triangles remain disabled
+- the live product path now hides Party Mode and forces non-party startup in
+  local and multiplayer flows
 
 What is still missing before a competition go decision:
 
 - broader degraded-network recovery coverage beyond the first delayed reconnect
   slice
 - security and input hardening completion
+- an explicit product decision on whether triangles and Party Mode remain off
+  for the competition build or return in a later guarded slice
 
 ## Brutally honest assessment
 
@@ -166,6 +175,8 @@ What now exists:
   plus shared-fixture transport delays to keep the recovery UI visible until
   delayed authoritative state lands and to verify repeated slowed reconnect
   cycles through recorded delivery artifacts
+- gameplay-path hardening on the approved runtime shell for touch selection
+  radius, dot visibility, and temporary triangle/Party Mode shutdown
 
 Key remaining gap:
 

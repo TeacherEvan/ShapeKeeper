@@ -38,7 +38,7 @@ export function bindMenuEventHandlers(deps) {
         if (window.ShapeKeeperConvex) {
             setStartupState(STARTUP_STATES.CREATING_OR_JOINING_ROOM, { visible: false });
             showToast('Creating room...', 'info', 2000);
-            const result = await window.ShapeKeeperConvex.createRoom(playerName, gridSize, true);
+            const result = await window.ShapeKeeperConvex.createRoom(playerName, gridSize, false);
 
             if (result.error) {
                 showToast('Error: ' + result.error, 'error');
@@ -91,7 +91,6 @@ export function bindMenuEventHandlers(deps) {
         const { welcomeAnimation } = getState();
         const player1Color = document.getElementById('player1Color').value;
         const player2Color = document.getElementById('player2Color').value;
-        const partyModeEnabled = document.getElementById('partyModeToggle').checked;
 
         if (welcomeAnimation) {
             welcomeAnimation.moveToGameScreen();
@@ -102,7 +101,7 @@ export function bindMenuEventHandlers(deps) {
 
         setActiveGame(
             new DotsAndBoxesGame(getSelectedGridSize(), player1Color, player2Color, {
-                partyModeEnabled,
+                partyModeEnabled: false,
             })
         );
     });
@@ -178,34 +177,6 @@ export function bindMenuEventHandlers(deps) {
             lobbyManager.setGridSize(newSize);
         });
     });
-
-    const lobbyPartyModeToggle = document.getElementById('lobbyPartyModeToggle');
-    if (lobbyPartyModeToggle) {
-        lobbyPartyModeToggle.addEventListener('change', async (event) => {
-            const { lobbyManager } = getState();
-            if (!lobbyManager.isHost) {
-                event.target.checked = !event.target.checked;
-                showToast('Only the host can change game settings', 'warning', 2000);
-                return;
-            }
-
-            const partyMode = event.target.checked;
-
-            if (window.ShapeKeeperConvex) {
-                const result = await window.ShapeKeeperConvex.updatePartyMode(partyMode);
-                if (result.error) {
-                    showToast('Error: ' + result.error, 'error');
-                    event.target.checked = !partyMode;
-                    return;
-                }
-                showToast(`Party Mode ${partyMode ? 'enabled' : 'disabled'}`, 'success', 2000);
-                return;
-            }
-
-            lobbyManager.partyMode = partyMode;
-            showToast(`Party Mode ${partyMode ? 'enabled' : 'disabled'}`, 'info', 2000);
-        });
-    }
 
     document.getElementById('copyCodeBtn').addEventListener('click', () => {
         const code = document.getElementById('roomCode').textContent;
