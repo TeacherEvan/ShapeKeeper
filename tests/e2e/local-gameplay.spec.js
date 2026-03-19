@@ -29,14 +29,27 @@ async function getCanvasGeometry(page) {
     });
 }
 
+async function drawUsingPrimaryInput(page, position, { hasTouch }) {
+    const canvas = page.locator('#gameCanvas');
+    if (hasTouch) {
+        await canvas.tap({ position });
+        return;
+    }
+    await canvas.click({ position });
+}
+
 test.describe('local gameplay canvas input', () => {
-    test('draws a line via mouse clicks on adjacent dots', async ({ page }) => {
+    test('draws a line via the primary input for the active browser profile', async ({ page }) => {
         await startLocalGame(page);
 
-        const canvas = page.locator('#gameCanvas');
+        const hasTouch = Boolean(test.info().project.use.hasTouch);
         const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
 
-        await canvas.click({ position: { x: offsetX, y: offsetY } });
+        await drawUsingPrimaryInput(
+            page,
+            { x: offsetX, y: offsetY },
+            { hasTouch }
+        );
 
         await expect
             .poll(() =>
@@ -46,7 +59,11 @@ test.describe('local gameplay canvas input', () => {
             )
             .toEqual({ selectedDot: { row: 0, col: 0 } });
 
-        await canvas.click({ position: { x: offsetX + cellSize, y: offsetY } });
+        await drawUsingPrimaryInput(
+            page,
+            { x: offsetX + cellSize, y: offsetY },
+            { hasTouch }
+        );
 
         await expect(page.locator('#turnIndicator')).toHaveText("Player 2's Turn");
         await expect
@@ -59,62 +76,16 @@ test.describe('local gameplay canvas input', () => {
             .toEqual({ lineCount: 1, selectedDot: null });
     });
 
-    test('draws a line via touch interactions on adjacent dots', async ({ page }) => {
+    test('draws a line via native touch interactions on touch-enabled profiles', async ({ page }) => {
+        test.skip(!test.info().project.use.hasTouch, 'Touch-enabled project required');
+
         await startLocalGame(page);
 
         const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
+        const canvas = page.locator('#gameCanvas');
 
-        await page.evaluate(
-            async ({ firstDot, secondDot }) => {
-                const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-                const canvas = document.getElementById('gameCanvas');
-                const rect = canvas.getBoundingClientRect();
-
-                const dispatchTouch = async (point, identifier) => {
-                    const startEvent = new Event('touchstart', {
-                        bubbles: true,
-                        cancelable: true,
-                    });
-                    Object.defineProperty(startEvent, 'changedTouches', {
-                        configurable: true,
-                        value: [
-                            {
-                                clientX: rect.left + point.x,
-                                clientY: rect.top + point.y,
-                                identifier,
-                            },
-                        ],
-                    });
-                    canvas.dispatchEvent(startEvent);
-
-                    await wait(60);
-
-                    const endEvent = new Event('touchend', {
-                        bubbles: true,
-                        cancelable: true,
-                    });
-                    Object.defineProperty(endEvent, 'changedTouches', {
-                        configurable: true,
-                        value: [
-                            {
-                                clientX: rect.left + point.x,
-                                clientY: rect.top + point.y,
-                                identifier,
-                            },
-                        ],
-                    });
-                    canvas.dispatchEvent(endEvent);
-                };
-
-                await dispatchTouch(firstDot, 1);
-                await wait(60);
-                await dispatchTouch(secondDot, 2);
-            },
-            {
-                firstDot: { x: offsetX, y: offsetY },
-                secondDot: { x: offsetX + cellSize, y: offsetY },
-            }
-        );
+        await canvas.tap({ position: { x: offsetX, y: offsetY } });
+        await canvas.tap({ position: { x: offsetX + cellSize, y: offsetY } });
 
         await expect(page.locator('#turnIndicator')).toHaveText("Player 2's Turn");
         await expect

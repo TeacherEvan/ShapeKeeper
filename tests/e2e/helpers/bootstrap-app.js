@@ -33,7 +33,7 @@ window.convex = {
 };
 `;
 
-export async function gotoApp(page, { startupTimeoutMs = 75 } = {}) {
+export async function gotoApp(page, { startupTimeoutMs = 250 } = {}) {
     await page.route(/https:\/\/unpkg\.com\/convex@.*\/dist\/browser\.bundle\.js/, (route) =>
         route.fulfill({
             status: 200,
@@ -46,8 +46,14 @@ export async function gotoApp(page, { startupTimeoutMs = 75 } = {}) {
         ({ startupTimeoutOverride }) => {
             window.__SHAPEKEEPER_STARTUP_TIMEOUT_MS = startupTimeoutOverride;
             const noopAsync = async () => {};
-            document.exitFullscreen = noopAsync;
-            Element.prototype.requestFullscreen = noopAsync;
+
+            if (typeof document.exitFullscreen !== 'function') {
+                document.exitFullscreen = noopAsync;
+            }
+
+            if (typeof Element.prototype.requestFullscreen !== 'function') {
+                Element.prototype.requestFullscreen = noopAsync;
+            }
 
             if (!navigator.clipboard) {
                 Object.defineProperty(navigator, 'clipboard', {

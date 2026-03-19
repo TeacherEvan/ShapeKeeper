@@ -4,7 +4,7 @@ import { gotoApp, installMockMultiplayer } from './helpers/bootstrap.js';
 
 test.describe('multiplayer startup recovery', () => {
     test('shows timeout recovery actions, supports retry, and exits cleanly', async ({ page }) => {
-        await gotoApp(page, { startupTimeoutMs: 250 });
+        await gotoApp(page, { startupTimeoutMs: 1000 });
         await installMockMultiplayer(page);
 
         await page.getByTestId('create-game-button').click();

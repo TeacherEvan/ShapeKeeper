@@ -29,6 +29,18 @@ function dispatchCanvasClick(canvas, x, y) {
     );
 }
 
+function dispatchCanvasTouchEvent(canvas, type, touches) {
+    const event = new Event(type, {
+        bubbles: true,
+        cancelable: true,
+    });
+    Object.defineProperty(event, 'changedTouches', {
+        configurable: true,
+        value: touches,
+    });
+    canvas.dispatchEvent(event);
+}
+
 function dispatchCanvasKey(canvas, key) {
     canvas.dispatchEvent(
         new KeyboardEvent('keydown', {
@@ -133,6 +145,31 @@ describe('Root InputHandler canvas lifecycle', () => {
 
         dispatchCanvasKey(canvas, 'ArrowRight');
         dispatchCanvasKey(canvas, 'Enter');
+
+        expect(game.drawLine).toHaveBeenCalledWith({ row: 0, col: 0 }, { row: 0, col: 1 });
+
+        handler.destroy();
+    });
+
+    it('accepts native-speed touch taps when selecting adjacent dots', () => {
+        const canvas = createCanvas();
+        const handler = new InputHandler(canvas, game);
+
+        dispatchCanvasTouchEvent(canvas, 'touchstart', [
+            { clientX: 20, clientY: 20, identifier: 1 },
+        ]);
+        dispatchCanvasTouchEvent(canvas, 'touchend', [
+            { clientX: 20, clientY: 20, identifier: 1 },
+        ]);
+
+        expect(game.selectedDot).toEqual({ row: 0, col: 0 });
+
+        dispatchCanvasTouchEvent(canvas, 'touchstart', [
+            { clientX: 60, clientY: 20, identifier: 2 },
+        ]);
+        dispatchCanvasTouchEvent(canvas, 'touchend', [
+            { clientX: 60, clientY: 20, identifier: 2 },
+        ]);
 
         expect(game.drawLine).toHaveBeenCalledWith({ row: 0, col: 0 }, { row: 0, col: 1 });
 

@@ -1,5 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const defaultBaseUrl = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:9323';
+const compatibilitySpecPatterns = [
+    '**/smoke.spec.js',
+    '**/local-gameplay.spec.js',
+    '**/loading-state.spec.js',
+    '**/browser-compatibility.spec.js',
+];
+
 export default defineConfig({
     testDir: './tests/e2e',
     fullyParallel: false,
@@ -7,7 +15,7 @@ export default defineConfig({
     retries: process.env.CI ? 1 : 0,
     reporter: [['html', { open: 'never' }], ['list']],
     use: {
-        baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:8000',
+        baseURL: defaultBaseUrl,
         trace: 'on-first-retry',
         screenshot: 'only-on-failure',
         video: 'retain-on-failure',
@@ -17,13 +25,38 @@ export default defineConfig({
             name: 'chromium',
             use: { ...devices['Desktop Chrome'] },
         },
+        {
+            name: 'firefox-compat',
+            testMatch: compatibilitySpecPatterns,
+            use: { ...devices['Desktop Firefox'] },
+        },
+        {
+            name: 'webkit-compat',
+            testMatch: compatibilitySpecPatterns,
+            use: { ...devices['Desktop Safari'] },
+        },
+        {
+            name: 'mobile-chrome-compat',
+            testMatch: compatibilitySpecPatterns,
+            use: { ...devices['Pixel 7'] },
+        },
+        {
+            name: 'mobile-safari-compat',
+            testMatch: compatibilitySpecPatterns,
+            use: { ...devices['iPhone 13'] },
+        },
+        {
+            name: 'tablet-safari-compat',
+            testMatch: compatibilitySpecPatterns,
+            use: { ...devices['iPad Pro 11'] },
+        },
     ],
     webServer: process.env.PLAYWRIGHT_BASE_URL
         ? undefined
         : {
-              command: 'npm run serve',
-              url: 'http://127.0.0.1:8000',
-              reuseExistingServer: !process.env.CI,
+              command: 'npx http-server . -p 9323 -a 127.0.0.1 -c-1 --silent',
+              url: defaultBaseUrl,
+              reuseExistingServer: false,
               timeout: 120000,
           },
 });

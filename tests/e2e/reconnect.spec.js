@@ -95,7 +95,10 @@ async function emulateSlowNetwork(page) {
 test.describe('degraded reconnect recovery', () => {
     test('keeps recovery UI visible until delayed authoritative state arrives after a degraded reconnect', async ({
         browser,
+        browserName,
     }) => {
+        test.skip(browserName !== 'chromium', 'CDP network throttling is Chromium-only');
+
         const session = await bootstrapLiveMatch(browser, { roomCode: 'SLOWRC' });
         const { hostPage, guestPage, hostErrors, guestErrors } = session;
         let guestNetworkClient = null;
@@ -206,7 +209,10 @@ test.describe('degraded reconnect recovery', () => {
 
     test('records ordered delayed recovery artifacts across repeated degraded reconnect cycles', async ({
         browser,
+        browserName,
     }) => {
+        test.skip(browserName !== 'chromium', 'CDP network throttling is Chromium-only');
+
         const session = await bootstrapLiveMatch(browser, {
             roomCode: 'SLOMO2',
             gridSize: 3,
@@ -349,7 +355,10 @@ test.describe('degraded reconnect recovery', () => {
 
     test('stays in recovery until a later reconnect rebroadcast replaces a stale first reconnect delivery', async ({
         browser,
+        browserName,
     }) => {
+        test.skip(browserName !== 'chromium', 'CDP network throttling is Chromium-only');
+
         const session = await bootstrapLiveMatch(browser, { roomCode: 'RETRY1' });
         const { hostPage, guestPage, hostErrors, guestErrors } = session;
         let guestNetworkClient = null;

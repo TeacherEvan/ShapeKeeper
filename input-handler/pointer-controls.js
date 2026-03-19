@@ -158,12 +158,6 @@ export function handleTouchEnd(handler, event) {
     event.preventDefault();
     handler.lastTouchTime = Date.now();
 
-    const now = Date.now();
-    if (now - handler.lastInteractionTime < 50) {
-        return;
-    }
-    handler.lastInteractionTime = now;
-
     for (const touch of event.changedTouches) {
         const { x, y } = getTouchCoordinates(handler, touch);
         const clickedCell = getSquareAtPosition(handler, x, y);
@@ -252,6 +246,7 @@ export function handleTouchEnd(handler, event) {
     handler.syncPreviewState();
 
     if (handler.activeTouches.size === 0) {
+        handler.lastInteractionTime = Date.now();
         handler.game.draw();
     }
 }
