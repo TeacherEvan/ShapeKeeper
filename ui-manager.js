@@ -160,6 +160,58 @@ export class UIManager {
         }
     }
 
+    updateUndoRedoControls() {
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        if (!undoBtn || !redoBtn) {
+            return;
+        }
+
+        if (this.game.isMultiplayer) {
+            undoBtn.disabled = true;
+            redoBtn.disabled = true;
+            return;
+        }
+
+        const lockForAI = this.game.localMode === 'ai' && this.game.aiThinking;
+        const lockForTutorial = this.game.tutorialSystem?.isActive?.() === true;
+        undoBtn.disabled = lockForAI || lockForTutorial || this.game.moveHistory.length === 0;
+        redoBtn.disabled = lockForAI || lockForTutorial || this.game.redoHistory.length === 0;
+    }
+
+    updateReplayControls() {
+        const saveLocalBtn = document.getElementById('saveLocalBtn');
+        const replayBackBtn = document.getElementById('replayBackBtn');
+        const replayForwardBtn = document.getElementById('replayForwardBtn');
+        const replayRestartBtn = document.getElementById('replayRestartBtn');
+
+        if (!saveLocalBtn || !replayBackBtn || !replayForwardBtn || !replayRestartBtn) {
+            return;
+        }
+
+        if (this.game.isMultiplayer) {
+            saveLocalBtn.disabled = true;
+            replayBackBtn.disabled = true;
+            replayForwardBtn.disabled = true;
+            replayRestartBtn.disabled = true;
+            return;
+        }
+
+        const lockForAI = this.game.localMode === 'ai' && this.game.aiThinking;
+        const lockForTutorial = this.game.tutorialSystem?.isActive?.() === true;
+        const hasHistory = this.game.moveHistory.length > 0;
+        saveLocalBtn.disabled = lockForAI || lockForTutorial;
+        replayBackBtn.disabled =
+            lockForAI || lockForTutorial || !hasHistory || this.game.replayIndex <= 0;
+        replayForwardBtn.disabled =
+            lockForAI ||
+            lockForTutorial ||
+            !hasHistory ||
+            this.game.replayIndex >= this.game.moveHistory.length;
+        replayRestartBtn.disabled =
+            lockForAI || lockForTutorial || !hasHistory || this.game.replayIndex === 0;
+    }
+
     /**
      * Trigger bonus turn visual
      */

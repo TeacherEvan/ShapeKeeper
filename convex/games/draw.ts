@@ -1,4 +1,5 @@
 import { checkForCompletedSquares } from './squares';
+import { checkForCompletedTriangles } from './triangles';
 
 export async function drawLineHandler(ctx: any, args: any) {
     console.log('[drawLine] Line draw request', {
@@ -81,15 +82,33 @@ export async function drawLineHandler(ctx: any, args: any) {
         currentPlayer.playerIndex,
         room.gridSize
     );
+    const trianglesEnabled = room.trianglesEnabled === true;
+    const completedTriangles = trianglesEnabled
+        ? await checkForCompletedTriangles(
+              ctx,
+              args.roomId,
+              args.lineKey,
+              currentPlayer._id,
+              currentPlayer.playerIndex,
+              room.gridSize
+          )
+        : [];
 
     console.log('[drawLine] Square check complete', {
         lineKey: args.lineKey,
         completedSquares: completedSquares.length,
         squareKeys: completedSquares,
     });
+    console.log('[drawLine] Triangle check complete', {
+        lineKey: args.lineKey,
+        trianglesEnabled,
+        completedTriangles: completedTriangles.length,
+        triangleKeys: completedTriangles,
+    });
 
-    if (completedSquares.length > 0) {
-        const newScore = currentPlayer.score + completedSquares.length;
+    const completedShapeCount = completedSquares.length + completedTriangles.length;
+    if (completedShapeCount > 0) {
+        const newScore = currentPlayer.score + completedShapeCount;
         await ctx.db.patch(currentPlayer._id, { score: newScore });
         console.log('[drawLine] Score updated', {
             playerId: currentPlayer._id,
@@ -99,18 +118,31 @@ export async function drawLineHandler(ctx: any, args: any) {
     }
 
     const totalSquares = (room.gridSize - 1) * (room.gridSize - 1);
+    const totalTriangles = totalSquares * 4;
     const allSquares = await ctx.db
         .query('squares')
         .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
         .collect();
+    const allTriangles = trianglesEnabled
+        ? await ctx.db
+              .query('triangles')
+              .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
+              .collect()
+        : [];
+
+    const isGameOver = trianglesEnabled
+        ? allSquares.length >= totalSquares && allTriangles.length >= totalTriangles
+        : allSquares.length >= totalSquares;
 
     console.log('[drawLine] Game progress', {
         completedSquares: allSquares.length,
         totalSquares,
-        isGameOver: allSquares.length >= totalSquares,
+        completedTriangles: allTriangles.length,
+        totalTriangles: trianglesEnabled ? totalTriangles : 0,
+        isGameOver,
     });
 
-    if (allSquares.length >= totalSquares) {
+    if (isGameOver) {
         await ctx.db.patch(args.roomId, {
             status: 'finished',
             updatedAt: Date.now(),
@@ -125,11 +157,12 @@ export async function drawLineHandler(ctx: any, args: any) {
         return {
             success: true,
             completedSquares: completedSquares.length,
+            completedTriangles: completedTriangles.length,
             gameOver: true,
         };
     }
 
-    if (completedSquares.length === 0) {
+    if (completedShapeCount === 0) {
         const nextPlayerIndex = (room.currentPlayerIndex + 1) % sortedPlayers.length;
         await ctx.db.patch(args.roomId, {
             currentPlayerIndex: nextPlayerIndex,
@@ -142,7 +175,7 @@ export async function drawLineHandler(ctx: any, args: any) {
         });
     } else {
         await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
-        console.log('[drawLine] Turn retained (squares completed)', {
+        console.log('[drawLine] Turn retained (shape completed)', {
             playerIndex: currentPlayer.playerIndex,
             playerName: currentPlayer.name,
         });
@@ -151,6 +184,7 @@ export async function drawLineHandler(ctx: any, args: any) {
     return {
         success: true,
         completedSquares: completedSquares.length,
-        keepTurn: completedSquares.length > 0,
+        completedTriangles: completedTriangles.length,
+        keepTurn: completedShapeCount > 0,
     };
 }

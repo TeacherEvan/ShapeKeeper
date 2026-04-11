@@ -6,7 +6,14 @@
  * @author Teacher Evan
  */
 
-import { areAdjacent, getLineKey, getLineType, parseLineKey, parseSquareKey } from './utils.js';
+import {
+    areAdjacent,
+    getLineKey,
+    getLineType,
+    getTriangleCellKey,
+    parseLineKey,
+    parseSquareKey,
+} from './utils.js';
 
 export class GameLogic {
     constructor(game) {
@@ -46,6 +53,10 @@ export class GameLogic {
      */
     getLineType(dot1, dot2) {
         return getLineType(dot1, dot2);
+    }
+
+    getTriangleCellKey(vertices) {
+        return getTriangleCellKey(vertices);
     }
 
     /**

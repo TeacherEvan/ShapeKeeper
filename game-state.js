@@ -118,6 +118,14 @@ export class GameState {
         this.game.myPlayerNumber = 1;
         this.game.isMyTurn = true;
         this.game.isHost = false;
+        this.game.localMode = this.game.options?.localMode === 'ai' ? 'ai' : 'human';
+        this.game.aiDifficulty = this.game.options?.aiDifficulty || 'medium';
+        this.game.aiPlayerNumber = this.game.localMode === 'ai' ? 2 : null;
+        this.game.aiThinking = false;
+        this.game.aiMoveDelayMs = 180;
+        this.game.aiTurnToken = 0;
+        this.game.moveHistory = [];
+        this.game.redoHistory = [];
 
         this.game.lastUIUpdate = 0;
         this.game.uiUpdateInterval = 16;
@@ -337,6 +345,10 @@ export class GameState {
      * Handle populate
      */
     async handlePopulate() {
+        if (this.game.tutorialSystem?.isActive()) {
+            return;
+        }
+
         const safeLines = this.game.gameLogic.getSafeLines();
 
         if (safeLines.length === 0) {

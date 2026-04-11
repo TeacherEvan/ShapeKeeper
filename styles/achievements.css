@@ -1,0 +1,39 @@
+.achievement-panel {
+    margin-left: auto;
+    min-width: 220px;
+    max-width: 300px;
+    font-size: 0.82rem;
+}
+
+.achievement-panel-summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.achievement-list {
+    list-style: none;
+    margin-top: 6px;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    max-height: 140px;
+    overflow-y: auto;
+}
+
+.achievement-item + .achievement-item {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-color);
+}
+
+.achievement-item-header {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.achievement-item-description,
+.achievement-empty {
+    color: var(--text-secondary);
+}

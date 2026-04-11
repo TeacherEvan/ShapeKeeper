@@ -248,7 +248,15 @@ export function handleTouchEnd(handler, event) {
                         handler.selectionLocked = true;
                     }
                 } else if (!handler.game.selectedDot) {
+                    if (
+                        handler.game.tutorialSystem?.isActive?.() &&
+                        !handler.game.tutorialSystem.canSelectDot(endDot)
+                    ) {
+                        handler.activeTouches.delete(touch.identifier);
+                        continue;
+                    }
                     handler.game.selectedDot = endDot;
+                    handler.game.tutorialSystem?.onDotSelected?.(endDot);
                     handler.touchStartDot = endDot;
                     handler.selectionLocked = true;
                 } else {
@@ -288,7 +296,14 @@ export function processClick(handler, x, y) {
     }
 
     if (!handler.game.selectedDot) {
+        if (
+            handler.game.tutorialSystem?.isActive?.() &&
+            !handler.game.tutorialSystem.canSelectDot(dot)
+        ) {
+            return;
+        }
         handler.game.selectedDot = dot;
+        handler.game.tutorialSystem?.onDotSelected?.(dot);
         handler.selectionLocked = true;
         handler.setKeyboardFocusDot(dot, { announce: false });
         handler.game.draw();

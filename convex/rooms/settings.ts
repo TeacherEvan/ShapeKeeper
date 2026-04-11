@@ -84,6 +84,49 @@ export async function updatePartyModeHandler(ctx: any, args: any) {
     return { success: true };
 }
 
+export async function updateTrianglesEnabledHandler(ctx: any, args: any) {
+    console.log('[updateTrianglesEnabled] Update triangles enabled request', {
+        roomId: args.roomId,
+        sessionId: args.sessionId,
+        trianglesEnabled: args.trianglesEnabled,
+    });
+
+    const room = await ctx.db.get(args.roomId);
+    if (!room) {
+        console.log('[updateTrianglesEnabled] Error: Room not found', { roomId: args.roomId });
+        return { error: 'Room not found' };
+    }
+
+    if (room.hostPlayerId !== args.sessionId) {
+        console.log('[updateTrianglesEnabled] Error: Not host', {
+            requestingSession: args.sessionId,
+            hostSession: room.hostPlayerId,
+        });
+        return { error: 'Only the host can change triangle mode' };
+    }
+
+    if (room.status !== 'lobby') {
+        console.log('[updateTrianglesEnabled] Error: Game in progress', {
+            roomId: args.roomId,
+            status: room.status,
+        });
+        return { error: 'Cannot change triangle mode while game is in progress' };
+    }
+
+    await ctx.db.patch(args.roomId, {
+        trianglesEnabled: args.trianglesEnabled === true,
+        updatedAt: Date.now(),
+    });
+
+    console.log('[updateTrianglesEnabled] Triangle mode updated', {
+        roomId: args.roomId,
+        oldTrianglesEnabled: room.trianglesEnabled === true,
+        newTrianglesEnabled: args.trianglesEnabled === true,
+    });
+
+    return { success: true };
+}
+
 export async function startGameHandler(ctx: any, args: any) {
     console.log('[startGame] Start game request', {
         roomId: args.roomId,

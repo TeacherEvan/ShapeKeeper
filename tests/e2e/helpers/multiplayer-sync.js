@@ -89,3 +89,10 @@ export async function bootstrapLiveMatch(browser, options = {}) {
 
     return session;
 }
+
+export async function expectScores({ hostPage, guestPage }, { hostScore, guestScore }) {
+    await expect(hostPage.locator('#player1Score')).toHaveText(String(hostScore));
+    await expect(hostPage.locator('#player2Score')).toHaveText(String(guestScore));
+    await expect(guestPage.locator('#player1Score')).toHaveText(String(hostScore));
+    await expect(guestPage.locator('#player2Score')).toHaveText(String(guestScore));
+}

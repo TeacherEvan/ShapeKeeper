@@ -70,7 +70,11 @@
                         <button id="joinGameBtn" class="menu-btn" data-testid="join-game-button">
                             Join Game
                         </button>
-                        <button id="localPlayBtn" class="menu-btn secondary">
+                        <button
+                            id="localPlayBtn"
+                            class="menu-btn secondary"
+                            data-testid="local-play-button"
+                        >
                             Local Play (2 Players)
                         </button>
                     </div>
@@ -101,6 +105,22 @@
                             <button class="grid-btn local-grid-btn" data-size="20">20x20</button>
                             <button class="grid-btn local-grid-btn" data-size="30">30x30</button>
                         </div>
+                        <div class="setting-row">
+                            <label for="localCustomGridSize">Custom Size:</label>
+                            <input
+                                type="number"
+                                id="localCustomGridSize"
+                                class="name-input"
+                                min="4"
+                                max="60"
+                                step="1"
+                                placeholder="4-60"
+                                aria-label="Custom local grid size"
+                            />
+                            <button id="applyLocalCustomGrid" class="back-btn" type="button">
+                                Apply
+                            </button>
+                        </div>
                     </div>
 
                     <div class="setup-section">
@@ -125,8 +145,44 @@
                         />
                     </div>
 
+                    <div class="setup-section">
+                        <h2>Opponent</h2>
+                        <label class="field-label" for="localOpponentType">Choose opponent type</label>
+                        <select id="localOpponentType" class="name-input" data-testid="local-opponent-type">
+                            <option value="human" selected>Local Player</option>
+                            <option value="ai">AI Opponent</option>
+                        </select>
+                        <div class="setting-row" style="margin-top: 10px">
+                            <label class="field-label" for="localTutorialMode">Guided tutorial</label>
+                            <input
+                                type="checkbox"
+                                id="localTutorialMode"
+                                data-testid="local-tutorial-toggle"
+                                aria-label="Enable tutorial mode"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="setup-section">
+                        <h2>AI Difficulty</h2>
+                        <label class="field-label" for="localAIDifficulty">Choose AI difficulty</label>
+                        <select
+                            id="localAIDifficulty"
+                            class="name-input"
+                            data-testid="local-ai-difficulty"
+                            disabled
+                        >
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+
                     <div class="button-row">
                         <button id="backToMenuFromLocal" class="back-btn">← Back</button>
+                        <button id="loadLocalGame" class="back-btn" type="button">
+                            Load Saved Game
+                        </button>
                         <button id="startLocalGame" class="start-btn" disabled>Start Game</button>
                     </div>
                 </div>
@@ -368,6 +424,47 @@
                         aria-describedby="gameCanvasInstructions appLiveRegion"
                         aria-label="Game board"
                     ></canvas>
+                    <div
+                        id="tutorialOverlay"
+                        class="tutorial-overlay hidden"
+                        data-testid="tutorial-overlay"
+                        data-tutorial-step="inactive"
+                        role="dialog"
+                        aria-live="polite"
+                        aria-atomic="true"
+                        aria-label="Tutorial guidance"
+                    >
+                        <p id="tutorialStepLabel" class="tutorial-step-label">Step 1 of 4</p>
+                        <h2 id="tutorialTitle" class="tutorial-title">Tutorial</h2>
+                        <p id="tutorialMessage" class="tutorial-message"></p>
+                        <div class="tutorial-actions">
+                            <button
+                                id="tutorialContinueBtn"
+                                class="loading-action-btn primary"
+                                data-testid="tutorial-continue-button"
+                                type="button"
+                                hidden
+                            >
+                                Continue
+                            </button>
+                            <button
+                                id="tutorialSkipBtn"
+                                class="loading-action-btn secondary"
+                                data-testid="tutorial-skip-button"
+                                type="button"
+                            >
+                                Skip Tutorial
+                            </button>
+                            <button
+                                id="tutorialExitBtn"
+                                class="loading-action-btn secondary"
+                                data-testid="tutorial-exit-button"
+                                type="button"
+                            >
+                                Exit Tutorial
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <footer class="game-footer">
@@ -379,6 +476,36 @@
                         aria-atomic="true"
                     ></div>
                     <div class="footer-buttons">
+                        <button id="undoBtn" class="populate-btn" aria-label="Undo last move">
+                            Undo
+                        </button>
+                        <button id="redoBtn" class="populate-btn" aria-label="Redo last move">
+                            Redo
+                        </button>
+                        <button id="saveLocalBtn" class="populate-btn" aria-label="Save local game">
+                            Save
+                        </button>
+                        <button
+                            id="replayBackBtn"
+                            class="populate-btn"
+                            aria-label="Replay step backward"
+                        >
+                            ◀ Step
+                        </button>
+                        <button
+                            id="replayForwardBtn"
+                            class="populate-btn"
+                            aria-label="Replay step forward"
+                        >
+                            Step ▶
+                        </button>
+                        <button
+                            id="replayRestartBtn"
+                            class="populate-btn"
+                            aria-label="Restart replay from beginning"
+                        >
+                            Replay ↺
+                        </button>
                         <button
                             id="soundToggle"
                             class="sound-btn"
@@ -394,6 +521,14 @@
                             Populate (10%)
                         </button>
                     </div>
+                    <details class="achievement-panel" id="achievementPanel">
+                        <summary class="achievement-panel-summary">
+                            🏅 Achievements <span id="achievementCountBadge">0/0</span>
+                        </summary>
+                        <ul id="achievementsList" class="achievement-list">
+                            <li class="achievement-empty">No achievements unlocked yet.</li>
+                        </ul>
+                    </details>
                 </footer>
             </section>
 

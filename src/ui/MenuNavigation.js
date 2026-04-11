@@ -120,6 +120,7 @@ function setStartupState(nextState, overrides = {}) {
 function setActiveGame(nextGame) {
     game = nextGame;
     window.__shapeKeeperActiveGame = nextGame;
+    window.__shapeKeeperTutorial = nextGame?.tutorialSystem || null;
     setMenuNavigationDependencies({
         lobbyManager,
         welcomeAnimation,
@@ -301,6 +302,7 @@ function initializeMultiplayerGame(roomState) {
         deferInitialReady: true,
     });
     multiplayerGame.isMultiplayer = true;
+    multiplayerGame.disableTriangles = roomState.trianglesEnabled !== true;
     multiplayerGame.myPlayerNumber = (meInRoom?.playerIndex ?? 0) + 1;
     multiplayerGame.isHost = roomState.hostPlayerId === mySessionId;
     setActiveGame(multiplayerGame);

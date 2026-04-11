@@ -78,8 +78,15 @@ export function handleKeyboardSelection(handler) {
     setKeyboardFocusDot(handler, focusedDot, { announce: false });
 
     if (!handler.game.selectedDot) {
+        if (
+            handler.game.tutorialSystem?.isActive?.() &&
+            !handler.game.tutorialSystem.canSelectDot(focusedDot)
+        ) {
+            return;
+        }
         handler.game.selectedDot = focusedDot;
         handler.selectionLocked = true;
+        handler.game.tutorialSystem?.onDotSelected?.(focusedDot);
         handler.syncPreviewState();
         handler.game.draw();
         announceStatus(`Selected dot row ${focusedDot.row + 1}, column ${focusedDot.col + 1}.`);

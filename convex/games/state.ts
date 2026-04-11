@@ -20,12 +20,17 @@ export async function getGameStateHandler(ctx: any, args: any) {
         .query('squares')
         .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
         .collect();
+    const triangles = await ctx.db
+        .query('triangles')
+        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
+        .collect();
 
     return {
         room,
         players: players.sort((a: any, b: any) => a.playerIndex - b.playerIndex),
         lines,
         squares,
+        triangles,
     };
 }
 
@@ -146,6 +151,15 @@ export async function resetGameHandler(ctx: any, args: any) {
     }
     console.log('[resetGame] Squares deleted', { count: squares.length });
 
+    const triangles = await ctx.db
+        .query('triangles')
+        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
+        .collect();
+    for (const triangle of triangles) {
+        await ctx.db.delete(triangle._id);
+    }
+    console.log('[resetGame] Triangles deleted', { count: triangles.length });
+
     const players = await ctx.db
         .query('players')
         .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
@@ -165,6 +179,7 @@ export async function resetGameHandler(ctx: any, args: any) {
         roomId: args.roomId,
         linesDeleted: lines.length,
         squaresDeleted: squares.length,
+        trianglesDeleted: triangles.length,
         playersReset: players.length,
     });
 

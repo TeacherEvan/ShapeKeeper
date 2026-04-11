@@ -2,11 +2,37 @@ import { expect, test } from '@playwright/test';
 
 import { gotoApp } from './helpers/bootstrap.js';
 
+async function selectLocalGridSize(page, size) {
+    await expect(page.locator('#localSetupScreen')).toHaveClass(/active/);
+    await page.evaluate((targetSize) => {
+        document
+            .querySelector(`#localSetupScreen .local-grid-btn[data-size="${targetSize}"]`)
+            ?.click();
+    }, size);
+    await expect(page.locator(`#localSetupScreen .local-grid-btn[data-size="${size}"]`)).toHaveClass(
+        /selected/
+    );
+    await expect(page.locator('#startLocalGame')).toBeEnabled();
+}
+
 async function startLocalGame(page) {
     await gotoApp(page);
 
     await page.locator('#localPlayBtn').click();
-    await page.locator('.local-grid-btn[data-size="5"]').click();
+    await selectLocalGridSize(page, 5);
+    await page.locator('#startLocalGame').click();
+
+    await expect(page.getByTestId('game-screen')).toHaveClass(/active/);
+    await expect(page.locator('#gameCanvas')).toBeVisible();
+    await expect(page.locator('#turnIndicator')).toHaveText("Player 1's Turn");
+}
+
+async function startLocalAIGame(page, { difficulty = 'medium' } = {}) {
+    await gotoApp(page);
+    await page.locator('#localPlayBtn').click();
+    await selectLocalGridSize(page, 5);
+    await page.getByTestId('local-opponent-type').selectOption('ai');
+    await page.getByTestId('local-ai-difficulty').selectOption(difficulty);
     await page.locator('#startLocalGame').click();
 
     await expect(page.getByTestId('game-screen')).toHaveClass(/active/);
@@ -166,8 +192,8 @@ test.describe('local gameplay canvas input', () => {
         const canvas = page.locator('#gameCanvas');
         await canvas.tap({
             position: {
-                x: offsetX + 16,
-                y: offsetY + 16,
+                x: offsetX,
+                y: offsetY,
             },
         });
 
@@ -178,5 +204,223 @@ test.describe('local gameplay canvas input', () => {
                 disableTriangles: true,
                 partyModeEnabled: false,
             });
+    });
+
+    test('allows selecting AI opponent and difficulty in local setup', async ({ page }) => {
+        await gotoApp(page);
+        await page.locator('#localPlayBtn').click();
+
+        await expect(page.getByTestId('local-opponent-type')).toHaveValue('human');
+        await expect(page.getByTestId('local-ai-difficulty')).toBeDisabled();
+
+        await page.getByTestId('local-opponent-type').selectOption('ai');
+        await expect(page.getByTestId('local-ai-difficulty')).toBeEnabled();
+        await page.getByTestId('local-ai-difficulty').selectOption('hard');
+        await selectLocalGridSize(page, 5);
+        await page.locator('#startLocalGame').click();
+
+        await expect
+            .poll(() => getInteractionDiagnostics(page))
+            .toMatchObject({
+                localMode: 'ai',
+                aiDifficulty: 'hard',
+            });
+    });
+
+    test('AI takes its turn after a human local move', async ({ page }) => {
+        await startLocalAIGame(page, { difficulty: 'easy' });
+        const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
+        const hasTouch = Boolean(test.info().project.use.hasTouch);
+
+        await drawUsingPrimaryInput(
+            page,
+            { x: offsetX, y: offsetY },
+            { hasTouch }
+        );
+        await drawUsingPrimaryInput(
+            page,
+            { x: offsetX + cellSize, y: offsetY },
+            { hasTouch }
+        );
+
+        await expect
+            .poll(() =>
+                page.evaluate(() => ({
+                    currentPlayer: window.__shapeKeeperActiveGame?.currentPlayer,
+                    lineCount: window.__shapeKeeperActiveGame?.lines?.size ?? 0,
+                }))
+            )
+            .toEqual({ currentPlayer: 1, lineCount: 2 });
+    });
+
+    test('supports custom grid input for local games', async ({ page }) => {
+        await gotoApp(page);
+        await page.locator('#localPlayBtn').click();
+        await page.locator('#localCustomGridSize').fill('12');
+        await page.locator('#applyLocalCustomGrid').click();
+        await page.locator('#startLocalGame').click();
+
+        await expect
+            .poll(() =>
+                page.evaluate(() => ({
+                    gridRows: window.__shapeKeeperActiveGame?.gridRows,
+                    gridCols: window.__shapeKeeperActiveGame?.gridCols,
+                    gridSize: window.__shapeKeeperActiveGame?.gridSize,
+                }))
+            )
+            .toMatchObject({
+                gridSize: 12,
+            });
+    });
+
+    test('supports undo and redo in local mode', async ({ page }) => {
+        await startLocalGame(page);
+        const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
+        const hasTouch = Boolean(test.info().project.use.hasTouch);
+
+        await drawUsingPrimaryInput(
+            page,
+            { x: offsetX, y: offsetY },
+            { hasTouch }
+        );
+        await drawUsingPrimaryInput(
+            page,
+            { x: offsetX + cellSize, y: offsetY },
+            { hasTouch }
+        );
+
+        await expect
+            .poll(() =>
+                page.evaluate(() => ({
+                    lineCount: window.__shapeKeeperActiveGame?.lines?.size ?? 0,
+                    currentPlayer: window.__shapeKeeperActiveGame?.currentPlayer,
+                }))
+            )
+            .toEqual({ lineCount: 1, currentPlayer: 2 });
+
+        await page.locator('#undoBtn').click();
+        await expect
+            .poll(() =>
+                page.evaluate(() => ({
+                    lineCount: window.__shapeKeeperActiveGame?.lines?.size ?? 0,
+                    currentPlayer: window.__shapeKeeperActiveGame?.currentPlayer,
+                }))
+            )
+            .toEqual({ lineCount: 0, currentPlayer: 1 });
+
+        await page.locator('#redoBtn').click();
+        await expect
+            .poll(() =>
+                page.evaluate(() => ({
+                    lineCount: window.__shapeKeeperActiveGame?.lines?.size ?? 0,
+                    currentPlayer: window.__shapeKeeperActiveGame?.currentPlayer,
+                }))
+            )
+            .toEqual({ lineCount: 1, currentPlayer: 2 });
+    });
+
+    test('saves local game and loads it from local setup with validated payload path', async ({
+        page,
+    }) => {
+        await startLocalGame(page);
+        const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
+        const hasTouch = Boolean(test.info().project.use.hasTouch);
+
+        await drawUsingPrimaryInput(
+            page,
+            { x: offsetX, y: offsetY },
+            { hasTouch }
+        );
+        await drawUsingPrimaryInput(
+            page,
+            { x: offsetX + cellSize, y: offsetY },
+            { hasTouch }
+        );
+
+        await page.locator('#saveLocalBtn').click();
+
+        await expect
+            .poll(() =>
+                page.evaluate(() => {
+                    const raw = window.localStorage.getItem('shapekeeper.local.save.v1');
+                    return raw ? JSON.parse(raw).version : null;
+                })
+            )
+            .toBe(1);
+
+        await page.locator('#exitGame').click();
+        await page.locator('#localPlayBtn').click();
+        await page.locator('#loadLocalGame').click();
+
+        await expect(page.getByTestId('game-screen')).toHaveClass(/active/);
+        await expect
+            .poll(() =>
+                page.evaluate(() => ({
+                    currentPlayer: window.__shapeKeeperActiveGame?.currentPlayer,
+                    lineCount: window.__shapeKeeperActiveGame?.lines?.size ?? 0,
+                }))
+            )
+            .toEqual({ currentPlayer: 2, lineCount: 1 });
+    });
+
+    test('supports deterministic local replay step controls', async ({ page }) => {
+        await startLocalGame(page);
+        const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
+        const hasTouch = Boolean(test.info().project.use.hasTouch);
+
+        await drawUsingPrimaryInput(
+            page,
+            { x: offsetX, y: offsetY },
+            { hasTouch }
+        );
+        await drawUsingPrimaryInput(
+            page,
+            { x: offsetX + cellSize, y: offsetY },
+            { hasTouch }
+        );
+        await drawUsingPrimaryInput(
+            page,
+            { x: offsetX + cellSize, y: offsetY + cellSize },
+            { hasTouch }
+        );
+        await drawUsingPrimaryInput(
+            page,
+            { x: offsetX + 2 * cellSize, y: offsetY + cellSize },
+            { hasTouch }
+        );
+
+        await expect
+            .poll(() => page.evaluate(() => window.__shapeKeeperActiveGame?.lines?.size ?? 0))
+            .toBe(2);
+
+        await page.locator('#replayRestartBtn').click();
+        await expect
+            .poll(() =>
+                page.evaluate(() => ({
+                    currentPlayer: window.__shapeKeeperActiveGame?.currentPlayer,
+                    lineCount: window.__shapeKeeperActiveGame?.lines?.size ?? 0,
+                }))
+            )
+            .toEqual({ currentPlayer: 1, lineCount: 0 });
+
+        await page.locator('#replayForwardBtn').click();
+        await expect
+            .poll(() => page.evaluate(() => window.__shapeKeeperActiveGame?.lines?.size ?? 0))
+            .toBe(1);
+
+        await page.locator('#replayForwardBtn').click();
+        await expect
+            .poll(() => page.evaluate(() => window.__shapeKeeperActiveGame?.lines?.size ?? 0))
+            .toBe(2);
+
+        await page.locator('#replayBackBtn').click();
+        await expect
+            .poll(() =>
+                page.evaluate(() => ({
+                    currentPlayer: window.__shapeKeeperActiveGame?.currentPlayer,
+                    lineCount: window.__shapeKeeperActiveGame?.lines?.size ?? 0,
+                }))
+            )
+            .toEqual({ currentPlayer: 2, lineCount: 1 });
     });
 });

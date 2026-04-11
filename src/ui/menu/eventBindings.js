@@ -14,6 +14,15 @@ import {
 import { toggleTheme } from '../ThemeManager.js';
 import { showToast } from '../Toast.js';
 
+function buildLocalGameFromConfig(config) {
+    return new DotsAndBoxesGame(config.gridSize, config.player1Color, config.player2Color, {
+        partyModeEnabled: false,
+        localMode: config.localMode,
+        aiDifficulty: config.aiDifficulty,
+        tutorialEnabled: config.tutorialEnabled,
+    });
+}
+
 export function bindMenuEventHandlers(deps) {
     const {
         getState,
@@ -63,7 +72,33 @@ export function bindMenuEventHandlers(deps) {
         showScreen('joinScreen');
     });
 
+    const localOpponentType = document.getElementById('localOpponentType');
+    const localAIDifficulty = document.getElementById('localAIDifficulty');
+    const localTutorialMode = document.getElementById('localTutorialMode');
+    const syncLocalAIControls = () => {
+        if (!localOpponentType || !localAIDifficulty) {
+            return;
+        }
+        localAIDifficulty.disabled = localOpponentType.value !== 'ai';
+        if (localOpponentType.value === 'ai' && localTutorialMode) {
+            localTutorialMode.checked = false;
+            localTutorialMode.disabled = true;
+        } else if (localTutorialMode) {
+            localTutorialMode.disabled = false;
+        }
+    };
+    localOpponentType?.addEventListener('change', syncLocalAIControls);
+    syncLocalAIControls();
+
     document.getElementById('localPlayBtn').addEventListener('click', () => {
+        if (localTutorialMode) {
+            localTutorialMode.checked = false;
+            localTutorialMode.disabled = false;
+        }
+        if (localOpponentType) {
+            localOpponentType.value = 'human';
+        }
+        syncLocalAIControls();
         showScreen('localSetupScreen');
     });
 
@@ -83,6 +118,24 @@ export function bindMenuEventHandlers(deps) {
         });
     });
 
+    const localCustomGridInput = document.getElementById('localCustomGridSize');
+    const applyLocalCustomGrid = document.getElementById('applyLocalCustomGrid');
+
+    applyLocalCustomGrid?.addEventListener('click', () => {
+        const rawValue = Number(localCustomGridInput?.value);
+        if (!Number.isInteger(rawValue) || rawValue < 4 || rawValue > 60) {
+            showToast('Custom grid size must be an integer between 4 and 60.', 'warning');
+            return;
+        }
+
+        document
+            .querySelectorAll('.local-grid-btn')
+            .forEach((candidate) => candidate.classList.remove('selected'));
+        setSelectedGridSize(rawValue);
+        document.getElementById('startLocalGame').disabled = false;
+        showToast(`Custom grid size set to ${rawValue}x${rawValue}.`, 'success', 2000);
+    });
+
     document.getElementById('backToMenuFromLocal').addEventListener('click', () => {
         showScreen('mainMenuScreen');
     });
@@ -91,6 +144,9 @@ export function bindMenuEventHandlers(deps) {
         const { welcomeAnimation } = getState();
         const player1Color = document.getElementById('player1Color').value;
         const player2Color = document.getElementById('player2Color').value;
+        const localMode = localOpponentType?.value === 'ai' ? 'ai' : 'human';
+        const aiDifficulty = localAIDifficulty?.value || 'medium';
+        const tutorialEnabled = Boolean(localTutorialMode?.checked);
 
         if (welcomeAnimation) {
             welcomeAnimation.moveToGameScreen();
@@ -100,10 +156,48 @@ export function bindMenuEventHandlers(deps) {
         requestFullscreen();
 
         setActiveGame(
-            new DotsAndBoxesGame(getSelectedGridSize(), player1Color, player2Color, {
-                partyModeEnabled: false,
+            buildLocalGameFromConfig({
+                gridSize: getSelectedGridSize(),
+                player1Color,
+                player2Color,
+                localMode,
+                aiDifficulty,
+                tutorialEnabled,
             })
         );
+    });
+
+    document.getElementById('loadLocalGame')?.addEventListener('click', () => {
+        const { welcomeAnimation } = getState();
+        const savedPayloadResult = DotsAndBoxesGame.readLocalSaveFromStorage();
+
+        if (!savedPayloadResult.ok) {
+            if (savedPayloadResult.type === 'missing') {
+                showToast(savedPayloadResult.message, 'info');
+                return;
+            }
+
+            const toastType = savedPayloadResult.type === 'incompatible' ? 'warning' : 'error';
+            showToast(savedPayloadResult.message, toastType);
+            return;
+        }
+
+        const localGame = buildLocalGameFromConfig(savedPayloadResult.payload.config);
+        const loaded = localGame.applyValidatedLocalPayload(savedPayloadResult);
+
+        if (!loaded) {
+            showToast('Unable to apply saved local game.', 'error');
+            return;
+        }
+
+        if (welcomeAnimation) {
+            welcomeAnimation.moveToGameScreen();
+        }
+
+        showScreen('gameScreen');
+        requestFullscreen();
+        setActiveGame(localGame);
+        showToast('Loaded saved local game.', 'success', 2200);
     });
 
     const joinRoomCodeInput = document.getElementById('joinRoomCode');

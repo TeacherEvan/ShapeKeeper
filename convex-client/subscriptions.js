@@ -25,6 +25,9 @@
         const newSquares = newState.squares || [];
         const lastSquares = lastState.squares || [];
         if (newSquares.length !== lastSquares.length) return true;
+        const newTriangles = newState.triangles || [];
+        const lastTriangles = lastState.triangles || [];
+        if (newTriangles.length !== lastTriangles.length) return true;
 
         const newPlayers = newState.players || [];
         const lastPlayers = lastState.players || [];
@@ -136,6 +139,7 @@
                             : null,
                         lines: { length: (newState.lines || []).length },
                         squares: { length: (newState.squares || []).length },
+                        triangles: { length: (newState.triangles || []).length },
                         players: (newState.players || []).map((player) => ({
                             score: player?.score || 0,
                         })),

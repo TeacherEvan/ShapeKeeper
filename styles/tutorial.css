@@ -1,0 +1,41 @@
+.tutorial-overlay {
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+    z-index: 3;
+    max-width: min(420px, calc(100% - 32px));
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: color-mix(in srgb, var(--bg-secondary) 92%, #0f172a 8%);
+    box-shadow: var(--shadow-soft);
+}
+
+.tutorial-overlay.hidden {
+    display: none;
+}
+
+.tutorial-step-label {
+    margin: 0 0 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    opacity: 0.85;
+}
+
+.tutorial-title {
+    margin: 0 0 8px;
+    font-size: 1rem;
+}
+
+.tutorial-message {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.35;
+}
+
+.tutorial-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
