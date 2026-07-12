@@ -41,5 +41,7 @@ convex/.env*
 bench.mjs
 play-ai-medium.mjs
 ai-*.png
+ai_*.mjs
+ai_*.json
 
 
