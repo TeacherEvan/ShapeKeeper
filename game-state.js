@@ -194,19 +194,19 @@ export class GameState {
         this.game.logicalHeight = logicalHeight;
 
         const dpr = window.devicePixelRatio || 1;
-        this.game.canvas.width = logicalWidth * dpr;
-        this.game.canvas.height = logicalHeight * dpr;
-        this.game.canvas.style.width = logicalWidth + 'px';
-        this.game.canvas.style.height = logicalHeight + 'px';
-
-        this.game.offsetX = GAME_CONSTANTS.GRID_OFFSET;
-        this.game.offsetY = GAME_CONSTANTS.GRID_OFFSET;
 
         const oldCanvas = this.game.canvas;
         const hadFocus = oldCanvas === document.activeElement;
         const newCanvas = document.createElement('canvas');
         newCanvas.id = oldCanvas.id;
         newCanvas.className = oldCanvas.className;
+        // The replacement canvas must inherit the computed backing-store and
+        // display dimensions, otherwise it reverts to the 300x150 HTML default
+        // and clips the board (right/bottom become unreachable).
+        newCanvas.width = logicalWidth * dpr;
+        newCanvas.height = logicalHeight * dpr;
+        newCanvas.style.width = logicalWidth + 'px';
+        newCanvas.style.height = logicalHeight + 'px';
         if (oldCanvas.getAttribute('tabindex')) {
             newCanvas.setAttribute('tabindex', oldCanvas.getAttribute('tabindex'));
         }
@@ -216,6 +216,8 @@ export class GameState {
         if (oldCanvas.getAttribute('aria-label')) {
             newCanvas.setAttribute('aria-label', oldCanvas.getAttribute('aria-label'));
         }
+        this.game.offsetX = GAME_CONSTANTS.GRID_OFFSET;
+        this.game.offsetY = GAME_CONSTANTS.GRID_OFFSET;
         oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
         this.game.canvas = newCanvas;
         this.game.ctx = newCanvas.getContext('2d');
