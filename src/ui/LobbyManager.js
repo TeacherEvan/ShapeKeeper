@@ -118,8 +118,16 @@ export class LobbyManager {
     }
 
     canStartGame() {
-        // Need at least 2 players and all must be ready
-        return this.players.length >= 2 && this.players.every((p) => p.isReady) && this.isHost;
+        // Need at least 2 players; non-host players must be ready, but the
+        // host is exempt (mirrors the backend startGame gate, which only
+        // requires every non-host player to be ready). This lets a match
+        // commence with as few as 2 players without forcing the host to
+        // ready up first.
+        return (
+            this.players.length >= 2 &&
+            this.isHost &&
+            this.players.every((p) => p.isReady || p.isHost)
+        );
     }
 
     getPlayerCount() {
