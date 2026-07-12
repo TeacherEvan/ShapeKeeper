@@ -36,3 +36,10 @@ test-results/
 .env*
 .vercel
 convex/.env*
+
+# Dev scratch / local AI-simulation tooling (not source)
+bench.mjs
+play-ai-medium.mjs
+ai-*.png
+
+
