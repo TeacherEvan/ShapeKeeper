@@ -34,7 +34,10 @@ export function drawSelectedDot(game) {
     const outerGlowRadius = dotRadius + (game.isTouchDevice ? 16 : 12);
     const middleRingRadius = dotRadius + (game.isTouchDevice ? 10 : 8);
     const innerRingRadius = dotRadius + (game.isTouchDevice ? 7 : 5);
-    const fillRadius = Math.max(dotRadius * (game.isTouchDevice ? 2.6 : 2), game.isTouchDevice ? 9 : 6);
+    const fillRadius = Math.max(
+        dotRadius * (game.isTouchDevice ? 2.6 : 2),
+        game.isTouchDevice ? 9 : 6
+    );
 
     game.ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
     game.ctx.beginPath();

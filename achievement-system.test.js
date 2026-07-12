@@ -20,7 +20,11 @@ describe('AchievementSystem', () => {
             comboCount: 3,
         });
 
-        expect(unlocked.map((entry) => entry.id).sort()).toEqual(['combo_3', 'first_square', 'score_15']);
+        expect(unlocked.map((entry) => entry.id).sort()).toEqual([
+            'combo_3',
+            'first_square',
+            'score_15',
+        ]);
 
         const secondPass = system.onMoveResolved({
             isMultiplayer: false,
@@ -42,7 +46,9 @@ describe('AchievementSystem', () => {
 
         const reloaded = new AchievementSystem(localStorage);
         const unlockedIds = reloaded.getUnlockedAchievements().map((entry) => entry.id);
-        expect(unlockedIds).toEqual(expect.arrayContaining(['first_square', 'combo_3', 'score_15']));
+        expect(unlockedIds).toEqual(
+            expect.arrayContaining(['first_square', 'combo_3', 'score_15'])
+        );
     });
 
     it('tracks comeback wins deterministically', () => {
@@ -64,7 +70,10 @@ describe('AchievementSystem', () => {
     });
 
     it('surfaces invalid persisted payloads via load issue', () => {
-        localStorage.setItem(AchievementSystem.STORAGE_KEY, '{"version":1,"unlocked":{"first_win":42}}');
+        localStorage.setItem(
+            AchievementSystem.STORAGE_KEY,
+            '{"version":1,"unlocked":{"first_win":42}}'
+        );
         const system = new AchievementSystem(localStorage);
         expect(system.getLoadIssue()).toEqual({
             type: 'invalid',

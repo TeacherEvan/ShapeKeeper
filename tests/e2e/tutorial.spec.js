@@ -42,18 +42,12 @@ test.describe('tutorial mode', () => {
         await expect(overlay).toHaveAttribute('data-tutorial-step', 'draw-first-line');
 
         await page.evaluate(async () => {
-            await window.__shapeKeeperActiveGame?.drawLine(
-                { row: 0, col: 0 },
-                { row: 0, col: 1 }
-            );
+            await window.__shapeKeeperActiveGame?.drawLine({ row: 0, col: 0 }, { row: 0, col: 1 });
         });
         await expect(overlay).toHaveAttribute('data-tutorial-step', 'complete-square');
 
         await page.evaluate(async () => {
-            await window.__shapeKeeperActiveGame?.drawLine(
-                { row: 0, col: 1 },
-                { row: 1, col: 1 }
-            );
+            await window.__shapeKeeperActiveGame?.drawLine({ row: 0, col: 1 }, { row: 1, col: 1 });
         });
         await expect(overlay).toHaveAttribute('data-tutorial-step', 'bonus-turn');
         await expect(page.getByTestId('tutorial-continue-button')).toBeVisible();
@@ -66,8 +60,8 @@ test.describe('tutorial mode', () => {
                     lineCount: window.__shapeKeeperActiveGame?.lines?.size ?? -1,
                     scoreOne: window.__shapeKeeperActiveGame?.scores?.[1] ?? -1,
                     tutorialActive:
-                        window.__shapeKeeperActiveGame?.getInteractionDiagnostics?.()?.tutorial?.active ??
-                        true,
+                        window.__shapeKeeperActiveGame?.getInteractionDiagnostics?.()?.tutorial
+                            ?.active ?? true,
                 }))
             )
             .toEqual({ lineCount: 0, scoreOne: 0, tutorialActive: false });
@@ -86,7 +80,8 @@ test.describe('tutorial mode', () => {
                     lineCount: window.__shapeKeeperActiveGame?.lines?.size ?? -1,
                     tutorialActive:
                         window.__shapeKeeperTutorial?.getSnapshot?.()?.active ??
-                        window.__shapeKeeperActiveGame?.getInteractionDiagnostics?.()?.tutorial?.active ??
+                        window.__shapeKeeperActiveGame?.getInteractionDiagnostics?.()?.tutorial
+                            ?.active ??
                         true,
                 }))
             )

@@ -26,7 +26,7 @@ export class SoundManager {
                 this.ctx = new AudioContext();
                 this.initialized = true;
             }
-        } catch (e) {
+        } catch {
             console.log('[Sound] Web Audio API not available');
         }
     }
@@ -41,7 +41,7 @@ export class SoundManager {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             this.ctx = new AudioContext();
             this.initialized = true;
-        } catch (e) {
+        } catch {
             console.log('[Sound] Could not initialize audio context');
         }
     }

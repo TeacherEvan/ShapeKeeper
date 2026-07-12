@@ -12,7 +12,6 @@ import { DotsAndBoxesGame } from './dots-and-boxes-game.js';
 window.DotsAndBoxesGame = DotsAndBoxesGame;
 
 // Initialize game when DOM is ready
-let game = null;
 document.addEventListener('DOMContentLoaded', () => {
     // Game initialization will be handled by the HTML
 });

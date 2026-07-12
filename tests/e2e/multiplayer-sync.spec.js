@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
 
-import { bootstrapLiveMatch, expectNoBrowserErrors, expectTurnIndicators } from './helpers/multiplayer-sync.js';
+import {
+    bootstrapLiveMatch,
+    expectNoBrowserErrors,
+    expectTurnIndicators,
+} from './helpers/multiplayer-sync.js';
 
 test.describe('multiplayer sync and reconnect', () => {
     test('re-synchronizes an in-match guest after a disconnect and reconnect with visible turn recovery', async ({

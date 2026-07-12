@@ -148,12 +148,20 @@ export class TutorialSystem {
             return false;
         }
 
-        if (step.id === 'draw-first-line' && !dotsEqual(dot, { row: 0, col: 0 }) && !dotsEqual(dot, { row: 0, col: 1 })) {
+        if (
+            step.id === 'draw-first-line' &&
+            !dotsEqual(dot, { row: 0, col: 0 }) &&
+            !dotsEqual(dot, { row: 0, col: 1 })
+        ) {
             showToast('Use one of the top two dots to draw the guided line.', 'warning', 1800);
             return false;
         }
 
-        if (step.id === 'complete-square' && !dotsEqual(dot, { row: 0, col: 1 }) && !dotsEqual(dot, { row: 1, col: 1 })) {
+        if (
+            step.id === 'complete-square' &&
+            !dotsEqual(dot, { row: 0, col: 1 }) &&
+            !dotsEqual(dot, { row: 1, col: 1 })
+        ) {
             showToast('Use the highlighted square corner dots for this step.', 'warning', 1800);
             return false;
         }
@@ -209,10 +217,7 @@ export class TutorialSystem {
             return;
         }
 
-        if (
-            step.id === 'complete-square' &&
-            completedSquaresCount > 0
-        ) {
+        if (step.id === 'complete-square' && completedSquaresCount > 0) {
             this.advance('Excellent! You completed a square.');
         }
     }

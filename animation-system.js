@@ -80,7 +80,7 @@ export class AnimationSystem {
         cellSize,
         playerColor,
         spawnParticles,
-        spawnSparkleEmojis
+        _spawnSparkleEmojis
     ) {
         const { row, col } = parseSquareKey(squareKey);
         const centerX = offsetX + (col + 0.5) * cellSize;
@@ -160,7 +160,7 @@ export class AnimationSystem {
     /**
      * Trigger invalid line flash
      */
-    triggerInvalidLineFlash(dot1, dot2, offsetX, offsetY, cellSize) {
+    triggerInvalidLineFlash(dot1, dot2, _offsetX, _offsetY, _cellSize) {
         this.invalidLineFlash = {
             dot1,
             dot2,

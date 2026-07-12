@@ -498,5 +498,4 @@ test.describe('degraded reconnect recovery', () => {
             await session.cleanup();
         }
     });
-
 });

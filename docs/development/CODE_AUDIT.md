@@ -1,176 +1,124 @@
 # Code Audit Report
 
+> Last reviewed: 2026-07-12 (v4.3.0, commit ec051fb)
+> Scope: full project — code quality, lint, tests, architecture, docs
+
 ## Overview
 
-- Total Lines: 1258 lines in game.js
-- Language: Vanilla JavaScript (ES6+)
-- No build process or dependencies
+- **Language:** Vanilla JavaScript (ES6+ modules), no frontend build step
+- **Version:** 4.3.0
+- **Deployment:** Vercel (static frontend) + Convex (backend)
+- **Entry point:** `index.html` → loads `game.js` as a browser ES module
+  (`src/index.js` is a library/barrel module, not the app entry)
+- **Grid model:** Squares-only since v4.3.0 — triangle mechanics were removed
+  in commit `ec051fb` (net −2,152 lines across 35 files).
+
+## Architecture (current, v4.3.0)
+
+The code is split into two layers:
+
+1. **Root-level runtime modules** orchestrated by `dots-and-boxes-game.js`
+   (924 lines) — the authoritative `DotsAndBoxesGame` class.
+2. **`src/` shared modules** — reusable engine pieces (`core`, `effects`,
+   `animations`, `sound`, `ui`, plus `src/animations`, `src/effects`).
+
+Key module sizes (lines):
+
+| File | Lines | Responsibility |
+| ---- | ----- | -------------- |
+| `dots-and-boxes-game.js` | 924 | Game orchestrator / public API |
+| `game-state.js` | 388 | Game state model + transitions |
+| `game-logic.js` | 240 | Pure rules (square detection, scoring, turns) |
+| `tutorial-system.js` | 323 | Guided first-play flow |
+| `animation-system.js` | 245 | Particle / square / multiplier / flash animations |
+| `renderer.js` + `renderer/board.js` + `renderer/markers.js` | 215 / 282 / 98 | Canvas drawing |
+| `ui-manager.js` + `ui-manager/*` | 257 / 361 / 74 | DOM overlays, celebrations, effects UI |
+| `effect-system.js` + `effect-system/*` | 116 / 329 / 94 | Tile effects gameplay + modal |
+| `convex-client.js` + `convex-client/*` | 77 / 181 / 167 | Convex API wrapper (rooms, subscriptions) |
+| `input-handler/pointer-controls.js` | 324 | Mouse/touch input |
+| `achievement-system.js` | 273 | Achievements + persistence |
+| `local-save-replay.js` | 244 | Save/load + replay |
+| `src/core/utils.js` | 177 | Shared key helpers (tested) |
+| `src/effects/TileEffects.js` | 468 | Trap/powerup definitions |
+| `src/animations/*`, `src/sound/*` | — | Animation + audio systems |
 
 ## Performance Analysis
 
-### 1. Animation Loop (animate() method)
+### Animation Loop
 
-**Current Implementation:**
+- Uses `requestAnimationFrame` with conditional redraws (GOOD).
+- All transient animation arrays are compacted via
+  `_compactAnimationArray()` (v4.3.0) — verified no unbounded growth in the
+  particle/square/line systems.
 
-- Uses requestAnimationFrame continuously
-- Conditional rendering based on active animations
-- **GOOD:** Only redraws when necessary
+### Memory Management
 
-**Optimization Opportunity:**
+| Array | Lifecycle |
+| ----- | --------- |
+| `pulsatingLines` | Cleaned on interval ✓ |
+| `squareAnimations` | Cleaned after duration ✓ |
+| `particles` | In-place compaction (v4.3.0) ✓ |
+| `sparkleEmojis` | Cleaned after duration ✓ |
+| `multiplierAnimations` | Cleaned after duration ✓ |
+| `lineDrawings` | Cleaned after duration ✓ |
+| `touchVisuals` | Cleaned after duration ✓ |
+| `ambientParticles` | Persistent, frame-skipped (v4.3.0) ✓ |
 
-- Consider pausing animation loop when no animations are active
-- Currently checks multiple arrays on every frame
+**Status:** GOOD — all temporary arrays have a bounded lifecycle.
 
-### 2. Drawing Operations
+### Network Optimization
 
-**Potential Bottleneck Areas:**
+Turn-based multiplayer uses state-change detection with host-side validation
+in Convex (documented ~20× traffic reduction, 100 KB/min → 5 KB/min).
 
-#### a. Line Drawing (draw() method)
+## Code Quality
 
-```javascript
-for (const lineKey of this.lines) {
-    // Parse line key on every draw
-    const [start, end] = lineKey.split('-').map((s) => {
-        const [row, col] = s.split(',').map(Number);
-        return { row, col };
-    });
-    // ... drawing code
-}
-```
+### Coordinate Parsing
 
-**Issue:** String parsing happens on every frame
-**Suggestion:** Cache parsed line positions
+- ✅ [DONE] `parseSquareKey()`, `parseLineKey()`, `getLineKey()` exist in
+  `src/core/utils.js` and are covered by `src/core/utils.test.js`. The audit's
+  original recommendation to extract these helpers has been implemented.
 
-#### b. Square Drawing (drawSquaresWithAnimations())
+### Magic Numbers
 
-- Iterates through all squares on every draw
-- Performs string splitting for coordinates
-  **Suggestion:** Pre-compute positions during square completion
+- Partially addressed: animation timings live in `GAME_CONSTANTS`
+  (`src/core/constants.js`). Some dot/line visual constants remain inline in
+  `renderer.js`; acceptable.
 
-#### c. Particle System
+### Lint / Format
 
-- Each particle checked individually for decay
-- Math operations on every particle every frame
-  **Current Status:** ACCEPTABLE - particles are short-lived
+- ✅ [DONE as of 2026-07-12] `npm run lint` is clean (0 errors, 0 warnings)
+  after the review cleanup. The `no-unused-vars` rule now honors the `_`
+  prefix convention for intentionally-unused params (see `eslint.config.mjs`).
 
-### 3. Event Handlers
+## Test Coverage (v4.3.0)
 
-**Touch Event Processing:**
+| Area | Status |
+| ---- | ------ |
+| Game rules / scoring (`dots-and-boxes-game.test.js`) | ✅ 7 tests |
+| Input handler (`input-handler.test.js`) | ✅ |
+| Convex client (`convex-client.test.js`) | ✅ 11 tests |
+| Achievement system (`achievement-system.test.js`) | ✅ 4 tests |
+| Local save / replay (`local-save-replay.test.js`) | ✅ 3 tests |
+| Core utils (`src/core/utils.test.js`) | ✅ 4 tests |
+| UI — MultiplayerStartup (`src/ui/MultiplayerStartup.test.js`) | ✅ 3 tests |
+| Tutorial system (`tutorial-system.test.js`) | ✅ 13 tests (added 2026-07-12) |
+| E2E (Playwright, `tests/e2e/`) | ✅ Comprehensive suite (requires live server) |
 
-- Multiple touch event handlers with similar logic
-- Debouncing implemented (GOOD)
-- Distance calculations repeated in multiple places
-
-**Mouse Event Processing:**
-
-- Proper debouncing to prevent conflicts with touch
-- Distance calculation in getNearestDot is efficient
-
-### 4. Memory Management
-
-**Arrays that grow over time:**
-
-- `this.pulsatingLines` - Cleaned every 2 seconds ✓
-- `this.squareAnimations` - Cleaned after duration ✓
-- `this.particles` - In-place compaction (v4.3.0) ✓
-- `this.sparkleEmojis` - Cleaned after duration ✓
-- `this.multiplierAnimations` - Cleaned after duration ✓
-- `this.lineDrawings` - Cleaned after duration ✓
-- `this.touchVisuals` - Cleaned after duration ✓
-- `this.ambientParticles` - Persistent, frame-skipped (v4.3.0) ✓
-
-**Status:** GOOD - All temporary arrays properly cleaned via `_compactAnimationArray()` (v4.3.0)
-
-## Code Quality Issues
-
-### 1. Redundant Code
-
-#### A. Duplicate Coordinate Parsing
-
-Multiple places parse string keys like "row,col":
-
-- Line 635: Drawing squares
-- Line 609: Drawing lines
-- Line 212: checkForSquares
-- Line 529: triggerSquareAnimation
-
-**Recommendation:** Create helper method `parseSquareKey(key)` and `parseLineKey(key)`
-
-#### B. Repeated Distance Calculations
-
-Distance to dot calculated in:
-
-- getNearestDot()
-- handleTouchEnd()
-- getSquareAtPosition() (could benefit from similar logic)
-
-**Status:** ACCEPTABLE - Each serves different purpose
-
-### 2. Magic Numbers
-
-Found several magic numbers that could be constants:
-
-- Line width: 6 (now increased from 2)
-- Dot radius: 1.6
-- Cell size range: 8-40
-- Animation durations: 600, 1000, 2000
-- Particle counts: 15, 30
-- Kiss emoji count: 20-35
-- Offset: 20
-
-**Recommendation:** Define as named constants at top of class
-
-### 3. Code Organization
-
-**Current Structure:** Mostly well-organized
-
-- Constructor sets up state
-- Methods grouped logically
-- Drawing methods separated
-
-**Improvement Opportunities:**
-
-- Consider splitting into separate files:
-    - game-core.js (game logic)
-    - game-rendering.js (drawing)
-    - game-animations.js (particle/animation systems)
+**Total unit tests: 50 passing.** Previously uncovered modules
+(`animation-system.js`, `sound-manager.js`, `ui-manager.js`, `effect-system.js`)
+remain gaps but are largely DOM/Web-Audio bound; the highest-risk uncovered
+logic (`tutorial-system.js`) now has unit coverage.
 
 ## Bottleneck Summary
 
-### Critical (Fix Now): NONE
-
-### Medium Priority:
-
-1. String parsing in draw loops - cache coordinates
-2. Magic numbers - convert to constants
-
-### Low Priority:
-
-1. Consider code splitting for maintainability
-2. Add performance monitoring for large grids (30x30)
-
-## Recommendations
-
-### Immediate Actions:
-
-1. ✅ Add helper methods for coordinate parsing
-2. ✅ Extract magic numbers to constants
-3. ✅ Add comments to complex sections
-
-### Future Considerations:
-
-1. Profile performance on 30x30 grid with many animations
-2. Consider object pooling for particles if performance issues arise
-3. Add JSDoc comments for all methods
+- **Critical:** NONE
+- **Medium:** String-key parsing in draw loops (mitigated by cached helpers).
+- **Low:** Profile 30×30 grids with heavy animation; object pooling if needed.
 
 ## Conclusion
 
-**Overall Code Quality: GOOD**
-
-The codebase is well-structured with:
-
-- Proper cleanup of temporary data
-- Efficient rendering with conditional draws
-- Good separation of concerns
-
-Minor optimizations recommended but no critical bottlenecks found.
+**Overall Code Quality: GOOD.** The codebase is well-modularized post-refactor,
+memory is bounded, network is optimized, and lint is clean. Remaining work is
+documentation accuracy (see `REFACTORING_PLAN.md`) and broadening unit coverage
+for DOM-bound systems.

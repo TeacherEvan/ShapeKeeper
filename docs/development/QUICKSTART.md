@@ -45,8 +45,8 @@ Then open `http://localhost:8000`
 ### Mouse
 
 - **Click** a dot to select it (you'll see a colored ring)
-- **Click** an adjacent dot to draw a line (orthogonal or diagonal!)
-- Complete a square or triangle to score and get another turn!
+- **Click** an adjacent dot to draw a line (orthogonal only)
+- Complete a square to score and get another turn!
 
 ### Touch (Mobile/Tablet)
 
@@ -57,16 +57,14 @@ Then open `http://localhost:8000`
 
 1. **Players alternate** drawing lines between adjacent dots
 2. **Complete a square** (4 sides) = 1 point
-3. **Complete a triangle** (3 sides with diagonal) = 0.5 points
-4. **Bonus**: Complete any shape, get another turn
-5. **Win**: Have the most points when the grid is full
+3. **Bonus**: Complete any shape, get another turn
+4. **Win**: Have the most points when the grid is full
 
 ## 💡 Pro Tips
 
-- **Plan ahead** - Try not to give your opponent easy shapes
-- **Diagonals** - Use diagonal lines to create triangles for bonus points
+- **Plan ahead** - Try not to give your opponent easy squares
 - **Control the endgame** - Be strategic about which shapes to complete
-- **Double-crosses** - Look for patterns where you can complete multiple shapes in one turn
+- **Double-crosses** - Look for patterns where you can complete multiple squares in one turn
 - **Landscape mode** - Rotate your device for the best experience on mobile
 
 ## 🎨 Customization

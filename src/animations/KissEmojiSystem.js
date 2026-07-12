@@ -69,7 +69,7 @@ export class KissEmojiSystem {
      * Update all emojis
      * @param {number} deltaTime - Time since last update (ms)
      */
-    update(deltaTime = 16) {
+    update(_deltaTime = 16) {
         for (let i = this.emojis.length - 1; i >= 0; i--) {
             const e = this.emojis[i];
 

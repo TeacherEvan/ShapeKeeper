@@ -167,7 +167,7 @@ export class ParticleSystem {
      * Update all particles
      * @param {number} deltaTime - Time since last update (ms)
      */
-    update(deltaTime = 16) {
+    update(_deltaTime = 16) {
         // Update burst particles
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];

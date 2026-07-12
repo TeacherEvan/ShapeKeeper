@@ -131,7 +131,7 @@
         );
     }
 
-    async function startGame(roomId) {
+    async function startGame(_roomId) {
         if (!shared.state.currentRoomId) {
             return { error: 'Not in a room' };
         }

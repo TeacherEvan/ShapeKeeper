@@ -2,10 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import { gotoApp } from './helpers/bootstrap.js';
 
-const MAIN_MENU_BUTTON_TEST_IDS = [
-    'create-game-button',
-    'join-game-button',
-];
+const MAIN_MENU_BUTTON_TEST_IDS = ['create-game-button', 'join-game-button'];
 
 test.describe('browser compatibility matrix', () => {
     test('boots to the main menu with stable core controls for the active profile', async ({
@@ -26,7 +23,9 @@ test.describe('browser compatibility matrix', () => {
         );
     });
 
-    test('keeps primary menu actions touch-friendly on touch-enabled profiles', async ({ page }) => {
+    test('keeps primary menu actions touch-friendly on touch-enabled profiles', async ({
+        page,
+    }) => {
         test.skip(!test.info().project.use.hasTouch, 'Touch-enabled project required');
 
         await gotoApp(page);

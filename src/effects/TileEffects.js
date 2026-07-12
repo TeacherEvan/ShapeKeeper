@@ -91,56 +91,56 @@ export class TileEffectsManager {
                 name: 'Landmine!',
                 description: 'BOOM! The area explodes! No one scores and you lose your turn.',
                 icon: '💣',
-                apply: (state) => ({ scoreChange: -3, loseTurn: true }),
+                apply: (_state) => ({ scoreChange: -3, loseTurn: true }),
             },
             {
                 id: 'secret',
                 name: 'Reveal a Secret',
                 description: 'Spill the tea! Share an embarrassing secret about yourself.',
                 icon: '🔮',
-                apply: (state) => ({ social: true }),
+                apply: (_state) => ({ social: true }),
             },
             {
                 id: 'hypothetical',
                 name: 'Hypothetical',
                 description: 'Answer the hypothetical question honestly!',
                 icon: '🤔',
-                apply: (state) => ({ social: true, text: this.getRandomHypothetical() }),
+                apply: (_state) => ({ social: true, text: this.getRandomHypothetical() }),
             },
             {
                 id: 'drink',
                 name: 'Drink!',
                 description: 'Take a sip of your beverage! Cheers! 🍻',
                 icon: '🍺',
-                apply: (state) => ({ social: true }),
+                apply: (_state) => ({ social: true }),
             },
             {
                 id: 'dared',
                 name: "You're DARED!",
                 description: 'Complete the dare or forfeit your next turn!',
                 icon: '🎯',
-                apply: (state) => ({ social: true, text: this.getRandomDare() }),
+                apply: (_state) => ({ social: true, text: this.getRandomDare() }),
             },
             {
                 id: 'truth',
                 name: 'TRUTH TIME!',
                 description: 'Answer a truth honestly or face the consequences!',
                 icon: '🔥',
-                apply: (state) => ({ social: true, text: this.getRandomTruth() }),
+                apply: (_state) => ({ social: true, text: this.getRandomTruth() }),
             },
             {
                 id: 'reverse',
                 name: 'Reverse!',
                 description: 'Turn order is now reversed! Uno-style chaos!',
                 icon: '🔄',
-                apply: (state) => ({ reverseTurn: true }),
+                apply: (_state) => ({ reverseTurn: true }),
             },
             {
                 id: 'freeze',
                 name: 'Frozen!',
                 description: 'Brrr! Skip your next turn while you thaw out.',
                 icon: '❄️',
-                apply: (state) => {
+                apply: (_state) => {
                     this.playerEffects.frozen = 1;
                     return { frozen: true };
                 },
@@ -150,21 +150,21 @@ export class TileEffectsManager {
                 name: 'Score Swap!',
                 description: 'Your score gets swapped with the player on your left!',
                 icon: '🎭',
-                apply: (state) => ({ swapScores: true }),
+                apply: (_state) => ({ swapScores: true }),
             },
             {
                 id: 'ghost',
                 name: 'Ghost Mode',
                 description: 'Your next 3 lines are invisible to opponents! Spooky!',
                 icon: '👻',
-                apply: (state) => ({ ghostMode: true }),
+                apply: (_state) => ({ ghostMode: true }),
             },
             {
                 id: 'chaos',
                 name: 'Chaos Storm!',
                 description: 'All unclaimed squares are randomly redistributed!',
                 icon: '🌪️',
-                apply: (state) => ({ chaosStorm: true }),
+                apply: (_state) => ({ chaosStorm: true }),
             },
         ];
     }
@@ -180,7 +180,7 @@ export class TileEffectsManager {
                 name: '+2 Extra Moves!',
                 description: 'Lucky you! Take 2 additional turns right now!',
                 icon: '➕',
-                apply: (state) => {
+                apply: (_state) => {
                     this.playerEffects.extraTurns += 2;
                     return { extraTurn: true };
                 },
@@ -190,28 +190,28 @@ export class TileEffectsManager {
                 name: "Pirate's Plunder",
                 description: "Steal one of your opponent's squares and all connected to it!",
                 icon: '🏴‍☠️',
-                apply: (state) => ({ stealSquare: true }),
+                apply: (_state) => ({ stealSquare: true }),
             },
             {
                 id: 'dare_left',
                 name: 'Dare Left!',
                 description: 'You get to DARE the player on your left! Make it good!',
                 icon: '👈',
-                apply: (state) => ({ social: true }),
+                apply: (_state) => ({ social: true }),
             },
             {
                 id: 'physical_challenge',
                 name: 'Physical Challenge!',
                 description: 'The player on your right must do a silly physical challenge!',
                 icon: '🤸',
-                apply: (state) => ({ social: true, text: this.getRandomPhysicalChallenge() }),
+                apply: (_state) => ({ social: true, text: this.getRandomPhysicalChallenge() }),
             },
             {
                 id: 'shield',
                 name: 'Shield Up!',
                 description: 'Your next 3 completed squares are protected from stealing!',
                 icon: '🛡️',
-                apply: (state) => {
+                apply: (_state) => {
                     this.playerEffects.shield = true;
                     this.playerEffects.shieldCount = 3;
                     return { shieldActive: true };
@@ -222,7 +222,7 @@ export class TileEffectsManager {
                 name: 'Lightning Strike!',
                 description: 'POWER! Draw 2 lines at once on your next turn!',
                 icon: '⚡',
-                apply: (state) => {
+                apply: (_state) => {
                     this.playerEffects.lightningActive = true;
                     return { lightning: true };
                 },
@@ -232,14 +232,14 @@ export class TileEffectsManager {
                 name: 'Gift of Giving',
                 description: 'Feeling generous? Give one of your squares to any player!',
                 icon: '🎁',
-                apply: (state) => ({ giftSquare: true }),
+                apply: (_state) => ({ giftSquare: true }),
             },
             {
                 id: 'oracle',
                 name: "Oracle's Vision",
                 description: 'See all hidden tile effects on the board for 10 seconds!',
                 icon: '🔍',
-                apply: (state) => {
+                apply: (_state) => {
                     this.playerEffects.oracleActive = true;
                     return { revealAdjacent: true };
                 },
@@ -249,14 +249,14 @@ export class TileEffectsManager {
                 name: 'Lucky Star!',
                 description: 'Your next 3 squares are worth DOUBLE points!',
                 icon: '✨',
-                apply: (state) => ({ pointsMultiplier: 2 }),
+                apply: (_state) => ({ pointsMultiplier: 2 }),
             },
             {
                 id: 'wildcard',
                 name: 'Wildcard!',
                 description: 'Choose ANY powerup effect! The power is yours!',
                 icon: '🌟',
-                apply: (state) => ({ wildcard: true }),
+                apply: (_state) => ({ wildcard: true }),
             },
         ];
     }

@@ -34,7 +34,9 @@ const ACHIEVEMENT_DEFINITIONS = [
     },
 ];
 
-const DEFINITION_BY_ID = new Map(ACHIEVEMENT_DEFINITIONS.map((achievement) => [achievement.id, achievement]));
+const DEFINITION_BY_ID = new Map(
+    ACHIEVEMENT_DEFINITIONS.map((achievement) => [achievement.id, achievement])
+);
 
 function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -196,16 +198,28 @@ export class AchievementSystem {
     updateDeficitTracking(scores) {
         const lead = scores[1] - scores[2];
         if (lead > 0) {
-            this.matchStats.maxDeficitByPlayer[2] = Math.max(this.matchStats.maxDeficitByPlayer[2], lead);
+            this.matchStats.maxDeficitByPlayer[2] = Math.max(
+                this.matchStats.maxDeficitByPlayer[2],
+                lead
+            );
             return;
         }
 
         if (lead < 0) {
-            this.matchStats.maxDeficitByPlayer[1] = Math.max(this.matchStats.maxDeficitByPlayer[1], Math.abs(lead));
+            this.matchStats.maxDeficitByPlayer[1] = Math.max(
+                this.matchStats.maxDeficitByPlayer[1],
+                Math.abs(lead)
+            );
         }
     }
 
-    onMoveResolved({ isMultiplayer, isTutorial = false, scores, completedSquaresCount, comboCount }) {
+    onMoveResolved({
+        isMultiplayer,
+        isTutorial = false,
+        scores,
+        completedSquaresCount,
+        comboCount,
+    }) {
         if (isMultiplayer || isTutorial) {
             return [];
         }

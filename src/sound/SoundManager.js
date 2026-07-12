@@ -30,7 +30,7 @@ export class SoundManager {
                 this.initialized = true;
                 console.log('[Sound] Audio context initialized');
             }
-        } catch (e) {
+        } catch {
             console.log('[Sound] Web Audio API not available');
         }
     }
