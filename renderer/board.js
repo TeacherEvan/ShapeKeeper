@@ -2,15 +2,22 @@ import { GAME_CONSTANTS } from '../constants.js';
 import { easeOutQuad, lerp } from '../utils.js';
 
 export function drawLines(game) {
+    // Precompute lookups once (O(n)) so per-line checks are O(1) instead of O(n^2).
+    const lineDrawingKeys = new Set(game.lineDrawings.map((a) => a.lineKey));
+    const pulsatingByLine = new Map();
+    for (const pulse of game.pulsatingLines) {
+        pulsatingByLine.set(pulse.line, pulse.player);
+    }
+
     for (const lineKey of game.lines) {
-        if (game.lineDrawings.some((animation) => animation.lineKey === lineKey)) {
+        if (lineDrawingKeys.has(lineKey)) {
             continue;
         }
 
         const [start, end] = game.gameLogic.parseLineKey(lineKey);
         const lineType = game.gameLogic.getLineType(start, end);
-        const pulsating = game.pulsatingLines.find((pulse) => pulse.line === lineKey);
-        const player = pulsating?.player || game.gameLogic.getLinePlayer(lineKey);
+        const pulsatingPlayer = pulsatingByLine.get(lineKey);
+        const player = pulsatingPlayer ?? game.gameLogic.getLinePlayer(lineKey);
         const isGhostLine = game.ghostLines && game.ghostLines.has(lineKey);
 
         const lineColor =
@@ -122,13 +129,20 @@ export function drawSquares(game) {
 export function drawSquaresWithAnimations(game) {
     const now = Date.now();
 
+    // Precompute square-animation lookup once (O(n)) instead of a per-square
+    // `.find` (O(n^2) across all squares each frame).
+    const animationBySquare = new Map();
+    for (const item of game.squareAnimations) {
+        animationBySquare.set(item.squareKey, item);
+    }
+
     for (const squareKey in game.squares) {
         const player = game.squares[squareKey];
         const color = player === 1 ? game.player1Color : game.player2Color;
         const { row, col } = game.gameLogic.parseSquareKey(squareKey);
         const x = game.offsetX + col * game.cellSize;
         const y = game.offsetY + row * game.cellSize;
-        const animation = game.squareAnimations.find((item) => item.squareKey === squareKey);
+        const animation = animationBySquare.get(squareKey);
 
         if (animation) {
             const age = now - animation.startTime;

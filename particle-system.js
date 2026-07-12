@@ -72,8 +72,11 @@ export class ParticleSystem {
     spawnParticles(x, y, color, count = GAME_CONSTANTS.PARTICLE_COUNT_SQUARE) {
         spawnParticlesFromPool(this.pool, x, y, color, count);
         // Mirror pooled particles into the legacy array the renderer reads.
+        // Use a Set for membership so this stays O(n) instead of O(n^2)
+        // (the old `this.particles.includes(p)` scan was per active particle).
+        const existing = new Set(this.particles);
         for (const p of this.pool.active) {
-            if (!this.particles.includes(p)) this.particles.push(p);
+            if (!existing.has(p)) this.particles.push(p);
         }
     }
 
