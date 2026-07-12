@@ -302,7 +302,6 @@ function initializeMultiplayerGame(roomState) {
         deferInitialReady: true,
     });
     multiplayerGame.isMultiplayer = true;
-    multiplayerGame.disableTriangles = roomState.trianglesEnabled !== true;
     multiplayerGame.myPlayerNumber = (meInRoom?.playerIndex ?? 0) + 1;
     multiplayerGame.isHost = roomState.hostPlayerId === mySessionId;
     setActiveGame(multiplayerGame);

@@ -9,9 +9,9 @@ async function selectLocalGridSize(page, size) {
             .querySelector(`#localSetupScreen .local-grid-btn[data-size="${targetSize}"]`)
             ?.click();
     }, size);
-    await expect(page.locator(`#localSetupScreen .local-grid-btn[data-size="${size}"]`)).toHaveClass(
-        /selected/
-    );
+    await expect(
+        page.locator(`#localSetupScreen .local-grid-btn[data-size="${size}"]`)
+    ).toHaveClass(/selected/);
     await expect(page.locator('#startLocalGame')).toBeEnabled();
 }
 
@@ -82,11 +82,7 @@ test.describe('local gameplay canvas input', () => {
         const hasTouch = Boolean(test.info().project.use.hasTouch);
         const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
 
-        await drawUsingPrimaryInput(
-            page,
-            { x: offsetX, y: offsetY },
-            { hasTouch }
-        );
+        await drawUsingPrimaryInput(page, { x: offsetX, y: offsetY }, { hasTouch });
 
         await expect
             .poll(() =>
@@ -96,11 +92,7 @@ test.describe('local gameplay canvas input', () => {
             )
             .toEqual({ selectedDot: { row: 0, col: 0 } });
 
-        await drawUsingPrimaryInput(
-            page,
-            { x: offsetX + cellSize, y: offsetY },
-            { hasTouch }
-        );
+        await drawUsingPrimaryInput(page, { x: offsetX + cellSize, y: offsetY }, { hasTouch });
 
         await expect(page.locator('#turnIndicator')).toHaveText("Player 2's Turn");
         await expect
@@ -113,7 +105,9 @@ test.describe('local gameplay canvas input', () => {
             .toEqual({ lineCount: 1, selectedDot: null });
     });
 
-    test('draws a line via native touch interactions on touch-enabled profiles', async ({ page }) => {
+    test('draws a line via native touch interactions on touch-enabled profiles', async ({
+        page,
+    }) => {
         test.skip(!test.info().project.use.hasTouch, 'Touch-enabled project required');
 
         await startLocalGame(page);
@@ -134,17 +128,13 @@ test.describe('local gameplay canvas input', () => {
             .toEqual({ lineCount: 1 });
     });
 
-    test('does not allow diagonal triangle lines while triangles are disabled', async ({ page }) => {
+    test('does not draw a line for a non-adjacent (diagonal) tap', async ({ page }) => {
         await startLocalGame(page);
 
         const hasTouch = Boolean(test.info().project.use.hasTouch);
         const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
 
-        await drawUsingPrimaryInput(
-            page,
-            { x: offsetX, y: offsetY },
-            { hasTouch }
-        );
+        await drawUsingPrimaryInput(page, { x: offsetX, y: offsetY }, { hasTouch });
         await drawUsingPrimaryInput(
             page,
             { x: offsetX + cellSize, y: offsetY + cellSize },
@@ -155,8 +145,6 @@ test.describe('local gameplay canvas input', () => {
             .poll(() => getInteractionDiagnostics(page))
             .toMatchObject({
                 selectedDot: { row: 0, col: 0 },
-                trianglesCount: 0,
-                disableTriangles: true,
             });
 
         await expect
@@ -172,9 +160,7 @@ test.describe('local gameplay canvas input', () => {
             });
     });
 
-    test('exposes stronger mobile interaction affordances and disables triangles/party mode', async ({
-        page,
-    }) => {
+    test('exposes stronger mobile interaction affordances', async ({ page }) => {
         test.skip(!test.info().project.use.hasTouch, 'Touch-enabled project required');
 
         await startLocalGame(page);
@@ -185,9 +171,7 @@ test.describe('local gameplay canvas input', () => {
         expect(diagnostics.isTouchDevice).toBe(true);
         expect(diagnostics.selectionRadiusMultiplier).toBeGreaterThan(0.5);
         expect(diagnostics.staticDotRadiusPx).toBeGreaterThanOrEqual(4);
-        expect(diagnostics.disableTriangles).toBe(true);
         expect(diagnostics.partyModeEnabled).toBe(false);
-        expect(diagnostics.trianglesCount).toBe(0);
 
         const canvas = page.locator('#gameCanvas');
         await canvas.tap({
@@ -201,7 +185,6 @@ test.describe('local gameplay canvas input', () => {
             .poll(() => getInteractionDiagnostics(page))
             .toMatchObject({
                 selectedDot: { row: 0, col: 0 },
-                disableTriangles: true,
                 partyModeEnabled: false,
             });
     });
@@ -232,16 +215,8 @@ test.describe('local gameplay canvas input', () => {
         const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
         const hasTouch = Boolean(test.info().project.use.hasTouch);
 
-        await drawUsingPrimaryInput(
-            page,
-            { x: offsetX, y: offsetY },
-            { hasTouch }
-        );
-        await drawUsingPrimaryInput(
-            page,
-            { x: offsetX + cellSize, y: offsetY },
-            { hasTouch }
-        );
+        await drawUsingPrimaryInput(page, { x: offsetX, y: offsetY }, { hasTouch });
+        await drawUsingPrimaryInput(page, { x: offsetX + cellSize, y: offsetY }, { hasTouch });
 
         await expect
             .poll(() =>
@@ -278,16 +253,8 @@ test.describe('local gameplay canvas input', () => {
         const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
         const hasTouch = Boolean(test.info().project.use.hasTouch);
 
-        await drawUsingPrimaryInput(
-            page,
-            { x: offsetX, y: offsetY },
-            { hasTouch }
-        );
-        await drawUsingPrimaryInput(
-            page,
-            { x: offsetX + cellSize, y: offsetY },
-            { hasTouch }
-        );
+        await drawUsingPrimaryInput(page, { x: offsetX, y: offsetY }, { hasTouch });
+        await drawUsingPrimaryInput(page, { x: offsetX + cellSize, y: offsetY }, { hasTouch });
 
         await expect
             .poll(() =>
@@ -326,16 +293,8 @@ test.describe('local gameplay canvas input', () => {
         const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
         const hasTouch = Boolean(test.info().project.use.hasTouch);
 
-        await drawUsingPrimaryInput(
-            page,
-            { x: offsetX, y: offsetY },
-            { hasTouch }
-        );
-        await drawUsingPrimaryInput(
-            page,
-            { x: offsetX + cellSize, y: offsetY },
-            { hasTouch }
-        );
+        await drawUsingPrimaryInput(page, { x: offsetX, y: offsetY }, { hasTouch });
+        await drawUsingPrimaryInput(page, { x: offsetX + cellSize, y: offsetY }, { hasTouch });
 
         await page.locator('#saveLocalBtn').click();
 
@@ -368,16 +327,8 @@ test.describe('local gameplay canvas input', () => {
         const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
         const hasTouch = Boolean(test.info().project.use.hasTouch);
 
-        await drawUsingPrimaryInput(
-            page,
-            { x: offsetX, y: offsetY },
-            { hasTouch }
-        );
-        await drawUsingPrimaryInput(
-            page,
-            { x: offsetX + cellSize, y: offsetY },
-            { hasTouch }
-        );
+        await drawUsingPrimaryInput(page, { x: offsetX, y: offsetY }, { hasTouch });
+        await drawUsingPrimaryInput(page, { x: offsetX + cellSize, y: offsetY }, { hasTouch });
         await drawUsingPrimaryInput(
             page,
             { x: offsetX + cellSize, y: offsetY + cellSize },

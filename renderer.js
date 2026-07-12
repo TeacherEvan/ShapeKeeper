@@ -14,7 +14,6 @@ import {
     drawSquares,
     drawSquaresWithAnimations,
     drawTileEffectIndicator,
-    drawTrianglesWithAnimations,
 } from './renderer/board.js';
 import {
     drawAmbientParticles,
@@ -71,9 +70,6 @@ export class Renderer {
 
         this.drawSquares();
         this.drawSquaresWithAnimations();
-        if (!this.game.disableTriangles) {
-            this.drawTrianglesWithAnimations();
-        }
 
         this.drawParticles();
         this.drawSparkleEmojis();
@@ -162,13 +158,6 @@ export class Renderer {
      */
     drawSquaresWithAnimations() {
         drawSquaresWithAnimations(this.game);
-    }
-
-    /**
-     * Draw triangles with animations
-     */
-    drawTrianglesWithAnimations() {
-        drawTrianglesWithAnimations(this.game);
     }
 
     /**

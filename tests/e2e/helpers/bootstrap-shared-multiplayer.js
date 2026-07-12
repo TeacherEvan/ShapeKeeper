@@ -9,7 +9,6 @@ export async function installSharedMockMultiplayer(
         roomCode = 'ABC123',
         gridSize = 5,
         partyMode = false,
-        trianglesEnabled = false,
         resetSharedState = false,
     }
 ) {
@@ -20,7 +19,6 @@ export async function installSharedMockMultiplayer(
             roomCode: initialRoomCode,
             gridSize: initialGridSize,
             partyMode: initialPartyMode,
-            trianglesEnabled: initialTrianglesEnabled,
             resetSharedState: shouldResetSharedState,
             storageKey,
             palette,
@@ -106,7 +104,6 @@ export async function installSharedMockMultiplayer(
                 currentPlayerIndex: gamePayload?.room?.currentPlayerIndex ?? null,
                 lineCount: gamePayload?.lines?.length || 0,
                 squareCount: gamePayload?.squares?.length || 0,
-                triangleCount: gamePayload?.triangles?.length || 0,
             });
             const record = (bucket, kind, payload, metadata = {}) => {
                 bucket.push(
@@ -281,7 +278,6 @@ export async function installSharedMockMultiplayer(
                     playerScores = [0, 0],
                     currentPlayerIndex = 0,
                     squares = [],
-                    triangles = [],
                 } = {}) {
                     const sharedState = ensureSharedState();
                     const room = getActiveRoom(sharedState);
@@ -296,7 +292,6 @@ export async function installSharedMockMultiplayer(
                         })),
                         room: { currentPlayerIndex, status: 'playing', updatedAt: room.updatedAt },
                         squares: clone(squares),
-                        triangles: clone(triangles),
                     };
                     writeSharedState(sharedState);
                     notifySubscribers('seed');
@@ -320,7 +315,6 @@ export async function installSharedMockMultiplayer(
                         gridSize: requestedGridSize || initialGridSize,
                         hostPlayerId: initialSessionId,
                         partyMode: requestedPartyMode ?? initialPartyMode,
-                        trianglesEnabled: initialTrianglesEnabled,
                         players: [
                             createPlayer({
                                 name: playerName || initialPlayerName,
@@ -458,7 +452,6 @@ export async function installSharedMockMultiplayer(
                         players: room.players
                             .slice(0, 2)
                             .map((player, index) => ({ playerIndex: index, score: 0 })),
-                        triangles: [],
                         room: {
                             currentPlayerIndex: 0,
                             status: 'playing',
@@ -492,158 +485,10 @@ export async function installSharedMockMultiplayer(
                                 (square) => square.squareKey === squareKey
                             )
                     );
-                    const completedTriangleKeys = [];
-                    if (room.trianglesEnabled === true) {
-                        const parseDot = (value) => {
-                            const [row, col] = value.split(',').map(Number);
-                            return { row, col };
-                        };
-                        const buildTriangleKey = (vertices) => {
-                            const sortedVertices = [...vertices].sort((a, b) =>
-                                a.row === b.row ? a.col - b.col : a.row - b.row
-                            );
-                            return `tri-${sortedVertices[0].row},${sortedVertices[0].col}-${sortedVertices[1].row},${sortedVertices[1].col}-${sortedVertices[2].row},${sortedVertices[2].col}`;
-                        };
-                        const [rawStart, rawEnd] = lineKey.split('-');
-                        const start = parseDot(rawStart);
-                        const end = parseDot(rawEnd);
-                        const lineSet = new Set([
-                            ...existingLines.map((line) => line.lineKey),
-                            lineKey,
-                        ]);
-                        const potentialTriangles = [];
-                        if (Math.abs(start.row - end.row) === 1 && Math.abs(start.col - end.col) === 1) {
-                            const row = Math.min(start.row, end.row);
-                            const col = Math.min(start.col, end.col);
-                            const isTLtoBR =
-                                (start.row < end.row && start.col < end.col) ||
-                                (end.row < start.row && end.col < start.col);
-
-                            if (isTLtoBR) {
-                                potentialTriangles.push([
-                                    { row, col },
-                                    { row, col: col + 1 },
-                                    { row: row + 1, col: col + 1 },
-                                ]);
-                                potentialTriangles.push([
-                                    { row, col },
-                                    { row: row + 1, col },
-                                    { row: row + 1, col: col + 1 },
-                                ]);
-                            } else {
-                                potentialTriangles.push([
-                                    { row, col },
-                                    { row, col: col + 1 },
-                                    { row: row + 1, col },
-                                ]);
-                                potentialTriangles.push([
-                                    { row, col: col + 1 },
-                                    { row: row + 1, col },
-                                    { row: row + 1, col: col + 1 },
-                                ]);
-                            }
-                        } else if (start.row === end.row) {
-                            const row = start.row;
-                            const col = Math.min(start.col, end.col);
-                            if (row > 0 && col > 0)
-                                potentialTriangles.push([
-                                    { row: row - 1, col: col - 1 },
-                                    { row: row - 1, col },
-                                    { row, col: col - 1 },
-                                ]);
-                            if (row > 0 && col < room.gridSize - 1)
-                                potentialTriangles.push([
-                                    { row: row - 1, col },
-                                    { row: row - 1, col: col + 1 },
-                                    { row, col: col + 1 },
-                                ]);
-                            if (row < room.gridSize - 1 && col > 0)
-                                potentialTriangles.push([
-                                    { row, col: col - 1 },
-                                    { row: row + 1, col: col - 1 },
-                                    { row: row + 1, col },
-                                ]);
-                            if (row < room.gridSize - 1 && col < room.gridSize - 1)
-                                potentialTriangles.push([
-                                    { row, col: col + 1 },
-                                    { row: row + 1, col },
-                                    { row: row + 1, col: col + 1 },
-                                ]);
-                        } else {
-                            const row = Math.min(start.row, end.row);
-                            const col = start.col;
-                            if (col > 0 && row > 0)
-                                potentialTriangles.push([
-                                    { row: row - 1, col: col - 1 },
-                                    { row: row - 1, col },
-                                    { row, col: col - 1 },
-                                ]);
-                            if (col > 0 && row < room.gridSize - 1)
-                                potentialTriangles.push([
-                                    { row, col: col - 1 },
-                                    { row: row + 1, col: col - 1 },
-                                    { row: row + 1, col },
-                                ]);
-                            if (col < room.gridSize - 1 && row > 0)
-                                potentialTriangles.push([
-                                    { row: row - 1, col },
-                                    { row: row - 1, col: col + 1 },
-                                    { row, col: col + 1 },
-                                ]);
-                            if (col < room.gridSize - 1 && row < room.gridSize - 1)
-                                potentialTriangles.push([
-                                    { row, col: col + 1 },
-                                    { row: row + 1, col },
-                                    { row: row + 1, col: col + 1 },
-                                ]);
-                        }
-
-                        const existingTriangles = new Set(
-                            (room.gameState.triangles || []).map((triangle) => triangle.triangleKey)
-                        );
-
-                        for (const vertices of potentialTriangles) {
-                            const [first, second, third] = vertices;
-                            const edge1 =
-                                first.row < second.row ||
-                                (first.row === second.row && first.col < second.col)
-                                    ? `${first.row},${first.col}-${second.row},${second.col}`
-                                    : `${second.row},${second.col}-${first.row},${first.col}`;
-                            const edge2 =
-                                second.row < third.row ||
-                                (second.row === third.row && second.col < third.col)
-                                    ? `${second.row},${second.col}-${third.row},${third.col}`
-                                    : `${third.row},${third.col}-${second.row},${second.col}`;
-                            const edge3 =
-                                third.row < first.row ||
-                                (third.row === first.row && third.col < first.col)
-                                    ? `${third.row},${third.col}-${first.row},${first.col}`
-                                    : `${first.row},${first.col}-${third.row},${third.col}`;
-                            if (!lineSet.has(edge1) || !lineSet.has(edge2) || !lineSet.has(edge3)) {
-                                continue;
-                            }
-                            const triangleKey = buildTriangleKey(vertices);
-                            if (existingTriangles.has(triangleKey)) {
-                                continue;
-                            }
-                            existingTriangles.add(triangleKey);
-                            completedTriangleKeys.push(triangleKey);
-                        }
-                    }
-
                     room.gameState.lines = [
                         ...existingLines,
                         { lineKey, playerIndex: player.playerIndex },
                     ];
-                    if (completedTriangleKeys.length > 0) {
-                        room.gameState.triangles = [
-                            ...(room.gameState.triangles || []),
-                            ...completedTriangleKeys.map((triangleKey) => ({
-                                triangleKey,
-                                playerIndex: player.playerIndex,
-                            })),
-                        ];
-                    }
                     if (completedSquareKeys.length > 0) {
                         room.gameState.squares = [
                             ...(room.gameState.squares || []),
@@ -658,14 +503,8 @@ export async function installSharedMockMultiplayer(
                                 : entry
                         );
                     }
-                    const completedShapeCount =
-                        completedSquareKeys.length + completedTriangleKeys.length;
+                    const completedShapeCount = completedSquareKeys.length;
                     if (completedShapeCount > 0) {
-                        room.gameState.players = (room.gameState.players || []).map((entry) =>
-                            entry.playerIndex === player.playerIndex
-                                ? { ...entry, score: entry.score + completedTriangleKeys.length }
-                                : entry
-                        );
                         room.gameState.room.currentPlayerIndex = player.playerIndex;
                     } else {
                         room.gameState.room.currentPlayerIndex = player.playerIndex === 0 ? 1 : 0;
@@ -678,7 +517,6 @@ export async function installSharedMockMultiplayer(
                     return {
                         success: true,
                         completedSquares: completedSquareKeys.length,
-                        completedTriangles: completedTriangleKeys.length,
                         keepTurn: completedShapeCount > 0,
                     };
                 },
@@ -729,16 +567,6 @@ export async function installSharedMockMultiplayer(
                     notifySubscribers('update-party-mode');
                     return { success: true };
                 },
-                async updateTrianglesEnabled(nextTrianglesEnabled) {
-                    const sharedState = ensureSharedState();
-                    const room = getActiveRoom(sharedState);
-                    if (!room) return { error: 'Not in a room' };
-                    room.trianglesEnabled = nextTrianglesEnabled === true;
-                    room.updatedAt = Date.now();
-                    writeSharedState(sharedState);
-                    notifySubscribers('update-triangles-enabled');
-                    return { success: true };
-                },
                 async updatePlayer(updates) {
                     const sharedState = ensureSharedState();
                     const room = getActiveRoom(sharedState);
@@ -762,7 +590,6 @@ export async function installSharedMockMultiplayer(
             roomCode,
             gridSize,
             partyMode,
-            trianglesEnabled,
             resetSharedState,
             storageKey: SHARED_BACKEND_STORAGE_KEY,
             palette: DEFAULT_SHARED_COLORS,
@@ -772,13 +599,7 @@ export async function installSharedMockMultiplayer(
 
 export async function createSharedMockMultiplayerPages(
     browser,
-    {
-        roomCode = 'ABC123',
-        gridSize = 5,
-        partyMode = false,
-        trianglesEnabled = false,
-        startupTimeoutMs = 1000,
-    } = {}
+    { roomCode = 'ABC123', gridSize = 5, partyMode = false, startupTimeoutMs = 1000 } = {}
 ) {
     const { gotoApp } = await import('./bootstrap-app.js');
     const context = await browser.newContext();
@@ -794,7 +615,6 @@ export async function createSharedMockMultiplayerPages(
         roomCode,
         gridSize,
         partyMode,
-        trianglesEnabled,
         resetSharedState: true,
     });
 
@@ -804,7 +624,6 @@ export async function createSharedMockMultiplayerPages(
         roomCode,
         gridSize,
         partyMode,
-        trianglesEnabled,
     });
 
     return {

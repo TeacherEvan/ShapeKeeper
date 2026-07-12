@@ -8,12 +8,7 @@ import {
     updatePlayerHandler,
 } from './rooms/mutations';
 import { getRoomByCodeHandler, getRoomHandler } from './rooms/queries';
-import {
-    startGameHandler,
-    updateGridSizeHandler,
-    updatePartyModeHandler,
-    updateTrianglesEnabledHandler,
-} from './rooms/settings';
+import { startGameHandler, updateGridSizeHandler, updatePartyModeHandler } from './rooms/settings';
 
 // Create a new room
 export const createRoom = mutation({
@@ -83,16 +78,6 @@ export const updatePartyMode = mutation({
         partyMode: v.boolean(),
     },
     handler: updatePartyModeHandler,
-});
-
-// Update triangle mode (host only)
-export const updateTrianglesEnabled = mutation({
-    args: {
-        roomId: v.id('rooms'),
-        sessionId: v.string(),
-        trianglesEnabled: v.boolean(),
-    },
-    handler: updateTrianglesEnabledHandler,
 });
 
 // Get room by code (for joining)

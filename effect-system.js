@@ -11,15 +11,9 @@ import {
     announceTurnMessage,
     executeEffect,
     revealMultiplier,
-    revealMultiplierForCell,
 } from './effect-system/gameplay.js';
 import { initializeMultipliers, initializeTileEffects } from './effect-system/init.js';
-import {
-    closeEffectModal,
-    createEffectModal,
-    showEffectModal,
-    showShapeMessage,
-} from './effect-system/modal.js';
+import { closeEffectModal, createEffectModal, showEffectModal } from './effect-system/modal.js';
 
 export class EffectSystem {
     constructor(game) {
@@ -114,20 +108,6 @@ export class EffectSystem {
      */
     async revealMultiplier(squareKey) {
         return revealMultiplier(this, squareKey);
-    }
-
-    /**
-     * Reveal multiplier for cell
-     */
-    revealMultiplierForCell(cellKey) {
-        revealMultiplierForCell(this, cellKey);
-    }
-
-    /**
-     * Show shape message
-     */
-    showShapeMessage(cellKey) {
-        showShapeMessage(this, cellKey);
     }
 
     announceTurnMessage(text, color, durationMs = 2000) {

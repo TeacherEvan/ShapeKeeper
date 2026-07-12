@@ -77,7 +77,6 @@ describe('Root InputHandler canvas lifecycle', () => {
             revealedMultipliers: new Set(),
             selectedDot: null,
             selectionRibbon: null,
-            showShapeMessage: vi.fn(),
             soundManager: {
                 ensureAudioContext: vi.fn(),
             },
@@ -85,7 +84,6 @@ describe('Root InputHandler canvas lifecycle', () => {
             squares: {},
             tileEffects: {},
             touchStartDot: null,
-            triangleCellOwners: new Map(),
         };
     });
 
@@ -158,18 +156,14 @@ describe('Root InputHandler canvas lifecycle', () => {
         dispatchCanvasTouchEvent(canvas, 'touchstart', [
             { clientX: 20, clientY: 20, identifier: 1 },
         ]);
-        dispatchCanvasTouchEvent(canvas, 'touchend', [
-            { clientX: 20, clientY: 20, identifier: 1 },
-        ]);
+        dispatchCanvasTouchEvent(canvas, 'touchend', [{ clientX: 20, clientY: 20, identifier: 1 }]);
 
         expect(game.selectedDot).toEqual({ row: 0, col: 0 });
 
         dispatchCanvasTouchEvent(canvas, 'touchstart', [
             { clientX: 60, clientY: 20, identifier: 2 },
         ]);
-        dispatchCanvasTouchEvent(canvas, 'touchend', [
-            { clientX: 60, clientY: 20, identifier: 2 },
-        ]);
+        dispatchCanvasTouchEvent(canvas, 'touchend', [{ clientX: 60, clientY: 20, identifier: 2 }]);
 
         expect(game.drawLine).toHaveBeenCalledWith({ row: 0, col: 0 }, { row: 0, col: 1 });
 
@@ -186,9 +180,7 @@ describe('Root InputHandler canvas lifecycle', () => {
         dispatchCanvasTouchEvent(canvas, 'touchstart', [
             { clientX: 36, clientY: 36, identifier: 1 },
         ]);
-        dispatchCanvasTouchEvent(canvas, 'touchend', [
-            { clientX: 36, clientY: 36, identifier: 1 },
-        ]);
+        dispatchCanvasTouchEvent(canvas, 'touchend', [{ clientX: 36, clientY: 36, identifier: 1 }]);
 
         expect(game.selectedDot).toEqual({ row: 0, col: 0 });
 

@@ -1,4 +1,4 @@
-import { DARES, HYPOTHETICALS, PHYSICAL_CHALLENGES, SHAPE_MESSAGES, TRUTHS } from '../constants.js';
+import { DARES, HYPOTHETICALS, PHYSICAL_CHALLENGES, TRUTHS } from '../constants.js';
 
 export function createEffectModal(system) {
     if (document.getElementById('effectModal')) {
@@ -91,31 +91,4 @@ export function closeEffectModal(system) {
         system.effectModal.classList.remove('show');
         system.pendingEffect = null;
     }
-}
-
-export function showShapeMessage(system) {
-    const message = SHAPE_MESSAGES[Math.floor(Math.random() * SHAPE_MESSAGES.length)];
-
-    if (!system.effectModal) {
-        createEffectModal(system);
-    }
-
-    const modal = system.effectModal;
-    const title = modal.querySelector('.effect-title');
-    const desc = modal.querySelector('.effect-description');
-    const icon = modal.querySelector('.effect-icon');
-    const prompt = modal.querySelector('.effect-prompt');
-    const primaryBtn = modal.querySelector('.effect-btn-primary');
-    const secondaryBtn = modal.querySelector('.effect-btn-secondary');
-
-    modal.className = 'effect-modal show powerup-theme';
-
-    icon.textContent = '🔺';
-    title.textContent = 'Triangle Wisdom';
-    desc.textContent = message;
-    prompt.innerHTML = '';
-
-    primaryBtn.textContent = 'Awesome!';
-    primaryBtn.onclick = () => system.closeEffectModal();
-    secondaryBtn.style.display = 'none';
 }

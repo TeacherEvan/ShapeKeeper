@@ -31,7 +31,6 @@ export async function createRoomHandler(ctx: any, args: any) {
         hostPlayerId: args.sessionId,
         gridSize: args.gridSize,
         partyMode: args.partyMode !== false,
-        trianglesEnabled: false,
         status: 'lobby',
         currentPlayerIndex: 0,
         createdAt: now,

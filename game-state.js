@@ -29,8 +29,6 @@ export class GameState {
         this.game.lines = new Set();
         this.game.ghostLines = new Set();
         this.game.squares = {};
-        this.game.triangles = {};
-        this.game.triangleCellOwners = new Map();
         this.game.claimedCells = new Set();
         this.game.selectedDot = null;
         this.game.keyboardFocusDot = null;
@@ -40,8 +38,6 @@ export class GameState {
         this.game.isTouchDevice =
             navigator.maxTouchPoints > 0 ||
             window.matchMedia?.('(pointer: coarse)')?.matches === true;
-        this.game.disableTriangles = true;
-        this.game.partyModeEnabled = false;
         this.game.selectionRadiusMultiplier = getDotSelectionRadiusMultiplier(
             this.game.isTouchDevice
         );
@@ -300,10 +296,7 @@ export class GameState {
      * Check if game is over
      */
     checkGameOver() {
-        const totalSquares = (this.game.gridRows - 1) * (this.game.gridCols - 1);
-        const completedSquares = Object.keys(this.game.squares).length;
-
-        if (completedSquares === totalSquares) {
+        if (this.isGameOver()) {
             setTimeout(() => this.game.uiManager.showWinner(), 500);
         }
     }

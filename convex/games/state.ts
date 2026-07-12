@@ -20,17 +20,12 @@ export async function getGameStateHandler(ctx: any, args: any) {
         .query('squares')
         .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
         .collect();
-    const triangles = await ctx.db
-        .query('triangles')
-        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
-        .collect();
 
     return {
         room,
         players: players.sort((a: any, b: any) => a.playerIndex - b.playerIndex),
         lines,
         squares,
-        triangles,
     };
 }
 
@@ -79,13 +74,13 @@ export async function revealMultiplierHandler(ctx: any, args: any) {
 
     if (square.multiplier.type === 'multiplier' && square.multiplier.value) {
         const bonus = square.multiplier.value;
-        const newScore = player.score * bonus;
+        const newScore = player.score + (bonus - 1);
         await ctx.db.patch(player._id, { score: newScore });
-        console.log('[revealMultiplier] Score multiplied', {
+        console.log('[revealMultiplier] Score updated with bonus', {
             playerId: player._id,
             oldScore: player.score,
             newScore,
-            multiplier: bonus,
+            bonus: bonus - 1,
         });
     }
 
@@ -151,15 +146,6 @@ export async function resetGameHandler(ctx: any, args: any) {
     }
     console.log('[resetGame] Squares deleted', { count: squares.length });
 
-    const triangles = await ctx.db
-        .query('triangles')
-        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
-        .collect();
-    for (const triangle of triangles) {
-        await ctx.db.delete(triangle._id);
-    }
-    console.log('[resetGame] Triangles deleted', { count: triangles.length });
-
     const players = await ctx.db
         .query('players')
         .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
@@ -179,7 +165,6 @@ export async function resetGameHandler(ctx: any, args: any) {
         roomId: args.roomId,
         linesDeleted: lines.length,
         squaresDeleted: squares.length,
-        trianglesDeleted: triangles.length,
         playersReset: players.length,
     });
 

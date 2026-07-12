@@ -47,7 +47,7 @@ export function handleRoomStateUpdate(roomState, deps) {
 
     if (game?.isMultiplayer) {
         game.isHost = nextIsHost;
-        game.disableTriangles = roomState.trianglesEnabled !== true;
+
         game.uiManager?.updatePopulateButtonVisibility();
 
         if (
@@ -182,46 +182,6 @@ export function handleAuthoritativeGameState(gameState, deps) {
             game.playSquareSound(game.comboCount);
         }
     });
-
-    const incomingTriangles = Array.isArray(gameState.triangles) ? gameState.triangles : [];
-    const nextTriangles = {};
-    const nextTriangleCellOwners = new Map();
-
-    incomingTriangles.forEach((triangle) => {
-        const triangleKey = triangle.triangleKey;
-        if (!triangleKey) {
-            return;
-        }
-
-        const displayPlayerIndex = triangle.playerIndex + 1;
-        nextTriangles[triangleKey] = displayPlayerIndex;
-
-        const normalizedTriangleKey = triangleKey.startsWith('tri-')
-            ? triangleKey.slice(4)
-            : triangleKey;
-        const vertices = normalizedTriangleKey.split('-').map((pair) => {
-            const [row, col] = pair.split(',').map(Number);
-            return { row, col };
-        });
-        const cellKey = `${Math.min(...vertices.map((vertex) => vertex.row))},${Math.min(...vertices.map((vertex) => vertex.col))}`;
-        if (!nextTriangleCellOwners.has(cellKey)) {
-            nextTriangleCellOwners.set(cellKey, new Set());
-        }
-        nextTriangleCellOwners.get(cellKey).add(displayPlayerIndex);
-
-        if (!game.triangles[triangleKey]) {
-            game.squareAnimations.push({
-                type: 'triangle',
-                key: triangleKey,
-                startTime: Date.now(),
-                duration: 600,
-            });
-            game.playSquareSound(game.comboCount);
-        }
-    });
-
-    game.triangles = nextTriangles;
-    game.triangleCellOwners = nextTriangleCellOwners;
 
     const p1 = gameState.players?.find((player) => player.playerIndex === 0);
     const p2 = gameState.players?.find((player) => player.playerIndex === 1);

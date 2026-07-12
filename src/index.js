@@ -22,9 +22,6 @@ export { ParticleSystem, TileEffectsManager } from './effects/index.js';
 // Animation systems
 export { KissEmojiSystem, SquareAnimationSystem } from './animations/index.js';
 
-// Game logic
-export { GameState, InputHandler, MultiplierSystem } from './game/index.js';
-
 // UI systems
 export * from './ui/index.js';
 
@@ -58,18 +55,12 @@ export async function createGameSystems(gameCanvas) {
         { TileEffectsManager },
         { KissEmojiSystem },
         { SquareAnimationSystem },
-        { InputHandler },
-        { MultiplierSystem },
-        { GameState },
     ] = await Promise.all([
         import('./sound/SoundManager.js'),
         import('./effects/ParticleSystem.js'),
         import('./effects/TileEffects.js'),
         import('./animations/KissEmojiSystem.js'),
         import('./animations/SquareAnimations.js'),
-        import('./game/InputHandler.js'),
-        import('./game/MultiplierSystem.js'),
-        import('./game/GameState.js'),
     ]);
 
     return {
@@ -78,9 +69,6 @@ export async function createGameSystems(gameCanvas) {
         tileEffectsController: new TileEffectsManager(),
         kissEmojiAnimator: new KissEmojiSystem(),
         squareAnimationController: new SquareAnimationSystem(),
-        inputController: new InputHandler(gameCanvas),
-        multiplierController: new MultiplierSystem(),
-        gameStateManager: new GameState(),
     };
 }
 
@@ -96,11 +84,7 @@ export async function preloadCriticalAssets() {
     // TODO: [PERFORMANCE] Consider using the Fetch API with cache hints
 
     // Preload modules that will be needed immediately
-    await Promise.all([
-        import('./sound/SoundManager.js'),
-        import('./effects/ParticleSystem.js'),
-        import('./game/GameState.js'),
-    ]);
+    await Promise.all([import('./sound/SoundManager.js'), import('./effects/ParticleSystem.js')]);
 }
 
 /**
@@ -110,7 +94,5 @@ export async function preloadCriticalAssets() {
  * @property {TileEffectsManager} tileEffectsController - Tile effects (traps/powerups)
  * @property {KissEmojiSystem} kissEmojiAnimator - Kiss emoji animation system
  * @property {SquareAnimationSystem} squareAnimationController - Square completion animations
- * @property {InputHandler} inputController - Touch/mouse input handler
- * @property {MultiplierSystem} multiplierController - Score multiplier system
- * @property {GameState} gameStateManager - Core game state management
+
  */

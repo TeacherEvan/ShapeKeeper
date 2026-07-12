@@ -45,7 +45,6 @@
         updatePlayer: roomOperations.updatePlayer,
         updateGridSize: roomOperations.updateGridSize,
         updatePartyMode: roomOperations.updatePartyMode,
-        updateTrianglesEnabled: roomOperations.updateTrianglesEnabled,
         startGame: roomOperations.startGame,
         drawLine: gameOperations.drawLine,
         revealMultiplier: gameOperations.revealMultiplier,

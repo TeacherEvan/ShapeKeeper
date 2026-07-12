@@ -1,19 +1,12 @@
 /**
  * ShapeKeeper - Game Logic
- * Core game mechanics for squares, triangles, and line drawing
+ * Core game mechanics for squares and line drawing
  *
  * @version 4.3.0
  * @author Teacher Evan
  */
 
-import {
-    areAdjacent,
-    getLineKey,
-    getLineType,
-    getTriangleCellKey,
-    parseLineKey,
-    parseSquareKey,
-} from './utils.js';
+import { areAdjacent, getLineKey, getLineType, parseLineKey, parseSquareKey } from './utils.js';
 
 export class GameLogic {
     constructor(game) {
@@ -53,10 +46,6 @@ export class GameLogic {
      */
     getLineType(dot1, dot2) {
         return getLineType(dot1, dot2);
-    }
-
-    getTriangleCellKey(vertices) {
-        return getTriangleCellKey(vertices);
     }
 
     /**
@@ -111,7 +100,7 @@ export class GameLogic {
      * Check if a square is complete
      */
     isSquareComplete(row, col) {
-        // Shape exclusivity check: if this cell is claimed by a triangle, square cannot form
+        // Shape exclusivity check: if this cell is already claimed, square cannot form
         const cellKey = `${row},${col}`;
         if (this.game.claimedCells.has(cellKey)) {
             return false;
@@ -129,208 +118,6 @@ export class GameLogic {
             this.game.lines.has(right) &&
             !this.game.squares[cellKey]
         );
-    }
-
-    /**
-     * Claim a cell for shape exclusivity
-     */
-    claimCell(row, col) {
-        this.game.claimedCells.add(`${row},${col}`);
-    }
-
-    /**
-     * Check for triangles completed by a line
-     */
-    checkForTriangles(lineKey) {
-        const [start, end] = parseLineKey(lineKey);
-
-        const completedTriangles = [];
-        const lineType = getLineType(start, end);
-
-        if (lineType === 'diagonal') {
-            // Diagonal lines can complete triangles in adjacent cells
-            this._checkTrianglesForDiagonal(start, end, completedTriangles);
-        } else if (lineType === 'horizontal' || lineType === 'vertical') {
-            // Orthogonal lines can complete triangles they're part of
-            this._checkTrianglesForOrthogonal(start, end, lineType, completedTriangles);
-        }
-
-        return completedTriangles;
-    }
-
-    /**
-     * Check triangles for diagonal line
-     */
-    _checkTrianglesForDiagonal(start, end, completedTriangles) {
-        const minRow = Math.min(start.row, end.row);
-        const minCol = Math.min(start.col, end.col);
-
-        // Determine diagonal direction: TL→BR or TR→BL
-        const isTLtoBR =
-            (start.row < end.row && start.col < end.col) ||
-            (start.row > end.row && start.col > end.col);
-
-        if (isTLtoBR) {
-            // Top-right triangle
-            const topRight = this._checkSingleTriangle(
-                { row: minRow, col: minCol }, // TL corner
-                { row: minRow, col: minCol + 1 }, // TR corner
-                { row: minRow + 1, col: minCol + 1 }, // BR corner
-                'TR'
-            );
-            if (topRight) completedTriangles.push(topRight);
-
-            // Bottom-left triangle
-            const bottomLeft = this._checkSingleTriangle(
-                { row: minRow, col: minCol }, // TL corner
-                { row: minRow + 1, col: minCol }, // BL corner
-                { row: minRow + 1, col: minCol + 1 }, // BR corner
-                'BL'
-            );
-            if (bottomLeft) completedTriangles.push(bottomLeft);
-        } else {
-            // Top-left triangle
-            const topLeft = this._checkSingleTriangle(
-                { row: minRow, col: minCol }, // TL corner
-                { row: minRow, col: minCol + 1 }, // TR corner
-                { row: minRow + 1, col: minCol }, // BL corner
-                'TL'
-            );
-            if (topLeft) completedTriangles.push(topLeft);
-
-            // Bottom-right triangle
-            const bottomRight = this._checkSingleTriangle(
-                { row: minRow, col: minCol + 1 }, // TR corner
-                { row: minRow + 1, col: minCol }, // BL corner
-                { row: minRow + 1, col: minCol + 1 }, // BR corner
-                'BR'
-            );
-            if (bottomRight) completedTriangles.push(bottomRight);
-        }
-    }
-
-    /**
-     * Check triangles for orthogonal line
-     */
-    _checkTrianglesForOrthogonal(start, end, lineType, completedTriangles) {
-        const minRow = Math.min(start.row, end.row);
-        const maxRow = Math.max(start.row, end.row);
-        const minCol = Math.min(start.col, end.col);
-        const maxCol = Math.max(start.col, end.col);
-
-        if (lineType === 'horizontal') {
-            // Triangles below this horizontal line
-            if (minRow < this.game.gridRows - 1) {
-                const bl = this._checkSingleTriangle(
-                    { row: minRow, col: minCol },
-                    { row: minRow, col: maxCol },
-                    { row: minRow + 1, col: minCol },
-                    'BL'
-                );
-                if (bl) completedTriangles.push(bl);
-
-                const br = this._checkSingleTriangle(
-                    { row: minRow, col: minCol },
-                    { row: minRow, col: maxCol },
-                    { row: minRow + 1, col: maxCol },
-                    'BR'
-                );
-                if (br) completedTriangles.push(br);
-            }
-
-            // Triangles above this horizontal line
-            if (minRow > 0) {
-                const tl = this._checkSingleTriangle(
-                    { row: minRow - 1, col: minCol },
-                    { row: minRow, col: minCol },
-                    { row: minRow, col: maxCol },
-                    'TL'
-                );
-                if (tl) completedTriangles.push(tl);
-
-                const tr = this._checkSingleTriangle(
-                    { row: minRow - 1, col: maxCol },
-                    { row: minRow, col: minCol },
-                    { row: minRow, col: maxCol },
-                    'TR'
-                );
-                if (tr) completedTriangles.push(tr);
-            }
-        } else if (lineType === 'vertical') {
-            // Triangles to the right
-            if (minCol < this.game.gridCols - 1) {
-                const tr = this._checkSingleTriangle(
-                    { row: minRow, col: minCol },
-                    { row: maxRow, col: minCol },
-                    { row: minRow, col: minCol + 1 },
-                    'TR'
-                );
-                if (tr) completedTriangles.push(tr);
-
-                const br = this._checkSingleTriangle(
-                    { row: minRow, col: minCol },
-                    { row: maxRow, col: minCol },
-                    { row: maxRow, col: minCol + 1 },
-                    'BR'
-                );
-                if (br) completedTriangles.push(br);
-            }
-
-            // Triangles to the left
-            if (minCol > 0) {
-                const tl = this._checkSingleTriangle(
-                    { row: minRow, col: minCol },
-                    { row: maxRow, col: minCol },
-                    { row: minRow, col: minCol - 1 },
-                    'TL'
-                );
-                if (tl) completedTriangles.push(tl);
-
-                const bl = this._checkSingleTriangle(
-                    { row: minRow, col: minCol },
-                    { row: maxRow, col: minCol },
-                    { row: maxRow, col: minCol - 1 },
-                    'BL'
-                );
-                if (bl) completedTriangles.push(bl);
-            }
-        }
-    }
-
-    /**
-     * Check if a specific triangle is complete
-     */
-    _checkSingleTriangle(v1, v2, v3, orientation) {
-        // Get the 3 edges of this triangle
-        const edge1 = getLineKey(v1, v2);
-        const edge2 = getLineKey(v2, v3);
-        const edge3 = getLineKey(v3, v1);
-
-        // Check if all 3 edges exist
-        if (
-            !this.game.lines.has(edge1) ||
-            !this.game.lines.has(edge2) ||
-            !this.game.lines.has(edge3)
-        ) {
-            return null;
-        }
-
-        // Generate unique triangle key
-        const vertices = [v1, v2, v3].sort((a, b) =>
-            a.row === b.row ? a.col - b.col : a.row - b.row
-        );
-        const triKey = `tri-${vertices[0].row},${vertices[0].col}-${vertices[1].row},${vertices[1].col}-${vertices[2].row},${vertices[2].col}`;
-
-        // Only return if not already completed
-        if (this.game.triangles[triKey]) {
-            return null;
-        }
-
-        return {
-            key: triKey,
-            vertices: [v1, v2, v3],
-            orientation: orientation,
-        };
     }
 
     /**
@@ -448,10 +235,6 @@ export class GameLogic {
      */
     getCellOwnerForEffects(cellKey) {
         if (this.game.squares[cellKey]) return this.game.squares[cellKey];
-        if (this.game.triangleCellOwners && this.game.triangleCellOwners.has(cellKey)) {
-            const owners = Array.from(this.game.triangleCellOwners.get(cellKey));
-            return owners[0];
-        }
         return null;
     }
 }

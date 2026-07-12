@@ -1,12 +1,5 @@
 import { areAdjacent } from '../utils.js';
 
-function isDiagonalNeighbor(startDot, endDot) {
-    return (
-        Math.abs(startDot.row - endDot.row) === 1 &&
-        Math.abs(startDot.col - endDot.col) === 1
-    );
-}
-
 function getTouchCoordinates(handler, touch) {
     const rect = handler.canvas.getBoundingClientRect();
     return {
@@ -39,19 +32,15 @@ export function getSquareAtPosition(handler, x, y) {
 
 function handleCellInteraction(handler, clickedCell) {
     const clickedHasSquare = clickedCell && !!handler.game.squares[clickedCell];
-    const clickedHasTriangle = clickedCell && handler.game.triangleCellOwners?.has(clickedCell);
 
-    if (!clickedCell || (!clickedHasSquare && !clickedHasTriangle)) {
+    if (!clickedCell || !clickedHasSquare) {
         return false;
     }
 
     if (handler.game.isMultiplayer) {
         const isSquareOwner =
             clickedHasSquare && handler.game.squares[clickedCell] === handler.game.myPlayerNumber;
-        const isTriangleOwner =
-            clickedHasTriangle &&
-            handler.game.triangleCellOwners.get(clickedCell).has(handler.game.myPlayerNumber);
-        if (!isSquareOwner && !isTriangleOwner) {
+        if (!isSquareOwner) {
             return true;
         }
     }
@@ -62,22 +51,7 @@ function handleCellInteraction(handler, clickedCell) {
     }
 
     if (!handler.game.revealedMultipliers.has(clickedCell)) {
-        if (clickedHasSquare) {
-            handler.game.revealMultiplier(clickedCell);
-        } else if (handler.game.squareMultipliers[clickedCell]) {
-            handler.game.revealMultiplierForCell(clickedCell);
-        } else {
-            handler.game.showShapeMessage(clickedCell);
-        }
-        return true;
-    }
-
-    if (
-        clickedHasTriangle &&
-        !handler.game.squareMultipliers[clickedCell] &&
-        !handler.game.tileEffects[clickedCell]
-    ) {
-        handler.game.showShapeMessage(clickedCell);
+        handler.game.revealMultiplier(clickedCell);
         return true;
     }
 
@@ -177,19 +151,13 @@ export function handleTouchEnd(handler, event) {
         const { x, y } = getTouchCoordinates(handler, touch);
         const clickedCell = getSquareAtPosition(handler, x, y);
         const clickedHasSquare = clickedCell && !!handler.game.squares[clickedCell];
-        const clickedHasTriangle = clickedCell && handler.game.triangleCellOwners?.has(clickedCell);
 
-        if (clickedCell && (clickedHasSquare || clickedHasTriangle)) {
+        if (clickedCell && clickedHasSquare) {
             if (handler.game.isMultiplayer) {
                 const isSquareOwner =
                     clickedHasSquare &&
                     handler.game.squares[clickedCell] === handler.game.myPlayerNumber;
-                const isTriangleOwner =
-                    clickedHasTriangle &&
-                    handler.game.triangleCellOwners
-                        .get(clickedCell)
-                        .has(handler.game.myPlayerNumber);
-                if (!isSquareOwner && !isTriangleOwner) {
+                if (!isSquareOwner) {
                     handler.activeTouches.delete(touch.identifier);
                     continue;
                 }
@@ -205,11 +173,7 @@ export function handleTouchEnd(handler, event) {
             }
 
             if (!handler.game.revealedMultipliers.has(clickedCell)) {
-                if (clickedHasSquare) {
-                    handler.game.revealMultiplier(clickedCell);
-                } else {
-                    handler.game.revealMultiplierForCell(clickedCell);
-                }
+                handler.game.revealMultiplier(clickedCell);
                 handler.activeTouches.delete(touch.identifier);
                 continue;
             }
@@ -222,7 +186,10 @@ export function handleTouchEnd(handler, event) {
                     Math.pow(y - (handler.game.offsetY + endDot.row * handler.game.cellSize), 2)
             );
 
-            if (distance <= handler.game.cellSize * (handler.game.selectionRadiusMultiplier || 0.5)) {
+            if (
+                distance <=
+                handler.game.cellSize * (handler.game.selectionRadiusMultiplier || 0.5)
+            ) {
                 if (
                     handler.game.selectedDot &&
                     (handler.game.selectedDot.row !== endDot.row ||
@@ -238,13 +205,8 @@ export function handleTouchEnd(handler, event) {
                             handler.game.offsetY,
                             handler.game.cellSize
                         );
-                        if (
-                            !handler.game.disableTriangles ||
-                            !isDiagonalNeighbor(handler.game.selectedDot, endDot)
-                        ) {
-                            handler.game.selectedDot = endDot;
-                            handler.touchStartDot = endDot;
-                        }
+                        handler.game.selectedDot = endDot;
+                        handler.touchStartDot = endDot;
                         handler.selectionLocked = true;
                     }
                 } else if (!handler.game.selectedDot) {
@@ -329,9 +291,7 @@ export function processClick(handler, x, y) {
             handler.game.offsetY,
             handler.game.cellSize
         );
-        if (!handler.game.disableTriangles || !isDiagonalNeighbor(handler.game.selectedDot, dot)) {
-            handler.game.selectedDot = dot;
-        }
+        handler.game.selectedDot = dot;
         handler.selectionLocked = true;
     }
 

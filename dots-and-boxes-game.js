@@ -150,6 +150,14 @@ export class DotsAndBoxesGame {
         );
     }
 
+    revealTileEffect(squareKey) {
+        this.effectSystem.revealTileEffect(squareKey);
+    }
+
+    async revealMultiplier(squareKey) {
+        return this.effectSystem.revealMultiplier(squareKey);
+    }
+
     showWinner() {
         this.uiManager.showWinner();
     }
@@ -293,10 +301,6 @@ export class DotsAndBoxesGame {
 
             this.soundManager.playLineSound();
 
-            const completedTriangles = this.disableTriangles
-                ? []
-                : this.gameLogic.checkForTriangles(lineKey);
-
             const completedSquares = this.gameLogic.checkForSquares(lineKey);
 
             if (completedSquares.length > 0) {
@@ -309,7 +313,7 @@ export class DotsAndBoxesGame {
                 }
             }
 
-            const totalShapes = completedSquares.length + completedTriangles.length;
+            const totalShapes = completedSquares.length;
 
             if (totalShapes === 0) {
                 if (playerEffects.doubleLine) {
@@ -360,7 +364,6 @@ export class DotsAndBoxesGame {
                         this.particleSystem.spawnSparkleEmojis.bind(this.particleSystem)
                     );
                 });
-
                 this.soundManager.playSquareSound(this.comboCount);
 
                 if (totalShapes >= 2) {
@@ -476,8 +479,12 @@ export class DotsAndBoxesGame {
             return null;
         }
 
-        const scoringLines = availableLines.filter((lineKey) => this.gameLogic.wouldCompleteSquare(lineKey));
-        const safeLines = availableLines.filter((lineKey) => !this.gameLogic.wouldCompleteSquare(lineKey));
+        const scoringLines = availableLines.filter((lineKey) =>
+            this.gameLogic.wouldCompleteSquare(lineKey)
+        );
+        const safeLines = availableLines.filter(
+            (lineKey) => !this.gameLogic.wouldCompleteSquare(lineKey)
+        );
 
         if (this.aiDifficulty === 'easy') {
             if (scoringLines.length > 0 && Math.random() > 0.35) {
@@ -644,11 +651,6 @@ export class DotsAndBoxesGame {
             protectedSquares: [...this.protectedSquares],
             scores: { ...this.scores },
             squares: { ...this.squares },
-            triangles: { ...this.triangles },
-            triangleCellOwners: [...this.triangleCellOwners.entries()].map(([cellKey, owners]) => [
-                cellKey,
-                [...owners],
-            ]),
         };
     }
 
@@ -657,13 +659,9 @@ export class DotsAndBoxesGame {
         this.ghostLines = new Set(snapshot.ghostLines || []);
         this.lineOwners = new Map(snapshot.lineOwners);
         this.squares = { ...snapshot.squares };
-        this.triangles = { ...snapshot.triangles };
         this.scores = { ...snapshot.scores };
         this.currentPlayer = snapshot.currentPlayer;
         this.claimedCells = new Set(snapshot.claimedCells);
-        this.triangleCellOwners = new Map(
-            snapshot.triangleCellOwners.map(([cellKey, owners]) => [cellKey, new Set(owners)])
-        );
         this.playerEffects = JSON.parse(JSON.stringify(snapshot.playerEffects));
         this.protectedSquares = new Set(snapshot.protectedSquares);
         this.comboCount = snapshot.comboCount;
@@ -912,7 +910,6 @@ export class DotsAndBoxesGame {
         return {
             aiDifficulty: this.aiDifficulty,
             aiThinking: this.aiThinking,
-            disableTriangles: this.disableTriangles,
             isTouchDevice: this.isTouchDevice,
             localMode: this.localMode,
             partyModeEnabled: this.partyModeEnabled,
@@ -922,7 +919,6 @@ export class DotsAndBoxesGame {
             staticDotRadiusPx: getDotRenderRadius(this.cellSize, this.isTouchDevice),
             selectedDot: this.selectedDot,
             selectionRibbonActive: Boolean(this.selectionRibbon),
-            trianglesCount: Object.keys(this.triangles || {}).length,
         };
     }
 }

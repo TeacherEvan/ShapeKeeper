@@ -1,6 +1,6 @@
 /**
  * ShapeKeeper - Animation System
- * Animation management for squares, triangles, and effects
+ * Animation management for squares and effects
  *
  * @version 4.3.0
  * @author Teacher Evan
@@ -127,32 +127,7 @@ export class AnimationSystem {
     }
 
     /**
-     * Trigger triangle animation
-     */
-    triggerTriangleAnimation(triangleKey, triangleData, playerColor, spawnParticles) {
-        // Calculate center of triangle for animation
-        const v = triangleData.vertices;
-        const centerX = (v[0].x + v[1].x + v[2].x) / 3;
-        const centerY = (v[0].y + v[1].y + v[2].y) / 3;
-
-        // Add triangle animation (similar to square but with different color)
-        this.squareAnimations.push({
-            type: 'triangle',
-            key: triangleKey,
-            vertices: triangleData.vertices,
-            centerX,
-            centerY,
-            startTime: Date.now(),
-            duration: GAME_CONSTANTS.ANIMATION_SQUARE_DURATION,
-            player: triangleData.player,
-        });
-
-        // Spawn particles at triangle center
-        spawnParticles(centerX, centerY, playerColor, 10);
-    }
-
-    /**
-     * Trigger multiplier animation
+     * Trigger square animation
      */
     triggerMultiplierAnimation(
         squareKey,

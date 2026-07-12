@@ -36,8 +36,6 @@ function createSnapshot(currentPlayer = 1) {
         protectedSquares: [],
         scores: { 1: 0, 2: 0 },
         squares: {},
-        triangles: {},
-        triangleCellOwners: [],
     };
 }
 

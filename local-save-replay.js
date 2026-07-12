@@ -62,7 +62,11 @@ export function isValidSnapshot(snapshot) {
     if (
         !Array.isArray(snapshot.lineOwners) ||
         !snapshot.lineOwners.every(
-            (entry) => Array.isArray(entry) && entry.length === 2 && isLineKey(entry[0]) && isPlayerNumber(entry[1])
+            (entry) =>
+                Array.isArray(entry) &&
+                entry.length === 2 &&
+                isLineKey(entry[0]) &&
+                isPlayerNumber(entry[1])
         )
     ) {
         return false;
@@ -71,15 +75,6 @@ export function isValidSnapshot(snapshot) {
     if (
         !isPlainObject(snapshot.squares) ||
         !Object.entries(snapshot.squares).every(
-            ([cellKey, owner]) => isCellKey(cellKey) && isPlayerNumber(owner)
-        )
-    ) {
-        return false;
-    }
-
-    if (
-        !isPlainObject(snapshot.triangles) ||
-        !Object.entries(snapshot.triangles).every(
             ([cellKey, owner]) => isCellKey(cellKey) && isPlayerNumber(owner)
         )
     ) {
@@ -99,20 +94,6 @@ export function isValidSnapshot(snapshot) {
     if (
         !Array.isArray(snapshot.claimedCells) ||
         !snapshot.claimedCells.every(isCellKey) ||
-        !Array.isArray(snapshot.triangleCellOwners) ||
-        !snapshot.triangleCellOwners.every(
-            (entry) =>
-                Array.isArray(entry) &&
-                entry.length === 2 &&
-                isCellKey(entry[0]) &&
-                Array.isArray(entry[1]) &&
-                entry[1].every(isPlayerNumber)
-        )
-    ) {
-        return false;
-    }
-
-    if (
         !validatePlayerEffects(snapshot.playerEffects) ||
         !Array.isArray(snapshot.protectedSquares) ||
         !snapshot.protectedSquares.every(isCellKey) ||
@@ -250,7 +231,8 @@ export function validateLocalSavePayload(payload) {
         payload: {
             version: LOCAL_SAVE_VERSION,
             mode: 'local',
-            savedAt: typeof payload.savedAt === 'string' ? payload.savedAt : new Date().toISOString(),
+            savedAt:
+                typeof payload.savedAt === 'string' ? payload.savedAt : new Date().toISOString(),
             config,
             replayIndex,
             state: clone(payload.state),

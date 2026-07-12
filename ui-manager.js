@@ -78,8 +78,16 @@ export class UIManager {
             this.game.displayedScores[2] = this.game.scores[2];
         }
 
-        const nextPlayer1Score = Math.floor(this.game.displayedScores[1]);
-        const nextPlayer2Score = Math.floor(this.game.displayedScores[2]);
+        const p1Target = this.game.scores[1];
+        const p2Target = this.game.scores[2];
+        const nextPlayer1Score =
+            p1Target % 1 === 0
+                ? Math.floor(this.game.displayedScores[1])
+                : (Math.floor(this.game.displayedScores[1] * 2) / 2).toFixed(1);
+        const nextPlayer2Score =
+            p2Target % 1 === 0
+                ? Math.floor(this.game.displayedScores[2])
+                : (Math.floor(this.game.displayedScores[2] * 2) / 2).toFixed(1);
 
         if (this.lastRenderedState.player1Score !== nextPlayer1Score) {
             player1Score.textContent = nextPlayer1Score;

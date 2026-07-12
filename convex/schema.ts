@@ -8,7 +8,6 @@ export default defineSchema({
         hostPlayerId: v.string(), // Session ID of the host
         gridSize: v.number(), // 5, 10, 20, or 30
         partyMode: v.optional(v.boolean()), // Party mode enabled (tile effects)
-        trianglesEnabled: v.optional(v.boolean()), // Triangle rules enabled for this room
         status: v.union(v.literal('lobby'), v.literal('playing'), v.literal('finished')),
         currentPlayerIndex: v.number(), // Index into players array for current turn
         createdAt: v.number(),
@@ -60,15 +59,4 @@ export default defineSchema({
     })
         .index('by_room', ['roomId'])
         .index('by_room_and_key', ['roomId', 'squareKey']),
-
-    // Completed triangles
-    triangles: defineTable({
-        roomId: v.id('rooms'),
-        triangleKey: v.string(), // Key like "tri-0,0-TL"
-        playerId: v.id('players'), // Who completed this triangle
-        playerIndex: v.number(), // For quick color lookup
-        createdAt: v.number(),
-    })
-        .index('by_room', ['roomId'])
-        .index('by_room_and_key', ['roomId', 'triangleKey']),
 });

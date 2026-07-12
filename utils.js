@@ -158,20 +158,6 @@ export function getDotRenderRadius(cellSize, isTouchDevice = false) {
 }
 
 /**
- * Get the cell key for a triangle based on its vertices
- * A triangle claims the cell containing its vertices
- * @param {Array} vertices - Array of 3 vertex objects {row, col}
- * @returns {string} Cell key "row,col"
- */
-export function getTriangleCellKey(vertices) {
-    // A triangle is always within a single cell
-    // The cell is determined by the minimum row and col of the vertices
-    const minRow = Math.min(vertices[0].row, vertices[1].row, vertices[2].row);
-    const minCol = Math.min(vertices[0].col, vertices[1].col, vertices[2].col);
-    return `${minRow},${minCol}`;
-}
-
-/**
  * In-place array compaction for animation cleanup
  * More efficient than filter() for hot paths
  * @private

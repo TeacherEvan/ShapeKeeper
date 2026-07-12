@@ -131,23 +131,7 @@
         );
     }
 
-    async function updateTrianglesEnabled(trianglesEnabled) {
-        if (!shared.state.currentRoomId) {
-            return { error: 'Not in a room' };
-        }
-
-        return shared.runMutation(
-            shared.api.rooms.updateTrianglesEnabled,
-            {
-                roomId: shared.state.currentRoomId,
-                sessionId: shared.getSessionId(),
-                trianglesEnabled,
-            },
-            'updating triangle mode'
-        );
-    }
-
-    async function startGame() {
+    async function startGame(roomId) {
         if (!shared.state.currentRoomId) {
             return { error: 'Not in a room' };
         }
@@ -192,7 +176,6 @@
         toggleReady,
         updateGridSize,
         updatePartyMode,
-        updateTrianglesEnabled,
         updatePlayer,
     };
 })(window);
