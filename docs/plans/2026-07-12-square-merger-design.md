@@ -28,29 +28,26 @@ User perception: Sqaure "feels smoother." Investigation shows ShapeKeeper alread
 | Populate feature | `game-state.js` + `convex/games` | ✅ present |
 | DPR scaling | `game-state.js:170` | ✅ present |
 
-## 3. Merger target — three concrete ports
+## 3. Merger target — implemented
 
-### 3.1 Particle object-pooling (PERF)
+### 3.1 Particle object-pooling (PERF) — DONE
 **Source:** `Sqaure/game.js` `particlePool` / `returnParticleToPool` / `getParticleFromPool`.
-**Target:** `particle-system/core.js` — add a fixed-capacity pool. Dead particles return to pool instead of being dropped; `spawnParticles`/`spawnSparkleEmojis` reuse pooled objects. Eliminates per-burst allocation + GC pauses on large grids (20×20, 30×30) and during combo chains.
-**Risk:** low. Pure additive; no call-site change beyond `core.js` internals.
+**Implemented in:** `particle-system/core.js` (`createParticlePool`, `spawnParticlesFromPool`, `updateParticlesFromPool`) + wired into `particle-system.js` (pool held on the system, `spawnParticles`/`createMultiplierParticles` acquire from it, `updateParticles` releases dead particles back). `PARTICLE_POOL_SIZE = 200` added to `constants.js`.
+**Effect:** eliminates per-burst allocation + GC pauses on large grids (20×20, 30×30) and during combo/multiplier chains.
+**Tests:** `particle-system/core.test.js` (3 cases) — PASS. Full suite 82/82 PASS.
 
-### 3.2 Clean canvas listener rebind on resize (INPUT SMOOTHNESS)
-**Source:** `Sqaure/game.js:166-171` — clones the canvas node (`cloneNode(true)` + `replaceChild`) before re-binding listeners, so old handlers are discarded.
-**Target:** `game-state.js` `setupCanvas()` — currently re-runs on resize (line 252/263). Verify it does not stack duplicate listeners on `gameCanvas`. If it does, adopt the clone-and-replace pattern (or `removeEventListener` by saved bound refs) so pointer/touch handlers are bound exactly once per canvas lifetime. This removes the subtle "double-click registers two lines / laggy input after a resize" class of bug.
-**Risk:** low–medium. Must preserve `this.canvas`/`this.ctx` references used everywhere.
+### 3.2 Clean canvas listener rebind on resize (INPUT) — ALREADY DONE (no-op)
+**Finding:** `game-state.js:200` already calls `this.game.inputHandler?.rebindCanvas(newCanvas)`, and `input-handler.js:170-177` removes then re-binds listeners to the fresh canvas node created at `game-state.js:172-197`. This achieves exactly Sqaure's cloneNode-trick goal (no stacked listeners). No change needed.
 
-### 3.3 Landscape-adaptive grid (OPTIONAL / LOCAL-ONLY)
-**Source:** `Sqaure/game.js:117-139` — derives `gridCols`/`gridRows` from container aspect ratio to fill wide screens.
-**Target:** local + AI modes only. Multiplayer rooms sync a single `gridSize` for both players, so adaptive dims would desync the board — gate this behind `!isMultiplayer`. Keep square grids for networked play.
-**Risk:** low if gated; **skip if it threatens MP parity.** Mark `Unfinished` in docs if deferred.
+### 3.3 Landscape-adaptive grid — DELIBERATELY REJECTED
+**Finding:** `game-state.js:142-152` intentionally keeps the player-selected grid square (aspect-warping was previously reverted because it "silently changed the game the player selected"). Reintroducing Sqaure's aspect-ratio grid would regress that decision and threaten multiplayer board parity. Not implemented.
 
 ## 4. Non-goals (YAGNI)
-
 - Do NOT port Sqaure's single-file class structure.
-- Do NOT rebuild ShapeKeeper's engine (per user decision: Polish port, not Square-core rebuild).
-- Do NOT port Sqaure's Truth-or-Dare squares (already superseded by ShapeKeeper's party-mode tile effects).
-- Do NOT add a new multiplayer backend — ShapeKeeper's Convex layer is the keeper.
+- Do NOT rebuild ShapeKeeper's engine.
+- Do NOT port Sqaure's Truth-or-Dare squares (superseded by party-mode tile effects).
+- Do NOT add a new multiplayer backend — Convex layer is the keeper.
+- Do NOT re-introduce landscape grid warping (see 3.3).
 
 ## 5. Verification
 

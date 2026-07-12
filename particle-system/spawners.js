@@ -43,31 +43,33 @@ export function createMultiplierParticles(system, x, y) {
         const angle = (Math.PI * 2 * i) / sparkCount;
         const speed = 2 + Math.random() * 3;
 
-        system.particles.push({
-            x,
-            y,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed - 1,
-            color: '#FFD700',
-            size: 2 + Math.random() * 3,
-            life: 1.0,
-            decay: 0.01 + Math.random() * 0.01,
-            spark: true,
-        });
+        const p = system.pool ? system.pool.acquire() : { trail: [] };
+        p.x = x;
+        p.y = y;
+        p.vx = Math.cos(angle) * speed;
+        p.vy = Math.sin(angle) * speed - 1;
+        p.color = '#FFD700';
+        p.size = 2 + Math.random() * 3;
+        p.life = 1.0;
+        p.decay = 0.01 + Math.random() * 0.01;
+        p.trail = [];
+        p.spark = true;
+        if (!system.particles.includes(p)) system.particles.push(p);
     }
 
     const smokeCount = GAME_CONSTANTS.PARTICLE_COUNT_MULTIPLIER_SMOKE;
     for (let i = 0; i < smokeCount; i++) {
-        system.particles.push({
-            x: x + (Math.random() - 0.5) * 20,
-            y,
-            vx: (Math.random() - 0.5) * 0.5,
-            vy: -1 - Math.random() * 1.5,
-            color: '#888888',
-            size: 5 + Math.random() * 5,
-            life: 1.0,
-            decay: 0.008,
-            smoke: true,
-        });
+        const p = system.pool ? system.pool.acquire() : { trail: [] };
+        p.x = x + (Math.random() - 0.5) * 20;
+        p.y = y;
+        p.vx = (Math.random() - 0.5) * 0.5;
+        p.vy = -1 - Math.random() * 1.5;
+        p.color = '#888888';
+        p.size = 5 + Math.random() * 5;
+        p.life = 1.0;
+        p.decay = 0.008;
+        p.trail = [];
+        p.smoke = true;
+        if (!system.particles.includes(p)) system.particles.push(p);
     }
 }

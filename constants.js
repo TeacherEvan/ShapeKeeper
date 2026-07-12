@@ -29,6 +29,7 @@ export const GAME_CONSTANTS = {
     PARTICLE_COUNT_MULTIPLIER_SPARKS: 30,
     PARTICLE_COUNT_MULTIPLIER_SMOKE: 10,
     PARTICLE_TRAIL_LENGTH: 8, // Trail history length for particles
+    PARTICLE_POOL_SIZE: 200, // Max pooled (reused) particles to cap GC churn
     AMBIENT_PARTICLE_COUNT: 30, // Floating dust motes
 
     // Star/sparkle emoji constants (reduced for performance)

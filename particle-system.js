@@ -9,7 +9,9 @@
 import { GAME_CONSTANTS } from './constants.js';
 import {
     createAmbientParticle,
+    createParticlePool,
     initializeAmbientParticles,
+    spawnParticlesFromPool,
     updateParticles,
 } from './particle-system/core.js';
 import {
@@ -31,17 +33,15 @@ import {
     createSwapParticles,
     createWildcardParticles,
 } from './particle-system/effects.js';
-import {
-    createMultiplierParticles,
-    spawnParticles,
-    spawnSparkleEmojis,
-} from './particle-system/spawners.js';
+import { createMultiplierParticles, spawnSparkleEmojis } from './particle-system/spawners.js';
 
 export class ParticleSystem {
     constructor() {
         this.particles = [];
         this.ambientParticles = [];
         this.sparkleEmojis = [];
+        // Object pool reuses dead particles to avoid per-burst GC churn.
+        this.pool = createParticlePool(GAME_CONSTANTS.PARTICLE_POOL_SIZE);
         this.initializeAmbientParticles();
     }
 
@@ -70,7 +70,11 @@ export class ParticleSystem {
      * Spawn particles at a given position
      */
     spawnParticles(x, y, color, count = GAME_CONSTANTS.PARTICLE_COUNT_SQUARE) {
-        spawnParticles(this, x, y, color, count);
+        spawnParticlesFromPool(this.pool, x, y, color, count);
+        // Mirror pooled particles into the legacy array the renderer reads.
+        for (const p of this.pool.active) {
+            if (!this.particles.includes(p)) this.particles.push(p);
+        }
     }
 
     /**
