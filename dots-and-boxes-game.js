@@ -496,55 +496,82 @@ export class DotsAndBoxesGame {
             return this.pickRandomLine(availableLines);
         }
 
+        // Medium & Hard always take the strongest immediate scoring line.
         if (scoringLines.length > 0) {
-            if (this.aiDifficulty === 'hard') {
-                return this.pickBestScoringLine(scoringLines);
-            }
-            return this.pickRandomLine(scoringLines);
+            return this.pickBestScoringLine(scoringLines);
         }
 
-        if (safeLines.length > 0) {
-            if (this.aiDifficulty === 'hard') {
-                return this.pickBestSafeLine(safeLines);
-            }
-            return this.pickRandomLine(safeLines);
+        // No immediate capture available: choose a safe line.
+        const candidateSafe = safeLines.length > 0 ? safeLines : availableLines;
+
+        if (this.aiDifficulty === 'hard') {
+            // 1-ply lookahead: prefer safe lines that do not hand the opponent
+            // an immediate capture on their next turn.
+            return this.pickHardSafeLine(candidateSafe);
         }
 
-        return this.pickRandomLine(availableLines);
+        // Medium: greedy safe-line heuristic (avoids creating 3-edge squares).
+        return this.pickBestSafeLine(candidateSafe);
+    }
+
+    pickHardSafeLine(lines) {
+        return this.pickRandomAmongBest(lines, (lineKey) => {
+            const ownStrength = this.evaluateSafeLineStrength(lineKey);
+            const opponentGain = this.opponentBestGainAfter(lineKey);
+            return ownStrength - opponentGain * 4;
+        });
+    }
+
+    // Simulates drawing lineKey, then measures how many squares the opponent
+    // could immediately complete on their following move. Restores line state.
+    opponentBestGainAfter(lineKey) {
+        const alreadyPresent = this.lines.has(lineKey);
+        this.lines.add(lineKey);
+
+        let maxGain = 0;
+        const opponentLines = this.gameLogic
+            .getAllPossibleLines()
+            .filter((l) => !this.lines.has(l));
+        for (const l of opponentLines) {
+            if (this.gameLogic.wouldCompleteSquare(l)) {
+                const gain = this.evaluateImmediateSquareGain(l);
+                if (gain > maxGain) {
+                    maxGain = gain;
+                }
+            }
+        }
+
+        if (!alreadyPresent) {
+            this.lines.delete(lineKey);
+        }
+        return maxGain;
     }
 
     pickRandomLine(lines) {
         return lines[Math.floor(Math.random() * lines.length)] || null;
     }
 
-    pickBestScoringLine(lines) {
-        let bestLine = lines[0];
+    // Randomly choose among the highest-scoring lines. Keeps the heuristic
+    // strength (only the best moves are ever picked) while restoring move
+    // variety so AI-vs-AI and AI-vs-human games are not byte-identical.
+    pickRandomAmongBest(lines, scoreFn) {
         let bestScore = -Infinity;
-
         for (const lineKey of lines) {
-            const score = this.evaluateImmediateSquareGain(lineKey);
+            const score = scoreFn(lineKey);
             if (score > bestScore) {
                 bestScore = score;
-                bestLine = lineKey;
             }
         }
+        const bestLines = lines.filter((l) => scoreFn(l) === bestScore);
+        return bestLines[Math.floor(Math.random() * bestLines.length)] || null;
+    }
 
-        return bestLine;
+    pickBestScoringLine(lines) {
+        return this.pickRandomAmongBest(lines, (l) => this.evaluateImmediateSquareGain(l));
     }
 
     pickBestSafeLine(lines) {
-        let bestLine = lines[0];
-        let bestScore = -Infinity;
-
-        for (const lineKey of lines) {
-            const score = this.evaluateSafeLineStrength(lineKey);
-            if (score > bestScore) {
-                bestScore = score;
-                bestLine = lineKey;
-            }
-        }
-
-        return bestLine;
+        return this.pickRandomAmongBest(lines, (l) => this.evaluateSafeLineStrength(l));
     }
 
     evaluateImmediateSquareGain(lineKey) {

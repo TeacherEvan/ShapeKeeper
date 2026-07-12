@@ -140,38 +140,12 @@ export class GameState {
         const maxHeight = container.clientHeight - 40;
 
         if (typeof this.game.gridSize === 'number') {
-            const aspectRatio = maxWidth / maxHeight;
-
-            if (aspectRatio > 1.5) {
-                const totalSquares = (this.game.gridSize - 1) * (this.game.gridSize - 1);
-                this.game.gridCols = Math.ceil(Math.sqrt(totalSquares * aspectRatio));
-                this.game.gridRows = Math.ceil(totalSquares / (this.game.gridCols - 1)) + 1;
-
-                this.game.gridCols = Math.max(
-                    this.game.gridCols,
-                    Math.ceil(this.game.gridSize * 1.2)
-                );
-                this.game.gridRows = Math.max(
-                    this.game.gridRows,
-                    Math.ceil(this.game.gridSize * 0.6)
-                );
-            } else if (aspectRatio < 0.75) {
-                const totalSquares = (this.game.gridSize - 1) * (this.game.gridSize - 1);
-                this.game.gridRows = Math.ceil(Math.sqrt(totalSquares / aspectRatio));
-                this.game.gridCols = Math.ceil(totalSquares / (this.game.gridRows - 1)) + 1;
-
-                this.game.gridRows = Math.max(
-                    this.game.gridRows,
-                    Math.ceil(this.game.gridSize * 1.2)
-                );
-                this.game.gridCols = Math.max(
-                    this.game.gridCols,
-                    Math.ceil(this.game.gridSize * 0.6)
-                );
-            } else {
-                this.game.gridCols = this.game.gridSize;
-                this.game.gridRows = this.game.gridSize;
-            }
+            // Honor the selected grid dimensions exactly. The board's cell count
+            // must match what the player picked; only cellSize adapts to the
+            // container. Previously the aspect ratio warped the grid (10x10 became
+            // 8x14), silently changing the game the player selected.
+            this.game.gridCols = this.game.gridSize;
+            this.game.gridRows = this.game.gridSize;
         } else {
             this.game.gridCols = this.game.gridSize.cols || this.game.gridSize;
             this.game.gridRows = this.game.gridSize.rows || this.game.gridSize;
