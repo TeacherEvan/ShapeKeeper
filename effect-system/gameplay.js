@@ -114,9 +114,6 @@ function applyLandmine(system, squareKey, player) {
         delete game.squares[squareKey];
         game.protectedSquares.delete(squareKey);
         game.scores[player] = Math.max(0, game.scores[player] - 1);
-    } else if (game.triangles && game.triangles[squareKey]) {
-        delete game.triangles[squareKey];
-        game.scores[player] = Math.max(0, game.scores[player] - 0.5);
     }
 
     game.particleSystem.createLandmineParticles(squareKey, game.gameLogic.parseSquareKey);
@@ -217,19 +214,6 @@ export function giftRandomShape(system, fromPlayer, toPlayer) {
         return;
     }
 
-    const ownedTriangles = Object.keys(system.game.triangles || {}).filter(
-        (key) => system.game.triangles[key] === fromPlayer
-    );
-
-    if (ownedTriangles.length > 0) {
-        const key = ownedTriangles[Math.floor(Math.random() * ownedTriangles.length)];
-        system.game.triangles[key] = toPlayer;
-        system.game.scores[fromPlayer] = Math.max(0, system.game.scores[fromPlayer] - 0.5);
-        system.game.scores[toPlayer] += 0.5;
-        system.game.particleSystem.createGiftParticles();
-        return;
-    }
-
     system.game.scores[toPlayer] += 1;
     system.game.particleSystem.createGiftParticles();
 }
@@ -292,29 +276,10 @@ export function triggerChaosStorm(system) {
         system.game.squares[key] = players[index];
     });
 
-    if (system.game.triangles) {
-        const allTriangles = Object.keys(system.game.triangles);
-        if (allTriangles.length > 0) {
-            const trianglePlayers = allTriangles.map((key) => system.game.triangles[key]);
-            for (let i = trianglePlayers.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [trianglePlayers[i], trianglePlayers[j]] = [trianglePlayers[j], trianglePlayers[i]];
-            }
-            allTriangles.forEach((key, index) => {
-                system.game.triangles[key] = trianglePlayers[index];
-            });
-        }
-    }
-
     system.game.scores = { 1: 0, 2: 0 };
     Object.values(system.game.squares).forEach((owner) => {
         system.game.scores[owner]++;
     });
-    if (system.game.triangles) {
-        Object.values(system.game.triangles).forEach((owner) => {
-            system.game.scores[owner] += 0.5;
-        });
-    }
 
     system.game.shakeIntensity = 12;
     system.game.screenPulse = 1.5;
@@ -356,33 +321,7 @@ export async function revealMultiplier(system, squareKey) {
             game.offsetX,
             game.offsetY,
             game.cellSize,
-            game.particleSystem.createMultiplierParticles
-        );
-        game.uiManager.updateUI();
-    }
-    game.draw();
-}
-
-export function revealMultiplierForCell(system, cellKey) {
-    const { game } = system;
-
-    game.revealedMultipliers.add(cellKey);
-
-    const multiplierData = game.squareMultipliers[cellKey];
-    const owner = game.gameLogic.getCellOwnerForEffects(cellKey);
-
-    if (multiplierData && multiplierData.type === 'multiplier' && owner) {
-        const currentScore = game.scores[owner];
-        const multiplierValue = multiplierData.value;
-        game.scores[owner] = currentScore * multiplierValue;
-        game.animationSystem.triggerMultiplierAnimation(
-            cellKey,
-            multiplierValue,
-            game.gameLogic.parseSquareKey,
-            game.offsetX,
-            game.offsetY,
-            game.cellSize,
-            game.particleSystem.createMultiplierParticles
+            game.particleSystem.createMultiplierParticles.bind(game.particleSystem)
         );
         game.uiManager.updateUI();
     }
