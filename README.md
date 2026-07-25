@@ -83,6 +83,40 @@ Then visit `http://localhost:8000` in your browser.
 
 Visit [https://shape-keeper.vercel.app](https://shape-keeper.vercel.app).
 
+## 🚀 Deployment
+
+> **Important:** All commands must run from the `ShapeKeeper/` directory (where
+> `package.json` and `convex/` live), **not** the repo root. Running `vercel`
+> or `convex` from the root fails or deploys the wrong folder.
+
+### Prerequisites
+
+- A linked Vercel project (`shape-keeper`) and Convex project (`shapekeeper`).
+- Local `.env.local` with `CONVEX_DEPLOYMENT` / `CONVEX_DEPLOY_KEY` for the dev backend
+  (`oceanic-antelope-781`) — used for local development only.
+- Production frontend is hardcoded to the prod Convex backend
+  (`precise-ladybug-504.convex.cloud`) directly in `index.html`; no build step
+  injects it.
+
+### Commands
+
+```bash
+cd ShapeKeeper
+
+# 1. Deploy backend functions to the PROD Convex deployment
+npx convex deploy --yes
+
+# 2. Deploy the static frontend to Vercel (no build step; serves index.html as-is)
+vercel --prod
+
+# Local development (uses dev Convex backend via .env.local)
+npx convex dev
+npm run serve   # python -m http.server 8000
+```
+
+If you push `main` to GitHub, Vercel auto-deploys the frontend from this
+directory. Backend changes still require `npx convex deploy --yes`.
+
 ## 📐 Grid Sizes
 
 The game offers four preset grid sizes that automatically adapt to your display:
