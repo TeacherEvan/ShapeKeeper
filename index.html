@@ -44,14 +44,14 @@
 
         <!-- DNS Prefetch for external resources -->
         <link rel="dns-prefetch" href="https://unpkg.com" />
-        <link rel="dns-prefetch" href="%%CONVEX_URL%%" />
+        <link rel="dns-prefetch" href="https://precise-ladybug-504.convex.cloud" />
 
         <!-- Preconnect for Convex backend -->
-        <link rel="preconnect" href="%%CONVEX_URL%%" crossorigin />
+        <link rel="preconnect" href="https://precise-ladybug-504.convex.cloud" crossorigin />
 
-        <!-- Convex deployment URL (injected at build time; see scripts/inject-convex-url.mjs) -->
+        <!-- Convex deployment URL (production backend). Local dev overrides via window.CONVEX_URL set in convex-client/shared.js fallback. -->
         <script>
-            window.CONVEX_URL = '%%CONVEX_URL%%';
+            window.CONVEX_URL = 'https://precise-ladybug-504.convex.cloud';
         </script>
     </head>
 

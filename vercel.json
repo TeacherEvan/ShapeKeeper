@@ -1,5 +1,5 @@
 {
-    "buildCommand": "node scripts/inject-convex-url.mjs",
+    "buildCommand": null,
     "outputDirectory": ".",
     "framework": null
 }
