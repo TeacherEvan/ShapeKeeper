@@ -4,7 +4,7 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
         include: ['**/*.test.js', '**/*.spec.js'],
-        exclude: ['node_modules/**', 'tests/e2e/**'],
+        exclude: ['node_modules/**', 'tests/e2e/**', '**/.vercel/output/**'],
         globals: true,
     },
 });

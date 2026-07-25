@@ -14,7 +14,17 @@ const compat = new FlatCompat({
 
 export default [
     {
-        ignores: ['**/dist', '**/node_modules'],
+        ignores: [
+            '**/dist',
+            '**/node_modules',
+            '**/.vercel/output',
+            'bench.mjs',
+            'play-ai-medium.mjs',
+            'ai-diagnose.mjs',
+            'ai_*.mjs',
+            'ai_*.json',
+            'ai-*.png',
+        ],
     },
     ...compat.extends('eslint:recommended', 'plugin:prettier/recommended'),
     {
