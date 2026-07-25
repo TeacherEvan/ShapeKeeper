@@ -1,0 +1,412 @@
+/*
+ * ShapeKeeper — Blueprint Identity Override
+ * Loaded LAST so it repaints the token system and adds the draughtsman treatment.
+ * Subject: a dots→lines→boxes territory game = a drafting table.
+ * Voice: cool blueprint paper, cobalt "draw" ink, signal-amber "party" ink.
+ */
+
+/* ───────────────────────── TOKENS (repaint) ───────────────────────── */
+:root {
+    --bg-primary: #e9eee5;
+    --bg-secondary: #dde4da;
+    --bg-tertiary: #ccd6c8;
+    --text-primary: #1b2a33;
+    --text-secondary: #465c66;
+    --border-color: #9fb2ac;
+    --accent-primary: #1f4e8c; /* cobalt — primary action / "draw a line" */
+    --accent-primary-strong: #143a6b;
+    --accent-secondary: #c9772b; /* signal amber — local / party mode */
+    --accent-secondary-strong: #a85e1c;
+    --accent-warning: #c9772b;
+    --accent-warning-strong: #a85e1c;
+    --accent-danger: #b23b3b;
+    --accent-danger-strong: #8f2e2e;
+    --accent-neutral: #5b6b66;
+    --accent-neutral-strong: #44524e;
+    --canvas-bg: rgba(233, 238, 229, 0.94);
+    --shadow-color: rgba(27, 42, 51, 0.16);
+
+    /* rgba helper channels for legacy hardcoded-color repaints */
+    --accent-primary-rgb: 31, 78, 140;
+    --accent-secondary-rgb: 201, 119, 43;
+    --accent-danger-rgb: 178, 59, 59;
+    --text-ink-rgb: 27, 42, 51;
+    --grid-line: rgba(27, 42, 51, 0.1);
+    --ink-mark: #465c66;
+
+    /* Type system */
+    --font-display: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'Space Mono', ui-monospace, 'Courier New', monospace;
+}
+
+[data-theme='dark'] {
+    --bg-primary: #0e1a2b;
+    --bg-secondary: #15263b;
+    --bg-tertiary: #1e3450;
+    --text-primary: #dce7f0;
+    --text-secondary: #9db2c4;
+    --border-color: #2e4a6b;
+    --accent-primary: #4f8de0;
+    --accent-primary-strong: #6fa3e8;
+    --accent-secondary: #e0a24b;
+    --accent-secondary-strong: #c9882f;
+    --accent-warning: #e0a24b;
+    --accent-warning-strong: #c9882f;
+    --accent-danger: #e07a7a;
+    --accent-danger-strong: #c75c5c;
+    --accent-neutral: #8499ac;
+    --accent-neutral-strong: #6e8294;
+    --canvas-bg: rgba(14, 26, 43, 0.94);
+    --shadow-color: rgba(0, 0, 0, 0.4);
+
+    --accent-primary-rgb: 79, 141, 224;
+    --accent-secondary-rgb: 224, 162, 75;
+    --accent-danger-rgb: 224, 122, 122;
+    --text-ink-rgb: 220, 231, 240;
+    --grid-line: rgba(220, 231, 240, 0.08);
+    --ink-mark: #9db2c4;
+}
+
+/* Repaint legacy green status surface → cobalt to keep identity coherent */
+:root {
+    --status-success-surface: rgba(31, 78, 140, 0.14);
+    --status-warning-surface: rgba(201, 119, 43, 0.16);
+    --status-danger-surface: rgba(178, 59, 59, 0.12);
+    --status-info-surface: rgba(31, 78, 140, 0.14);
+}
+
+[data-theme='dark'] {
+    --status-success-surface: rgba(79, 141, 224, 0.22);
+    --status-warning-surface: rgba(224, 162, 75, 0.24);
+    --status-danger-surface: rgba(224, 122, 122, 0.2);
+    --status-info-surface: rgba(79, 141, 224, 0.24);
+}
+
+/* ───────────────────────── BLUEPRINT SUBSTRATE ───────────────────────── */
+.screen {
+    background-color: var(--bg-primary);
+    background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    background-position: center;
+}
+
+#gameScreen {
+    background-color: var(--bg-primary);
+    background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+}
+
+/* ───────────────────────── TYPOGRAPHY ───────────────────────── */
+.welcome-container h1,
+.lobby-header h1,
+.setup-section h2,
+.lobby-settings h2,
+.players-section h2,
+.your-settings h2,
+.winner-container h1,
+.winner-container h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+}
+
+body {
+    font-family: var(--font-body);
+}
+
+/* "Spec" annotations — room codes, scores, turn readout */
+.room-code,
+.room-code-input,
+.player-score,
+.final-score-points,
+.turn-indicator {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ───────────────────────── DIMENSION LINE under titles ───────────────────────── */
+.welcome-container h1,
+.lobby-header h1,
+.winner-container h1 {
+    position: relative;
+}
+
+.welcome-container h1::after,
+.lobby-header h1::after,
+.winner-container h1::after {
+    content: '';
+    display: block;
+    width: 76px;
+    height: 10px;
+    margin: 16px auto 0;
+    background-image: linear-gradient(var(--accent-secondary), var(--accent-secondary)),
+        linear-gradient(var(--accent-secondary), var(--accent-secondary)),
+        linear-gradient(var(--accent-secondary), var(--accent-secondary));
+    background-size: 76px 2px, 2px 10px, 2px 10px;
+    background-position: center, left center, right center;
+    background-repeat: no-repeat;
+}
+
+/* ───────────────────────── CROP-MARK CARDS ───────────────────────── */
+/* Apply draughtsman corner ticks to the real card surfaces (class + selector hook) */
+.blueprint-card,
+.lobby-settings,
+.players-section,
+.your-settings,
+.room-code-section,
+.winner-container,
+.final-score-entry,
+.checkbox-setting {
+    position: relative;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: rgba(var(--text-ink-rgb), 0.02);
+    box-shadow: var(--shadow-soft);
+}
+
+.blueprint-card::before,
+.lobby-settings::before,
+.players-section::before,
+.your-settings::before,
+.room-code-section::before,
+.final-score-entry::before,
+.checkbox-setting::before {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    pointer-events: none;
+    background-image: linear-gradient(var(--ink-mark), var(--ink-mark)),
+        linear-gradient(var(--ink-mark), var(--ink-mark)),
+        linear-gradient(var(--ink-mark), var(--ink-mark)),
+        linear-gradient(var(--ink-mark), var(--ink-mark)),
+        linear-gradient(var(--ink-mark), var(--ink-mark)),
+        linear-gradient(var(--ink-mark), var(--ink-mark)),
+        linear-gradient(var(--ink-mark), var(--ink-mark)),
+        linear-gradient(var(--ink-mark), var(--ink-mark));
+    background-size: 18px 2px, 2px 18px, 18px 2px, 2px 18px, 18px 2px, 2px 18px, 18px 2px,
+        2px 18px;
+    background-position: left top, left top, right top, right top, left bottom, left bottom,
+        right bottom, right bottom;
+    background-repeat: no-repeat;
+    opacity: 0.55;
+}
+
+/* Keep dynamic entry backgrounds (ready/winner) intact over the crop-mark */
+.player-entry.ready,
+.final-score-entry.winner {
+    background-color: var(--status-success-surface);
+}
+
+/* ───────────────────────── REPAINT legacy hardcoded greens → cobalt ───────────────────────── */
+.menu-btn,
+.start-btn {
+    box-shadow: 0 6px 20px rgba(var(--accent-primary-rgb), 0.28);
+}
+
+.menu-btn:hover,
+.start-btn:hover:not(:disabled) {
+    background: var(--accent-primary-strong);
+    box-shadow: 0 10px 30px rgba(var(--accent-primary-rgb), 0.34);
+}
+
+.menu-btn.secondary {
+    background: var(--accent-secondary);
+    box-shadow: 0 6px 20px rgba(var(--accent-secondary-rgb), 0.3);
+}
+
+.menu-btn.secondary:hover {
+    background: var(--accent-secondary-strong);
+    box-shadow: 0 10px 30px rgba(var(--accent-secondary-rgb), 0.36);
+}
+
+.grid-btn:hover {
+    border-color: var(--accent-primary);
+}
+
+.grid-btn.selected {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary);
+    box-shadow: 0 4px 20px rgba(var(--accent-primary-rgb), 0.32);
+}
+
+.grid-btn::before {
+    background: rgba(var(--accent-primary-rgb), 0.15);
+}
+
+.checkbox-setting:has(input:checked) {
+    border-color: var(--accent-primary);
+    background: var(--status-success-surface);
+    box-shadow: 0 0 15px rgba(var(--accent-primary-rgb), 0.2);
+}
+
+.checkbox-setting input[type='checkbox'] {
+    accent-color: var(--accent-primary);
+}
+
+.name-input:focus,
+.room-code-input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 4px rgba(var(--accent-primary-rgb), 0.14);
+}
+
+.room-code {
+    color: var(--accent-primary);
+}
+
+.room-code:hover {
+    text-shadow: 0 0 20px rgba(var(--accent-primary-rgb), 0.5);
+}
+
+.copy-btn:hover {
+    border-color: var(--accent-primary);
+}
+
+.copy-btn.copied {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.player-entry.ready {
+    border-color: var(--accent-primary);
+    background: var(--status-success-surface);
+}
+
+.ready-btn.is-ready {
+    background: var(--accent-primary);
+}
+
+.ready-btn.is-ready:hover {
+    background: var(--accent-primary-strong);
+}
+
+.player-info.active {
+    background: rgba(var(--accent-primary-rgb), 0.16);
+    box-shadow: 0 0 0 2px rgba(var(--accent-primary-rgb), 0.4), var(--shadow-soft);
+}
+
+input[type='color']:hover {
+    border-color: var(--accent-primary);
+}
+
+input[type='color']:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.3);
+}
+
+/* ───────────────────────── WINNER SCREEN theme-aware ───────────────────────── */
+#winnerScreen {
+    background: linear-gradient(150deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+}
+
+.winner-container {
+    background: var(--bg-primary);
+}
+
+.winner-container .start-btn {
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-strong) 100%);
+    box-shadow: 0 4px 15px rgba(var(--accent-primary-rgb), 0.4);
+}
+
+.winner-container .start-btn:hover {
+    transform: scale(1.05) translateY(-2px);
+    box-shadow: 0 8px 25px rgba(var(--accent-primary-rgb), 0.5);
+}
+
+/* ───────────────────────── MOBILE-FIRST GAME LAYOUT ─────────────────────────
+   Game header → horizontal snap-rail of player chips.
+   Game footer → turn pill + thumb-scrollable action bar, safe-area aware. */
+@media screen and (max-width: 768px) {
+    .game-header {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        gap: 8px;
+        padding: 6px 10px;
+        scroll-snap-type: x proximity;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .game-header .player-info {
+        flex: 0 0 auto;
+        min-width: 74px;
+        padding: 6px 10px;
+        scroll-snap-align: start;
+    }
+
+    .game-header .exit-btn {
+        margin-right: 2px;
+        flex: 0 0 auto;
+    }
+
+    .game-footer {
+        display: block;
+        padding: 6px 10px calc(6px + env(safe-area-inset-bottom));
+        gap: 0;
+    }
+
+    .turn-indicator {
+        flex: 0 0 auto;
+        width: 100%;
+        text-align: center;
+        font-size: 0.82rem;
+        margin-bottom: 6px;
+        padding: 6px 12px;
+        background: var(--bg-tertiary);
+        border-radius: 999px;
+        border: 1px solid var(--border-color);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .footer-buttons {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        gap: 8px;
+        padding-bottom: 4px;
+        scroll-snap-type: x proximity;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .footer-buttons > * {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+    }
+
+    .game-container {
+        padding: 6px;
+    }
+
+    #gameCanvas {
+        max-width: 100%;
+        max-height: 100%;
+    }
+}
+
+/* Very short landscape phones: keep board dominant, controls compact */
+@media screen and (max-height: 520px) and (orientation: landscape) {
+    .game-header {
+        padding: 4px 10px;
+    }
+
+    .player-name {
+        font-size: 0.75rem;
+    }
+
+    .player-score {
+        font-size: 1.05rem;
+    }
+
+    .turn-indicator {
+        margin-bottom: 4px;
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+
+    .game-footer {
+        padding: 4px 10px calc(4px + env(safe-area-inset-bottom));
+    }
+}

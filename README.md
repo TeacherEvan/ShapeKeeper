@@ -2,7 +2,7 @@
 
 A modern, browser-based implementation of the classic Dots and Boxes game (reimagined as ShapeKeeper) with adaptive landscape layouts, smooth animations, and touch support.
 
-![Game Version](https://img.shields.io/badge/version-4.2.0-blue)
+![Game Version](https://img.shields.io/badge/version-4.3.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Deployment](https://img.shields.io/badge/deployed-shape--keeper.vercel.app-brightgreen)
 
@@ -15,11 +15,11 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 ### Core Gameplay
 
 - **Classic Dots and Boxes mechanics** - Connect dots to create boxes and score points
-- **Diagonal Lines & Triangles** - Draw diagonal lines to complete triangles (0.5 points each)
+- **Diagonal Lines** - Connect dots diagonally for alternative paths
 - **Two-player turn-based gameplay** - Players alternate turns, with bonus turns for completing shapes
 - **Turn-Based Online Multiplayer** - Chess-like communication with Convex backend
 - **Lobby System** - Create/join rooms with unique codes
-- **Smart turn logic** - Complete a square or triangle, keep your turn!
+- **Smart turn logic** - Complete a square, keep your turn!
 - **Real-time score tracking** - Live updates for both players
 - **Party Mode 🎉** - ALL squares have tile effects (dares, hypotheticals, powerups, traps)
 
@@ -28,7 +28,6 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 - **Adaptive Landscape Layout** - Automatically optimizes grid for landscape displays (e.g., 30x30 becomes ~50×18)
 - **Miniaturized Design** - Dots are 5× smaller than traditional implementations for more gameplay area
 - **Smooth Animations** - Particle effects and shape completion animations
-- **Triangle Patterns** - Striped fill visually distinguishes triangles from squares
 - **Pulsating Lines** - Visual feedback for newly drawn lines
 - **Touch Visuals** - Ripple effects for touch interactions
 - **Color Customization** - Choose your own player colors
@@ -152,7 +151,6 @@ ShapeKeeper/
 ├── Triangle/               # Triangle feature planning
 │   └── canvasBonusFeature.md
 ├── vercel.json             # Vercel deployment config
-├── README.md               # This file
 └── .github/
     └── copilot-instructions.md  # Development guidelines
 ```
@@ -168,10 +166,10 @@ runtime entry scripts for the competition branch.
 
 #### DotsAndBoxesGame Class (`dots-and-boxes-game.js`)
 
-- **State Management**: Lines (Set), Squares (Object), Triangles (Object), Scores (Object)
+- **State Management**: Lines (Set), Squares (Object), Scores (Object)
 - **Rendering Engine**: HTML5 Canvas with 60fps animation loop
 - **Event Handling**: Mouse, touch, and resize events
-- **Game Logic**: Square and triangle detection, turn management, win conditions
+- **Game Logic**: Square detection, turn management, win conditions
 
 #### Key Methods
 
@@ -179,7 +177,6 @@ runtime entry scripts for the competition branch.
 setupCanvas(); // Adaptive layout calculation
 getNearestDot(); // Collision detection for dot selection
 checkForSquares(); // Square completion detection
-checkForTriangles(); // Triangle completion detection (diagonal lines)
 draw(); // Main rendering loop
 animate(); // Animation frame management
 ```
@@ -200,12 +197,6 @@ Always sorted to prevent duplicates.
 
 ```javascript
 '5,10'; // Square at row 5, column 10
-```
-
-#### Triangle Keys
-
-```javascript
-'tri-1,2-TR'; // Triangle at top-right of cell (1,2)
 ```
 
 ### Coordinate System
@@ -270,7 +261,6 @@ Default colors can be changed in `index.html`:
 - Parsing error in VSCode is cosmetic (ESLint configuration)
 - Portrait mode shows rotation prompt (landscape recommended)
 - Very large grids (50×50+) may impact performance on older devices
-- Triangles not yet synced in multiplayer mode (local only)
 
 ## 🔮 Future Enhancements
 
@@ -281,8 +271,6 @@ Default colors can be changed in `index.html`:
 - [x] Dark/light theme toggle ✅
 - [x] Visual effects overhaul (CounterPlan complete) ✅
 - [x] Diagonal lines support ✅
-- [x] Triangle shape detection ✅
-- [ ] Triangle multiplayer sync
 - [ ] AI opponent with difficulty levels
 - [ ] Game replay and save/load functionality
 - [ ] Achievement system
@@ -317,7 +305,7 @@ Contributions welcome! Feel free to:
 
 ## 📝 Version History
 
-### v4.2.0 (Current)
+### v4.3.0 (Current)
 
 - **Party Mode 🎉** - Renamed "Hypotheticals" to "Party Mode" - ALL squares have tile effects
 - **Turn-Based Multiplayer Optimization** - Chess-like communication prevents glitches
@@ -325,6 +313,7 @@ Contributions welcome! Feel free to:
 - **Debounced Updates** - Prevents rapid-fire updates from causing issues
 - **Documentation Index** - Added docs/README.md for easy navigation
 - **Copilot Instructions Index** - Table of contents for quick reference
+- **Squares-Only Gameplay** - Triangle mechanics (added in v4.1.0) were removed; game is squares-only since v4.3.0
 
 ### v4.1.0
 

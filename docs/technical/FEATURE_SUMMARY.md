@@ -72,15 +72,19 @@
 - **Visual distinction:** Diagonal lines rendered at 50% width (3px vs 6px)
 - **Line type detection:** `getLineType(dot1, dot2)` returns 'horizontal', 'vertical', 'diagonal', or 'invalid'
 
-### 7. ✅ Triangle Detection System (v4.1.0)
+### 7. ⚠️ Triangle Detection System (v4.1.0 — REMOVED in v4.3.0)
 
-- Complete triangle shapes can now be formed and scored
+> **Historical note:** Triangle mechanics were added in v4.1.0 but **removed** in
+> v4.3.0 (commit `ec051fb`). The game is now **squares-only**. This section is
+> retained as a record of the original implementation.
+
+- Complete triangle shapes could be formed and scored
 - **Geometry:** Triangle = 2 orthogonal edges + 1 diagonal edge
 - **4 triangles per cell:** TL (top-left), TR (top-right), BL (bottom-left), BR (bottom-right)
 - **Scoring:** Triangles = 0.5 points (Squares = 1 point)
 - **Visual:** Striped pattern fill + ▲ symbol at center
 
-#### Triangle Methods Added
+#### Triangle Methods (removed)
 
 ```javascript
 checkForTriangles(lineKey); // Main detection entry
@@ -92,7 +96,7 @@ triggerTriangleAnimation(); // Visual feedback
 drawTrianglesWithAnimations(); // Render with striped pattern
 ```
 
-#### Triangle State
+#### Triangle State (removed)
 
 ```javascript
 this.triangles = {}; // Object parallel to this.squares
@@ -207,7 +211,7 @@ All requested features have been successfully implemented and tested:
 4. ✅ Score multiplier system with distribution
 5. ✅ Animated score counter with effects
 6. ✅ Diagonal lines support (v4.1.0)
-7. ✅ Triangle detection system (v4.1.0)
+7. ⚠️ Triangle detection system (v4.1.0 — removed in v4.3.0, squares-only)
 8. ✅ Dark mode canvas fix (v4.1.0)
 9. ✅ Code audit completed with optimizations
 

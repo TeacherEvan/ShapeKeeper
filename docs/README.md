@@ -34,6 +34,10 @@
 | [TURN_BASED_OPTIMIZATION.md](technical/TURN_BASED_OPTIMIZATION.md)   | Multiplayer state sync optimization |
 | [POPULATE_FEATURE.md](technical/POPULATE_FEATURE.md)                 | Populate feature implementation     |
 | [BENQ_FIX.md](technical/BENQ_FIX.md)                                 | BenQ board touch compatibility fix  |
+| [BACKEND_DEBUGGING_GUIDE.md](technical/BACKEND_DEBUGGING_GUIDE.md)   | Backend debugging walkthrough        |
+| [BACKEND_DEBUGGING_SUMMARY.md](technical/BACKEND_DEBUGGING_SUMMARY.md) | Backend debugging summary          |
+| [CONNECTION_POOLING.md](technical/CONNECTION_POOLING.md)            | Convex connection pooling notes      |
+| [TESTING_BACKEND_LOGGING.md](technical/TESTING_BACKEND_LOGGING.md)  | Backend logging test setup           |
 
 ### History (`/docs/history/`)
 
@@ -76,10 +80,10 @@
 ### Core Gameplay
 
 - Dots and Boxes with diagonal lines
-- Triangle detection and scoring
+- Triangle detection and scoring (removed in v4.3.0 — squares-only)
 - Score multipliers (×2 to ×10)
 - Dark/light theme support
 
 ---
 
-_Last updated: December 9, 2025_
+_Last updated: July 26, 2026_

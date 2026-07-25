@@ -5,7 +5,6 @@
 
 import { DotsAndBoxesGame } from '../../dots-and-boxes-game.js';
 import { announceAlert, announceStatus } from './AccessibilityAnnouncer.js';
-import { requestFullscreen } from './Fullscreen.js';
 import { bindMenuEventHandlers } from './menu/eventBindings.js';
 import { updateLobbyUI as renderLobbyUI } from './menu/lobbyView.js';
 import { handleAuthoritativeGameState, handleRoomStateUpdate } from './menu/syncHandlers.js';
@@ -285,7 +284,6 @@ function initializeMultiplayerGame(roomState) {
     }
 
     showScreen('gameScreen');
-    requestFullscreen();
 
     // Get player colors from room state (sorted by playerIndex)
     const sortedPlayers = [...roomState.players].sort((a, b) => a.playerIndex - b.playerIndex);

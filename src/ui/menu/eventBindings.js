@@ -341,6 +341,9 @@ export function bindMenuEventHandlers(deps) {
                 return;
             }
 
+            // User-initiated gesture: safe to request fullscreen here.
+            requestFullscreen();
+
             showToast('Starting game...', 'success', 2000);
             return;
         }

@@ -124,7 +124,7 @@ Continue with branch cleanup:
 # Delete merged remote branches
 git push origin --delete copilot/enhance-welcome-screen-display
 git push origin --delete copilot/fix-blokkies-display-issue
-# ... etc (see BRANCH_CLEANUP_PLAN.md)
+# ... etc
 
 # Prune local references
 git fetch --prune

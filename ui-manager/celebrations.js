@@ -3,6 +3,7 @@
  */
 
 import { announceStatus } from '../src/ui/AccessibilityAnnouncer.js';
+import { showScreen } from '../src/ui/ScreenTransition.js';
 
 function getTurnIndicator() {
     return document.getElementById('turnIndicator');
@@ -332,7 +333,6 @@ export function showWinner(game) {
 
     game.soundManager.playVictorySound();
 
-    const winnerScreen = document.getElementById('winnerScreen');
     const winnerText = document.getElementById('winnerText');
     const finalScores = document.getElementById('finalScores');
 
@@ -354,7 +354,7 @@ export function showWinner(game) {
     );
 
     document.getElementById('gameScreen').classList.remove('active');
-    winnerScreen.classList.add('active');
+    showScreen('winnerScreen');
 
     launchConfetti(winnerColor);
     launchFireworks(winnerColor);

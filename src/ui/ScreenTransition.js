@@ -11,6 +11,28 @@ let fullscreenTriggered = false;
  * @param {string} screenId - The ID of the screen to show
  */
 export function showScreen(screenId) {
+    const newScreen = document.getElementById(screenId);
+
+    // Capture focus BEFORE mutating visibility attributes. The browser raises a
+    // synchronous "aria-hidden on focused element" warning the moment a focused
+    // control's ancestor gains `aria-hidden="true"`. If the focused element
+    // lives in a screen we are about to hide, move focus to the incoming screen
+    // first so no focused control is ever inside an aria-hidden subtree.
+    const activeEl = document.activeElement;
+    const leavingFocused =
+        activeEl &&
+        activeEl !== newScreen &&
+        activeEl.closest('.screen') &&
+        activeEl.closest('.screen').id !== screenId;
+
+    if (leavingFocused && newScreen) {
+        const focusTarget =
+            newScreen.querySelector(
+                'button:not([hidden]):not([disabled]), [href], input:not([hidden]):not([disabled]), select:not([hidden]):not([disabled]), [tabindex]:not([tabindex="-1"])'
+            ) || newScreen;
+        focusTarget.focus({ preventScroll: true });
+    }
+
     document.querySelectorAll('.screen').forEach((screen) => {
         const isActive = screen.id === screenId;
         screen.classList.toggle('active', isActive);

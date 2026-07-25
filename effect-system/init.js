@@ -62,7 +62,7 @@ export function initializeTileEffects(system) {
     const totalSquares = (game.gridRows - 1) * (game.gridCols - 1);
 
     if (!game.partyModeEnabled) {
-        console.log('[TileEffects] Party Mode disabled - no tile effects');
+        console.debug('[TileEffects] Party Mode disabled - no tile effects');
         return;
     }
 
