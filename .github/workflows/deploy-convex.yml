@@ -11,7 +11,7 @@ on:
 
 jobs:
     deploy:
-        if: vars.ENABLE_CONVEX_DEPLOY == 'true'
+        if: vars.CONVEX_DEPLOY != ''
         runs-on: ubuntu-latest
 
         steps:
@@ -21,7 +21,7 @@ jobs:
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: '18'
+                  node-version: '22'
                   cache: 'npm'
 
             - name: Install dependencies
