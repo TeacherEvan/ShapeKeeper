@@ -6,6 +6,10 @@ const compatibilitySpecPatterns = [
     '**/local-gameplay.spec.js',
     '**/loading-state.spec.js',
     '**/browser-compatibility.spec.js',
+    '**/settings-and-theme.spec.js',
+    '**/achievement-panel.spec.js',
+    '**/local-setup.spec.js',
+    '**/winner-screen.spec.js',
 ];
 
 export default defineConfig({
