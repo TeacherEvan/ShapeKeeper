@@ -18,9 +18,7 @@ test.describe('Settings: theme and sound toggles', () => {
         await expect(root).toHaveAttribute('data-theme', 'dark');
         await expect(themeToggle).toHaveAttribute('aria-label', 'Switch to light mode');
 
-        const stored = await page.evaluate(() =>
-            localStorage.getItem('shapekeeper_theme')
-        );
+        const stored = await page.evaluate(() => localStorage.getItem('shapekeeper_theme'));
         expect(stored).toBe('dark');
 
         // reload and confirm persistence
