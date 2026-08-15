@@ -8,18 +8,14 @@ async function openLocalSetup(page) {
 }
 
 test.describe('Local setup options', () => {
-    test('selecting a grid size enables Start and persists selection', async ({
-        page,
-    }) => {
+    test('selecting a grid size enables Start and persists selection', async ({ page }) => {
         await openLocalSetup(page);
 
         const start = page.locator('#startLocalGame');
         await expect(start).toBeDisabled();
 
         await page.locator('.local-grid-btn[data-size="5"]').click();
-        await expect(
-            page.locator('.local-grid-btn[data-size="5"]')
-        ).toHaveClass(/selected/);
+        await expect(page.locator('.local-grid-btn[data-size="5"]')).toHaveClass(/selected/);
         await expect(start).toBeEnabled();
     });
 
@@ -31,9 +27,7 @@ test.describe('Local setup options', () => {
         await expect(page.locator('#startLocalGame')).toBeEnabled();
     });
 
-    test('AI difficulty is disabled for human opponent and enabled for AI', async ({
-        page,
-    }) => {
+    test('AI difficulty is disabled for human opponent and enabled for AI', async ({ page }) => {
         await openLocalSetup(page);
 
         const opponent = page.getByTestId('local-opponent-type');
@@ -49,9 +43,7 @@ test.describe('Local setup options', () => {
         await expect(difficulty).toBeDisabled();
     });
 
-    test('tutorial toggle is mutually exclusive with AI opponent', async ({
-        page,
-    }) => {
+    test('tutorial toggle is mutually exclusive with AI opponent', async ({ page }) => {
         await openLocalSetup(page);
 
         const opponent = page.getByTestId('local-opponent-type');
