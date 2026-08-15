@@ -1,0 +1,159 @@
+================================================================================
+VERIFICATION LOG #2 — Main-Menu CTA rename planning docs
+================================================================================
+Timestamp : 2026-08-15 22:00:18 +07 (run during review window; live working
+            tree already implements the feature — expected, not a mismatch)
+Run number: 2
+Reviewer  : subagent (READ-ONLY on index.html / src/ / styles/ / the 3 docs).
+            Repo: ShapeKeeper @ feature/main-menu-cta-rename
+VERDICT   : FAIL  (1 mismatch logged below — a BORDERLINE/cosmetic wording
+            residual of M7; every other check PASSED and all 7 run-1 fixes
+            (M1-M7) are verified landed. See "VERIFIED-TRUE".)
+
+--------------------------------------------------------------------------------
+DATA-INTEGRITY NOTE (read first)
+--------------------------------------------------------------------------------
+The live working tree legitimately contains the implemented feature (M index.html,
+M src/ui/ScreenTransition.js, ?? tests/e2e/main-menu.spec.js + ?? docs). This is
+EXPECTED per the run-2 brief (feature already implemented; docs reframed to
+baseline-vs-target). It is NOT a divergence. The single mismatch below is a
+doc-vs-command wording inaccuracy, not a code state problem.
+
+--------------------------------------------------------------------------------
+M-A. INDEX §4 "grep -rn "order:" styles/ returns exactly two hits" is literally false
+--------------------------------------------------------------------------------
+CLAIM (INDEX §4, lines 84-87):
+  "Verified: grep -rn "order:" styles/ returns exactly two hits,
+   styles/game.css:291 and styles/winner.css:13, neither inside .menu-options,
+   so nothing overrides menu paint order."
+REALITY (exact command, run 2026-08-15 22:00):
+  `grep -rn "order:" styles/` returns 39 matching lines, because the substring
+  "order:" also matches "border:" (e.g. styles/menu-layout.css:115, :173,
+  :180, ... many). Only TWO of those 39 are actual `order:` CSS-property
+  declarations:
+      styles/game.css:291:    order: -1;
+      styles/winner.css:13:    order: -1;
+  A property-isolated grep confirms exactly those two:
+      grep -rnE "order:[[:space:]]" styles/ | grep -v "border:"
+        -> styles/game.css:291, styles/winner.css:13
+  => The two CITED file:lines are CORRECT, and "neither inside .menu-options"
+     is CORRECT (game.css/.winner.css are not .menu-options). The functional
+     conclusion ("nothing overrides menu paint order") is CORRECT.
+  The ONLY false part is the phrase "returns exactly two hits" — the literal
+  command returns 39, not 2. This is a residual imprecision from M7's reword
+  (M7 dropped "no order: anywhere" but kept the imprecise "exactly two hits").
+WHAT MUST CHANGE: Reword to describe the property, e.g.
+  "Only two `order:` CSS-property declarations exist in styles/ —
+   styles/game.css:291 and styles/winner.css:13 — neither inside `.menu-options`,
+   so nothing overrides menu paint order."
+  OR change the command to one that isolates the property
+  (e.g. `grep -rnE 'order:[[:space:]]' styles/ | grep -v 'border:'`).
+SEVERITY: LOW / cosmetic. No engineering fact is wrong; the two named lines are
+  exactly right and outside .menu-options. Treat as non-blocking if desired.
+
+================================================================================
+VERIFIED-TRUE (everything else coincides — recorded so the parent can rely)
+================================================================================
+--- Run-1 fixes M1-M7 all landed ---
+M1 (baseline-vs-target framing):
+  PLAN header note (lines 9-12): "This is the TARGET. INDEX §2 documents the
+    BASELINE and is deliberately different — that delta is the feature."
+  PLAN consistency contract (lines 162-166): "The TARGET ... table is IDENTICAL
+    in PLAN header, ARCHITECTURE §2, and ARCHITECTURE §3. INDEX §2 holds the
+    BASELINE table and is expected to differ ... verify only that INDEX's
+    per-element id↔data-testid↔route identity triples match the target's."
+  ARCH §2 note (lines 63-66): baseline ordering "is documented in INDEX §2 and
+    is intentionally NOT the same table as this one. Element id↔data-testid↔route
+    triples are identical across both; only position, label text and
+    primary/secondary class change."  [TRUE]
+M2 (INDEX §2 reframed as baseline): INDEX §2 header (lines 7-10) explicitly
+  "BASELINE — pre-change state of main @ 02618d9"; §2 (lines 28-46) labelled
+  "BEFORE this feature" with a POST-IMPLEMENTATION NOTE. [TRUE]
+M3 (text-coupling scope): INDEX §6 POST-IMPLEMENTATION NOTE (lines 140-144):
+  "the same grep now returns 1 hit — tests/e2e/main-menu.spec.js
+  RETIRED_LABELS = ['Create Game', 'Join Game', 'Local Play (2 Players)'] ...
+  The 'zero text-coupling' finding is scoped to the 13 pre-existing specs". [TRUE]
+M4 (exhaustive coupling inventory): INDEX §6 now lists tutorial.spec.js:7,
+  loading-state.spec.js:10, reconnect.spec.js:46,50, multiplayer-startup.spec.js:38,44,
+  helpers/multiplayer-sync.js:44,48 — all 5 run-1-omitted files present. [TRUE]
+M5 (objective count): PLAN title "(tickable, 25 objectives)" + line 7
+  "A1-A4(4)+B1-B7(7)+C1-C8+C7a(9)+D1-D5(5)=25". Actual checkbox count = 25
+  (search_files ^\s*- \[[ x]\]: 25 matches). >=10 holds. [TRUE]
+M6 (A1 git status): PLAN A1 (lines 24-30) AMENDED to state the real
+  post-implementation status: M index.html, M src/ui/ScreenTransition.js,
+  ?? docs/plans/2026-08-15-main-menu-cta-{INDEX,ARCHITECTURE,PLAN}.md,
+  ?? docs/plans/log#1.txt, ?? tests/e2e/main-menu.spec.js. Matches `git status
+  --short` exactly. [TRUE]
+M7 (order: reworded): see M-A — the "no order: anywhere" claim is GONE and
+  replaced by "neither inside .menu-options". The two named lines are correct.
+  ONLY the "returns exactly two hits" leftover is imprecise (logged as M-A). [PARTIAL]
+
+--- TARGET table identity (step 3) ---
+PLAN header (lines 14-18) vs ARCH §2 mapping (lines 55-57) vs ARCH §3 visual
+diagram AFTER column (lines 73-88) all agree:
+  pos1 | START GAME            | localPlayBtn  | local-play-button  | menu-btn (primary)         | localSetupScreen
+  pos2 | HOST AGAINST FRIENDS  | createGameBtn | create-game-button | menu-btn secondary         | lobbyScreen
+  pos3 | JOIN AGAINST FRIENDS  | joinGameBtn   | join-game-button   | menu-btn secondary         | joinScreen
+  No row divergence across the three. [TRUE]
+
+--- Live-code TARGET verification (step 4) ---
+`sed -n '74,95p' index.html`:
+  order localPlayBtn/createGameBtn/joinGameBtn; labels START GAME / HOST AGAINST
+  FRIENDS / JOIN AGAINST FRIENDS; classes menu-btn / menu-btn secondary /
+  menu-btn secondary; data-testids local-play-button / create-game-button /
+  join-game-button all UNCHANGED. Matches TARGET table exactly. [TRUE]
+`git diff --name-only`: index.html + src/ui/ScreenTransition.js only (tracked).
+  Untracked: 3 docs + log#1.txt + tests/e2e/main-menu.spec.js. No styles/, no
+  convex/. Matches PLAN B6 / ARCH §5. [TRUE]
+`git show 02618d9:index.html | sed -n '75,93p'`: pos1 createGameBtn "Create Game"
+  (menu-btn), pos2 joinGameBtn "Join Game" (menu-btn), pos3 localPlayBtn
+  "Local Play (2 Players)" (menu-btn secondary). Matches INDEX §2 BASELINE table
+  exactly. [TRUE]
+
+--- ScreenTransition.js focus fix (step 5) ---
+Code order (src/ui/ScreenTransition.js):
+  (a) blur outgoing: activeEl.blur() at lines 23-32 (BEFORE flip)
+  (b) flip .active/hidden/aria-hidden/inert on all .screen: lines 34-40
+  (c) focus incoming: focusTarget.focus() at lines 42-48 (AFTER flip)
+  Matches ARCH §7 fix (lines 186-194), INDEX §5 (lines 101-106), and PLAN C7/C7a
+  (lines 112-127) — all describe the same blur-before / focus-after behaviour. [TRUE]
+
+--- INDEX §6 coupling exhaustive (step 6) ---
+`grep -rn "local-play-button|create-game-button|join-game-button|localPlayBtn|createGameBtn|joinGameBtn" tests/`
+returned 14 files; EVERY one appears in INDEX §6:
+  tutorial, reconnect, settings-and-theme, main-menu, loading-state, local-setup,
+  multiplayer-startup, achievement-panel, winner-screen, smoke, local-gameplay,
+  aria-hidden-verify, browser-compatibility, helpers/multiplayer-sync. [TRUE]
+No omission. [TRUE]
+
+--- INDEX §4 order: (step 7) ---
+Substantive claim CORRECT: only 2 `order:` property declarations
+(game.css:291, winner.css:13), neither in .menu-options. See M-A for the
+wording inaccuracy. [PARTIAL — see M-A]
+
+--- PLAN objective count (step 8) ---
+25 checkbox objectives counted (>=10). Matches stated 25. [TRUE]
+
+--- Gates (step 9) ---
+npx vitest run        -> Test Files 12 passed, Tests 78 passed (78). [TRUE, expect 78/78]
+npx eslint .          -> 14 problems (14 errors, 0 warnings), ALL prettier/prettier,
+  in EXACTLY tests/e2e/{achievement-panel,local-setup,settings-and-theme}.spec.js.
+  index.html and tests/e2e/main-menu.spec.js are NOT among offenders. [TRUE, expect 14]
+npx playwright test tests/e2e/main-menu.spec.js tests/e2e/aria-hidden-verify.spec.js
+    --project=chromium -> 11 passed (9 main-menu + 2 aria-hidden-verify). [TRUE, expect 11]
+
+--- Internal contradiction sweep (step 10) ---
+No remaining cross-doc contradiction. ARCH §1's "any src/ diff is a red flag"
+is explicitly superseded by ARCH §7 ("supersedes the original 'no src/ change
+expected' claim") and ARCH §5 / PLAN C7a / PLAN B6 all document ScreenTransition.js
+as an intentional unplanned fix. INDEX/PLAN/ARCH all agree on: 14 pre-existing
+eslint errors (3 specs), 78 vitest, baseline vs target framing, and changed-file
+set. [TRUE]
+
+================================================================================
+ESCALATION
+================================================================================
+Mismatch count in this log: 1 (M-A, borderline/cosmetic, correct underlying facts).
+Well under the 5-run escalation threshold. Run 3 (if dispatched) should confirm
+M-A's one-line reword; no substantive work outstanding.
+================================================================================

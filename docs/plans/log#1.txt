@@ -1,0 +1,170 @@
+================================================================================
+VERIFICATION LOG #1 — Main-Menu CTA rename planning docs
+================================================================================
+Timestamp : 2026-08-15 (run during review window; docs mtime 21:38:59, live
+            index.html / main-menu.spec.js modified 21:42:11)
+Run number: 1
+Reviewer  : subagent (READ-ONLY). Repo: ShapeKeeper @ feature/main-menu-cta-rename
+VERDICT   : FAIL  (>=1 divergence found; 7 mismatches logged below)
+
+--------------------------------------------------------------------------------
+DATA-INTEGRITY NOTE (read first)
+--------------------------------------------------------------------------------
+The live working tree was NOT stable during this review. The first `git status
+--short` (review start) showed ONLY three untracked docs and a CLEAN index.html
+(old labels, matching HEAD). By a later `git status` the working tree showed
+`M index.html` (rename+reorder+class-swap applied) AND a NEW untracked file
+`tests/e2e/main-menu.spec.js`. Both have mtime 21:42:11 — ~3 min AFTER the three
+docs were written (21:38:59). Conclusion: the plan was implemented (or is being
+implemented) concurrently with / immediately after the doc capture. A clean
+"docs vs baseline" comparison is therefore impossible, and the INDEX baseline is
+now stale. This alone breaks the "docs coincide with the live codebase" gate.
+
+Separately and independently of the live-code churn, the three docs' mapping
+tables are NOT mutually identical (see M1) — a time-independent FAIL.
+
+--------------------------------------------------------------------------------
+M1. Mapping tables are NOT mutually identical (PLAN §138 claims "IDENTICAL")
+--------------------------------------------------------------------------------
+CLAIM (PLAN §138 / task step 2): "The label/id/testid/class/route table is
+  IDENTICAL in INDEX §7+§2, ARCHITECTURE §2/§3, and PLAN header."
+REALITY (extracted tables):
+  INDEX §2 (claimed CURRENT baseline), by DOM position:
+    pos1 | Create Game        | createGameBtn | create-game-button | menu-btn (primary)
+    pos2 | Join Game          | joinGameBtn   | join-game-button   | menu-btn (primary)
+    pos3 | Local Play (2 Pl)  | localPlayBtn  | local-play-button  | menu-btn secondary
+  PLAN header / ARCH §2 (TARGET), by DOM position:
+    pos1 | START GAME              | localPlayBtn  | local-play-button | menu-btn (primary)
+    pos2 | HOST AGAINST FRIENDS    | createGameBtn | create-game-button | menu-btn secondary
+    pos3 | JOIN AGAINST FRIENDS    | joinGameBtn   | join-game-button   | menu-btn secondary
+  The per-element id↔testid↔route identity pairs ARE the same, but the
+  position ordering, the visible labels, and the per-position class differ.
+  Row-by-row the three tables diverge. The "IDENTICAL" claim is FALSE.
+WHAT MUST CHANGE: Either (a) correct PLAN §138 to state the tables are
+  intentionally NOT identical (baseline vs target), or (b) make INDEX §2 an
+  explicit "TARGET/baseline delta" view that matches PLAN/ARCH on the
+  position→id mapping. The three docs must agree on which element sits at
+  position 1/2/3.
+
+--------------------------------------------------------------------------------
+M2. INDEX §2 does not coincide with the live index.html
+--------------------------------------------------------------------------------
+CLAIM (INDEX §2): index.html:75-93 currently shows, in order —
+  "Create Game"(id=createGameBtn, primary) / "Join Game"(id=joinGameBtn, primary)
+  / "Local Play (2 Players)"(id=localPlayBtn, secondary); pos1=createGameBtn,
+  pos2=joinGameBtn, pos3=localPlayBtn.
+REALITY (sed -n '75,93p' index.html + git diff index.html):
+    <button id="localPlayBtn" class="menu-btn" data-testid="local-play-button">
+        START GAME
+    <button id="createGameBtn" class="menu-btn secondary" data-testid="create-game-button">
+        HOST AGAINST FRIENDS
+    <button id="joinGameBtn" class="menu-btn secondary" data-testid="join-game-button">
+        JOIN AGAINST FRIENDS
+  git diff: index.html | 34 changed (rename+reorder+class-swap already applied,
+  status `M index.html`). Live pos1=localPlayBtn, pos2=createGameBtn, pos3=joinGameBtn.
+WHAT MUST CHANGE: INDEX §2 is a stale baseline. Regenerate it against the current
+  working tree, OR acknowledge the rename is already implemented. Line citations
+  (INDEX §2 :81/:84/:91) are also wrong vs the live file.
+
+--------------------------------------------------------------------------------
+M3. INDEX §6 "ZERO text-coupling in executed test code" is false vs live repo
+--------------------------------------------------------------------------------
+CLAIM (INDEX §6): grep -rn "Create Game|Join Game|Local Play" tests/ src/ *.test.js
+  → ZERO assertions on main-menu button text.
+REALITY (command run):
+  tests/e2e/main-menu.spec.js:36:const RETIRED_LABELS = ['Create Game', 'Join Game', 'Local Play (2 Players)'];
+  => 1 hit, not zero.
+  (Caveat: main-menu.spec.js is the plan's own NEW spec, created 21:42:11 after
+  INDEX was written 21:38:59. At INDEX-capture time the grep was indeed zero.
+  As of the current live repo it is non-zero.)
+WHAT MUST CHANGE: INDEX §6 must note the new main-menu.spec.js references the
+  retired labels (intentionally, as RETIRED_LABELS) so the "zero coupling" audit
+  is scoped to the pre-existing specs.
+
+--------------------------------------------------------------------------------
+M4. INDEX §6 test-coupling inventory is INCOMPLETE
+--------------------------------------------------------------------------------
+CLAIM (INDEX §6): lists coupled-by-#id / data-testid files (smoke, browser-compat,
+  aria-hidden-verify, local-gameplay, winner-screen, achievement-panel,
+  local-setup, settings-and-theme).
+REALITY (grep -rn of testids/#ids across tests/): additional coupling NOT listed —
+  tests/e2e/tutorial.spec.js:7            (local-play-button)
+  tests/e2e/reconnect.spec.js:46,50       (create/join-game-button)
+  tests/e2e/loading-state.spec.js:10      (create-game-button)
+  tests/e2e/multiplayer-startup.spec.js:38,44 (create/join-game-button)
+  tests/e2e/helpers/multiplayer-sync.js:44,48 (create/join-game-button)
+  (The cited file:line entries themselves were spot-checked and ARE accurate.)
+WHAT MUST CHANGE: Add the 5 omitted files to the coupling inventory, or label the
+  list "non-exhaustive".
+
+--------------------------------------------------------------------------------
+M5. PLAN objective self-count is wrong (claims 16, actually 24)
+--------------------------------------------------------------------------------
+CLAIM (PLAN title "(tickable, 16 objectives)" and §145 "(this plan: 16)").
+REALITY (counted checkbox objectives): A1-A4 (4) + B1-B7 (7) + C1-C8 (8) + D1-D5 (5)
+  = 24 objectives. The ≥10 gate still passes, but the stated count is false.
+WHAT MUST CHANGE: Fix the count to 24, or remove the specific "16" claim.
+
+--------------------------------------------------------------------------------
+M6. PLAN A1 factual error re: git status output
+--------------------------------------------------------------------------------
+CLAIM (PLAN A1): "git status --short shows only the 4 new
+  docs/plans/2026-08-15-main-menu-cta-*.md files."
+REALITY (git status --short):
+    M  index.html
+    ?? docs/plans/2026-08-15-main-menu-cta-ARCHITECTURE.md
+    ?? docs/plans/2026-08-15-main-menu-cta-INDEX.md
+    ?? docs/plans/2026-08-15-main-menu-cta-PLAN.md
+    ?? tests/e2e/main-menu.spec.js
+  => not 4, and not docs-only (index.html modified; main-menu.spec.js exists).
+WHAT MUST CHANGE: Update A1 to reflect actual status, or regenerate after a clean
+  state. (Also only 3 docs exist, not 4 — the DEBRIEF is still to be written.)
+
+--------------------------------------------------------------------------------
+M7. INDEX §4 "no order: overrides anywhere" is literally false
+--------------------------------------------------------------------------------
+CLAIM (INDEX §4): ".menu-options ... DOM order == visual order (no order: overrides
+  anywhere)".
+REALITY (grep -rn "order:" styles/):
+    styles/game.css:291:    order: -1;
+    styles/winner.css:13:    order: -1;
+  => 2 `order:` properties exist in styles/. Neither is inside .menu-options, so
+  the functional claim "menu DOM order == paint order" still holds, but the
+  blanket "no order: anywhere" wording is inaccurate.
+WHAT MUST CHANGE: Reword to "no `order:` property affects .menu-options".
+
+================================================================================
+VERIFIED-TRUE (recorded so the parent can rely on them)
+================================================================================
+- eventBindings.js:42 getElementById('createGameBtn') handler; :71 joinGameBtn
+  handler (showScreen('joinScreen')); :93 localPlayBtn handler
+  (showScreen('localSetupScreen')). Matches INDEX §2 behaviour table. [TRUE]
+- ScreenTransition.js:13-42 showScreen(); focus moved to first focusable of
+  incoming screen via querySelector at :29-33. Matches INDEX §5. [TRUE]
+- styles/menu-layout.css:89-94 .menu-options { display:flex; flex-direction:column;
+  gap:20px }. [TRUE]
+- styles/menu-layout.css:290 .menu-btn min-height:48px (within cited 275-316);
+  :318-325 .menu-btn.secondary. [TRUE, minor line offset]
+- styles/menu-responsive.css:191 .menu-options { flex-direction:row; ... } (within
+  cited 190-200). [TRUE]
+- Handlers bind by getElementById => no src/ edit needed. [TRUE]
+- "Unaffected" specs reference only ids/testids (#localPlayBtn + testids), no
+  visible-text coupling. [TRUE]
+- npx vitest run => Test Files 12 passed, Tests 78 passed (78). Matches INDEX §1/§8. [TRUE]
+- npx eslint . => 14 problems (14 errors, 0 warnings), all prettier/prettier, in
+  EXACTLY tests/e2e/{achievement-panel,local-setup,settings-and-theme}.spec.js.
+  Matches INDEX §1/§8. [TRUE]
+- INDEX §6 cited file:line entries accurately reference #localPlayBtn/testids
+  (spot-checked smoke:23-24, aria-hidden-verify:18-19/38, local-gameplay:21/32/
+  194/233/311, winner-screen:6, settings-and-theme:34, achievement-panel:7,
+  local-setup:6, browser-compatibility:5/19/34-35/36/52/67/71). [TRUE]
+- PLAN Phase B edit target = index.html only; consistent with ARCH edit zones
+  (EDIT ZONE 1 = index.html; src/ and styles/ untouched). git diff --name-only
+  (working) touches only index.html + untracked docs + new spec. [TRUE]
+
+================================================================================
+ESCALATION
+================================================================================
+Mismatch count in this log: 7 (>5). Per PLAN §147 escalation rule, STOP and request
+user assistance before proceeding with implementation.
+================================================================================
