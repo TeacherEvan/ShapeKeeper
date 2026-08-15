@@ -73,22 +73,22 @@
                     <p class="credit">Created by Teacher Evan</p>
 
                     <div class="menu-options">
+                        <button id="localPlayBtn" class="menu-btn" data-testid="local-play-button">
+                            START GAME
+                        </button>
                         <button
                             id="createGameBtn"
-                            class="menu-btn"
+                            class="menu-btn secondary"
                             data-testid="create-game-button"
                         >
-                            Create Game
-                        </button>
-                        <button id="joinGameBtn" class="menu-btn" data-testid="join-game-button">
-                            Join Game
+                            HOST AGAINST FRIENDS
                         </button>
                         <button
-                            id="localPlayBtn"
+                            id="joinGameBtn"
                             class="menu-btn secondary"
-                            data-testid="local-play-button"
+                            data-testid="join-game-button"
                         >
-                            Local Play (2 Players)
+                            JOIN AGAINST FRIENDS
                         </button>
                     </div>
                     <button id="themeToggle" class="theme-toggle" aria-label="Switch to dark mode">
@@ -160,13 +160,21 @@
 
                     <div class="setup-section">
                         <h2>Opponent</h2>
-                        <label class="field-label" for="localOpponentType">Choose opponent type</label>
-                        <select id="localOpponentType" class="name-input" data-testid="local-opponent-type">
+                        <label class="field-label" for="localOpponentType"
+                            >Choose opponent type</label
+                        >
+                        <select
+                            id="localOpponentType"
+                            class="name-input"
+                            data-testid="local-opponent-type"
+                        >
                             <option value="human" selected>Local Player</option>
                             <option value="ai">AI Opponent</option>
                         </select>
                         <div class="setting-row" style="margin-top: 10px">
-                            <label class="field-label" for="localTutorialMode">Guided tutorial</label>
+                            <label class="field-label" for="localTutorialMode"
+                                >Guided tutorial</label
+                            >
                             <input
                                 type="checkbox"
                                 id="localTutorialMode"
@@ -178,7 +186,9 @@
 
                     <div class="setup-section">
                         <h2>AI Difficulty</h2>
-                        <label class="field-label" for="localAIDifficulty">Choose AI difficulty</label>
+                        <label class="field-label" for="localAIDifficulty"
+                            >Choose AI difficulty</label
+                        >
                         <select
                             id="localAIDifficulty"
                             class="name-input"

@@ -13,11 +13,13 @@ let fullscreenTriggered = false;
 export function showScreen(screenId) {
     const newScreen = document.getElementById(screenId);
 
-    // Capture focus BEFORE mutating visibility attributes. The browser raises a
+    // Focus is handled in two beats around the visibility flip. The browser raises a
     // synchronous "aria-hidden on focused element" warning the moment a focused
-    // control's ancestor gains `aria-hidden="true"`. If the focused element
-    // lives in a screen we are about to hide, move focus to the incoming screen
-    // first so no focused control is ever inside an aria-hidden subtree.
+    // control's ancestor gains `aria-hidden="true"`, so any control inside the
+    // outgoing screen must be blurred BEFORE the flip. The incoming screen is still
+    // `hidden`/`inert` at that point, and focusing a hidden element is a no-op that
+    // silently drops focus to <body>, so the incoming target is focused AFTER the
+    // flip instead.
     const activeEl = document.activeElement;
     const leavingFocused =
         activeEl &&
@@ -25,12 +27,8 @@ export function showScreen(screenId) {
         activeEl.closest('.screen') &&
         activeEl.closest('.screen').id !== screenId;
 
-    if (leavingFocused && newScreen) {
-        const focusTarget =
-            newScreen.querySelector(
-                'button:not([hidden]):not([disabled]), [href], input:not([hidden]):not([disabled]), select:not([hidden]):not([disabled]), [tabindex]:not([tabindex="-1"])'
-            ) || newScreen;
-        focusTarget.focus({ preventScroll: true });
+    if (leavingFocused) {
+        activeEl.blur();
     }
 
     document.querySelectorAll('.screen').forEach((screen) => {
@@ -40,6 +38,14 @@ export function showScreen(screenId) {
         screen.setAttribute('aria-hidden', String(!isActive));
         screen.inert = !isActive;
     });
+
+    if (leavingFocused && newScreen) {
+        const focusTarget =
+            newScreen.querySelector(
+                'button:not([hidden]):not([disabled]), [href], input:not([hidden]):not([disabled]), select:not([hidden]):not([disabled]), [tabindex]:not([tabindex="-1"])'
+            ) || newScreen;
+        focusTarget.focus({ preventScroll: true });
+    }
 }
 
 /**
