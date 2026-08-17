@@ -65,8 +65,12 @@
             state.convexClient = new ConvexClient(CONVEX_URL);
             state.sessionId = localStorage.getItem('shapekeeper_session_id');
             if (!state.sessionId) {
-                state.sessionId =
-                    'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const randomBytes = new Uint8Array(8);
+                windowObject.crypto.getRandomValues(randomBytes);
+                const randomSuffix = Array.from(randomBytes, (byte) =>
+                    byte.toString(16).padStart(2, '0')
+                ).join('');
+                state.sessionId = 'session_' + Date.now() + '_' + randomSuffix;
                 localStorage.setItem('shapekeeper_session_id', state.sessionId);
             }
 
