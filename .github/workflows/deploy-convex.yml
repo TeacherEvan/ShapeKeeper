@@ -9,6 +9,9 @@ on:
             - '.github/workflows/deploy-convex.yml'
     workflow_dispatch: # Allow manual trigger
 
+permissions:
+    contents: read
+
 jobs:
     deploy:
         if: vars.CONVEX_DEPLOY != ''
