@@ -7,7 +7,7 @@
         return;
     }
 
-    async function drawLine(lineKey) {
+    async function drawLine(lineKey, opts = {}) {
         if (!shared.state.currentRoomId) {
             return { error: 'Not in a room' };
         }
@@ -18,6 +18,7 @@
                 roomId: shared.state.currentRoomId,
                 sessionId: shared.getSessionId(),
                 lineKey,
+                clientSentAt: opts.clientSentAt,
             },
             'drawing line'
         );

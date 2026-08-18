@@ -131,19 +131,29 @@ export async function drawLineHandler(ctx: any, args: any) {
         };
     }
 
+    const serverReceivedAt = Date.now();
+    // Record the client/server timestamps used for RTT + clock-offset smoothing
+    // on the client (FR-2 / FR-3).
+    const timingPatch: any = {
+        lastTurnClientSentAt: args.clientSentAt ?? null,
+        lastTurnServerReceivedAt: serverReceivedAt,
+        updatedAt: serverReceivedAt,
+    };
+
     if (completedSquares.length === 0) {
         const nextPlayerIndex = (room.currentPlayerIndex + 1) % sortedPlayers.length;
-        await ctx.db.patch(args.roomId, {
-            currentPlayerIndex: nextPlayerIndex,
-            updatedAt: Date.now(),
-        });
+        // Re-arm the turn countdown for the next player (FR-2 / FR-3).
+        timingPatch.currentPlayerIndex = nextPlayerIndex;
+        timingPatch.turnStartTime = serverReceivedAt;
+        timingPatch.turnEndTime = serverReceivedAt + 10000;
+        await ctx.db.patch(args.roomId, timingPatch);
         console.log('[drawLine] Turn advanced', {
             fromPlayerIndex: room.currentPlayerIndex,
             toPlayerIndex: nextPlayerIndex,
             nextPlayerName: sortedPlayers[nextPlayerIndex]?.name,
         });
     } else {
-        await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
+        await ctx.db.patch(args.roomId, timingPatch);
         console.log('[drawLine] Turn retained (shape completed)', {
             playerIndex: currentPlayer.playerIndex,
             playerName: currentPlayer.name,

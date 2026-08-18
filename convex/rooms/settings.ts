@@ -147,6 +147,8 @@ export async function startGameHandler(ctx: any, args: any) {
     await ctx.db.patch(args.roomId, {
         status: 'playing',
         currentPlayerIndex: 0,
+        turnStartTime: Date.now(),
+        turnEndTime: Date.now() + 10000,
         updatedAt: Date.now(),
     });
 

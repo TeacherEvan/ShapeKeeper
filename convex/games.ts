@@ -15,6 +15,7 @@ export const drawLine = mutation({
         roomId: v.id('rooms'),
         sessionId: v.string(),
         lineKey: v.string(), // Normalized line key like "1,2-1,3"
+        clientSentAt: v.optional(v.number()), // client epoch (ms) when the move was issued
     },
     handler: drawLineHandler,
 });

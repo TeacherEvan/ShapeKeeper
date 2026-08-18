@@ -261,7 +261,9 @@ export class DotsAndBoxesGame {
             if (!this.isMyTurn) return;
 
             if (window.ShapeKeeperConvex) {
-                const result = await window.ShapeKeeperConvex.drawLine(lineKey);
+                const result = await window.ShapeKeeperConvex.drawLine(lineKey, {
+                    clientSentAt: Date.now(),
+                });
                 if (result.error) {
                     console.error('[Game] Error drawing line:', result.error);
                     return;
@@ -921,6 +923,12 @@ export class DotsAndBoxesGame {
 
         if (hasActiveAnimations || ambientRedraw) {
             this.renderer.draw();
+        }
+
+        // FR-2 / FR-3: keep the online turn countdown ticking every frame.
+        if (this.isOnline) {
+            const ctrl = window.ShapeKeeperTurnClock;
+            if (ctrl) ctrl.tick();
         }
 
         requestAnimationFrame(() => this.animate());

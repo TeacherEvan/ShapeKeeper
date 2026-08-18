@@ -111,9 +111,12 @@ export class GameState {
         this.game.soundEnabled = true;
 
         this.game.isMultiplayer = false;
+        this.game.isOnline = false; // set true by convex-client when in an online room
         this.game.myPlayerNumber = 1;
         this.game.isMyTurn = true;
         this.game.isHost = false;
+        this.game.lava = null; // LavaTimer particle system (FR-1)
+        this.game.turnRemainingMs = null; // current online turn countdown (FR-2)
         this.game.localMode = this.game.options?.localMode === 'ai' ? 'ai' : 'human';
         this.game.aiDifficulty = this.game.options?.aiDifficulty || 'medium';
         this.game.aiPlayerNumber = this.game.localMode === 'ai' ? 2 : null;
