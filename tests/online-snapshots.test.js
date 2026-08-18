@@ -100,7 +100,6 @@ describe('online snapshots (FR-4)', () => {
             })
         );
         saveOnlineSnapshot('room2', makeSnapshot('room2'), storage);
-        const before = storage._map.size; // raw count, before any filtering
         const removed = purgeExpiredOnlineSnapshots(storage, NOW);
         expect(removed).toBe(1);
         expect(listOnlineSnapshots(storage, NOW).map((r) => r.roomId)).toEqual(['room2']);
