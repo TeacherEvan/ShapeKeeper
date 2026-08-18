@@ -12,6 +12,12 @@ export default defineSchema({
         currentPlayerIndex: v.number(), // Index into players array for current turn
         createdAt: v.number(),
         updatedAt: v.number(),
+        // Turn timing metadata (FR-2 / FR-3): authoritative server clock for the
+        // online turn countdown. Clients derive their local countdown from these.
+        turnStartTime: v.optional(v.number()), // server epoch (ms) when current turn began
+        turnEndTime: v.optional(v.number()), // server epoch (ms) when current turn ends
+        lastTurnClientSentAt: v.optional(v.number()), // client send timestamp of last move
+        lastTurnServerReceivedAt: v.optional(v.number()), // server receipt timestamp of last move
     })
         .index('by_code', ['roomCode'])
         .index('by_status', ['status']),

@@ -27,6 +27,8 @@ import {
     drawTouchVisuals,
 } from './renderer/effects.js';
 import { drawDots, drawKeyboardFocusDot, drawSelectedDot } from './renderer/markers.js';
+import { drawLavaTimer } from './renderer/lava-timer.js';
+import { FEATURE_FLAGS } from './constants.js';
 
 export class Renderer {
     constructor(game) {
@@ -41,6 +43,7 @@ export class Renderer {
 
         this.drawDynamicBackground();
         this.drawAmbientParticles();
+        this.drawLavaTimerLayer();
 
         this.game.ctx.save();
         if (this.game.shakeIntensity > 0.1) {
@@ -95,6 +98,16 @@ export class Renderer {
      */
     drawAmbientParticles() {
         drawAmbientParticles(this.game);
+    }
+
+    /**
+     * Layer 2: lava timer (FR-1 / NFR-2) — gated behind FEATURE_LAVA_TIMER,
+     * rendered BEHIND lines/squares/dots at 40% opacity.
+     */
+    drawLavaTimerLayer() {
+        if (!FEATURE_FLAGS.FEATURE_LAVA_TIMER) return;
+        if (!this.game.isOnline) return; // lava timer is an online-match feature
+        drawLavaTimer(this.game);
     }
 
     /**

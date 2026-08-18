@@ -102,6 +102,8 @@ export async function endGameHandler(ctx: any, args: any) {
 
     await ctx.db.patch(args.roomId, {
         status: 'finished',
+        turnStartTime: undefined,
+        turnEndTime: undefined,
         updatedAt: Date.now(),
     });
 
@@ -158,6 +160,8 @@ export async function resetGameHandler(ctx: any, args: any) {
     await ctx.db.patch(args.roomId, {
         status: 'lobby',
         currentPlayerIndex: 0,
+        turnStartTime: undefined,
+        turnEndTime: undefined,
         updatedAt: Date.now(),
     });
 

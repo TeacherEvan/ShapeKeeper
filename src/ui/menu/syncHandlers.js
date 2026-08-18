@@ -3,6 +3,14 @@
  */
 
 import { DotsAndBoxesGame } from '../../../dots-and-boxes-game.js';
+import { createTurnClockController } from '../../timing/turn-clock-controller.js';
+
+// One controller per active game instance (module-scoped; reset on new match).
+let turnClockController = null;
+
+export function getTurnClockController() {
+    return turnClockController;
+}
 
 export function handleRoomStateUpdate(roomState, deps) {
     const {
@@ -26,6 +34,9 @@ export function handleRoomStateUpdate(roomState, deps) {
         resetStartupState();
         clearSubscriptions({ room: true, gameState: true });
         setActiveGame(null);
+        turnClockController?.clear();
+        turnClockController = null;
+        window.ShapeKeeperTurnClock = null;
         showToast('Room no longer exists', 'warning');
         lobbyManager.leaveRoom();
         showScreen('mainMenuScreen');
@@ -125,6 +136,15 @@ export function handleAuthoritativeGameState(gameState, deps) {
 
     const serverPlayerIndex = gameState.room?.currentPlayerIndex ?? 0;
     game.currentPlayer = serverPlayerIndex + 1;
+
+    // FR-2 / FR-3: feed authoritative turn timing into the clock controller and
+    // keep the live countdown on the game object.
+    if (!turnClockController) {
+        turnClockController = createTurnClockController(game);
+        window.ShapeKeeperTurnClock = turnClockController;
+    }
+    turnClockController.onAuthoritativeRoom(gameState.room);
+    turnClockController.tick();
 
     console.log(
         '[Game] State update - currentPlayerIndex:',

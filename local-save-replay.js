@@ -1,6 +1,8 @@
 export const LOCAL_SAVE_STORAGE_KEY = 'shapekeeper.local.save.v1';
 export const LOCAL_SAVE_VERSION = 1;
 
+import { TIMING_CONSTANTS } from './constants.js';
+
 const LINE_KEY_PATTERN = /^\d+,\d+-\d+,\d+$/;
 const CELL_KEY_PATTERN = /^\d+,\d+$/;
 const AI_DIFFICULTIES = new Set(['easy', 'medium', 'hard']);
@@ -241,4 +243,133 @@ export function validateLocalSavePayload(payload) {
             redoHistory: clone(payload.redoHistory),
         },
     };
+}
+
+// ---------------------------------------------------------------------------
+// Online turn-by-turn snapshots (FR-4)
+//
+// Per-room snapshots of in-progress online matches, stored under a separate
+// localStorage prefix so they never collide with the local-save format. Used by
+// the "Join Friends" reconnect UI. Each snapshot is TTL-scoped (purged >48h or
+// when the match reaches `finished`).
+// ---------------------------------------------------------------------------
+
+function snapshotKey(roomId) {
+    return TIMING_CONSTANTS.SNAPSHOT_PREFIX + roomId;
+}
+
+/**
+ * Persist a turn-by-turn snapshot of an in-progress online match.
+ * @param {string} roomId
+ * @param {object} data - { roomCode, gridSize, lines, scores, currentPlayer,
+ *                           updatedAt, status }
+ * @param {object} [storage] - injectable localStorage (for tests)
+ * @returns {boolean} success
+ */
+export function saveOnlineSnapshot(roomId, data, storage = localStorage) {
+    if (!roomId || !isPlainObject(data)) return false;
+    try {
+        const record = {
+            roomId,
+            roomCode: data.roomCode,
+            gridSize: data.gridSize,
+            lines: data.lines || [],
+            scores: data.scores || {},
+            currentPlayer: data.currentPlayer,
+            playerCount: data.playerCount,
+            status: data.status || 'playing',
+            savedAt: Date.now(),
+        };
+        storage.setItem(snapshotKey(roomId), JSON.stringify(record));
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Read a single online snapshot (or null).
+ * Expired (>TTL) or finished snapshots are treated as absent.
+ * @param {string} roomId
+ * @param {object} [storage]
+ * @param {number} [now] - injectable clock (ms)
+ */
+export function getOnlineSnapshot(roomId, storage = localStorage, now = Date.now()) {
+    if (!roomId) return null;
+    try {
+        const raw = storage.getItem(snapshotKey(roomId));
+        if (!raw) return null;
+        const record = JSON.parse(raw);
+        if (record.status === 'finished') return null;
+        if (now - (record.savedAt || 0) > TIMING_CONSTANTS.SNAPSHOT_TTL_MS) {
+            storage.removeItem(snapshotKey(roomId));
+            return null;
+        }
+        return record;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * List all non-expired, in-progress online snapshots (for the reconnect UI).
+ * @param {object} [storage]
+ * @param {number} [now]
+ * @returns {Array<object>}
+ */
+export function listOnlineSnapshots(storage = localStorage, now = Date.now()) {
+    const result = [];
+    try {
+        const prefix = TIMING_CONSTANTS.SNAPSHOT_PREFIX;
+        const keys = [];
+        for (let i = 0; i < storage.length; i++) {
+            const k = storage.key(i);
+            if (k && k.startsWith(prefix)) keys.push(k);
+        }
+        for (const k of keys) {
+            const roomId = k.slice(prefix.length);
+            const rec = getOnlineSnapshot(roomId, storage, now);
+            if (rec) result.push(rec);
+        }
+    } catch {
+        /* ignore storage errors */
+    }
+    return result;
+}
+
+/**
+ * Delete a single online snapshot (Delete/Dismiss action).
+ * @param {string} roomId
+ * @param {object} [storage]
+ * @returns {boolean}
+ */
+export function deleteOnlineSnapshot(roomId, storage = localStorage) {
+    if (!roomId) return false;
+    try {
+        storage.removeItem(snapshotKey(roomId));
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/** Purge all expired online snapshots. @returns {number} count removed. */
+export function purgeExpiredOnlineSnapshots(storage = localStorage, now = Date.now()) {
+    const prefix = TIMING_CONSTANTS.SNAPSHOT_PREFIX;
+    const keys = [];
+    try {
+        for (let i = 0; i < storage.length; i++) {
+            const k = storage.key(i);
+            if (k && k.startsWith(prefix)) keys.push(k);
+        }
+    } catch {
+        return 0;
+    }
+    let removed = 0;
+    for (const k of keys) {
+        const roomId = k.slice(prefix.length);
+        const rec = getOnlineSnapshot(roomId, storage, now);
+        if (!rec) removed++;
+    }
+    return removed;
 }

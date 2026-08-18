@@ -46,6 +46,33 @@ export const GAME_CONSTANTS = {
     SOUND_LINE_BASE: 440,
     SOUND_SQUARE_BASE: 523,
     SOUND_COMBO_BASE: 659,
+
+    // Lava timer particle engine (FR-1 / NFR-1)
+    LAVA_PARTICLE_COUNT: 24,
+    LAVA_PARTICLE_RADIUS_MIN: 6,
+    LAVA_PARTICLE_RADIUS_MAX: 16,
+    LAVA_PARTICLE_SPEED: 0.6,
+    LAVA_OPACITY: 0.4, // Hard cap: lava never obscures dots (NFR-2)
+    LAVA_URGENCY_THRESHOLD_MS: 5000, // <=5s left -> escalate
+    LAVA_URGENCY_SPEED_SCALE: 1.85,
+    LAVA_URGENCY_BUOYANCY: 0.08,
+    LAVA_BOUNCE_DAMPING: 0.88, // vx/vy *= 0.88 on elastic reflection
+};
+
+// Feature flags (FR-6). Default OFF; enabled via window.FEATURE_* at runtime.
+export const FEATURE_FLAGS = {
+    FEATURE_LAVA_TIMER: false,
+    FEATURE_SYNC_RESILIENCE: false,
+};
+
+// Turn / network timing (FR-2, FR-3)
+export const TIMING_CONSTANTS = {
+    TURN_DURATION_MS: 10000, // 10s countdown
+    LAG_PAUSE_THRESHOLD_MS: 600, // packet/heartbeat latency above this pauses clock
+    CLOCK_OFFSET_EMA_ALPHA: 0.2, // smoothing factor (0.2 new, 0.8 old)
+    COUNTDOWN_QUANTIZE_MS: 100, // display quantized to 0.1s
+    SNAPSHOT_TTL_MS: 48 * 60 * 60 * 1000, // purge snapshots older than 48h (FR-4)
+    SNAPSHOT_PREFIX: 'shapekeeper.online.snapshots.', // localStorage key prefix (FR-4)
 };
 
 export const TILE_EFFECTS = {
