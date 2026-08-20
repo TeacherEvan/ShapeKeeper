@@ -4,19 +4,31 @@ import { gotoApp } from './helpers/bootstrap.js';
 /**
  * Task 8 (FR-6 / FR-1) end-to-end gate for the Lava Timer feature flag.
  *
- * This E2E's unique job: prove the plan's stated contract ("flags enabled via
- * window.FEATURE_* at runtime") actually flips the runtime guard. Without the
- * bridge in game.js the flags are permanently false and the lava clock is dead
- * code in the running app. The bridge exposes a live window.FEATURE_FLAGS mirror.
+ * The lava timer + sync resilience ship ON by default (set in index.html via
+ * `window.FEATURE_* ?? true`). The bridge in game.js copies window.FEATURE_*
+ * into the static FEATURE_FLAGS and exposes a live window.FEATURE_FLAGS mirror.
  *
- * NOTE: actual rendering (40% opacity + countdown behind dots in an online
- * match) is proven authoritatively by tests/lava-timer-renders.test.js against
- * the real Renderer.drawLavaTimerLayer(); we do not re-assert drawing here to
- * avoid exposing internal modules on window.
+ * This E2E's job: prove the window.FEATURE_* -> FEATURE_FLAGS bridge works both
+ * ways — default-ON, explicit-ON, and explicit opt-out. Actual rendering (40%
+ * opacity + countdown behind dots in an online match) is proven authoritatively
+ * by tests/lava-timer-renders.test.js against the real Renderer.drawLavaTimerLayer().
  */
 
 test.describe('lava timer feature flag gating', () => {
-    test('FEATURE_LAVA_TIMER=true (via window) flips the runtime flag', async ({ page }) => {
+    test('defaults ON (shipped on) when no window flag is set', async ({ page }) => {
+        await gotoApp(page);
+
+        const flags = await page.evaluate(() => ({
+            lava: window.FEATURE_FLAGS.FEATURE_LAVA_TIMER,
+            sync: window.FEATURE_FLAGS.FEATURE_SYNC_RESILIENCE,
+        }));
+        expect(flags.lava).toBe(true);
+        expect(flags.sync).toBe(true);
+    });
+
+    test('explicit window.FEATURE_LAVA_TIMER=true still flips the runtime flag', async ({
+        page,
+    }) => {
         await page.addInitScript(() => {
             window.FEATURE_LAVA_TIMER = true;
             window.FEATURE_SYNC_RESILIENCE = true;
@@ -31,7 +43,11 @@ test.describe('lava timer feature flag gating', () => {
         expect(flags.sync).toBe(true);
     });
 
-    test('flag defaults OFF when window.FEATURE_LAVA_TIMER is not set', async ({ page }) => {
+    test('flag can be opted OUT via window.FEATURE_LAVA_TIMER=false', async ({ page }) => {
+        await page.addInitScript(() => {
+            window.FEATURE_LAVA_TIMER = false;
+            window.FEATURE_SYNC_RESILIENCE = false;
+        });
         await gotoApp(page);
 
         const flags = await page.evaluate(() => ({
