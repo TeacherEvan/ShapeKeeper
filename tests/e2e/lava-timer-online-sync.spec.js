@@ -4,11 +4,15 @@ import { gotoApp } from './helpers/bootstrap.js';
 /**
  * Task 8 (FR-6 / FR-1) end-to-end gate for the Lava Timer feature flag.
  *
- * Proves the plan's stated contract ("flags enabled via window.FEATURE_* at
- * runtime") actually flips the runtime flag — without the bridge in game.js,
- * these flags are permanently false and the lava clock is dead code in the
- * running app. The bridge exposes a live window.FEATURE_FLAGS mirror reflecting
- * the exact guard renderer.js:108 / turn-clock-controller.js:65 read.
+ * This E2E's unique job: prove the plan's stated contract ("flags enabled via
+ * window.FEATURE_* at runtime") actually flips the runtime guard. Without the
+ * bridge in game.js the flags are permanently false and the lava clock is dead
+ * code in the running app. The bridge exposes a live window.FEATURE_FLAGS mirror.
+ *
+ * NOTE: actual rendering (40% opacity + countdown behind dots in an online
+ * match) is proven authoritatively by tests/lava-timer-renders.test.js against
+ * the real Renderer.drawLavaTimerLayer(); we do not re-assert drawing here to
+ * avoid exposing internal modules on window.
  */
 
 test.describe('lava timer feature flag gating', () => {
@@ -19,7 +23,6 @@ test.describe('lava timer feature flag gating', () => {
         });
         await gotoApp(page);
 
-        // The bridge in game.js must have copied window.* into the live mirror.
         const flags = await page.evaluate(() => ({
             lava: window.FEATURE_FLAGS.FEATURE_LAVA_TIMER,
             sync: window.FEATURE_FLAGS.FEATURE_SYNC_RESILIENCE,
