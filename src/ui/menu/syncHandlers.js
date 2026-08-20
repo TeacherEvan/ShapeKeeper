@@ -210,8 +210,12 @@ export function handleAuthoritativeGameState(gameState, deps) {
 
     game.uiManager.updatePopulateButtonVisibility();
 
-    if (gameState.room?.status === 'finished' && !game.isGameOver) {
-        game.isGameOver = true;
+    if (gameState.room?.status === 'finished' && !game.gameOverHandled) {
+        // Use a dedicated flag rather than `game.isGameOver`. Elsewhere the
+        // game-over state is a METHOD on gameState (`this.gameState.isGameOver()`),
+        // so overwriting `game.isGameOver` as a boolean here causes a
+        // property/method collision that breaks those checks.
+        game.gameOverHandled = true;
         game.showWinner();
     }
 

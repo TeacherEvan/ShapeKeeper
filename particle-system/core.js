@@ -2,15 +2,16 @@ import { GAME_CONSTANTS } from '../constants.js';
 
 export function initializeAmbientParticles(system) {
     system.ambientParticles = [];
+    // Spread ambient particles across the real board dimensions so they cover
+    // the canvas instead of a hardcoded 800x600 box (AUD-3).
+    const width = system.logicalWidth || 800;
+    const height = system.logicalHeight || 600;
     for (let i = 0; i < GAME_CONSTANTS.AMBIENT_PARTICLE_COUNT; i++) {
-        system.ambientParticles.push(createAmbientParticle());
+        system.ambientParticles.push(createAmbientParticle(false, width, height));
     }
 }
 
-export function createAmbientParticle(atEdge = false) {
-    const width = 800;
-    const height = 600;
-
+export function createAmbientParticle(atEdge = false, width = 800, height = 600) {
     return {
         x: atEdge ? (Math.random() < 0.5 ? 0 : width) : Math.random() * width,
         y: Math.random() * height,

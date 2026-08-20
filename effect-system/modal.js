@@ -60,22 +60,37 @@ export function showEffectModal(system, effectData) {
     prompt.innerHTML = '';
     prompt.style.display = 'none';
 
+    // Render effect prompts as text content (never innerHTML) so any string the
+    // back end or future content source supplies is inert — strict XSS immunity
+    // (AUD-6).
     if (effect.id === 'hypothetical') {
         const question = HYPOTHETICALS[Math.floor(Math.random() * HYPOTHETICALS.length)];
-        prompt.innerHTML = `<div class="effect-question">"${question}"</div>`;
+        const node = document.createElement('div');
+        node.className = 'effect-question';
+        node.textContent = `"${question}"`;
+        prompt.appendChild(node);
         prompt.style.display = 'block';
     } else if (effect.id === 'dared' || effect.id === 'dare_left') {
         const dare = DARES[Math.floor(Math.random() * DARES.length)];
-        prompt.innerHTML = `<div class="effect-dare">${dare}</div>`;
+        const node = document.createElement('div');
+        node.className = 'effect-dare';
+        node.textContent = dare;
+        prompt.appendChild(node);
         prompt.style.display = 'block';
     } else if (effect.id === 'truth') {
         const truth = TRUTHS[Math.floor(Math.random() * TRUTHS.length)];
-        prompt.innerHTML = `<div class="effect-truth">${truth}</div>`;
+        const node = document.createElement('div');
+        node.className = 'effect-truth';
+        node.textContent = truth;
+        prompt.appendChild(node);
         prompt.style.display = 'block';
     } else if (effect.id === 'physical_challenge') {
         const challenge =
             PHYSICAL_CHALLENGES[Math.floor(Math.random() * PHYSICAL_CHALLENGES.length)];
-        prompt.innerHTML = `<div class="effect-challenge">${challenge}</div>`;
+        const node = document.createElement('div');
+        node.className = 'effect-challenge';
+        node.textContent = challenge;
+        prompt.appendChild(node);
         prompt.style.display = 'block';
     }
 
