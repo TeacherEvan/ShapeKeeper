@@ -53,6 +53,15 @@
         <script>
             window.CONVEX_URL = 'https://precise-ladybug-504.convex.cloud';
         </script>
+
+        <!-- Feature flags (FR-6). The lava timer + online sync resilience ship ON
+             by default; the runtime bridge in game.js copies window.FEATURE_*
+             into the static FEATURE_FLAGS. Opt a flag out by setting it to false
+             (e.g. window.FEATURE_LAVA_TIMER = false) before the module loads. -->
+        <script>
+            window.FEATURE_LAVA_TIMER = window.FEATURE_LAVA_TIMER ?? true;
+            window.FEATURE_SYNC_RESILIENCE = window.FEATURE_SYNC_RESILIENCE ?? true;
+        </script>
     </head>
 
     <body>
