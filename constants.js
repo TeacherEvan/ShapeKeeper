@@ -252,19 +252,6 @@ export const TILE_EFFECTS = {
     ],
 };
 
-export const SHAPE_MESSAGES = [
-    'Triangle Power! 🔺',
-    'Three sides, infinite possibilities!',
-    'Acute move! 😉',
-    "You're looking sharp!",
-    'Pyramid scheme? No, just points!',
-    'Tri-umphant!',
-    'Isosceles what you did there!',
-    'Equilateral excellence!',
-    'Pointy business!',
-    'Geometry rules!',
-];
-
 export const HYPOTHETICALS = [
     'Would you rather fight 100 duck-sized horses or 1 horse-sized duck?',
     'Would you rather have unlimited money or unlimited time?',
@@ -273,7 +260,7 @@ export const HYPOTHETICALS = [
     'Would you rather always be 10 minutes late or 20 minutes early?',
     'Would you rather have a rewind button or a pause button for your life?',
     'Would you rather know how you die or when you die?',
-    'Would you rather speak all languages or talk to animals?',
+    'Would you rather speak all languages or talk to animals',
     'Would you rather give up social media forever or never watch TV again?',
     'Would you rather be famous for something bad or unknown for something great?',
 ];
