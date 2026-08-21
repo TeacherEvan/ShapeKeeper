@@ -246,28 +246,51 @@ export class GameState {
      * Setup event listeners
      */
     setupEventListeners() {
-        window.addEventListener('resize', () => {
+        const resizeHandler = () => {
             if (this.game.resizeTimeout) {
                 clearTimeout(this.game.resizeTimeout);
             }
-            this.game.resizeTimeout = setTimeout(() => {
+            const timeoutId = setTimeout(() => {
                 this.game.uiManager.displayLoadingSkeleton(true);
                 this.setupCanvas();
                 this.game.draw();
                 this.game.uiManager.displayLoadingSkeleton(false);
             }, 300);
-        });
+            this.game.resizeTimeout = timeoutId;
+            if (this.game.disposables) {
+                this.game.disposables.addTimeout(timeoutId);
+            }
+        };
+
+        if (this.game.disposables) {
+            this.game.disposables.addEventListener(window, 'resize', resizeHandler);
+        } else {
+            window.addEventListener('resize', resizeHandler);
+        }
 
         if (window.screen && window.screen.orientation) {
-            window.screen.orientation.addEventListener('change', () => {
+            const orientationHandler = () => {
                 console.log('[Game] Orientation changed to:', window.screen.orientation.type);
                 this.game.uiManager.displayLoadingSkeleton(true);
-                setTimeout(() => {
+                const timeoutId = setTimeout(() => {
                     this.setupCanvas();
                     this.game.draw();
                     this.game.uiManager.displayLoadingSkeleton(false);
                 }, 100);
-            });
+                if (this.game.disposables) {
+                    this.game.disposables.addTimeout(timeoutId);
+                }
+            };
+
+            if (this.game.disposables) {
+                this.game.disposables.addEventListener(
+                    window.screen.orientation,
+                    'change',
+                    orientationHandler
+                );
+            } else {
+                window.screen.orientation.addEventListener('change', orientationHandler);
+            }
         }
     }
 

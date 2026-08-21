@@ -3,6 +3,7 @@
     "version": "4.3.0",
     "description": "ShapeKeeper - A modern browser-based territory capture game with turn-based multiplayer",
     "main": "index.html",
+    "type": "module",
     "scripts": {
         "dev": "convex dev",
         "build": "echo 'No build step required'",

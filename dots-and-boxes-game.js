@@ -18,6 +18,9 @@ import { showToast } from './src/ui/Toast.js';
 import { notifyAchievementUnlock, renderAchievementPanel } from './src/ui/AchievementPanel.js';
 import { getDotRenderRadius } from './utils.js';
 import { TutorialSystem } from './tutorial-system.js';
+import { findOptimalMinimaxMove } from './src/ai/MinimaxEngine.js';
+import { DisposableRegistry } from './src/lifecycle/DisposableRegistry.js';
+import { AccessibleGridTree } from './src/a11y/AccessibleGridTree.js';
 
 export class DotsAndBoxesGame {
     static POPULATE_PLAYER_ID = GAME_CONSTANTS.POPULATE_PLAYER_ID;
@@ -66,9 +69,15 @@ export class DotsAndBoxesGame {
         ]);
         this.linkSystemState(this.particleSystem, ['ambientParticles', 'particles']);
 
+        this.isDestroyed = false;
+        this.disposables = new DisposableRegistry();
+
         // Setup canvas and initialize game
         this.gameState.setupCanvas();
         this.inputHandler = new InputHandler(this.canvas, this);
+        this.disposables.addDisposable(this.inputHandler);
+        this.accessibleGrid = new AccessibleGridTree(this);
+        this.disposables.addDisposable(this.accessibleGrid);
         this.effectSystem.initializeMultipliers();
         this.effectSystem.initializeTileEffects();
         this.particleSystem.initializeAmbientParticles();
@@ -80,9 +89,10 @@ export class DotsAndBoxesGame {
         this.initialLocalSnapshot = this.captureMoveSnapshot();
         this.replayIndex = 0;
 
-        requestAnimationFrame(() => {
+        const focusRaf = requestAnimationFrame(() => {
             this.canvas?.focus({ preventScroll: true });
         });
+        this.disposables.addRAF(focusRaf);
 
         // Start the game
         this.renderer.draw();
@@ -191,42 +201,52 @@ export class DotsAndBoxesGame {
     setupPopulateButton() {
         const populateBtn = document.getElementById('populateBtn');
         if (populateBtn) {
-            populateBtn.addEventListener('click', () => this.gameState.handlePopulate());
+            this.disposables.addEventListener(populateBtn, 'click', () =>
+                this.gameState.handlePopulate()
+            );
         }
 
         const undoBtn = document.getElementById('undoBtn');
         if (undoBtn) {
-            undoBtn.addEventListener('click', () => this.undoMove());
+            this.disposables.addEventListener(undoBtn, 'click', () => this.undoMove());
         }
 
         const redoBtn = document.getElementById('redoBtn');
         if (redoBtn) {
-            redoBtn.addEventListener('click', () => this.redoMove());
+            this.disposables.addEventListener(redoBtn, 'click', () => this.redoMove());
         }
 
         const saveLocalBtn = document.getElementById('saveLocalBtn');
         if (saveLocalBtn) {
-            saveLocalBtn.addEventListener('click', () => this.saveLocalGame());
+            this.disposables.addEventListener(saveLocalBtn, 'click', () => this.saveLocalGame());
         }
 
         const replayBackBtn = document.getElementById('replayBackBtn');
         if (replayBackBtn) {
-            replayBackBtn.addEventListener('click', () => this.stepReplayBackward());
+            this.disposables.addEventListener(replayBackBtn, 'click', () =>
+                this.stepReplayBackward()
+            );
         }
 
         const replayForwardBtn = document.getElementById('replayForwardBtn');
         if (replayForwardBtn) {
-            replayForwardBtn.addEventListener('click', () => this.stepReplayForward());
+            this.disposables.addEventListener(replayForwardBtn, 'click', () =>
+                this.stepReplayForward()
+            );
         }
 
         const replayRestartBtn = document.getElementById('replayRestartBtn');
         if (replayRestartBtn) {
-            replayRestartBtn.addEventListener('click', () => this.restartReplay());
+            this.disposables.addEventListener(replayRestartBtn, 'click', () =>
+                this.restartReplay()
+            );
         }
 
         const soundToggle = document.getElementById('soundToggle');
         if (soundToggle) {
-            soundToggle.addEventListener('click', () => this.soundManager.toggleSound());
+            this.disposables.addEventListener(soundToggle, 'click', () =>
+                this.soundManager.toggleSound()
+            );
         }
 
         this.uiManager.updatePopulateButtonVisibility();
@@ -443,14 +463,20 @@ export class DotsAndBoxesGame {
         this.aiThinking = true;
         const turnToken = ++this.aiTurnToken;
         const delayMs = this.aiMoveDelayMs;
-        window.setTimeout(() => {
-            if (turnToken !== this.aiTurnToken || !this.isAITurn() || this.gameState.isGameOver()) {
+        const timerId = window.setTimeout(() => {
+            if (
+                this.isDestroyed ||
+                turnToken !== this.aiTurnToken ||
+                !this.isAITurn() ||
+                this.gameState.isGameOver()
+            ) {
                 this.aiThinking = false;
                 this.uiManager.updateUndoRedoControls();
                 return;
             }
             void this.performAIMove(turnToken);
         }, delayMs);
+        this.disposables.addTimeout(timerId);
         this.uiManager.updateUndoRedoControls();
     }
 
@@ -507,8 +533,16 @@ export class DotsAndBoxesGame {
         const candidateSafe = safeLines.length > 0 ? safeLines : availableLines;
 
         if (this.aiDifficulty === 'hard') {
-            // 1-ply lookahead: prefer safe lines that do not hand the opponent
-            // an immediate capture on their next turn.
+            const bestMinimaxMove = findOptimalMinimaxMove(
+                this.gameLogic,
+                this.lines,
+                this.gridRows,
+                this.gridCols,
+                2
+            );
+            if (bestMinimaxMove) {
+                return bestMinimaxMove;
+            }
             return this.pickHardSafeLine(candidateSafe);
         }
 
@@ -931,7 +965,10 @@ export class DotsAndBoxesGame {
             if (ctrl) ctrl.tick();
         }
 
-        requestAnimationFrame(() => this.animate());
+        if (!this.isDestroyed) {
+            const rafId = requestAnimationFrame(() => this.animate());
+            this.disposables.addRAF(rafId);
+        }
     }
 
     /**
@@ -955,5 +992,19 @@ export class DotsAndBoxesGame {
             selectedDot: this.selectedDot,
             selectionRibbonActive: Boolean(this.selectionRibbon),
         };
+    }
+
+    /**
+     * Destroy and cleanup all active resources, timers, and listeners.
+     */
+    destroy() {
+        if (this.isDestroyed) {
+            return;
+        }
+        this.isDestroyed = true;
+
+        if (this.disposables) {
+            this.disposables.dispose();
+        }
     }
 }
