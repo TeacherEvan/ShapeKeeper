@@ -1,8 +1,9 @@
 # ShapeKeeper
+![Game Version](https://img.shields.io/badge/version-4.3.0-blue)
 
 A modern, browser-based implementation of the classic Dots and Boxes game (reimagined as ShapeKeeper) with adaptive landscape layouts, smooth animations, and touch support.
 
-![Game Version](https://img.shields.io/badge/version-4.3.0-blue)
+
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Deployment](https://img.shields.io/badge/deployed-shape--keeper.vercel.app-brightgreen)
 
@@ -40,6 +41,9 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 - **Combo System** - Visual escalation for consecutive shape completions
 - **Victory Fireworks** - Celebratory effects when game ends
 - **Dark Mode** - Toggle between light and dark themes
+<img width="1360" height="768" alt="Screenshot from 2026-08-21 15-54-29" src="https://github.com/user-attachments/assets/e9474dc3-a56a-43e9-ba3d-ff14686a26b0" />
+
+<img width="1360" height="768" alt="Screenshot from 2026-08-21 15-55-06" src="https://github.com/user-attachments/assets/c5986e6c-d840-4585-b539-368db2c78d1c" />
 
 ### Audio Features
 
@@ -99,6 +103,7 @@ Visit [https://shape-keeper.vercel.app](https://shape-keeper.vercel.app).
 - Production frontend is hardcoded to the prod Convex backend
   (`precise-ladybug-504.convex.cloud`) directly in `index.html`; no build step
   injects it.
+<img width="1360" height="768" alt="Screenshot from 2026-08-21 15-57-47" src="https://github.com/user-attachments/assets/de1f948d-8323-43dd-8753-cbfc141709a2" />
 
 ### Commands
 
