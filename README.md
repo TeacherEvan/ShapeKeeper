@@ -24,6 +24,8 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 - **Party Mode 🎉** - ALL squares have tile effects (dares, hypotheticals, powerups, traps)
 
 ### Visual Enhancements
+<img width="494" height="519" alt="Screenshot from 2026-08-18 20-00-38" src="https://github.com/user-attachments/assets/2a7bf6f3-d02a-4a54-b48a-44ea802534e4" /> <img width="1360" height="768" alt="Screenshot from 2026-08-18 17-04-04" src="https://github.com/user-attachments/assets/ea767352-2003-4a19-ba67-f839a4e0f0ef" /> 
+
 
 - **Adaptive Landscape Layout** - Automatically optimizes grid for landscape displays (e.g., 30x30 becomes ~50×18)
 - **Miniaturized Design** - Dots are 5× smaller than traditional implementations for more gameplay area
