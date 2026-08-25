@@ -5,6 +5,7 @@ export default defineSchema({
     // Game rooms/sessions
     rooms: defineTable({
         roomCode: v.string(), // 6-character code for joining
+        passcode: v.optional(v.string()), // silly [Adjective][Animal] (e.g. "EasterPig"). Optional for pre-migration rooms.
         hostPlayerId: v.string(), // Session ID of the host
         gridSize: v.number(), // 5, 10, 20, or 30
         partyMode: v.optional(v.boolean()), // Party mode enabled (tile effects)
@@ -20,6 +21,7 @@ export default defineSchema({
         lastTurnServerReceivedAt: v.optional(v.number()), // server receipt timestamp of last move
     })
         .index('by_code', ['roomCode'])
+        .index('by_passcode', ['passcode'])
         .index('by_status', ['status']),
 
     // Players in rooms

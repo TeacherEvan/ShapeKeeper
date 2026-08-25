@@ -27,6 +27,7 @@ export const joinRoom = mutation({
         roomCode: v.string(),
         sessionId: v.string(),
         playerName: v.string(),
+        passcode: v.optional(v.string()), // Required for rooms with a passcode (post 2026-08-25); legacy rooms may omit.
     },
     handler: joinRoomHandler,
 });
