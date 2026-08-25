@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { gotoApp } from './helpers/bootstrap.js';
+import { gotoApp, openGameControls } from './helpers/bootstrap.js';
 
 async function selectLocalGridSize(page, size) {
     await expect(page.locator('#localSetupScreen')).toHaveClass(/active/);
@@ -245,6 +245,7 @@ test.describe('local gameplay canvas input', () => {
             )
             .toEqual({ lineCount: 1, currentPlayer: 2 });
 
+        await openGameControls(page);
         await page.locator('#undoBtn').click();
         await expect
             .poll(() =>
@@ -255,6 +256,7 @@ test.describe('local gameplay canvas input', () => {
             )
             .toEqual({ lineCount: 0, currentPlayer: 1 });
 
+        await openGameControls(page);
         await page.locator('#redoBtn').click();
         await expect
             .poll(() =>
@@ -276,6 +278,7 @@ test.describe('local gameplay canvas input', () => {
         await drawUsingPrimaryInput(page, { x: offsetX, y: offsetY }, { hasTouch });
         await drawUsingPrimaryInput(page, { x: offsetX + cellSize, y: offsetY }, { hasTouch });
 
+        await openGameControls(page);
         await page.locator('#saveLocalBtn').click();
 
         await expect
@@ -324,6 +327,7 @@ test.describe('local gameplay canvas input', () => {
             .poll(() => page.evaluate(() => window.__shapeKeeperActiveGame?.lines?.size ?? 0))
             .toBe(2);
 
+        await openGameControls(page);
         await page.locator('#replayRestartBtn').click();
         await expect
             .poll(() =>
@@ -334,6 +338,7 @@ test.describe('local gameplay canvas input', () => {
             )
             .toEqual({ currentPlayer: 1, lineCount: 0 });
 
+        await openGameControls(page);
         await page.locator('#replayForwardBtn').click();
         await expect
             .poll(() => page.evaluate(() => window.__shapeKeeperActiveGame?.lines?.size ?? 0))
@@ -344,6 +349,7 @@ test.describe('local gameplay canvas input', () => {
             .poll(() => page.evaluate(() => window.__shapeKeeperActiveGame?.lines?.size ?? 0))
             .toBe(2);
 
+        await openGameControls(page);
         await page.locator('#replayBackBtn').click();
         await expect
             .poll(() =>

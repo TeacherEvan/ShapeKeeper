@@ -234,12 +234,110 @@
     position: relative;
     z-index: 1;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     gap: 10px;
     padding: 6px 10px;
+    /* Respect the device's bottom safe area (iOS home indicator, Android gesture bar)
+       so the controls don't sit underneath the system nav. */
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
     background: var(--bg-secondary);
     border-top: 2px solid var(--border-color);
+}
+
+/* --- Mobile controls panel -----------------------------------------------
+ * The footer action buttons (Undo/Redo/Save/Replay/Sound/Populate) used to
+ * live directly inside .game-footer and got cut off on short mobile viewports
+ * (the system nav bar overlaid the bottom row). We now wrap them in a
+ * collapsible #gameControlsPanel that opens behind a small toggle button.
+ * The toggle requires a double-tap on first open (UX guard against accidental
+ * triggers during gameplay); a single tap closes it.
+ * ----------------------------------------------------------------------- */
+.controls-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary, inherit);
+    background: var(--accent-secondary);
+    color: #fff;
+    border: 2px solid var(--accent-secondary-strong, transparent);
+    border-radius: 999px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        transform var(--transition-fast, 120ms) ease,
+        background var(--transition-fast, 120ms) ease,
+        box-shadow var(--transition-fast, 120ms) ease;
+    box-shadow: var(--shadow-soft, 0 2px 6px rgba(0, 0, 0, 0.12));
+}
+
+.controls-toggle-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.controls-toggle-btn:active {
+    transform: translateY(0);
+}
+
+/* First tap recorded (waiting for the second tap to open the panel) */
+.controls-toggle-btn.primed {
+    background: var(--accent-secondary-strong, #ff6a2a);
+    animation: controls-primed-pulse 0.6s ease-out;
+}
+
+@keyframes controls-primed-pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.08);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.controls-toggle-btn[aria-expanded='true'] {
+    background: var(--accent-danger, #f44336);
+    border-color: var(--accent-danger-strong, #c62828);
+}
+
+.controls-toggle-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+/* The panel itself: starts hidden via the `hidden` attribute, transitions
+   on `aria-expanded` of the toggle for a soft slide-in. Uses max-height
+   rather than display:none so the buttons animate rather than pop. */
+.game-controls-panel {
+    flex-basis: 100%;
+    order: 99;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition:
+        max-height 240ms ease,
+        opacity 180ms ease,
+        padding 240ms ease;
+    padding: 0 10px;
+}
+
+.game-controls-panel:not([hidden]) {
+    max-height: 320px; /* tall enough for the wrap of 8 buttons on portrait phones */
+    opacity: 1;
+    padding: 10px;
+}
+
+.game-controls-panel .footer-buttons {
+    justify-content: center;
 }
 
 .turn-indicator {

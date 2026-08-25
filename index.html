@@ -535,51 +535,78 @@
                         aria-live="polite"
                         aria-atomic="true"
                     ></div>
-                    <div class="footer-buttons">
-                        <button id="undoBtn" class="populate-btn" aria-label="Undo last move">
-                            Undo
-                        </button>
-                        <button id="redoBtn" class="populate-btn" aria-label="Redo last move">
-                            Redo
-                        </button>
-                        <button id="saveLocalBtn" class="populate-btn" aria-label="Save local game">
-                            Save
-                        </button>
-                        <button
-                            id="replayBackBtn"
-                            class="populate-btn"
-                            aria-label="Replay step backward"
-                        >
-                            ◀ Step
-                        </button>
-                        <button
-                            id="replayForwardBtn"
-                            class="populate-btn"
-                            aria-label="Replay step forward"
-                        >
-                            Step ▶
-                        </button>
-                        <button
-                            id="replayRestartBtn"
-                            class="populate-btn"
-                            aria-label="Restart replay from beginning"
-                        >
-                            Replay ↺
-                        </button>
-                        <button
-                            id="soundToggle"
-                            class="sound-btn"
-                            aria-label="Toggle sound effects"
-                        >
-                            🔊
-                        </button>
-                        <button
-                            id="populateBtn"
-                            class="populate-btn"
-                            aria-label="Populate board with random lines"
-                        >
-                            Populate (10%)
-                        </button>
+                    <!--
+                        Mobile-first controls panel: by default only the toggle button is
+                        visible, so the action buttons (Undo/Redo/Save/Replay/Sound/Populate)
+                        never get cut off by the device nav bar. Tapping once shows a hint;
+                        tapping a second time within 500ms opens the panel. Closing is a
+                        single tap (no double-tap to close — getting back to gameplay should
+                        be easy). See `src/ui/GameControlsPanel.js` for the state machine.
+                    -->
+                    <button
+                        id="gameControlsToggleBtn"
+                        class="controls-toggle-btn"
+                        type="button"
+                        data-testid="game-controls-toggle"
+                        aria-expanded="false"
+                        aria-controls="gameControlsPanel"
+                        title="Tap once to hint, tap again to open"
+                    >
+                        <span class="controls-toggle-icon" aria-hidden="true">🎮</span>
+                        <span class="controls-toggle-label">Controls</span>
+                    </button>
+                    <div
+                        id="gameControlsPanel"
+                        class="game-controls-panel"
+                        hidden
+                        data-testid="game-controls-panel"
+                    >
+                        <div class="footer-buttons">
+                            <button id="undoBtn" class="populate-btn" aria-label="Undo last move">
+                                Undo
+                            </button>
+                            <button id="redoBtn" class="populate-btn" aria-label="Redo last move">
+                                Redo
+                            </button>
+                            <button id="saveLocalBtn" class="populate-btn" aria-label="Save local game">
+                                Save
+                            </button>
+                            <button
+                                id="replayBackBtn"
+                                class="populate-btn"
+                                aria-label="Replay step backward"
+                            >
+                                ◀ Step
+                            </button>
+                            <button
+                                id="replayForwardBtn"
+                                class="populate-btn"
+                                aria-label="Replay step forward"
+                            >
+                                Step ▶
+                            </button>
+                            <button
+                                id="replayRestartBtn"
+                                class="populate-btn"
+                                aria-label="Restart replay from beginning"
+                            >
+                                Replay ↺
+                            </button>
+                            <button
+                                id="soundToggle"
+                                class="sound-btn"
+                                aria-label="Toggle sound effects"
+                            >
+                                🔊
+                            </button>
+                            <button
+                                id="populateBtn"
+                                class="populate-btn"
+                                aria-label="Populate board with random lines"
+                            >
+                                Populate (10%)
+                            </button>
+                        </div>
                     </div>
                     <details class="achievement-panel" id="achievementPanel">
                         <summary class="achievement-panel-summary">

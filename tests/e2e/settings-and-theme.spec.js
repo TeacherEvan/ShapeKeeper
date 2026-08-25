@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { gotoApp } from './helpers/bootstrap-app.js';
+import { openGameControls } from './helpers/bootstrap.js';
 
 test.describe('Settings: theme and sound toggles', () => {
     test('theme toggle switches between light and dark and persists to localStorage', async ({
@@ -35,6 +36,7 @@ test.describe('Settings: theme and sound toggles', () => {
         await expect(page.getByTestId('game-screen')).toHaveClass(/active/);
 
         const soundToggle = page.locator('#soundToggle');
+        await openGameControls(page);
         // initial state: enabled -> 🔊, not muted
         await expect(soundToggle).toHaveText('🔊');
         await expect(soundToggle).not.toHaveClass(/muted/);

@@ -4,6 +4,7 @@
 
 import { DotsAndBoxesGame } from '../../../dots-and-boxes-game.js';
 import { exitFullscreen, requestFullscreen } from '../Fullscreen.js';
+import { bindGameControlsPanel, createGameControlsPanel } from '../GameControlsPanel.js';
 import {
     getSelectedGridSize,
     isFullscreenTriggered,
@@ -91,6 +92,16 @@ export function bindMenuEventHandlers(deps) {
     };
     localOpponentType?.addEventListener('change', syncLocalAIControls);
     syncLocalAIControls();
+
+    // Wire the mobile-first controls panel: a small toggle button that opens
+    // the action row behind a double-tap (UX guard against accidental triggers
+    // during gameplay). See src/ui/GameControlsPanel.js for the state machine.
+    const controlsToggleBtn = document.getElementById('gameControlsToggleBtn');
+    const controlsPanelEl = document.getElementById('gameControlsPanel');
+    if (controlsToggleBtn && controlsPanelEl) {
+        const controlsPanel = createGameControlsPanel();
+        bindGameControlsPanel(controlsPanel, controlsToggleBtn, controlsPanelEl);
+    }
 
     document.getElementById('localPlayBtn').addEventListener('click', () => {
         if (localTutorialMode) {
