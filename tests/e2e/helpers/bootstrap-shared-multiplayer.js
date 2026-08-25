@@ -520,6 +520,55 @@ export async function installSharedMockMultiplayer(
                         keepTurn: completedShapeCount > 0,
                     };
                 },
+                async tapSquare(squareKey) {
+                    const sharedState = ensureSharedState();
+                    const room = getActiveRoom(sharedState);
+                    if (!room) {
+                        return { error: 'Room not found' };
+                    }
+                    if (room.status !== 'playing') {
+                        return { error: 'Game is not in progress' };
+                    }
+                    const square = (room.gameState?.squares || []).find(
+                        (entry) => entry.squareKey === squareKey
+                    );
+                    if (!square) {
+                        return { error: 'Square not found' };
+                    }
+                    const me = getLocalPlayer(room);
+                    if (!me) {
+                        return { error: 'Player not found' };
+                    }
+                    if (me.playerIndex === square.playerIndex) {
+                        return { error: 'You cannot tap your own square' };
+                    }
+                    // Mirrors the server: increment taps, collapse multiplier
+                    // to 0.5x. The mock stores multiplier/effectiveMultiplier
+                    // on the square only when the test opts in (the real
+                    // `generateMultiplier` is server-side). For E2E we just
+                    // record the tap count.
+                    const nextTaps = (square.taps ?? 0) + 1;
+                    square.taps = nextTaps;
+                    if (
+                        square.multiplier &&
+                        square.multiplier.type === 'multiplier' &&
+                        (square.multiplier.value ?? 0) > 0.5
+                    ) {
+                        square.effectiveMultiplier = {
+                            type: 'multiplier',
+                            value: 0.5,
+                        };
+                    }
+                    room.updatedAt = Date.now();
+                    writeSharedState(sharedState);
+                    notifySubscribers('tap-square');
+                    return {
+                        success: true,
+                        squareKey,
+                        taps: nextTaps,
+                        effectiveMultiplier: square.effectiveMultiplier ?? square.multiplier,
+                    };
+                },
                 subscribeToGameState(callback) {
                     gameSubscribers.add(callback);
                     const gameState = clone(getActiveRoom()?.gameState || null);
