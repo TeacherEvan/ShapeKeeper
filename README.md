@@ -19,7 +19,8 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 - **Diagonal Lines** - Connect dots diagonally for alternative paths
 - **Two-player turn-based gameplay** - Players alternate turns, with bonus turns for completing shapes
 - **Turn-Based Online Multiplayer** - Chess-like communication with Convex backend
-- **Lobby System** - Create/join rooms with unique codes
+- **Live Lobby + Invite Link** - Real-time waiting room with a shareable `?join=…&passcode=…` URL and a one-tap copy button
+- **Silly [Adjective][Animal] passcodes** - Lobby auth codes like `EasterPig` and `SillyRabbit`, dynamically generated per room (no env, no random letters, no numbers)
 - **Smart turn logic** - Complete a square, keep your turn!
 - **Real-time score tracking** - Live updates for both players
 - **Party Mode 🎉** - ALL squares have tile effects (dares, hypotheticals, powerups, traps)
@@ -346,7 +347,16 @@ Contributions welcome! Feel free to:
 
 ## 📝 Version History
 
-### v4.3.0 (Current)
+### v4.4.0 (Live Lobby + Silly Passcode)
+
+- **Silly [Adjective][Animal] passcodes** - Lobby auth codes like `EasterPig` and `SillyRabbit`, dynamically generated per room. Replaces the static-env and 6-letter-random-letter approaches. No numbers, no human names, no real places — see `convex/rooms/shared.ts` for the word lists and the invariants in `convex/rooms/shared.test.js`.
+- **Live waiting room** - New `LiveLobbyManager` (`src/ui/LiveLobbyManager.js`) subscribes to Convex and renders the player list in realtime. Players see each other join without refreshing.
+- **Invite link** - New `🔗 Copy Invite Link` button on the lobby screen. Writes a `${origin}/?join=ROOMCODE&passcode=PASSCODE` URL to the clipboard. Falls back to a hidden readonly `<input>` + `document.execCommand` for insecure contexts.
+- **URL pre-fill** - Loading the app with `?join=…&passcode=…` jumps the user to the join screen with both inputs pre-filled. Documented in `docs/feature-multiplayer-lobby.md`.
+- **Backwards compat** - Legacy rooms (no `passcode` field) still allow code-only joining. The `passcode` column is `v.optional(v.string())` so the schema change is non-breaking.
+- **AGENTS.md** - New file documenting the passcode rules + live-lobby invariants + repo conventions for future agents.
+
+### v4.3.0 (Previous)
 
 - **Party Mode 🎉** - Renamed "Hypotheticals" to "Party Mode" - ALL squares have tile effects
 - **Turn-Based Multiplayer Optimization** - Chess-like communication prevents glitches
