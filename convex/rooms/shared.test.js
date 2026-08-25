@@ -57,7 +57,18 @@ describe('generateSillyPasscode', () => {
     it('avoids human-name word starts (e.g. Bob-cat should not match "Bob")', () => {
         // Each passcode is two words starting at capital letters. Check each word
         // independently against a small set of human-name first halves.
-        const firstNames = ['John', 'Jane', 'Bob', 'Alice', 'Charlie', 'David', 'Eve', 'Frank', 'Grace', 'Heidi'];
+        const firstNames = [
+            'John',
+            'Jane',
+            'Bob',
+            'Alice',
+            'Charlie',
+            'David',
+            'Eve',
+            'Frank',
+            'Grace',
+            'Heidi',
+        ];
         for (let i = 0; i < 500; i++) {
             const code = generateSillyPasscode();
             const parts = code.split(/(?=[A-Z])/);

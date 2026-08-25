@@ -3,7 +3,6 @@
  * Orchestrates all UI modules for the welcome screen
  */
 
-import { LobbyManager } from './src/ui/LobbyManager.js';
 import { LiveLobbyManager, getJoinParamsFromUrl } from './src/ui/LiveLobbyManager.js';
 import {
     handleGameStateUpdate,

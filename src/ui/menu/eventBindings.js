@@ -341,7 +341,7 @@ export function bindMenuEventHandlers(deps) {
                 try {
                     document.execCommand('copy');
                     showToast('Invite link copied (fallback).', 'success', 2000);
-                } catch (err) {
+                } catch (_err) {
                     showToast('Copy failed. Select the link manually.', 'error');
                 }
                 document.body.removeChild(input);

@@ -36,11 +36,7 @@
         if (typeof passcode === 'string' && passcode.length > 0) {
             args.passcode = passcode;
         }
-        const result = await shared.runMutation(
-            shared.api.rooms.joinRoom,
-            args,
-            'joining room'
-        );
+        const result = await shared.runMutation(shared.api.rooms.joinRoom, args, 'joining room');
 
         if (result?.roomId) {
             shared.state.currentRoomId = result.roomId;

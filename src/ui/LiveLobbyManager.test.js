@@ -27,7 +27,14 @@ describe('LiveLobbyManager — applySnapshot', () => {
 
     it('applies room fields and stores passcode', () => {
         m.applySnapshot({
-            room: { _id: 'r1', roomCode: 'ABC123', passcode: 'EasterPig', hostPlayerId: 's1', gridSize: 10, status: 'lobby' },
+            room: {
+                _id: 'r1',
+                roomCode: 'ABC123',
+                passcode: 'EasterPig',
+                hostPlayerId: 's1',
+                gridSize: 10,
+                status: 'lobby',
+            },
             players: [],
         });
         expect(m.roomId).toBe('r1');
@@ -43,9 +50,30 @@ describe('LiveLobbyManager — applySnapshot', () => {
         m.applySnapshot({
             room: { _id: 'r1', hostPlayerId: 's2', status: 'lobby' },
             players: [
-                { sessionId: 's3', name: 'Charlie', color: '#00FF00', isReady: false, isConnected: true, playerIndex: 2 },
-                { sessionId: 's1', name: 'Alice', color: '#FF0000', isReady: true, isConnected: true, playerIndex: 0 },
-                { sessionId: 's2', name: 'Bob', color: '#0000FF', isReady: false, isConnected: true, playerIndex: 1 },
+                {
+                    sessionId: 's3',
+                    name: 'Charlie',
+                    color: '#00FF00',
+                    isReady: false,
+                    isConnected: true,
+                    playerIndex: 2,
+                },
+                {
+                    sessionId: 's1',
+                    name: 'Alice',
+                    color: '#FF0000',
+                    isReady: true,
+                    isConnected: true,
+                    playerIndex: 0,
+                },
+                {
+                    sessionId: 's2',
+                    name: 'Bob',
+                    color: '#0000FF',
+                    isReady: false,
+                    isConnected: true,
+                    playerIndex: 1,
+                },
             ],
         });
         expect(m.players.map((p) => p.name)).toEqual(['Alice', 'Bob', 'Charlie']);
@@ -170,7 +198,10 @@ describe('getJoinParamsFromUrl', () => {
     });
 
     it('returns {roomCode} when only ?join is set', () => {
-        expect(getJoinParamsFromUrl('?join=ABC123')).toEqual({ roomCode: 'ABC123', passcode: null });
+        expect(getJoinParamsFromUrl('?join=ABC123')).toEqual({
+            roomCode: 'ABC123',
+            passcode: null,
+        });
     });
 
     it('returns {roomCode, passcode} when both set', () => {

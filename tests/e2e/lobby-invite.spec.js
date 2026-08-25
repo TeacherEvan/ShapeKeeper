@@ -8,8 +8,6 @@
  */
 import { expect, test } from '@playwright/test';
 
-import { gotoApp } from './helpers/bootstrap.js';
-
 test.describe('lobby invite link', () => {
     test('pre-fills the join screen from ?join=…&passcode=… URL params', async ({ page }) => {
         await page.goto('/?join=ABC123&passcode=EasterPig');
