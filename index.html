@@ -248,6 +248,27 @@
                                 📋
                             </button>
                         </div>
+                        <div class="room-passcode-section" id="lobbyPasscodeSection" hidden>
+                            <span class="room-label">Passcode:</span>
+                            <span
+                                class="room-passcode"
+                                id="roomPasscode"
+                                data-testid="room-passcode"
+                                >------</span
+                            >
+                        </div>
+                        <div class="invite-link-section">
+                            <button
+                                id="copyInviteLinkBtn"
+                                class="copy-btn invite-link-btn"
+                                title="Copy invite link (room code + passcode)"
+                                aria-label="Copy invite link"
+                                data-testid="copy-invite-link"
+                                type="button"
+                            >
+                                🔗 Copy Invite Link
+                            </button>
+                        </div>
                     </div>
 
                     <div class="lobby-settings">
@@ -347,6 +368,29 @@
                             maxlength="6"
                             aria-label="Room code"
                         />
+                    </div>
+
+                    <div class="setup-section">
+                        <h2>Lobby Passcode</h2>
+                        <label class="field-label" for="joinRoomPasscode"
+                            >Enter the silly passcode the host shared</label
+                        >
+                        <input
+                            type="text"
+                            id="joinRoomPasscode"
+                            class="room-code-input passcode-input"
+                            data-testid="join-room-passcode-input"
+                            placeholder="e.g. EasterPig"
+                            maxlength="32"
+                            spellcheck="false"
+                            autocomplete="off"
+                            aria-label="Lobby passcode"
+                        />
+                        <p class="field-hint">
+                            Newer lobbies require a passcode (e.g.
+                            <code>EasterPig</code>). The host shares this in the
+                            invite link.
+                        </p>
                     </div>
 
                     <div class="setup-section">

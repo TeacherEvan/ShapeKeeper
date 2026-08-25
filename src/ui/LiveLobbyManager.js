@@ -117,6 +117,44 @@ export class LiveLobbyManager {
         if (this.players.length < 2) return false;
         return this.players.every((p) => p.isReady);
     }
+
+    // --- Fallback (no-backend) shims ---------------------------------------
+    // The legacy LobbyManager exposes a few local-only mutators (createRoom,
+    // setGridSize, updateMyName, updateMyColor) that the event bindings call
+    // when window.ShapeKeeperConvex is missing. In online mode those branches
+    // are skipped, but the methods must still exist so a non-Convex boot
+    // doesn't blow up. They update the local state only.
+
+    createRoom(playerName) {
+        this.roomCode = this.roomCode || ''; // offline: no real code; the legacy placeholder
+        this.isHost = true;
+        this.mySessionId = this.mySessionId || 'local-host';
+        this.players = [
+            {
+                sessionId: this.mySessionId,
+                name: playerName || 'Host',
+                color: '#FF0000',
+                isReady: false,
+                isConnected: true,
+                playerIndex: 0,
+                isHost: true,
+            },
+        ];
+    }
+
+    setGridSize(size) {
+        if (Number.isFinite(size)) this.gridSize = size;
+    }
+
+    updateMyName(name) {
+        const me = this.players.find((p) => p.sessionId === this.mySessionId);
+        if (me && typeof name === 'string') me.name = name;
+    }
+
+    updateMyColor(color) {
+        const me = this.players.find((p) => p.sessionId === this.mySessionId);
+        if (me && typeof color === 'string') me.color = color;
+    }
 }
 
 /**

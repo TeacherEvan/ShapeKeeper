@@ -4,6 +4,21 @@
 
 export function updateLobbyUI(lobbyManager) {
     document.getElementById('roomCode').textContent = lobbyManager.roomCode || '------';
+
+    // Show the passcode section ONLY when a passcode has been generated.
+    // Legacy rooms and unfinished bootstraps hide it.
+    const passcodeSection = document.getElementById('lobbyPasscodeSection');
+    const passcodeEl = document.getElementById('roomPasscode');
+    if (passcodeSection && passcodeEl) {
+        if (lobbyManager.passcode) {
+            passcodeSection.hidden = false;
+            passcodeEl.textContent = lobbyManager.passcode;
+        } else {
+            passcodeSection.hidden = true;
+            passcodeEl.textContent = '------';
+        }
+    }
+
     document.getElementById('playerCount').textContent = lobbyManager.getPlayerCount();
 
     const playersList = document.getElementById('playersList');

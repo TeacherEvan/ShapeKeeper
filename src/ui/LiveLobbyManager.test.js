@@ -194,3 +194,22 @@ describe('getJoinParamsFromUrl', () => {
         });
     });
 });
+
+describe('invite link round-trip (buildInviteUrl -> getJoinParamsFromUrl)', () => {
+    it('a generated URL is parseable back to the same code + passcode', () => {
+        const m = new LiveLobbyManager();
+        m.roomCode = 'ABC123';
+        m.passcode = 'EasterPig';
+        const url = m.buildInviteUrl({ base: 'https://example.com' });
+        const parsed = getJoinParamsFromUrl(new URL(url).search);
+        expect(parsed).toEqual({ roomCode: 'ABC123', passcode: 'EasterPig' });
+    });
+
+    it('a generated URL without passcode still parses (legacy room)', () => {
+        const m = new LiveLobbyManager();
+        m.roomCode = 'ABC123';
+        const url = m.buildInviteUrl({ base: 'https://example.com' });
+        const parsed = getJoinParamsFromUrl(new URL(url).search);
+        expect(parsed).toEqual({ roomCode: 'ABC123', passcode: null });
+    });
+});
