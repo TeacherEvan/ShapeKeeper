@@ -7,6 +7,7 @@ import {
     populateLinesHandler,
     resetGameHandler,
     revealMultiplierHandler,
+    tapSquareHandler,
 } from './games/state';
 
 // Draw a line (make a move)
@@ -36,6 +37,19 @@ export const revealMultiplier = mutation({
         squareKey: v.string(),
     },
     handler: revealMultiplierHandler,
+});
+
+// Opponent-tap mechanic (multiplayer only). An opponent taps a completed
+// square to reduce its effective multiplier from the raw value (typically
+// 2x) to 0.5x. The owner then reveals to score — but with the reduced
+// value. See docs/feature-opponent-tap.md.
+export const tapSquare = mutation({
+    args: {
+        roomId: v.id('rooms'),
+        sessionId: v.string(),
+        squareKey: v.string(),
+    },
+    handler: tapSquareHandler,
 });
 
 // End game early (host only, or by vote)

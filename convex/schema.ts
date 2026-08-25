@@ -63,6 +63,20 @@ export default defineSchema({
                 value: v.optional(v.number()),
             })
         ),
+        // Opponent tap mechanic (multiplayer only): every tap by an opponent
+        // reduces the effective multiplier to 0.5x (capped). Taps on the
+        // owner's own square, on already-revealed squares, or on truth-or-dare
+        // squares are no-ops (see `tapSquareHandler`). Default = 0.
+        taps: v.optional(v.number()),
+        // The post-tap effective multiplier (cached on the row so the game-state
+        // subscription doesn't have to recompute it for every client). Server is
+        // the source of truth; clients render the value as-is.
+        effectiveMultiplier: v.optional(
+            v.object({
+                type: v.union(v.literal('multiplier'), v.literal('truthOrDare')),
+                value: v.optional(v.number()),
+            })
+        ),
         createdAt: v.number(),
     })
         .index('by_room', ['roomId'])

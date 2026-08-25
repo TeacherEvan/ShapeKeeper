@@ -81,6 +81,12 @@ export async function checkForCompletedSquares(
             playerId,
             playerIndex,
             multiplier,
+            // Initialise the effective multiplier to the same value as the raw
+            // multiplier; tapSquareHandler will overwrite it when an opponent
+            // taps the box. Stored as a separate column so the game-state
+            // subscription can ship the post-tap value without recomputation.
+            effectiveMultiplier: multiplier,
+            taps: 0,
             createdAt: Date.now(),
         });
 
