@@ -120,24 +120,6 @@ export function bindMenuEventHandlers(deps) {
         });
     });
 
-    const localCustomGridInput = document.getElementById('localCustomGridSize');
-    const applyLocalCustomGrid = document.getElementById('applyLocalCustomGrid');
-
-    applyLocalCustomGrid?.addEventListener('click', () => {
-        const rawValue = Number(localCustomGridInput?.value);
-        if (!Number.isInteger(rawValue) || rawValue < 4 || rawValue > 60) {
-            showToast('Custom grid size must be an integer between 4 and 60.', 'warning');
-            return;
-        }
-
-        document
-            .querySelectorAll('.local-grid-btn')
-            .forEach((candidate) => candidate.classList.remove('selected'));
-        setSelectedGridSize(rawValue);
-        document.getElementById('startLocalGame').disabled = false;
-        showToast(`Custom grid size set to ${rawValue}x${rawValue}.`, 'success', 2000);
-    });
-
     document.getElementById('backToMenuFromLocal').addEventListener('click', () => {
         showScreen('mainMenuScreen');
     });

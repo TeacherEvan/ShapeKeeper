@@ -19,14 +19,6 @@ test.describe('Local setup options', () => {
         await expect(start).toBeEnabled();
     });
 
-    test('applying a custom grid size enables Start', async ({ page }) => {
-        await openLocalSetup(page);
-
-        await page.locator('#localCustomGridSize').fill('7');
-        await page.locator('#applyLocalCustomGrid').click();
-        await expect(page.locator('#startLocalGame')).toBeEnabled();
-    });
-
     test('AI difficulty is disabled for human opponent and enabled for AI', async ({ page }) => {
         await openLocalSetup(page);
 

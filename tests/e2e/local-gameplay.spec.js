@@ -228,26 +228,6 @@ test.describe('local gameplay canvas input', () => {
             .toEqual({ currentPlayer: 1, lineCount: 2 });
     });
 
-    test('supports custom grid input for local games', async ({ page }) => {
-        await gotoApp(page);
-        await page.locator('#localPlayBtn').click();
-        await page.locator('#localCustomGridSize').fill('12');
-        await page.locator('#applyLocalCustomGrid').click();
-        await page.locator('#startLocalGame').click();
-
-        await expect
-            .poll(() =>
-                page.evaluate(() => ({
-                    gridRows: window.__shapeKeeperActiveGame?.gridRows,
-                    gridCols: window.__shapeKeeperActiveGame?.gridCols,
-                    gridSize: window.__shapeKeeperActiveGame?.gridSize,
-                }))
-            )
-            .toMatchObject({
-                gridSize: 12,
-            });
-    });
-
     test('supports undo and redo in local mode', async ({ page }) => {
         await startLocalGame(page);
         const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
