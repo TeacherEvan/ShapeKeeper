@@ -217,9 +217,7 @@
 }
 
 #gameCanvas {
-    border: 2px solid var(--border-color);
     cursor: pointer;
-    background: var(--canvas-bg);
 }
 
 #gameCanvas:focus-visible {
