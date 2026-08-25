@@ -41,6 +41,11 @@ function handleCellInteraction(handler, clickedCell) {
         const isSquareOwner =
             clickedHasSquare && handler.game.squares[clickedCell] === handler.game.myPlayerNumber;
         if (!isSquareOwner) {
+            // Opponent-tap mechanic: an opponent clicking a completed square
+            // reduces its effective multiplier to 0.5x (capped). The server
+            // validates and broadcasts the change via the Convex subscription.
+            // See `docs/feature-opponent-tap.md` and `convex/games/state.ts`.
+            handler.game.tapSquare(clickedCell);
             return true;
         }
     }
@@ -158,6 +163,9 @@ export function handleTouchEnd(handler, event) {
                     clickedHasSquare &&
                     handler.game.squares[clickedCell] === handler.game.myPlayerNumber;
                 if (!isSquareOwner) {
+                    // Opponent tap — same as the mouse path. See
+                    // handleCellInteraction above for the full description.
+                    handler.game.tapSquare(clickedCell);
                     handler.activeTouches.delete(touch.identifier);
                     continue;
                 }

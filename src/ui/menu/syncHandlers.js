@@ -198,8 +198,27 @@ export function handleAuthoritativeGameState(gameState, deps) {
                 };
             }
 
+            // Track taps per-square for the visual ✋ indicator. The renderer
+            // reads game.squareTaps; missing key is treated as 0.
+            if (game.squareTaps) {
+                game.squareTaps[key] = square.taps ?? 0;
+            }
+
             game.triggerSquareAnimation(key, square.playerIndex + 1);
             game.playSquareSound(game.comboCount);
+        } else if (game.squareTaps && (square.taps ?? 0) > (game.squareTaps[key] ?? 0)) {
+            // The square was already known to us, but a NEW tap has landed.
+            // Update the local counter (so the renderer can show ✋) and
+            // refresh the effective multiplier from the server so the next
+            // reveal uses the right value. We do NOT trigger a re-animation
+            // — taps should feel snappy and lightweight, not a re-claim.
+            game.squareTaps[key] = square.taps ?? 0;
+            if (square.effectiveMultiplier) {
+                game.squareMultipliers[key] = {
+                    type: square.effectiveMultiplier.type,
+                    value: square.effectiveMultiplier.value,
+                };
+            }
         }
     });
 

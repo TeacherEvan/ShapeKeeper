@@ -48,6 +48,7 @@
         startGame: roomOperations.startGame,
         drawLine: gameOperations.drawLine,
         revealMultiplier: gameOperations.revealMultiplier,
+        tapSquare: gameOperations.tapSquare,
         populateLines: gameOperations.populateLines,
         subscribeToRoom: subscriptions.subscribeToRoom,
         subscribeToGameState: subscriptions.subscribeToGameState,

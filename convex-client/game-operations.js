@@ -40,6 +40,28 @@
         );
     }
 
+    /**
+     * Opponent-tap mechanic: tap a completed opponent's square to reduce
+     * its effective multiplier to 0.5x. Multiplayer-only — the server
+     * rejects self-taps, truthOrDare squares, and revealed squares. See
+     * `docs/feature-opponent-tap.md` for the design.
+     */
+    async function tapSquare(squareKey) {
+        if (!shared.state.currentRoomId) {
+            return { error: 'Not in a room' };
+        }
+
+        return shared.runMutation(
+            shared.api.games.tapSquare,
+            {
+                roomId: shared.state.currentRoomId,
+                sessionId: shared.getSessionId(),
+                squareKey,
+            },
+            'tapping opponent square'
+        );
+    }
+
     async function getGameState() {
         if (!shared.state.currentRoomId) {
             return null;
@@ -105,5 +127,6 @@
         populateLines,
         resetGame,
         revealMultiplier,
+        tapSquare,
     };
 })(window);

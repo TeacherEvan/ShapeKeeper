@@ -59,6 +59,11 @@ export class GameState {
 
         this.game.squareMultipliers = {};
         this.game.revealedMultipliers = new Set();
+        // Per-square tap count for the opponent-tap mechanic. The renderer
+        // shows a ✋ on squares where squareTaps[key] > 0. The server is the
+        // source of truth; this is a local cache populated from the
+        // game-state subscription. See docs/feature-opponent-tap.md.
+        this.game.squareTaps = {};
 
         this.game.tileEffects = {};
         this.game.revealedEffects = new Set();
