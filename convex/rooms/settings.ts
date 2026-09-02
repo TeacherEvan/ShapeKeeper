@@ -1,3 +1,5 @@
+import { isAuthorisedHostAsync } from '../auth/token';
+
 export async function updateGridSizeHandler(ctx: any, args: any) {
     console.log('[updateGridSize] Update grid size request', {
         roomId: args.roomId,
@@ -11,12 +13,15 @@ export async function updateGridSizeHandler(ctx: any, args: any) {
         return { error: 'Room not found' };
     }
 
-    if (room.hostPlayerId !== args.sessionId) {
-        console.log('[updateGridSize] Error: Not host', {
+    if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
+        console.log('[updateGridSize] Error: Unauthorized host', {
+            roomId: args.roomId,
             requestingSession: args.sessionId,
             hostSession: room.hostPlayerId,
+            hasHostTokenHash: Boolean(room.hostTokenHash),
+            hasPresentedToken: Boolean(args.hostToken),
         });
-        return { error: 'Only the host can change grid size' };
+        return { error: 'Unauthorized' };
     }
 
     if (room.status !== 'lobby') {
@@ -54,12 +59,15 @@ export async function updatePartyModeHandler(ctx: any, args: any) {
         return { error: 'Room not found' };
     }
 
-    if (room.hostPlayerId !== args.sessionId) {
-        console.log('[updatePartyMode] Error: Not host', {
+    if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
+        console.log('[updatePartyMode] Error: Unauthorized host', {
+            roomId: args.roomId,
             requestingSession: args.sessionId,
             hostSession: room.hostPlayerId,
+            hasHostTokenHash: Boolean(room.hostTokenHash),
+            hasPresentedToken: Boolean(args.hostToken),
         });
-        return { error: 'Only the host can change party mode' };
+        return { error: 'Unauthorized' };
     }
 
     if (room.status !== 'lobby') {
@@ -96,12 +104,15 @@ export async function startGameHandler(ctx: any, args: any) {
         return { error: 'Room not found' };
     }
 
-    if (room.hostPlayerId !== args.sessionId) {
-        console.log('[startGame] Error: Not host', {
+    if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
+        console.log('[startGame] Error: Unauthorized host', {
+            roomId: args.roomId,
             requestingSession: args.sessionId,
             hostSession: room.hostPlayerId,
+            hasHostTokenHash: Boolean(room.hostTokenHash),
+            hasPresentedToken: Boolean(args.hostToken),
         });
-        return { error: 'Only the host can start the game' };
+        return { error: 'Unauthorized' };
     }
 
     if (room.status !== 'lobby') {
@@ -123,7 +134,6 @@ export async function startGameHandler(ctx: any, args: any) {
         players: players.map((player: any) => ({
             name: player.name,
             isReady: player.isReady,
-            sessionId: player.sessionId,
         })),
     });
 

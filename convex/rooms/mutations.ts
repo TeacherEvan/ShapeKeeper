@@ -1,3 +1,4 @@
+import { generateHostToken, hashToken } from '../auth/token';
 import { DEFAULT_COLORS, generateRoomCode } from './shared';
 
 export async function createRoomHandler(ctx: any, args: any) {
@@ -26,9 +27,12 @@ export async function createRoomHandler(ctx: any, args: any) {
     }
 
     const now = Date.now();
+    const hostToken = generateHostToken();
+    const hostTokenHash = await hashToken(hostToken);
     const roomId = await ctx.db.insert('rooms', {
         roomCode,
         hostPlayerId: args.sessionId,
+        hostTokenHash: hostTokenHash ?? undefined,
         gridSize: args.gridSize,
         partyMode: args.partyMode !== false,
         status: 'lobby',
@@ -52,7 +56,11 @@ export async function createRoomHandler(ctx: any, args: any) {
     });
 
     console.log('[createRoom] Host player added', { roomId, sessionId: args.sessionId });
-    return { roomId, roomCode };
+    // The hostToken is shown ONCE. The browser must stash it in sessionStorage
+    // and pass it on every host-gated mutation. The server only stores the
+    // SHA-256 hash, so a leak of the room row cannot be used to forge host
+    // actions.
+    return { roomId, roomCode, hostToken };
 }
 
 export async function joinRoomHandler(ctx: any, args: any) {

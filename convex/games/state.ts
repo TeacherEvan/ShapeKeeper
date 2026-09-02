@@ -1,3 +1,4 @@
+import { isAuthorisedHostAsync } from '../auth/token';
 import { POPULATE_PLAYER_INDEX } from './shared';
 import { validateLineKey } from './line-validation';
 
@@ -105,8 +106,15 @@ export async function endGameHandler(ctx: any, args: any) {
         return { error: 'Room not found' };
     }
 
-    if (room.hostPlayerId !== args.sessionId) {
-        return { error: 'Only the host can end the game' };
+    if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
+        console.log('[endGame] Error: Unauthorized host', {
+            roomId: args.roomId,
+            requestingSession: args.sessionId,
+            hostSession: room.hostPlayerId,
+            hasHostTokenHash: Boolean(room.hostTokenHash),
+            hasPresentedToken: Boolean(args.hostToken),
+        });
+        return { error: 'Unauthorized' };
     }
 
     await ctx.db.patch(args.roomId, {
@@ -131,12 +139,15 @@ export async function resetGameHandler(ctx: any, args: any) {
         return { error: 'Room not found' };
     }
 
-    if (room.hostPlayerId !== args.sessionId) {
-        console.log('[resetGame] Error: Not host', {
+    if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
+        console.log('[resetGame] Error: Unauthorized host', {
+            roomId: args.roomId,
             requestingSession: args.sessionId,
             hostSession: room.hostPlayerId,
+            hasHostTokenHash: Boolean(room.hostTokenHash),
+            hasPresentedToken: Boolean(args.hostToken),
         });
-        return { error: 'Only the host can reset the game' };
+        return { error: 'Unauthorized' };
     }
 
     const lines = await ctx.db
@@ -205,12 +216,15 @@ export async function populateLinesHandler(ctx: any, args: any) {
         return { error: 'Game not in progress' };
     }
 
-    if (room.hostPlayerId !== args.sessionId) {
-        console.log('[populateLines] Error: Not host', {
+    if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
+        console.log('[populateLines] Error: Unauthorized host', {
+            roomId: args.roomId,
             requestingSession: args.sessionId,
             hostSession: room.hostPlayerId,
+            hasHostTokenHash: Boolean(room.hostTokenHash),
+            hasPresentedToken: Boolean(args.hostToken),
         });
-        return { error: 'Only the host can populate lines' };
+        return { error: 'Unauthorized' };
     }
 
     const hostPlayer = await ctx.db

@@ -6,6 +6,12 @@ export default defineSchema({
     rooms: defineTable({
         roomCode: v.string(), // 6-character code for joining
         hostPlayerId: v.string(), // Session ID of the host
+        // SHA-256 of the server-issued hostToken. Created in createRoom and
+        // required by every host-gated mutation. Optional only because rooms
+        // created before this deploy do not have it; the auth helper
+        // isAuthorisedHost falls back to a sessionId-only check for those
+        // legacy rooms.
+        hostTokenHash: v.optional(v.string()),
         gridSize: v.number(), // 5, 10, 20, or 30
         partyMode: v.optional(v.boolean()), // Party mode enabled (tile effects)
         status: v.union(v.literal('lobby'), v.literal('playing'), v.literal('finished')),

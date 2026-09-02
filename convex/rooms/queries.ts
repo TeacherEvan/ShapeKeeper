@@ -1,13 +1,12 @@
-export async function getRoomByCodeHandler(ctx: any, args: any) {
-    console.log('[getRoomByCode] Query room by code', { roomCode: args.roomCode });
+import { projectPlayersForClient, projectRoomForClient } from '../auth/token';
 
+export async function getRoomByCodeHandler(ctx: any, args: any) {
     const room = await ctx.db
         .query('rooms')
         .withIndex('by_code', (q: any) => q.eq('roomCode', args.roomCode.toUpperCase()))
         .first();
 
     if (!room) {
-        console.log('[getRoomByCode] Room not found', { roomCode: args.roomCode });
         return null;
     }
 
@@ -16,16 +15,17 @@ export async function getRoomByCodeHandler(ctx: any, args: any) {
         .withIndex('by_room', (q: any) => q.eq('roomId', room._id))
         .collect();
 
-    console.log('[getRoomByCode] Room found', {
-        roomId: room._id,
-        roomCode: room.roomCode,
-        status: room.status,
-        playerCount: players.length,
-    });
-
+    // Public projection: strips hostTokenHash, hostPlayerId, and every
+    // player's sessionId. Adds server-computed isHost and isYou when the
+    // caller supplies their sessionId, so the browser can identify its own
+    // row and know whether it is the host — without ever learning anyone
+    // else's sessionId.
     return {
-        ...room,
-        players: players.sort((a: any, b: any) => a.playerIndex - b.playerIndex),
+        ...projectRoomForClient(room, args.sessionId),
+        players: projectPlayersForClient(
+            players.sort((a: any, b: any) => a.playerIndex - b.playerIndex),
+            args.sessionId
+        ),
     };
 }
 
@@ -41,7 +41,10 @@ export async function getRoomHandler(ctx: any, args: any) {
         .collect();
 
     return {
-        ...room,
-        players: players.sort((a: any, b: any) => a.playerIndex - b.playerIndex),
+        ...projectRoomForClient(room, args.sessionId),
+        players: projectPlayersForClient(
+            players.sort((a: any, b: any) => a.playerIndex - b.playerIndex),
+            args.sessionId
+        ),
     };
 }
