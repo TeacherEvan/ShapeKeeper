@@ -1,4 +1,5 @@
 import { projectPlayersForClient, projectRoomForClient } from '../auth/token';
+import { log, errorLog, warn } from '../log';
 
 export async function getRoomByCodeHandler(ctx: any, args: any) {
     const room = await ctx.db

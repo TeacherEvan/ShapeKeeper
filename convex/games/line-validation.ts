@@ -1,4 +1,5 @@
 import { normalizeLineKey } from './shared';
+import { log, errorLog, warn } from '../log';
 
 /**
  * Validate and canonicalize a line key against the room's dot grid.

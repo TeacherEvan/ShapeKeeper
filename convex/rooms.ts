@@ -9,6 +9,7 @@ import {
 } from './rooms/mutations';
 import { getRoomByCodeHandler, getRoomHandler } from './rooms/queries';
 import { startGameHandler, updateGridSizeHandler, updatePartyModeHandler } from './rooms/settings';
+import { log, errorLog, warn } from './log';
 
 // Create a new room
 export const createRoom = mutation({

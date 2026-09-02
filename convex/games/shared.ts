@@ -1,3 +1,5 @@
+import { log, errorLog, warn } from '../log';
+
 export const POPULATE_PLAYER_INDEX = 2;
 
 export function normalizeLineKey(r1: number, c1: number, r2: number, c2: number): string {

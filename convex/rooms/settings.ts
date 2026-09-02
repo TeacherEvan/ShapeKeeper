@@ -1,7 +1,8 @@
 import { isAuthorisedHostAsync } from '../auth/token';
+import { log, errorLog, warn } from '../log';
 
 export async function updateGridSizeHandler(ctx: any, args: any) {
-    console.log('[updateGridSize] Update grid size request', {
+    log('[updateGridSize] Update grid size request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
         newGridSize: args.gridSize,
@@ -9,12 +10,12 @@ export async function updateGridSizeHandler(ctx: any, args: any) {
 
     const room = await ctx.db.get(args.roomId);
     if (!room) {
-        console.log('[updateGridSize] Error: Room not found', { roomId: args.roomId });
+        log('[updateGridSize] Error: Room not found', { roomId: args.roomId });
         return { error: 'Room not found' };
     }
 
     if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
-        console.log('[updateGridSize] Error: Unauthorized host', {
+        log('[updateGridSize] Error: Unauthorized host', {
             roomId: args.roomId,
             requestingSession: args.sessionId,
             hostSession: room.hostPlayerId,
@@ -25,7 +26,7 @@ export async function updateGridSizeHandler(ctx: any, args: any) {
     }
 
     if (room.status !== 'lobby') {
-        console.log('[updateGridSize] Error: Game in progress', {
+        log('[updateGridSize] Error: Game in progress', {
             roomId: args.roomId,
             status: room.status,
         });
@@ -37,7 +38,7 @@ export async function updateGridSizeHandler(ctx: any, args: any) {
         updatedAt: Date.now(),
     });
 
-    console.log('[updateGridSize] Grid size updated', {
+    log('[updateGridSize] Grid size updated', {
         roomId: args.roomId,
         oldGridSize: room.gridSize,
         newGridSize: args.gridSize,
@@ -47,7 +48,7 @@ export async function updateGridSizeHandler(ctx: any, args: any) {
 }
 
 export async function updatePartyModeHandler(ctx: any, args: any) {
-    console.log('[updatePartyMode] Update party mode request', {
+    log('[updatePartyMode] Update party mode request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
         newPartyMode: args.partyMode,
@@ -55,12 +56,12 @@ export async function updatePartyModeHandler(ctx: any, args: any) {
 
     const room = await ctx.db.get(args.roomId);
     if (!room) {
-        console.log('[updatePartyMode] Error: Room not found', { roomId: args.roomId });
+        log('[updatePartyMode] Error: Room not found', { roomId: args.roomId });
         return { error: 'Room not found' };
     }
 
     if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
-        console.log('[updatePartyMode] Error: Unauthorized host', {
+        log('[updatePartyMode] Error: Unauthorized host', {
             roomId: args.roomId,
             requestingSession: args.sessionId,
             hostSession: room.hostPlayerId,
@@ -71,7 +72,7 @@ export async function updatePartyModeHandler(ctx: any, args: any) {
     }
 
     if (room.status !== 'lobby') {
-        console.log('[updatePartyMode] Error: Game in progress', {
+        log('[updatePartyMode] Error: Game in progress', {
             roomId: args.roomId,
             status: room.status,
         });
@@ -83,7 +84,7 @@ export async function updatePartyModeHandler(ctx: any, args: any) {
         updatedAt: Date.now(),
     });
 
-    console.log('[updatePartyMode] Party mode updated', {
+    log('[updatePartyMode] Party mode updated', {
         roomId: args.roomId,
         oldPartyMode: room.partyMode,
         newPartyMode: args.partyMode,
@@ -93,19 +94,19 @@ export async function updatePartyModeHandler(ctx: any, args: any) {
 }
 
 export async function startGameHandler(ctx: any, args: any) {
-    console.log('[startGame] Start game request', {
+    log('[startGame] Start game request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
     });
 
     const room = await ctx.db.get(args.roomId);
     if (!room) {
-        console.log('[startGame] Error: Room not found', { roomId: args.roomId });
+        log('[startGame] Error: Room not found', { roomId: args.roomId });
         return { error: 'Room not found' };
     }
 
     if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
-        console.log('[startGame] Error: Unauthorized host', {
+        log('[startGame] Error: Unauthorized host', {
             roomId: args.roomId,
             requestingSession: args.sessionId,
             hostSession: room.hostPlayerId,
@@ -116,7 +117,7 @@ export async function startGameHandler(ctx: any, args: any) {
     }
 
     if (room.status !== 'lobby') {
-        console.log('[startGame] Error: Game already started', {
+        log('[startGame] Error: Game already started', {
             roomId: args.roomId,
             status: room.status,
         });
@@ -128,7 +129,7 @@ export async function startGameHandler(ctx: any, args: any) {
         .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
         .collect();
 
-    console.log('[startGame] Validating players', {
+    log('[startGame] Validating players', {
         roomId: args.roomId,
         playerCount: players.length,
         players: players.map((player: any) => ({
@@ -138,7 +139,7 @@ export async function startGameHandler(ctx: any, args: any) {
     });
 
     if (players.length < 2) {
-        console.log('[startGame] Error: Not enough players', { playerCount: players.length });
+        log('[startGame] Error: Not enough players', { playerCount: players.length });
         return { error: 'Need at least 2 players to start' };
     }
 
@@ -146,7 +147,7 @@ export async function startGameHandler(ctx: any, args: any) {
         (player: any) => player.isReady || player.sessionId === room.hostPlayerId
     );
     if (!allReady) {
-        console.log('[startGame] Error: Not all players ready', {
+        log('[startGame] Error: Not all players ready', {
             notReady: players
                 .filter((player: any) => !player.isReady && player.sessionId !== room.hostPlayerId)
                 .map((player: any) => player.name),
@@ -162,7 +163,7 @@ export async function startGameHandler(ctx: any, args: any) {
         updatedAt: Date.now(),
     });
 
-    console.log('[startGame] Game started successfully', {
+    log('[startGame] Game started successfully', {
         roomId: args.roomId,
         playerCount: players.length,
         gridSize: room.gridSize,
