@@ -1,4 +1,5 @@
 import { POPULATE_PLAYER_INDEX } from './shared';
+import { validateLineKey } from './line-validation';
 
 export async function getGameStateHandler(ctx: any, args: any) {
     const room = await ctx.db.get(args.roomId);
@@ -66,6 +67,10 @@ export async function revealMultiplierHandler(ctx: any, args: any) {
         return { error: 'No multiplier on this square' };
     }
 
+    if (square.multiplierRevealed) {
+        return { error: 'Multiplier already revealed' };
+    }
+
     console.log('[revealMultiplier] Multiplier found', {
         squareKey: args.squareKey,
         multiplier: square.multiplier,
@@ -83,6 +88,10 @@ export async function revealMultiplierHandler(ctx: any, args: any) {
             bonus: bonus - 1,
         });
     }
+
+    // Mark the effect consumed server-side. Client-side `revealedMultipliers`
+    // is only a UI optimization and cannot be trusted for preventing replays.
+    await ctx.db.patch(square._id, { multiplierRevealed: true });
 
     return {
         success: true,
@@ -219,6 +228,22 @@ export async function populateLinesHandler(ctx: any, args: any) {
         return { error: 'Host player not found' };
     }
 
+    const MAX_POPULATE_LINES = 2000;
+    if (args.lineKeys.length > MAX_POPULATE_LINES) {
+        return { error: `Too many lines (max ${MAX_POPULATE_LINES})` };
+    }
+
+    const validatedLineKeys: string[] = [];
+    const seenLineKeys = new Set<string>();
+    for (const lineKey of args.lineKeys) {
+        const validated = validateLineKey(lineKey, room.gridSize);
+        if (!validated || seenLineKeys.has(validated)) {
+            return { error: 'Invalid or duplicate line in populate request' };
+        }
+        seenLineKeys.add(validated);
+        validatedLineKeys.push(validated);
+    }
+
     console.log('[populateLines] Starting line insertion', {
         hostPlayerId: hostPlayer._id,
         linesToInsert: args.lineKeys.length,
@@ -227,7 +252,7 @@ export async function populateLinesHandler(ctx: any, args: any) {
     let insertedCount = 0;
     let skippedCount = 0;
 
-    for (const lineKey of args.lineKeys) {
+    for (const lineKey of validatedLineKeys) {
         const existingLine = await ctx.db
             .query('lines')
             .withIndex('by_room_and_key', (q: any) =>

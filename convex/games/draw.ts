@@ -1,4 +1,5 @@
 import { checkForCompletedSquares } from './squares';
+import { validateLineKey } from './line-validation';
 
 export async function drawLineHandler(ctx: any, args: any) {
     console.log('[drawLine] Line draw request', {
@@ -19,6 +20,16 @@ export async function drawLineHandler(ctx: any, args: any) {
             status: room.status,
         });
         return { error: 'Game not in progress' };
+    }
+
+    const validatedLineKey = validateLineKey(args.lineKey, room.gridSize);
+    if (!validatedLineKey) {
+        console.log('[drawLine] Error: Invalid line key', {
+            roomId: args.roomId,
+            lineKey: args.lineKey,
+            gridSize: room.gridSize,
+        });
+        return { error: 'Invalid line' };
     }
 
     const players = await ctx.db

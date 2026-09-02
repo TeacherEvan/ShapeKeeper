@@ -29,15 +29,22 @@ function dispatchCanvasClick(canvas, x, y) {
     );
 }
 
-function dispatchCanvasTouchEvent(canvas, type, touches) {
-    const event = new Event(type, {
-        bubbles: true,
-        cancelable: true,
-    });
-    Object.defineProperty(event, 'changedTouches', {
-        configurable: true,
-        value: touches,
-    });
+function dispatchCanvasPointerEvent(
+    canvas,
+    type,
+    { clientX, clientY, pointerId = 1, pointerType = 'touch', button = 0 }
+) {
+    const event = new Event(type, { bubbles: true, cancelable: true });
+    for (const [key, value] of Object.entries({
+        clientX,
+        clientY,
+        pointerId,
+        pointerType,
+        button,
+    })) {
+        Object.defineProperty(event, key, { configurable: true, value });
+    }
+    event.preventDefault = vi.fn();
     canvas.dispatchEvent(event);
 }
 
@@ -153,19 +160,86 @@ describe('Root InputHandler canvas lifecycle', () => {
         const canvas = createCanvas();
         const handler = new InputHandler(canvas, game);
 
-        dispatchCanvasTouchEvent(canvas, 'touchstart', [
-            { clientX: 20, clientY: 20, identifier: 1 },
-        ]);
-        dispatchCanvasTouchEvent(canvas, 'touchend', [{ clientX: 20, clientY: 20, identifier: 1 }]);
+        dispatchCanvasPointerEvent(canvas, 'pointerdown', {
+            clientX: 20,
+            clientY: 20,
+            pointerId: 1,
+        });
+        dispatchCanvasPointerEvent(canvas, 'pointerup', {
+            clientX: 20,
+            clientY: 20,
+            pointerId: 1,
+        });
 
         expect(game.selectedDot).toEqual({ row: 0, col: 0 });
 
-        dispatchCanvasTouchEvent(canvas, 'touchstart', [
-            { clientX: 60, clientY: 20, identifier: 2 },
-        ]);
-        dispatchCanvasTouchEvent(canvas, 'touchend', [{ clientX: 60, clientY: 20, identifier: 2 }]);
+        dispatchCanvasPointerEvent(canvas, 'pointerdown', {
+            clientX: 60,
+            clientY: 20,
+            pointerId: 2,
+        });
+        dispatchCanvasPointerEvent(canvas, 'pointerup', {
+            clientX: 60,
+            clientY: 20,
+            pointerId: 2,
+        });
 
         expect(game.drawLine).toHaveBeenCalledWith({ row: 0, col: 0 }, { row: 0, col: 1 });
+
+        handler.destroy();
+    });
+
+    it('draws a line when a touch/pen/mouse drag starts on one dot and ends on an adjacent dot', () => {
+        const canvas = createCanvas();
+        const handler = new InputHandler(canvas, game);
+
+        dispatchCanvasPointerEvent(canvas, 'pointerdown', {
+            clientX: 20,
+            clientY: 20,
+            pointerId: 10,
+            pointerType: 'touch',
+        });
+        expect(game.selectedDot).toEqual({ row: 0, col: 0 });
+
+        dispatchCanvasPointerEvent(canvas, 'pointermove', {
+            clientX: 60,
+            clientY: 20,
+            pointerId: 10,
+            pointerType: 'touch',
+        });
+        dispatchCanvasPointerEvent(canvas, 'pointerup', {
+            clientX: 60,
+            clientY: 20,
+            pointerId: 10,
+            pointerType: 'touch',
+        });
+
+        expect(game.drawLine).toHaveBeenCalledWith({ row: 0, col: 0 }, { row: 0, col: 1 });
+        expect(handler.activePointers.size).toBe(0);
+
+        handler.destroy();
+    });
+
+    it('cancels an active pointer without drawing or losing the selected start dot', () => {
+        const canvas = createCanvas();
+        const handler = new InputHandler(canvas, game);
+
+        dispatchCanvasPointerEvent(canvas, 'pointerdown', {
+            clientX: 20,
+            clientY: 20,
+            pointerId: 11,
+            pointerType: 'touch',
+        });
+        dispatchCanvasPointerEvent(canvas, 'pointercancel', {
+            clientX: 60,
+            clientY: 20,
+            pointerId: 11,
+            pointerType: 'touch',
+        });
+
+        expect(game.drawLine).not.toHaveBeenCalled();
+        expect(game.selectedDot).toEqual({ row: 0, col: 0 });
+        expect(handler.activePointers.size).toBe(0);
 
         handler.destroy();
     });
@@ -177,10 +251,16 @@ describe('Root InputHandler canvas lifecycle', () => {
         const canvas = createCanvas();
         const handler = new InputHandler(canvas, game);
 
-        dispatchCanvasTouchEvent(canvas, 'touchstart', [
-            { clientX: 36, clientY: 36, identifier: 1 },
-        ]);
-        dispatchCanvasTouchEvent(canvas, 'touchend', [{ clientX: 36, clientY: 36, identifier: 1 }]);
+        dispatchCanvasPointerEvent(canvas, 'pointerdown', {
+            clientX: 36,
+            clientY: 36,
+            pointerId: 1,
+        });
+        dispatchCanvasPointerEvent(canvas, 'pointerup', {
+            clientX: 36,
+            clientY: 36,
+            pointerId: 1,
+        });
 
         expect(game.selectedDot).toEqual({ row: 0, col: 0 });
 
