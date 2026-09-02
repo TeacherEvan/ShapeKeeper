@@ -61,6 +61,11 @@ export default defineSchema({
                 value: v.optional(v.number()),
             })
         ),
+        // Set by revealMultiplierHandler on first successful reveal. Stops a
+        // hostile client from re-calling revealMultiplier to apply the bonus
+        // a second time. The browser's revealedMultipliers Set is UI-only;
+        // this is the authoritative flag.
+        multiplierRevealed: v.optional(v.boolean()),
         createdAt: v.number(),
     })
         .index('by_room', ['roomId'])

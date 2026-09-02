@@ -1,5 +1,6 @@
 import { checkForCompletedSquares } from './squares';
 import { validateLineKey } from './line-validation';
+import { isTurnExpired } from './turn-deadline';
 
 export async function drawLineHandler(ctx: any, args: any) {
     console.log('[drawLine] Line draw request', {
@@ -20,6 +21,17 @@ export async function drawLineHandler(ctx: any, args: any) {
             status: room.status,
         });
         return { error: 'Game not in progress' };
+    }
+
+    // Authoritative server-side turn deadline. The browser renders a 10s
+    // countdown, but a hostile client could bypass that and call this
+    // mutation directly; the server must enforce the window itself.
+    if (isTurnExpired(room)) {
+        console.log('[drawLine] Error: Turn deadline expired', {
+            roomId: args.roomId,
+            turnEndTime: room.turnEndTime,
+        });
+        return { error: 'Turn deadline expired' };
     }
 
     const validatedLineKey = validateLineKey(args.lineKey, room.gridSize);
