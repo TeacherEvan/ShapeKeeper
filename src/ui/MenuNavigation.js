@@ -290,9 +290,9 @@ function initializeMultiplayerGame(roomState) {
     const player1Color = sortedPlayers[0]?.color || '#FF0000';
     const player2Color = sortedPlayers[1]?.color || '#0000FF';
 
-    // Find my player in the room
-    const mySessionId = window.ShapeKeeperConvex?.getSessionId();
-    const meInRoom = roomState.players.find((p) => p.sessionId === mySessionId);
+    // Find my player in the room (server-computed isYou; the per-player
+    // sessionId is no longer leaked in the public getRoomByCode response).
+    const meInRoom = roomState.players.find((p) => p.isYou);
 
     // Initialize game with room settings and multiplayer mode.
     const multiplayerGame = new DotsAndBoxesGame(roomState.gridSize, player1Color, player2Color, {
@@ -301,7 +301,7 @@ function initializeMultiplayerGame(roomState) {
     });
     multiplayerGame.isMultiplayer = true;
     multiplayerGame.myPlayerNumber = (meInRoom?.playerIndex ?? 0) + 1;
-    multiplayerGame.isHost = roomState.hostPlayerId === mySessionId;
+    multiplayerGame.isHost = roomState.isHost;
     setActiveGame(multiplayerGame);
     game.uiManager.displayLoadingSkeleton(true);
 

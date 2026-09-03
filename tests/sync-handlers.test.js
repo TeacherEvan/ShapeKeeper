@@ -101,3 +101,141 @@ describe('handleAuthoritativeGameState — online game completion', () => {
         expect(game.gameOverHandled).toBeUndefined();
     });
 });
+
+describe('handleRoomStateUpdate — isHost/isYou from server', () => {
+    // The hostToken commit (054c4a8) strips every player's sessionId and the
+    // room's hostPlayerId from the public getRoomByCode response. The server
+    // now returns server-computed isHost (on the room) and isYou (on each
+    // player). These tests prove the consumer side uses the new fields and
+    // does not re-introduce a sessionId comparison that would always
+    // evaluate to false on the new response shape.
+
+    function makeLobbyManager() {
+        return {
+            roomCode: null,
+            gridSize: null,
+            isHost: false,
+            isReady: false,
+            myPlayerId: null,
+            players: [],
+            canStartGame: () => false,
+        };
+    }
+
+    function makeRoomState(overrides = {}) {
+        return {
+            _id: 'rooms:1',
+            roomCode: 'ABC123',
+            status: 'lobby',
+            gridSize: 5,
+            isHost: false,
+            players: [
+                {
+                    _id: 'p1',
+                    name: 'Alice',
+                    sessionId: 'session_a',
+                    playerIndex: 0,
+                    isHost: true,
+                    isYou: false,
+                },
+                {
+                    _id: 'p2',
+                    name: 'Bob',
+                    sessionId: 'session_b',
+                    playerIndex: 1,
+                    isHost: false,
+                    isYou: true,
+                },
+            ],
+            ...overrides,
+        };
+    }
+
+    function makeDepsForRoom(lobbyManager, overrides = {}) {
+        return {
+            multiplayerStartup: {
+                setLastRoomState: () => {},
+                getSnapshot: () => ({ phase: 'idle' }),
+            },
+            STARTUP_STATES: {
+                IDLE: 'idle',
+                ROOM_SUBSCRIBED: 'subscribed',
+                ROOM_READY_TO_START: 'ready',
+                IN_MATCH: 'in_match',
+            },
+            lobbyManager,
+            getGame: () => null,
+            setStartupState: vi.fn(),
+            showToast: vi.fn(),
+            showScreen: vi.fn(),
+            updateLobbyUI: vi.fn(),
+            ...overrides,
+        };
+    }
+
+    it('sets lobbyManager.isHost from roomState.isHost (host view)', async () => {
+        const { handleRoomStateUpdate } = await import('../src/ui/menu/syncHandlers.js');
+        const lobbyManager = makeLobbyManager();
+        const room = makeRoomState({ isHost: true });
+
+        handleRoomStateUpdate(room, makeDepsForRoom(lobbyManager));
+
+        expect(lobbyManager.isHost).toBe(true);
+    });
+
+    it('sets lobbyManager.isHost from roomState.isHost (guest view)', async () => {
+        const { handleRoomStateUpdate } = await import('../src/ui/menu/syncHandlers.js');
+        const lobbyManager = makeLobbyManager();
+        const room = makeRoomState({ isHost: false });
+
+        handleRoomStateUpdate(room, makeDepsForRoom(lobbyManager));
+
+        expect(lobbyManager.isHost).toBe(false);
+    });
+
+    it('sets lobbyManager.myPlayerId to the player with isYou=true (not sessionId match)', async () => {
+        const { handleRoomStateUpdate } = await import('../src/ui/menu/syncHandlers.js');
+        const lobbyManager = makeLobbyManager();
+        const room = makeRoomState();
+
+        handleRoomStateUpdate(room, makeDepsForRoom(lobbyManager));
+
+        expect(lobbyManager.myPlayerId).toBe('p2');
+    });
+
+    it('marks every player with roomState.isHost (per-player isHost in lobby list)', async () => {
+        const { handleRoomStateUpdate } = await import('../src/ui/menu/syncHandlers.js');
+        const lobbyManager = makeLobbyManager();
+        const room = makeRoomState({ isHost: true });
+
+        handleRoomStateUpdate(room, makeDepsForRoom(lobbyManager));
+
+        expect(lobbyManager.players).toHaveLength(2);
+        expect(lobbyManager.players[0].isHost).toBe(true);
+        expect(lobbyManager.players[1].isHost).toBe(true);
+    });
+
+    it('regression: works when per-player sessionId is missing from response', async () => {
+        // This is the actual production shape: the new getRoomByCode response
+        // does NOT include per-player sessionId at all. The old consumer
+        // code (roomState.players.find((p) => p.sessionId === mySessionId))
+        // would have returned undefined for myPlayer. The new code must
+        // succeed.
+        const { handleRoomStateUpdate } = await import('../src/ui/menu/syncHandlers.js');
+        const lobbyManager = makeLobbyManager();
+        const room = {
+            _id: 'rooms:1',
+            roomCode: 'ABC123',
+            status: 'lobby',
+            gridSize: 5,
+            isHost: true,
+            // Note: NO hostPlayerId field, NO per-player sessionId field.
+            players: [{ _id: 'p1', name: 'Alice', playerIndex: 0, isYou: true, isReady: false }],
+        };
+
+        handleRoomStateUpdate(room, makeDepsForRoom(lobbyManager));
+
+        expect(lobbyManager.isHost).toBe(true);
+        expect(lobbyManager.myPlayerId).toBe('p1');
+    });
+});

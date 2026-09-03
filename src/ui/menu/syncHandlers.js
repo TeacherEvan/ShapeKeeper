@@ -43,12 +43,14 @@ export function handleRoomStateUpdate(roomState, deps) {
     lobbyManager.roomCode = roomState.roomCode;
     lobbyManager.gridSize = roomState.gridSize;
 
-    const mySessionId = window.ShapeKeeperConvex?.getSessionId();
-    const nextIsHost = roomState.hostPlayerId === mySessionId;
+    // The server computes isHost/isYou against the requesting sessionId;
+    // the public getRoomByCode response strips every player's sessionId,
+    // so the client cannot (and must not) re-derive these locally.
+    const nextIsHost = roomState.isHost;
     const previousGameIsHost = game?.isMultiplayer ? game.isHost : null;
     lobbyManager.isHost = nextIsHost;
 
-    const myPlayer = roomState.players.find((player) => player.sessionId === mySessionId);
+    const myPlayer = roomState.players.find((player) => player.isYou);
     lobbyManager.myPlayerId = myPlayer?._id || null;
     lobbyManager.isReady = myPlayer?.isReady || false;
 
@@ -72,7 +74,7 @@ export function handleRoomStateUpdate(roomState, deps) {
         name: player.name,
         color: player.color,
         isReady: player.isReady,
-        isHost: player.sessionId === roomState.hostPlayerId,
+        isHost: roomState.isHost,
         playerNumber: player.playerNumber || index + 1,
     }));
 
