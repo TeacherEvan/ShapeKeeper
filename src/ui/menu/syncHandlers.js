@@ -8,10 +8,6 @@ import { createTurnClockController } from '../../timing/turn-clock-controller.js
 // One controller per active game instance (module-scoped; reset on new match).
 let turnClockController = null;
 
-export function getTurnClockController() {
-    return turnClockController;
-}
-
 export function handleRoomStateUpdate(roomState, deps) {
     const {
         multiplayerStartup,
