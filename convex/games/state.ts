@@ -2,6 +2,7 @@ import { isAuthorisedHostAsync } from '../auth/token';
 import { POPULATE_PLAYER_INDEX } from './shared';
 import { validateLineKey } from './line-validation';
 import { log, errorLog, warn } from '../log';
+import { checkRateLimit } from '../rate-limit';
 
 export async function getGameStateHandler(ctx: any, args: any) {
     const room = await ctx.db.get(args.roomId);
@@ -33,6 +34,14 @@ export async function getGameStateHandler(ctx: any, args: any) {
 }
 
 export async function revealMultiplierHandler(ctx: any, args: any) {
+    // N9 per-session rate limit. revealMultiplier is a one-shot per
+    // square per game; the 4/5s cap stops a hostile client from
+    // probing the schema for off-square keys.
+    const rl = await checkRateLimit(ctx, 'revealMultiplier', args.sessionId);
+    if (!rl.allowed) {
+        return { error: 'Rate limit exceeded', resetMs: rl.resetMs };
+    }
+
     log('[revealMultiplier] Reveal request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
@@ -197,6 +206,14 @@ export async function resetGameHandler(ctx: any, args: any) {
 }
 
 export async function populateLinesHandler(ctx: any, args: any) {
+    // N9 per-session rate limit. populateLines is a host-only mutation
+    // that fills the board; the host may legitimately call it more than
+    // once across a session, but not more than 4/5s in a hot loop.
+    const rl = await checkRateLimit(ctx, 'populateLines', args.sessionId);
+    if (!rl.allowed) {
+        return { error: 'Rate limit exceeded', resetMs: rl.resetMs };
+    }
+
     log('[populateLines] Populate request', {
         roomId: args.roomId,
         sessionId: args.sessionId,

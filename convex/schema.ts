@@ -76,4 +76,16 @@ export default defineSchema({
     })
         .index('by_room', ['roomId'])
         .index('by_room_and_key', ['roomId', 'squareKey']),
+
+    // Per-sessionId sliding-window rate-limit buckets (N9 follow-up).
+    // Keyed by `${action}:${sessionId}` so a single client cannot bypass
+    // the limit by joining a new room. Window state lives here, not on
+    // the room document, because rate limits are per-actor, not per-room.
+    // The convex-helpers `@convex-dev/rate-limiter` package is the
+    // production-grade replacement when this branch adopts it.
+    rateLimits: defineTable({
+        key: v.string(), // e.g. "drawLine:session_abc"
+        windowStart: v.number(), // server epoch (ms) when the current window began
+        count: v.number(), // requests consumed in the current window
+    }).index('by_key', ['key']),
 });
