@@ -1,4 +1,7 @@
+import { isAuthorisedHostAsync } from '../auth/token';
 import { POPULATE_PLAYER_INDEX } from './shared';
+import { validateLineKey } from './line-validation';
+import { log, errorLog, warn } from '../log';
 
 export async function getGameStateHandler(ctx: any, args: any) {
     const room = await ctx.db.get(args.roomId);
@@ -30,7 +33,7 @@ export async function getGameStateHandler(ctx: any, args: any) {
 }
 
 export async function revealMultiplierHandler(ctx: any, args: any) {
-    console.log('[revealMultiplier] Reveal request', {
+    log('[revealMultiplier] Reveal request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
         squareKey: args.squareKey,
@@ -44,7 +47,7 @@ export async function revealMultiplierHandler(ctx: any, args: any) {
         .first();
 
     if (!square) {
-        console.log('[revealMultiplier] Error: Square not found', {
+        log('[revealMultiplier] Error: Square not found', {
             roomId: args.roomId,
             squareKey: args.squareKey,
         });
@@ -53,7 +56,7 @@ export async function revealMultiplierHandler(ctx: any, args: any) {
 
     const player = await ctx.db.get(square.playerId);
     if (!player || player.sessionId !== args.sessionId) {
-        console.log('[revealMultiplier] Error: Not player square', {
+        log('[revealMultiplier] Error: Not player square', {
             squarePlayerId: square.playerId,
             squarePlayerSession: player?.sessionId,
             requestingSession: args.sessionId,
@@ -62,11 +65,15 @@ export async function revealMultiplierHandler(ctx: any, args: any) {
     }
 
     if (!square.multiplier) {
-        console.log('[revealMultiplier] Error: No multiplier', { squareKey: args.squareKey });
+        log('[revealMultiplier] Error: No multiplier', { squareKey: args.squareKey });
         return { error: 'No multiplier on this square' };
     }
 
-    console.log('[revealMultiplier] Multiplier found', {
+    if (square.multiplierRevealed) {
+        return { error: 'Multiplier already revealed' };
+    }
+
+    log('[revealMultiplier] Multiplier found', {
         squareKey: args.squareKey,
         multiplier: square.multiplier,
         currentScore: player.score,
@@ -76,13 +83,17 @@ export async function revealMultiplierHandler(ctx: any, args: any) {
         const bonus = square.multiplier.value;
         const newScore = player.score + (bonus - 1);
         await ctx.db.patch(player._id, { score: newScore });
-        console.log('[revealMultiplier] Score updated with bonus', {
+        log('[revealMultiplier] Score updated with bonus', {
             playerId: player._id,
             oldScore: player.score,
             newScore,
             bonus: bonus - 1,
         });
     }
+
+    // Mark the effect consumed server-side. Client-side `revealedMultipliers`
+    // is only a UI optimization and cannot be trusted for preventing replays.
+    await ctx.db.patch(square._id, { multiplierRevealed: true });
 
     return {
         success: true,
@@ -96,8 +107,15 @@ export async function endGameHandler(ctx: any, args: any) {
         return { error: 'Room not found' };
     }
 
-    if (room.hostPlayerId !== args.sessionId) {
-        return { error: 'Only the host can end the game' };
+    if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
+        log('[endGame] Error: Unauthorized host', {
+            roomId: args.roomId,
+            requestingSession: args.sessionId,
+            hostSession: room.hostPlayerId,
+            hasHostTokenHash: Boolean(room.hostTokenHash),
+            hasPresentedToken: Boolean(args.hostToken),
+        });
+        return { error: 'Unauthorized' };
     }
 
     await ctx.db.patch(args.roomId, {
@@ -111,23 +129,26 @@ export async function endGameHandler(ctx: any, args: any) {
 }
 
 export async function resetGameHandler(ctx: any, args: any) {
-    console.log('[resetGame] Reset request', {
+    log('[resetGame] Reset request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
     });
 
     const room = await ctx.db.get(args.roomId);
     if (!room) {
-        console.log('[resetGame] Error: Room not found', { roomId: args.roomId });
+        log('[resetGame] Error: Room not found', { roomId: args.roomId });
         return { error: 'Room not found' };
     }
 
-    if (room.hostPlayerId !== args.sessionId) {
-        console.log('[resetGame] Error: Not host', {
+    if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
+        log('[resetGame] Error: Unauthorized host', {
+            roomId: args.roomId,
             requestingSession: args.sessionId,
             hostSession: room.hostPlayerId,
+            hasHostTokenHash: Boolean(room.hostTokenHash),
+            hasPresentedToken: Boolean(args.hostToken),
         });
-        return { error: 'Only the host can reset the game' };
+        return { error: 'Unauthorized' };
     }
 
     const lines = await ctx.db
@@ -137,7 +158,7 @@ export async function resetGameHandler(ctx: any, args: any) {
     for (const line of lines) {
         await ctx.db.delete(line._id);
     }
-    console.log('[resetGame] Lines deleted', { count: lines.length });
+    log('[resetGame] Lines deleted', { count: lines.length });
 
     const squares = await ctx.db
         .query('squares')
@@ -146,7 +167,7 @@ export async function resetGameHandler(ctx: any, args: any) {
     for (const square of squares) {
         await ctx.db.delete(square._id);
     }
-    console.log('[resetGame] Squares deleted', { count: squares.length });
+    log('[resetGame] Squares deleted', { count: squares.length });
 
     const players = await ctx.db
         .query('players')
@@ -155,7 +176,7 @@ export async function resetGameHandler(ctx: any, args: any) {
     for (const player of players) {
         await ctx.db.patch(player._id, { score: 0, isReady: false });
     }
-    console.log('[resetGame] Player scores reset', { playerCount: players.length });
+    log('[resetGame] Player scores reset', { playerCount: players.length });
 
     await ctx.db.patch(args.roomId, {
         status: 'lobby',
@@ -165,7 +186,7 @@ export async function resetGameHandler(ctx: any, args: any) {
         updatedAt: Date.now(),
     });
 
-    console.log('[resetGame] Game reset complete', {
+    log('[resetGame] Game reset complete', {
         roomId: args.roomId,
         linesDeleted: lines.length,
         squaresDeleted: squares.length,
@@ -176,7 +197,7 @@ export async function resetGameHandler(ctx: any, args: any) {
 }
 
 export async function populateLinesHandler(ctx: any, args: any) {
-    console.log('[populateLines] Populate request', {
+    log('[populateLines] Populate request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
         lineCount: args.lineKeys.length,
@@ -184,24 +205,27 @@ export async function populateLinesHandler(ctx: any, args: any) {
 
     const room = await ctx.db.get(args.roomId);
     if (!room) {
-        console.log('[populateLines] Error: Room not found', { roomId: args.roomId });
+        log('[populateLines] Error: Room not found', { roomId: args.roomId });
         return { error: 'Room not found' };
     }
 
     if (room.status !== 'playing') {
-        console.log('[populateLines] Error: Game not in progress', {
+        log('[populateLines] Error: Game not in progress', {
             roomId: args.roomId,
             status: room.status,
         });
         return { error: 'Game not in progress' };
     }
 
-    if (room.hostPlayerId !== args.sessionId) {
-        console.log('[populateLines] Error: Not host', {
+    if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
+        log('[populateLines] Error: Unauthorized host', {
+            roomId: args.roomId,
             requestingSession: args.sessionId,
             hostSession: room.hostPlayerId,
+            hasHostTokenHash: Boolean(room.hostTokenHash),
+            hasPresentedToken: Boolean(args.hostToken),
         });
-        return { error: 'Only the host can populate lines' };
+        return { error: 'Unauthorized' };
     }
 
     const hostPlayer = await ctx.db
@@ -212,14 +236,30 @@ export async function populateLinesHandler(ctx: any, args: any) {
         .first();
 
     if (!hostPlayer) {
-        console.log('[populateLines] Error: Host player not found', {
+        log('[populateLines] Error: Host player not found', {
             roomId: args.roomId,
             sessionId: args.sessionId,
         });
         return { error: 'Host player not found' };
     }
 
-    console.log('[populateLines] Starting line insertion', {
+    const MAX_POPULATE_LINES = 2000;
+    if (args.lineKeys.length > MAX_POPULATE_LINES) {
+        return { error: `Too many lines (max ${MAX_POPULATE_LINES})` };
+    }
+
+    const validatedLineKeys: string[] = [];
+    const seenLineKeys = new Set<string>();
+    for (const lineKey of args.lineKeys) {
+        const validated = validateLineKey(lineKey, room.gridSize);
+        if (!validated || seenLineKeys.has(validated)) {
+            return { error: 'Invalid or duplicate line in populate request' };
+        }
+        seenLineKeys.add(validated);
+        validatedLineKeys.push(validated);
+    }
+
+    log('[populateLines] Starting line insertion', {
         hostPlayerId: hostPlayer._id,
         linesToInsert: args.lineKeys.length,
     });
@@ -227,7 +267,7 @@ export async function populateLinesHandler(ctx: any, args: any) {
     let insertedCount = 0;
     let skippedCount = 0;
 
-    for (const lineKey of args.lineKeys) {
+    for (const lineKey of validatedLineKeys) {
         const existingLine = await ctx.db
             .query('lines')
             .withIndex('by_room_and_key', (q: any) =>
@@ -250,14 +290,14 @@ export async function populateLinesHandler(ctx: any, args: any) {
         insertedCount++;
     }
 
-    console.log('[populateLines] Line insertion complete', {
+    log('[populateLines] Line insertion complete', {
         requestedLines: args.lineKeys.length,
         inserted: insertedCount,
         skipped: skippedCount,
     });
 
     await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
-    console.log('[populateLines] Populate complete', { linesPopulated: insertedCount });
+    log('[populateLines] Populate complete', { linesPopulated: insertedCount });
 
     return {
         success: true,

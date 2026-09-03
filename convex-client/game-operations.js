@@ -7,6 +7,11 @@
         return;
     }
 
+    function getHostTokenForCurrentRoom() {
+        if (!shared.getHostToken) return null;
+        return shared.getHostToken(shared.state.currentRoomId);
+    }
+
     async function drawLine(lineKey, opts = {}) {
         if (!shared.state.currentRoomId) {
             return { error: 'Not in a room' };
@@ -62,6 +67,7 @@
             {
                 roomId: shared.state.currentRoomId,
                 sessionId: shared.getSessionId(),
+                hostToken: getHostTokenForCurrentRoom(),
             },
             'ending game'
         );
@@ -77,6 +83,7 @@
             {
                 roomId: shared.state.currentRoomId,
                 sessionId: shared.getSessionId(),
+                hostToken: getHostTokenForCurrentRoom(),
             },
             'resetting game'
         );
@@ -92,6 +99,7 @@
             {
                 roomId: shared.state.currentRoomId,
                 sessionId: shared.getSessionId(),
+                hostToken: getHostTokenForCurrentRoom(),
                 lineKeys,
             },
             'populating lines'

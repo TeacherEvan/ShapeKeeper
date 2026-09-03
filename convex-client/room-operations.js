@@ -7,6 +7,46 @@
         return;
     }
 
+    // Per-tab hostToken storage. sessionStorage is cleared on tab close, so
+    // closing and re-opening the tab makes the host re-authenticate by
+    // re-creating the room. This is the correct threat model: the token is
+    // never persisted across sessions. For rooms created before the hostToken
+    // scheme (legacy rooms), no entry is created and the mutations fall back
+    // to the previous sessionId-only check.
+    function hostTokenKey(roomId) {
+        return roomId ? `shapekeeper_host_token_${roomId}` : null;
+    }
+    function stashHostToken(roomId, hostToken) {
+        if (!roomId || typeof hostToken !== 'string' || hostToken.length === 0) return;
+        try {
+            windowObject.sessionStorage.setItem(hostTokenKey(roomId), hostToken);
+        } catch {
+            // sessionStorage can throw in private-browsing modes; not fatal.
+        }
+    }
+    function getHostToken(roomId) {
+        if (!roomId) return null;
+        try {
+            return windowObject.sessionStorage.getItem(hostTokenKey(roomId));
+        } catch {
+            return null;
+        }
+    }
+    function clearHostToken(roomId) {
+        if (!roomId) return;
+        try {
+            windowObject.sessionStorage.removeItem(hostTokenKey(roomId));
+        } catch {
+            // ignore
+        }
+    }
+    // Expose helpers for tests / debug. They are namespaced under shared
+    // so other modules (game-operations) can reach them without a circular
+    // import.
+    shared.stashHostToken = stashHostToken;
+    shared.getHostToken = getHostToken;
+    shared.clearHostToken = clearHostToken;
+
     async function createRoom(playerName, gridSize, partyMode = false) {
         const result = await shared.runMutation(
             shared.api.rooms.createRoom,
@@ -21,7 +61,10 @@
 
         if (result?.roomId) {
             shared.state.currentRoomId = result.roomId;
-            console.log('[Convex] Room created:', result.roomCode, 'partyMode:', partyMode);
+            // Server-issued hostToken: stash for the lifetime of this tab.
+            if (typeof result.hostToken === 'string' && result.hostToken.length > 0) {
+                stashHostToken(result.roomId, result.hostToken);
+            }
         }
 
         return result;
@@ -40,7 +83,6 @@
 
         if (result?.roomId) {
             shared.state.currentRoomId = result.roomId;
-            console.log('[Convex] Joined room:', roomCode);
         }
 
         return result;
@@ -51,10 +93,11 @@
             return { error: 'Not in a room' };
         }
 
+        const roomId = shared.state.currentRoomId;
         const result = await shared.runMutation(
             shared.api.rooms.leaveRoom,
             {
-                roomId: shared.state.currentRoomId,
+                roomId,
                 sessionId: shared.getSessionId(),
             },
             'leaving room'
@@ -62,7 +105,7 @@
 
         if (!result?.error) {
             shared.cleanupRoomResources();
-            console.log('[Convex] Left room');
+            clearHostToken(roomId);
         }
 
         return result;
@@ -109,6 +152,7 @@
             {
                 roomId: shared.state.currentRoomId,
                 sessionId: shared.getSessionId(),
+                hostToken: getHostToken(shared.state.currentRoomId),
                 gridSize,
             },
             'updating grid size'
@@ -125,6 +169,7 @@
             {
                 roomId: shared.state.currentRoomId,
                 sessionId: shared.getSessionId(),
+                hostToken: getHostToken(shared.state.currentRoomId),
                 partyMode,
             },
             'updating party mode'
@@ -141,6 +186,7 @@
             {
                 roomId: shared.state.currentRoomId,
                 sessionId: shared.getSessionId(),
+                hostToken: getHostToken(shared.state.currentRoomId),
             },
             'starting game'
         );
@@ -153,7 +199,10 @@
 
         return shared.runQuery(
             shared.api.rooms.getRoom,
-            { roomId: shared.state.currentRoomId },
+            {
+                roomId: shared.state.currentRoomId,
+                sessionId: shared.getSessionId(),
+            },
             'getting room state'
         );
     }
@@ -161,7 +210,10 @@
     async function getRoomByCode(roomCode) {
         return shared.runQuery(
             shared.api.rooms.getRoomByCode,
-            { roomCode: roomCode.toUpperCase() },
+            {
+                roomCode: roomCode.toUpperCase(),
+                sessionId: shared.getSessionId(),
+            },
             'getting room by code'
         );
     }

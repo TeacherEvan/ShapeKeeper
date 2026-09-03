@@ -49,19 +49,9 @@
         <!-- Preconnect for Convex backend -->
         <link rel="preconnect" href="https://precise-ladybug-504.convex.cloud" crossorigin />
 
-        <!-- Convex deployment URL (production backend). Local dev overrides via window.CONVEX_URL set in convex-client/shared.js fallback. -->
-        <script>
-            window.CONVEX_URL = 'https://precise-ladybug-504.convex.cloud';
-        </script>
-
-        <!-- Feature flags (FR-6). The lava timer + online sync resilience ship ON
-             by default; the runtime bridge in game.js copies window.FEATURE_*
-             into the static FEATURE_FLAGS. Opt a flag out by setting it to false
-             (e.g. window.FEATURE_LAVA_TIMER = false) before the module loads. -->
-        <script>
-            window.FEATURE_LAVA_TIMER = window.FEATURE_LAVA_TIMER ?? true;
-            window.FEATURE_SYNC_RESILIENCE = window.FEATURE_SYNC_RESILIENCE ?? true;
-        </script>
+        <!-- Runtime configuration (loaded as an external script so the page
+             can be served under a strict CSP without 'unsafe-inline'). -->
+        <script src="config.js"></script>
     </head>
 
     <body>
@@ -592,7 +582,14 @@
         ></div>
         <div id="appAlertRegion" class="visually-hidden" role="alert" aria-atomic="true"></div>
 
-        <script src="https://unpkg.com/convex@1.42.3/dist/browser.bundle.js"></script>
+        <!-- Convex browser bundle. SRI hash pins the exact bytes; if unpkg
+             is compromised or the package is replaced, the browser refuses
+             to load the script. Update this hash when bumping the version. -->
+        <script
+            src="https://unpkg.com/convex@1.42.3/dist/browser.bundle.js"
+            integrity="sha384-iNc+jvfzNXVk96Jms+T6Epwohmjary1EAOqigjsBRTpagAhMDHdeQYjjeQWXsSPc"
+            crossorigin="anonymous"
+        ></script>
         <script src="convex-client/shared.js"></script>
         <script src="convex-client/room-operations.js"></script>
         <script src="convex-client/game-operations.js"></script>

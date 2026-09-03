@@ -1,7 +1,10 @@
 import { checkForCompletedSquares } from './squares';
+import { validateLineKey } from './line-validation';
+import { isTurnExpired } from './turn-deadline';
+import { log, errorLog, warn } from '../log';
 
 export async function drawLineHandler(ctx: any, args: any) {
-    console.log('[drawLine] Line draw request', {
+    log('[drawLine] Line draw request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
         lineKey: args.lineKey,
@@ -9,16 +12,37 @@ export async function drawLineHandler(ctx: any, args: any) {
 
     const room = await ctx.db.get(args.roomId);
     if (!room) {
-        console.log('[drawLine] Error: Room not found', { roomId: args.roomId });
+        log('[drawLine] Error: Room not found', { roomId: args.roomId });
         return { error: 'Room not found' };
     }
 
     if (room.status !== 'playing') {
-        console.log('[drawLine] Error: Game not in progress', {
+        log('[drawLine] Error: Game not in progress', {
             roomId: args.roomId,
             status: room.status,
         });
         return { error: 'Game not in progress' };
+    }
+
+    // Authoritative server-side turn deadline. The browser renders a 10s
+    // countdown, but a hostile client could bypass that and call this
+    // mutation directly; the server must enforce the window itself.
+    if (isTurnExpired(room)) {
+        log('[drawLine] Error: Turn deadline expired', {
+            roomId: args.roomId,
+            turnEndTime: room.turnEndTime,
+        });
+        return { error: 'Turn deadline expired' };
+    }
+
+    const validatedLineKey = validateLineKey(args.lineKey, room.gridSize);
+    if (!validatedLineKey) {
+        log('[drawLine] Error: Invalid line key', {
+            roomId: args.roomId,
+            lineKey: args.lineKey,
+            gridSize: room.gridSize,
+        });
+        return { error: 'Invalid line' };
     }
 
     const players = await ctx.db
@@ -29,7 +53,7 @@ export async function drawLineHandler(ctx: any, args: any) {
     const sortedPlayers = players.sort((a: any, b: any) => a.playerIndex - b.playerIndex);
     const currentPlayer = sortedPlayers[room.currentPlayerIndex];
 
-    console.log('[drawLine] Turn validation', {
+    log('[drawLine] Turn validation', {
         currentPlayerIndex: room.currentPlayerIndex,
         currentPlayerSession: currentPlayer?.sessionId,
         requestingSession: args.sessionId,
@@ -37,7 +61,7 @@ export async function drawLineHandler(ctx: any, args: any) {
     });
 
     if (!currentPlayer || currentPlayer.sessionId !== args.sessionId) {
-        console.log('[drawLine] Error: Not player turn', {
+        log('[drawLine] Error: Not player turn', {
             expectedSession: currentPlayer?.sessionId,
             receivedSession: args.sessionId,
         });
@@ -52,7 +76,7 @@ export async function drawLineHandler(ctx: any, args: any) {
         .first();
 
     if (existingLine) {
-        console.log('[drawLine] Error: Line already drawn', {
+        log('[drawLine] Error: Line already drawn', {
             lineKey: args.lineKey,
             existingLineId: existingLine._id,
         });
@@ -67,7 +91,7 @@ export async function drawLineHandler(ctx: any, args: any) {
         createdAt: Date.now(),
     });
 
-    console.log('[drawLine] Line drawn successfully', {
+    log('[drawLine] Line drawn successfully', {
         lineKey: args.lineKey,
         playerId: currentPlayer._id,
         playerIndex: currentPlayer.playerIndex,
@@ -82,7 +106,7 @@ export async function drawLineHandler(ctx: any, args: any) {
         room.gridSize
     );
 
-    console.log('[drawLine] Square check complete', {
+    log('[drawLine] Square check complete', {
         lineKey: args.lineKey,
         completedSquares: completedSquares.length,
         squareKeys: completedSquares,
@@ -91,7 +115,7 @@ export async function drawLineHandler(ctx: any, args: any) {
     if (completedSquares.length > 0) {
         const newScore = currentPlayer.score + completedSquares.length;
         await ctx.db.patch(currentPlayer._id, { score: newScore });
-        console.log('[drawLine] Score updated', {
+        log('[drawLine] Score updated', {
             playerId: currentPlayer._id,
             oldScore: currentPlayer.score,
             newScore,
@@ -106,7 +130,7 @@ export async function drawLineHandler(ctx: any, args: any) {
 
     const isGameOver = allSquares.length >= totalSquares;
 
-    console.log('[drawLine] Game progress', {
+    log('[drawLine] Game progress', {
         completedSquares: allSquares.length,
         totalSquares,
         isGameOver,
@@ -117,7 +141,7 @@ export async function drawLineHandler(ctx: any, args: any) {
             status: 'finished',
             updatedAt: Date.now(),
         });
-        console.log('[drawLine] Game over', {
+        log('[drawLine] Game over', {
             roomId: args.roomId,
             finalScores: sortedPlayers.map((player: any) => ({
                 name: player.name,
@@ -147,14 +171,14 @@ export async function drawLineHandler(ctx: any, args: any) {
         timingPatch.turnStartTime = serverReceivedAt;
         timingPatch.turnEndTime = serverReceivedAt + 10000;
         await ctx.db.patch(args.roomId, timingPatch);
-        console.log('[drawLine] Turn advanced', {
+        log('[drawLine] Turn advanced', {
             fromPlayerIndex: room.currentPlayerIndex,
             toPlayerIndex: nextPlayerIndex,
             nextPlayerName: sortedPlayers[nextPlayerIndex]?.name,
         });
     } else {
         await ctx.db.patch(args.roomId, timingPatch);
-        console.log('[drawLine] Turn retained (shape completed)', {
+        log('[drawLine] Turn retained (shape completed)', {
             playerIndex: currentPlayer.playerIndex,
             playerName: currentPlayer.name,
         });

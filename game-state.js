@@ -44,6 +44,7 @@ export class GameState {
         this.game.touchInteractionThrottleMs = this.game.isTouchDevice ? 24 : 50;
         this.game.pointerInteractionThrottleMs = 50;
         this.game.touchMoveThrottleMs = this.game.isTouchDevice ? 24 : 16;
+        this.game.pointerMoveThrottleMs = 16;
 
         this.game.activeTouches = new Map();
         this.game.touchVisuals = [];

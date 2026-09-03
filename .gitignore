@@ -46,3 +46,4 @@ ai_*.mjs
 ai_*.json
 
 
+*.prune/

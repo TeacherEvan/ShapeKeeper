@@ -76,6 +76,31 @@ async function drawUsingPrimaryInput(page, position, { hasTouch }) {
 }
 
 test.describe('local gameplay canvas input', () => {
+    test('draws a line from a single pointer drag across adjacent dots', async ({ page }) => {
+        await startLocalGame(page);
+
+        const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
+        const canvas = page.locator('#gameCanvas');
+        const start = { x: offsetX, y: offsetY };
+        const end = { x: offsetX + cellSize, y: offsetY };
+
+        await canvas.hover({ position: start });
+        await page.mouse.move(start.x, start.y);
+        await page.mouse.down();
+        await page.mouse.move(end.x, end.y, { steps: 8 });
+        await page.mouse.up();
+
+        await expect(page.locator('#turnIndicator')).toHaveText("Player 2's Turn");
+        await expect
+            .poll(() =>
+                page.evaluate(() => ({
+                    lineCount: window.__shapeKeeperActiveGame?.lines?.size ?? 0,
+                    selectedDot: window.__shapeKeeperActiveGame?.selectedDot,
+                }))
+            )
+            .toEqual({ lineCount: 1, selectedDot: null });
+    });
+
     test('draws a line via the primary input for the active browser profile', async ({ page }) => {
         await startLocalGame(page);
 

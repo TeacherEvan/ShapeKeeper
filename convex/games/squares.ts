@@ -1,4 +1,5 @@
 import { generateMultiplier, normalizeLineKey } from './shared';
+import { log, errorLog, warn } from '../log';
 
 export async function checkForCompletedSquares(
     ctx: any,
@@ -8,7 +9,7 @@ export async function checkForCompletedSquares(
     playerIndex: number,
     gridSize: number
 ): Promise<string[]> {
-    console.log('[checkForCompletedSquares] Starting square check', {
+    log('[checkForCompletedSquares] Starting square check', {
         newLineKey,
         playerId,
         playerIndex,
@@ -32,7 +33,7 @@ export async function checkForCompletedSquares(
         if (c1 < gridSize - 1) potentialSquares.push({ row, col: c1 });
     }
 
-    console.log('[checkForCompletedSquares] Potential squares to check', {
+    log('[checkForCompletedSquares] Potential squares to check', {
         lineType: r1 === r2 ? 'horizontal' : 'vertical',
         potentialSquares,
     });
@@ -43,7 +44,7 @@ export async function checkForCompletedSquares(
         .collect();
 
     const lineSet = new Set(allLines.map((line: any) => line.lineKey));
-    console.log('[checkForCompletedSquares] Total lines in room', { lineCount: lineSet.size });
+    log('[checkForCompletedSquares] Total lines in room', { lineCount: lineSet.size });
 
     for (const square of potentialSquares) {
         const { row, col } = square;
@@ -84,7 +85,7 @@ export async function checkForCompletedSquares(
             createdAt: Date.now(),
         });
 
-        console.log('[checkForCompletedSquares] Square completed!', {
+        log('[checkForCompletedSquares] Square completed!', {
             squareKey,
             playerId,
             playerIndex,
@@ -94,7 +95,7 @@ export async function checkForCompletedSquares(
         completedSquares.push(squareKey);
     }
 
-    console.log('[checkForCompletedSquares] Check complete', {
+    log('[checkForCompletedSquares] Check complete', {
         completedSquares: completedSquares.length,
         squareKeys: completedSquares,
     });

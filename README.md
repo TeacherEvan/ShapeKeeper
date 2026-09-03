@@ -100,9 +100,27 @@ Visit [https://shape-keeper.vercel.app](https://shape-keeper.vercel.app).
 - A linked Vercel project (`shape-keeper`) and Convex project (`shapekeeper`).
 - Local `.env.local` with `CONVEX_DEPLOYMENT` / `CONVEX_DEPLOY_KEY` for the dev backend
   (`oceanic-antelope-781`) — used for local development only.
-- Production frontend is hardcoded to the prod Convex backend
-  (`precise-ladybug-504.convex.cloud`) directly in `index.html`; no build step
-  injects it.
+- Production frontend is wired to the prod Convex backend
+  (`precise-ladybug-504.convex.cloud`) via `config.js` (no build step).
+  Override `window.CONVEX_URL` in a separate script BEFORE `config.js` to
+  point at a different deployment.
+
+### Security headers (`vercel.json`)
+
+The deployment ships strict response headers via `vercel.json`:
+
+- **Content-Security-Policy**: `default-src 'self'`; `script-src 'self' https://unpkg.com`;
+  `connect-src` restricted to the Convex deployment; `frame-ancestors 'none'`;
+  `object-src 'none'`. No `unsafe-inline` for script-src.
+- **Subresource Integrity**: the Convex browser bundle is loaded from
+  `unpkg.com/convex@1.42.3` with an `integrity="sha384-..."` attribute. If
+  unpkg is compromised or the package bytes change, the browser refuses
+  to load the script. Bump the hash in `index.html` when changing the version:
+  `curl -sSL https://unpkg.com/convex@<ver>/dist/browser.bundle.js | openssl dgst -sha384 -binary | openssl base64 -A`.
+- **HSTS**, **X-Content-Type-Options**, **Referrer-Policy**, **Permissions-Policy**,
+  **X-Frame-Options** all set.
+- HTML files are served with `Cache-Control: public, max-age=0, must-revalidate`
+  so deploys are picked up immediately; `config.js` is cached 5 minutes.
 <img width="1360" height="768" alt="Screenshot from 2026-08-21 15-57-47" src="https://github.com/user-attachments/assets/de1f948d-8323-43dd-8753-cbfc141709a2" />
 
 ### Commands
