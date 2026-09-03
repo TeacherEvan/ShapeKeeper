@@ -31,7 +31,7 @@ export function toggleTheme() {
  * Update theme toggle button icon
  * @param {string} theme - Current theme ('light' or 'dark')
  */
-export function updateThemeButton(theme) {
+function updateThemeButton(theme) {
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
