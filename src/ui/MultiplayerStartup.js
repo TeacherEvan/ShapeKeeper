@@ -41,7 +41,7 @@ export const STARTUP_COPY = {
         hint: 'Re-subscribing and requesting the latest board state.',
     },
     [STARTUP_STATES.DESYNCED]: {
-        message: 'Match sync interrupted.',
+        message: 'Match sync interrupted (grid-lock + lobby sync check needed).',
         hint: 'Trying to recover the authoritative board state.',
     },
     [STARTUP_STATES.FATAL_STARTUP_FAILURE]: {
@@ -80,6 +80,7 @@ export function createMultiplayerStartupController({
             lastRoomState: state.lastRoomState,
             startupBeganAt: state.startupBeganAt,
             retryCount: state.retryCount,
+            syncReady: state.syncReady,
         };
     }
 
@@ -132,6 +133,7 @@ export function createMultiplayerStartupController({
             isFirstAuthoritativeState: true,
             startupDurationMs: state.startupBeganAt ? nowFn() - state.startupBeganAt : null,
             retryCount: state.retryCount,
+            syncReady: state.syncReady,
         };
     }
 
@@ -148,9 +150,16 @@ export function createMultiplayerStartupController({
     }
 
     return {
+        get syncReady() {
+            return state.syncReady;
+        },
         getSnapshot,
         setPhase,
         setLastRoomState,
+        onGridSizeEvent: (e) => {
+            state.gridSize = e.detail.gridSize || 5;
+            state.syncReady = !!(e.detail.isHost || e.detail.roomCode);
+        }, // B: sync event from A grid-lock hook
         beginGameShell,
         startAwaitingFirstState,
         clearAwaitingTimeout,
