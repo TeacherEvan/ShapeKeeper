@@ -1,0 +1,9 @@
+{
+  "plan": "2026-09-08-bigfile-ShapeKeeper-eventBindings.js.md",
+  "verdict": "READY-WITH-WARNINGS",
+  "ready_for_impl": true,
+  "gaps": [
+    "llm_unreachable"
+  ],
+  "reviewed_at": "2026-09-08T15:35:08.631089+07:00"
+}
