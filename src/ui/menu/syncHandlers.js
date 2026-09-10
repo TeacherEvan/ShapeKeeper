@@ -5,12 +5,8 @@
 import { DotsAndBoxesGame } from '../../../dots-and-boxes-game.js';
 import { createTurnClockController } from '../../timing/turn-clock-controller.js';
 
-// One controller per active game instance (module-scoped; reset on new match).
+// turnClockController is module-scoped, reset on new match.
 let turnClockController = null;
-
-export function getTurnClockController() {
-    return turnClockController;
-}
 
 export function handleRoomStateUpdate(roomState, deps) {
     const {
@@ -47,12 +43,14 @@ export function handleRoomStateUpdate(roomState, deps) {
     lobbyManager.roomCode = roomState.roomCode;
     lobbyManager.gridSize = roomState.gridSize;
 
-    const mySessionId = window.ShapeKeeperConvex?.getSessionId();
-    const nextIsHost = roomState.hostPlayerId === mySessionId;
+    // The server strips hostPlayerId / sessionId from the public projection
+    // and computes isHost / isYou server-side. Read those flags instead of
+    // comparing sessionIds that no longer exist on the response.
+    const nextIsHost = roomState.isHost === true;
     const previousGameIsHost = game?.isMultiplayer ? game.isHost : null;
     lobbyManager.isHost = nextIsHost;
 
-    const myPlayer = roomState.players.find((player) => player.sessionId === mySessionId);
+    const myPlayer = roomState.players.find((player) => player.isYou === true);
     lobbyManager.myPlayerId = myPlayer?._id || null;
     lobbyManager.isReady = myPlayer?.isReady || false;
 
@@ -76,7 +74,7 @@ export function handleRoomStateUpdate(roomState, deps) {
         name: player.name,
         color: player.color,
         isReady: player.isReady,
-        isHost: player.sessionId === roomState.hostPlayerId,
+        isHost: player.isHost === true,
         playerNumber: player.playerNumber || index + 1,
     }));
 
