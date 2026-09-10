@@ -47,3 +47,5 @@ ai_*.json
 
 
 *.prune/
+
+docs/.scratch-audit/
