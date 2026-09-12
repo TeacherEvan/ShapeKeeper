@@ -8,16 +8,21 @@
  * @module
  */
 
+import type * as auth_token from "../auth/token.js";
 import type * as games from "../games.js";
 import type * as games_draw from "../games/draw.js";
+import type * as games_lineValidation from "../games/lineValidation.js";
 import type * as games_shared from "../games/shared.js";
 import type * as games_squares from "../games/squares.js";
 import type * as games_state from "../games/state.js";
+import type * as games_turnDeadline from "../games/turnDeadline.js";
+import type * as log from "../log.js";
 import type * as rooms from "../rooms.js";
 import type * as rooms_mutations from "../rooms/mutations.js";
 import type * as rooms_queries from "../rooms/queries.js";
 import type * as rooms_settings from "../rooms/settings.js";
 import type * as rooms_shared from "../rooms/shared.js";
+import type * as rooms_sharedUtils from "../rooms/sharedUtils.js";
 
 import type {
   ApiFromModules,
@@ -26,16 +31,21 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "auth/token": typeof auth_token;
   games: typeof games;
   "games/draw": typeof games_draw;
+  "games/lineValidation": typeof games_lineValidation;
   "games/shared": typeof games_shared;
   "games/squares": typeof games_squares;
   "games/state": typeof games_state;
+  "games/turnDeadline": typeof games_turnDeadline;
+  log: typeof log;
   rooms: typeof rooms;
   "rooms/mutations": typeof rooms_mutations;
   "rooms/queries": typeof rooms_queries;
   "rooms/settings": typeof rooms_settings;
   "rooms/shared": typeof rooms_shared;
+  "rooms/sharedUtils": typeof rooms_sharedUtils;
 }>;
 
 /**

@@ -1,6 +1,6 @@
 import { isAuthorisedHostAsync } from '../auth/token';
 import { POPULATE_PLAYER_INDEX } from './shared';
-import { validateLineKey } from './line-validation';
+import { validateLineKey } from './lineValidation';
 import { log, errorLog, warn } from '../log';
 
 export async function getGameStateHandler(ctx: any, args: any) {

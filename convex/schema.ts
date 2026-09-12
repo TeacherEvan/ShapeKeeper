@@ -24,6 +24,8 @@ export default defineSchema({
         turnEndTime: v.optional(v.number()), // server epoch (ms) when current turn ends
         lastTurnClientSentAt: v.optional(v.number()), // client send timestamp of last move
         lastTurnServerReceivedAt: v.optional(v.number()), // server receipt timestamp of last move
+        // Legacy field from prior schema version; kept for backwards compatibility
+        securityVersion: v.optional(v.number()),
     })
         .index('by_code', ['roomCode'])
         .index('by_status', ['status']),

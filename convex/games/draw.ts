@@ -1,6 +1,6 @@
 import { checkForCompletedSquares } from './squares';
-import { validateLineKey } from './line-validation';
-import { isTurnExpired } from './turn-deadline';
+import { validateLineKey } from './lineValidation';
+import { isTurnExpired } from './turnDeadline';
 import { log, errorLog, warn } from '../log';
 
 export async function drawLineHandler(ctx: any, args: any) {

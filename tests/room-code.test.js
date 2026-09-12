@@ -5,7 +5,7 @@ import {
     generateSecureRoomCode,
     ROOM_CODE_CHARSET,
     ROOM_CODE_LENGTH,
-} from '../convex/rooms/shared-utils.js';
+} from '../convex/rooms/sharedUtils.js';
 
 describe('generateRoomCode', () => {
     it('produces a string of the configured length', () => {
