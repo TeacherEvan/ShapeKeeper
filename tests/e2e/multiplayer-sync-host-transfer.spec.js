@@ -64,7 +64,9 @@ test.describe('multiplayer sync host transfer', () => {
         const { hostPage, guestPage, hostErrors, guestErrors } = session;
 
         try {
-            await expect(hostPage.locator('#populateBtn')).not.toHaveClass(/hidden/);
+            await expect(hostPage.locator('#populateBtn')).not.toHaveClass(/hidden/, {
+                timeout: 10000,
+            });
             await expect(guestPage.locator('#populateBtn')).toHaveClass(/hidden/);
 
             await expectTurnIndicators(

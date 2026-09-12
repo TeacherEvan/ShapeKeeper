@@ -107,7 +107,7 @@ export function executeEffect(system, effectId, effectType, player, squareKey) {
     }
 }
 
-function applyLandmine(system, squareKey, player) {
+export function applyLandmine(system, squareKey, player) {
     const { game } = system;
 
     if (game.squares[squareKey]) {

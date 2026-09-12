@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git Hygiene Audit — ShapeKeeper · 2026-09-11</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#e6edf3;
+    --muted:#8b949e; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --blue:#58a6ff; --purple:#bc8cff; --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.6;padding:2rem}
+  .container{max-width:960px;margin:0 auto}
+  h1{font-size:1.8rem;margin:0 0 .4rem;display:flex;align-items:center;gap:.6rem}
+  h1 .emoji{font-size:2rem}
+  h2{font-size:1.2rem;margin:2rem 0 .8rem;border-bottom:1px solid var(--border);padding-bottom:.3rem;color:var(--blue)}
+  h3{font-size:1rem;margin:1.2rem 0 .4rem;color:var(--purple)}
+  .subtitle{color:var(--muted);margin:0 0 2rem;font-size:.95rem}
+  .scorecard{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin:1.5rem 0}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem}
+  .card .label{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .card .value{font-size:1.6rem;font-weight:700;margin-top:.2rem}
+  .card .sub{font-size:.8rem;color:var(--muted);margin-top:.15rem}
+  .grade-A{color:var(--green)} .grade-B{color:var(--blue)} .grade-C{color:var(--yellow)} .grade-D{color:var(--red)}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:1rem 0}
+  th{text-align:left;background:#1c2128;color:var(--muted);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;padding:.6rem 1rem}
+  td{padding:.55rem 1rem;border-top:1px solid var(--border);font-size:.9rem;vertical-align:top}
+  tr:hover td{background:#1a2028}
+  .tag{display:inline-block;padding:.15rem .5rem;border-radius:4px;font-size:.75rem;font-weight:600;margin-right:.3rem}
+  .tag-ok{background:rgba(63,185,80,.15);color:var(--green)}
+  .tag-warn{background:rgba(210,153,34,.15);color:var(--yellow)}
+  .tag-bad{background:rgba(248,81,73,.15);color:var(--red)}
+  .tag-info{background:rgba(88,166,255,.15);color:var(--blue)}
+  .section{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.2rem;margin:1rem 0}
+  ul.findings{list-style:none;padding:0;margin:0}
+  ul.findings li{padding:.5rem 0;border-bottom:1px solid var(--border);display:flex;gap:.6rem;align-items:flex-start}
+  ul.findings li:last-child{border-bottom:none}
+  ul.findings li .sev{font-weight:700;flex-shrink:0;margin-top:.1rem}
+  .sev-critical{color:var(--red)} .sev-high{color:var(--red)} .sev-medium{color:var(--yellow)} .sev-low{color:var(--blue)} .sev-info{color:var(--muted)}
+  .callout{background:rgba(88,166,255,.08);border-left:3px solid var(--blue);padding:.8rem 1rem;margin:1rem 0;border-radius:0 6px 6px 0}
+  .callout.warn{background:rgba(210,153,34,.08);border-left-color:var(--yellow)}
+  .callout.bad{background:rgba(248,81,73,.08);border-left-color:var(--red)}
+  .callout.ok{background:rgba(63,185,80,.08);border-left-color:var(--green)}
+  code{background:#21262d;padding:.15rem .4rem;border-radius:4px;font-size:.85rem;color:var(--blue);font-family:"SF Mono",Menlo,Consolas,monospace}
+  pre{background:#0d1117;border:1px solid var(--border);border-radius:6px;padding:1rem;overflow-x:auto;font-size:.82rem;line-height:1.5;margin:1rem 0}
+  pre code{background:none;padding:0;color:var(--text)}
+  .footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);color:var(--muted);font-size:.85rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+  .actions{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.2rem;margin:1rem 0}
+  .actions ol{margin:.5rem 0;padding-left:1.5rem}
+  .actions li{margin-bottom:.6rem}
+  .check{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:.4rem;vertical-align:middle}
+  .check-ok{background:var(--green)} .check-warn{background:var(--yellow)} .check-bad{background:var(--red)}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1><span class="emoji">🐺</span> Git Hygiene Audit — ShapeKeeper</h1>
+<p class="subtitle">Audited: 11 September 2026 · Branch: <code>main</code> (up to date with <code>origin/main</code>) · Repository: <code>TeacherEvan/ShapeKeeper</code> · Total commits: 215</p>
+
+<div class="scorecard">
+  <div class="card">
+    <div class="label">Overall Grade</div>
+    <div class="value grade-B">B+</div>
+    <div class="sub">Healthy, with cleanup work to do</div>
+  </div>
+  <div class="card">
+    <div class="label">Repo Integrity</div>
+    <div class="value grade-A">A</div>
+    <div class="sub">1 pack, 0 loose objects, 0 garbage</div>
+  </div>
+  <div class="card">
+    <div class="label">Branch Hygiene</div>
+    <div class="value grade-D">D</div>
+    <div class="sub">31 branches, 20 stale, 18 merged-but-not-deleted</div>
+  </div>
+  <div class="card">
+    <div class="label">Commit Discipline</div>
+    <div class="value grade-A">A</div>
+    <div class="sub">Strong conventional-commit adherence recently</div>
+  </div>
+</div>
+
+<!-- ============ 1. REPO BASICS ============ -->
+<h2>1. Repository Basics</h2>
+<div class="section">
+<dl class="meta-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:.4rem 1.5rem;font-size:.88rem;margin:0">
+  <dt style="color:var(--muted);font-weight:400">Remote URL</dt><dd style="margin:0;color:var(--text)"><code>https://github.com/TeacherEvan/ShapeKeeper.git</code></dd>
+  <dt style="color:var(--muted);font-weight:400">Fetch refspec</dt><dd style="margin:0;color:var(--text)"><code>+refs/heads/*:refs/remotes/origin/*</code></dd>
+  <dt style="color:var(--muted);font-weight:400">Current branch</dt><dd style="margin:0;color:var(--text)"><code>main</code> — up to date with <code>origin/main</code></dd>
+  <dt style="color:var(--muted);font-weight:400">Total commits</dt><dd style="margin:0;color:var(--text)">215</dd>
+  <dt style="color:var(--muted);font-weight:400">Branches (local + remote)</dt><dd style="margin:0;color:var(--text)">31 remote-tracking branches; 1 local branch (<code>main</code>)</dd>
+  <dt style="color:var(--muted);font-weight:400">Tags</dt><dd style="margin:0;color:var(--text)"><code>V1.0</code> (single legacy tag — no semver sequence)</dd>
+  <dt style="color:var(--muted);font-weight:400">Submodules</dt><dd style="margin:0;color:var(--text)">None</dd>
+  <dt style="color:var(--muted);font-weight:400">Git attributes</dt><dd style="margin:0;color:var(--text)">None (<code>.gitattributes</code> absent)</dd>
+  <dt style="color:var(--muted);font-weight:400">Default branch on remote</dt><dd style="margin:0;color:var(--text)"><code>origin/HEAD → origin/main</code></dd>
+</dl>
+</div>
+
+<div class="callout ok">
+<strong>Good:</strong> The remote is a standard single-origin HTTPS setup. Fetch refspec is correct. No submodules to manage. Default remote HEAD points at <code>main</code>.
+</div>
+
+<!-- ============ 2. REPOSITORY INTEGRITY ============ -->
+<h2>2. Repository Integrity</h2>
+<div class="section">
+<table>
+  <tr><th>Metric</th><th>Value</th><th>Assessment</th></tr>
+  <tr>
+    <td>Pack files</td>
+    <td>1 pack (<code>cebd42f…pack</code>)</td>
+    <td><span class="tag tag-ok">OK</span> — single well-compressed pack</td>
+  </tr>
+  <tr>
+    <td>Pack size on disk</td>
+    <td>1,407 KB (~1.4 MB)</td>
+    <td><span class="tag tag-ok">OK</span> — negligible for a 215-commit JS repo</td>
+  </tr>
+  <tr>
+    <td>Objects in pack</td>
+    <td>1,841</td>
+    <td><span class="tag tag-ok">OK</span></td>
+  </tr>
+  <tr>
+    <td>Loose objects</td>
+    <td>0</td>
+    <td><span class="tag tag-ok">OK</span> — no orphaned loose objects</td>
+  </tr>
+  <tr>
+    <td>Garbage objects</td>
+    <td>0</td>
+    <td><span class="tag tag-ok">OK</span></td>
+  </tr>
+  <tr>
+    <td>Prune-packable</td>
+    <td>0</td>
+    <td><span class="tag tag-ok">OK</span></td>
+  </tr>
+  <tr>
+    <td>Dangling / unreachable objects</td>
+    <td>0</td>
+    <td><span class="tag tag-ok">OK</span> — <code>git fsck --unreachable</code> clean</td>
+  </tr>
+  <tr>
+    <td>Largest blob in history</td>
+    <td>17,867 bytes</td>
+    <td><span class="tag tag-info">INFO</span> — see §8 for blob analysis</td>
+  </tr>
+</table>
+</div>
+
+<div class="callout ok">
+<strong>Clean bill of health.</strong> The object store is well-maintained: one efficient pack, zero loose objects, zero garbage, zero unreachable objects. No <code>git gc</code> needed. No large-file problem.
+</div>
+
+<!-- ============ 3. BRANCH HYGIENE ============ -->
+<h2>3. Branch Hygiene</h2>
+<div class="section">
+<p style="margin-top:0"><strong>31 remote-tracking branches</strong> exist on <code>origin</code>. Only <code>main</code> is an active local branch. This is a significant cleanup signal.</p>
+</div>
+
+<h3>3a. Branches whose tips are already merged into <code>main</code> — safe to delete</h3>
+<div class="section">
+<p>These branches are fully merged into <code>main</code>. They are dead weight in the branch list and should be deleted on the remote:</p>
+<table>
+  <tr><th>Branch</th><th>Notes</th></tr>
+  <tr><td><code>origin/alert-autofix-1</code></td><td><span class="tag tag-info">MERGED</span> PR #29</td></tr>
+  <tr><td><code>origin/alert-autofix-2</code></td><td><span class="tag tag-info">MERGED</span> PR #28</td></tr>
+  <tr><td><code>origin/alert-autofix-3</code></td><td><span class="tag tag-info">MERGED</span> PR #27</td></tr>
+  <tr><td><code>origin/copilot/debug-backend-problems</code></td><td><span class="tag tag-info">MERGED</span> PR #20 · last activity 272 days ago</td></tr>
+  <tr><td><code>origin/copilot/fix-backend-integration-error</code></td><td><span class="tag tag-info">MERGED</span> PR #22 · last activity 272 days ago</td></tr>
+  <tr><td><code>origin/copilot/fix-party-mode-validation-error</code></td><td><span class="tag tag-info">MERGED</span> PR #26 · last activity 276 days ago</td></tr>
+  <tr><td><code>origin/copilot/investigate-party-prompts</code></td><td><span class="tag tag-info">MERGED</span> · last activity 282 days ago</td></tr>
+  <tr><td><code>origin/copilot/investigate-screenshot-issue</code></td><td><span class="tag tag-info">MERGED</span> PR #18 · last activity 276 days ago</td></tr>
+  <tr><td><code>origin/copilot/normal-vole</code></td><td><span class="tag tag-info">MERGED</span> (merged in-place, no PR) · 271 days ago</td></tr>
+  <tr><td><code>origin/copilot/optimize-party-mode-display</code></td><td><span class="tag tag-info">MERGED</span> · 276 days ago</td></tr>
+  <tr><td><code>origin/copilot/optimize-turn-based-gameplay</code></td><td><span class="tag tag-info">MERGED</span> · 277 days ago</td></tr>
+  <tr><td><code>origin/copilot/overhaul-code-for-production</code></td><td><span class="tag tag-info">MERGED</span> · 281 days ago</td></tr>
+  <tr><td><code>origin/copilot/refactor-code-for-production-grade</code></td><td><span class="tag tag-info">MERGED</span> · 280 days ago</td></tr>
+  <tr><td><code>origin/copilot/refactor-code-for-production-grade-again</code></td><td><span class="tag tag-info">MERGED</span> · 276 days ago</td></tr>
+  <tr><td><code>origin/copilot/toggle-hypotheticals-checkbox</code></td><td><span class="tag tag-info">MERGED</span> · 282 days ago</td></tr>
+  <tr><td><code>origin/copilot/update-all-dependencies</code></td><td><span class="tag tag-info">MERGED</span> · 270 days ago</td></tr>
+  <tr><td><code>origin/copilot/update-documentation-reviews</code></td><td><span class="tag tag-info">MERGED</span> · 282 days ago</td></tr>
+  <tr><td><code>origin/copilot/update-party-mode-tiles</code></td><td><span class="tag tag-info">MERGED</span> · 280 days ago</td></tr>
+  <tr><td><code>origin/feature/main-menu-cta-rename</code></td><td><span class="tag tag-info">MERGED</span> PR #25</td></tr>
+  <tr><td><code>origin/fix/e2e-lint-formatting</code></td><td><span class="tag tag-info">MERGED</span> PR #24</td></tr>
+</table>
+<p style="margin-bottom:0"><strong>20 branches are already merged</strong> — every row above is a candidate for <code>git push origin --delete</code>.</p>
+</div>
+
+<div class="callout warn">
+<strong>Action:</strong> Delete all 20 merged branches on the remote. Each one is dead weight. Use <code>git push origin --delete &lt;branch&gt;</code> or the GitHub UI. Batch them in one sitting.
+</div>
+
+<h3>3b. Active branches worth keeping</h3>
+<div class="section">
+<table>
+  <tr><th>Branch</th><th>Last activity</th><th>Status</th></tr>
+  <tr>
+    <td><code>origin/main</code></td>
+    <td>2026-09-11</td>
+    <td><span class="tag tag-ok">ACTIVE</span> trunk</td>
+  </tr>
+  <tr>
+    <td><code>origin/v2/production-hardening</code></td>
+    <td>~2026-09-03</td>
+    <td><span class="tag tag-ok">ACTIVE-ish</span> likely the v2 ship branch; verify if still needed</td>
+  </tr>
+  <tr>
+    <td><code>origin/feat/lava-timer-online-sync</code></td>
+    <td>2026-09-09</td>
+    <td><span class="tag tag-warn">RECENT</span> check if already merged into main — if so, delete</td>
+  </tr>
+  <tr>
+    <td><code>origin/feat/live-lobby-silly-passcode</code></td>
+    <td>~2026-09-08</td>
+    <td><span class="tag tag-warn">RECENT</span> check merge status; delete if merged</td>
+  </tr>
+  <tr>
+    <td><code>origin/audit/codebase-hardening-aud1-6-tests</code></td>
+    <td>~2026-09-09</td>
+    <td><span class="tag tag-warn">RECENT</span> audit-temp branch; likely safe to delete after #43 landed</td>
+  </tr>
+</table>
+</div>
+
+<h3>3c. Stale branches — no activity for 60+ days</h3>
+<div class="section">
+<p>The following branches have had zero commits for more than 60 days. The merged ones (in 3a above) are already accounted for — this table just reinforces the delete decision and flags the unmerged ones for manual review:</p>
+<table>
+  <tr><th>Branch</th><th>Last activity</th><th>Age (days)</th><th>Merge status</th></tr>
+  <tr><td><code>origin/copilot/investigate-party-prompts</code></td><td>2025-12-03</td><td>282</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/toggle-hypotheticals-checkbox</code></td><td>2025-12-03</td><td>282</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/update-documentation-reviews</code></td><td>2025-12-03</td><td>282</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/investigate-screenshot-issue</code></td><td>2025-12-09</td><td>276</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/fix-party-mode-validation-error</code></td><td>2025-12-08</td><td>276</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/optimize-turn-based-gameplay</code></td><td>2025-12-08</td><td>277</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/update-party-mode-tiles</code></td><td>2025-12-05</td><td>280</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/refactor-code-for-production-grade</code></td><td>2025-12-05</td><td>280</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/overhaul-code-for-production</code></td><td>2025-12-04</td><td>281</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/refactor-code-for-production-grade-again</code></td><td>2025-12-08</td><td>276</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/optimize-party-mode-display</code></td><td>2025-12-08</td><td>276</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/fix-backend-integration-error</code></td><td>2025-12-13</td><td>272</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/normal-vole</code></td><td>2025-12-13</td><td>271</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/debug-backend-problems</code></td><td>2025-12-13</td><td>272</td><td>Merged</td></tr>
+  <tr><td><code>origin/copilot/update-all-dependencies</code></td><td>2025-12-15</td><td>270</td><td>Merged</td></tr>
+  <tr><td><code>origin/worktree-2025-12-13T12-52-46</code></td><td>2025-12-13</td><td>271</td><td>Check — likely worktree artifact</td></tr>
+  <tr><td><code>origin/worktree-2025-12-13T12-53-25</code></td><td>2025-12-13</td><td>272</td><td>Check — likely worktree artifact</td></tr>
+  <tr><td><code>origin/worktree-2025-12-13T13-23-47</code></td><td>2025-12-13</td><td>271</td><td>Check — likely worktree artifact</td></tr>
+  <tr><td><code>origin/feature/refactor/convex-games</code></td><td>2026-02-13</td><td>210</td><td>Check — may be abandoned work; review before deleting</td></tr>
+</table>
+</div>
+
+<div class="callout bad">
+<strong>The three <code>worktree-*</code> branches</strong> (dated 2025-12-13) look like automated or manual worktree checkout artifacts that got pushed. They are almost certainly not intentional long-lived branches. Audit before deleting: <code>git log origin/worktree-2025-12-13T12-52-46 --oneline -3</code> to confirm they are empty/no-op. If they contain nothing but a checkout of an existing commit, delete them.
+</div>
+
+<!-- ============ 4. COMMIT HISTORY ============ -->
+<h2>4. Commit History &amp; Discipline</h2>
+
+<h3>4a. Authorship</h3>
+<div class="section">
+<table>
+  <tr><th>Author identity (as recorded)</th><th>Commits</th><th>Notes</th></tr>
+  <tr><td><code>TeacherEvan</code></td><td>77</td><td>Primary human author — but see §4b</td></tr>
+  <tr><td><code>copilot-swe-agent[bot]</code></td><td>48</td><td>AI agent commits — fine if intentional</td></tr>
+  <tr><td><code>Teacher Evan</code> (with space)</td><td>30</td><td><span class="tag tag-warn">SPLIT</span> same person as <code>TeacherEvan</code>?</td></tr>
+  <tr><td><code>PicKaBoo</code></td><td>20</td><td>Secondary human — verify if this is Evan</td></tr>
+  <tr><td><code>Ewaldt Botha</code></td><td>13</td><td>Evan's real name — separate identity</td></tr>
+  <tr><td><code>teacherEvan</code> (lowercase)</td><td>12</td><td><span class="tag tag-warn">SPLIT</span> another casing variant</td></tr>
+  <tr><td><code>dependabot[bot]</code></td><td>8</td><td>Dependency updates — expected</td></tr>
+  <tr><td><code>ShapeKeeper Dev</code></td><td>7</td><td><span class="tag tag-warn">MYSTERY</span> <code>developer@shapekeeper.dev</code> + <code>dev@shapekeeper.local</code> — what is this?</td></tr>
+</table>
+</div>
+
+<div class="callout warn">
+<strong>Author identity fragmentation.</strong> The repo has 8 distinct author strings, but <em>at least 4 of them are the same human</em> (TeacherEvan, Teacher Evan, teacherEvan, Ewaldt Botha, PicKaBoo, ShapeKeeper Dev — possibly all Evan). This muddies <code>git blame</code>, <code>git shortlog</code>, and any future contributor statistics.
+</div>
+
+<h3>4b. Commit message quality</h3>
+<div class="section">
+<p>Recent non-merge commits (last 30) show <strong>strong conventional-commit adherence</strong>:</p>
+<table>
+  <tr><th>Prefix</th><th>Count in sample</th><th>Verdict</th></tr>
+  <tr><td><code>fix:</code></td><td>2</td><td><span class="tag tag-ok">GOOD</span></td></tr>
+  <tr><td><code>chore:</code> / <code>chore(deps):</code> / <code>chore(deps-dev):</code></td><td>8</td><td><span class="tag tag-ok">GOOD</span></td></tr>
+  <tr><td><code>chore(plans):</code></td><td>2</td><td><span class="tag tag-ok">GOOD</span> scoped chore</td></tr>
+  <tr><td><code>chore(prune):</code></td><td>4</td><td><span class="tag tag-ok">GOOD</span> well-scoped</td></tr>
+  <tr><td><code>feat(lobby, multiplayer):</code></td><td>1</td><td><span class="tag tag-ok">GOOD</span> multi-scope</td></tr>
+  <tr><td><code>feat(convex):</code></td><td>1</td><td><span class="tag tag-ok">GOOD</span></td></tr>
+  <tr><td><code>feat(multiplayer):</code> / <code>feat(game):</code></td><td>3</td><td><span class="tag tag-ok">GOOD</span></td></tr>
+  <tr><td><code>v2:</code></td><td>6</td><td><span class="tag tag-warn">NON-STANDARD</span> — custom prefix, but well-structured with subtitles; acceptable as a release-track convention</td></tr>
+  <tr><td><code>docs:</code> / <code>docs(audit):</code></td><td>2</td><td><span class="tag tag-ok">GOOD</span></td></tr>
+  <tr><td><code>test(multiplayer):</code></td><td>1</td><td><span class="tag tag-ok">GOOD</span></td></tr>
+  <tr><td><code>style(game):</code></td><td>1</td><td><span class="tag tag-ok">GOOD</span></td></tr>
+  <tr><td><code>refactor(local-setup):</code></td><td>1</td><td><span class="tag tag-ok">GOOD</span></td></tr>
+</table>
+</div>
+
+<div class="callout ok">
+<strong>Verdict:</strong> The recent commit history is genuinely good. Scoped prefixes, descriptive subjects, body explanations on the important commits. The <code>v2:</code> prefix is a non-standard but intentional release-track convention — keep it if it's documented, otherwise migrate to <code>feat(v2):</code> for consistency.
+</div>
+
+<h3>4c. Commits with detailed bodies</h3>
+<div class="section">
+<p>The most important commits have rich bodies explaining the <em>why</em>:</p>
+<ul>
+  <li><code>73fc11f</code> (latest) — full explanation of the hostToken projection bug, files changed, and verification gates</li>
+  <li><code>a188439</code> (v2 hardening) — PR #46, production hardening bundle</li>
+  <li><code>dcd03e9</code> — architectural hardening with test coverage</li>
+  <li><code>b19c2b4</code> — rate-limit feature with schema + tests</li>
+</ul>
+<p>This is <span class="tag tag-ok">GOOD</span> hygiene. Commit bodies are not decorative here — they carry real context.</p>
+</div>
+
+<h3>4d. The one suspicious commit</h3>
+<div class="section">
+<div class="callout warn">
+<p style="margin:0 0 .4rem"><strong>⚠ <code>a475356</code> — "chore: auto-commit and push — agent batch 2026-09-10T11:08:24Z"</strong></p>
+<p style="margin:0">This commit is in the top-20 by size (591 insertions across 2 files) and has an auto-generated bot-style message. It added two files under <code>docs/plans/</code>. Verify:</p>
+</div>
+<pre><code>git show a475356 --stat
+git show a475356 --format=fuller</code></pre>
+<p>If this was an intentional agent batch, the message format is acceptable but could be more descriptive. If it was accidental or redundant, consider noting it. Either way, it's not a defect — just worth confirming.</p>
+</div>
+
+<!-- ============ 5. .gitignore ============ -->
+<h2>5. <code>.gitignore</code> Assessment</h2>
+<div class="section">
+<p>A <code>.gitignore</code> exists at the repo root. Overall it's <span class="tag tag-ok">SOLID</span>, covering:</p>
+<table>
+  <tr><th>Category</th><th>Covered</th><th>Details</th></tr>
+  <tr><td>Dependencies</td><td><span class="tag tag-ok">✓</span></td><td><code>node_modules/</code></td></tr>
+  <tr><td>IDE</td><td><span class="tag tag-ok">✓</span></td><td><code>.vscode/*</code> (with intentional keep for settings + launch), <code>.idea/</code>, <code>*.swp</code>, <code>*.swo</code>, <code>*~</code></td></tr>
+  <tr><td>OS artifacts</td><td><span class="tag tag-ok">✓</span></td><td><code>.DS_Store</code>, <code>Thumbs.db</code>, <code>desktop.ini</code></td></tr>
+  <tr><td>Logs</td><td><span class="tag tag-ok">✓</span></td><td><code>*.log</code>, <code>npm-debug.log*</code>, <code>yarn-*.log*</code></td></tr>
+  <tr><td>Build output</td><td><span class="tag tag-ok">✓</span></td><td><code>dist/</code>, <code>build/</code></td></tr>
+  <tr><td>Temp / test artifacts</td><td><span class="tag tag-ok">✓</span></td><td><code>*.tmp</code>, <code>.cache/</code>, <code>playwright-report/</code>, <code>test-results/</code></td></tr>
+  <tr><td>Env files</td><td><span class="tag tag-ok">✓</span></td><td><code>.env.local</code>, <code>.env</code>, <code>.env*</code>, <code>.vercel</code>, <code>convex/.env*</code></td></tr>
+  <tr><td>AI scratch files</td><td><span class="tag tag-ok">✓</span></td><td><code>bench.mjs</code>, <code>ai-diagnose.mjs</code>, <code>ai_*.mjs</code>, <code>ai_*.json</code>, <code>ai_*.png</code>, <code>*.prune/</code>, <code>docs/.scratch-audit/</code></td></tr>
+</table>
+</div>
+
+<h3>5a. Gaps and recommendations</h3>
+<div class="section">
+<table>
+  <tr><th>Gap</th><th>Severity</th><th>Recommendation</th></tr>
+  <tr>
+    <td>No <code>.gitattributes</code></td>
+    <td><span class="tag tag-warn">MEDIUM</span></td>
+    <td>Without <code>.gitattributes</code>, Git cannot apply consistent line-ending rules or binary-file handling. For a JS-only repo with a multi-OS contributor set, add <code>* text=auto eol=lf</code> and <code>*.png binary</code>, <code>*.jpg binary</code>. See §9.</td>
+  </tr>
+  <tr>
+    <td><code>AGENTS.md</code> is untracked</td>
+    <td><span class="tag tag-info">INFO</span></td>
+    <td><code>AGENTS.md</code> exists in the working tree but is not in Git and not in <code>.gitignore</code>. Either add and commit it (it's project instructions — valuable), or add to <code>.gitignore</code> if it's scratch. Given it's in the repo root and named like a project convention file, it should probably be <strong>committed</strong>.</td>
+  </tr>
+  <tr>
+    <td><code>docs/plans/2026-09-11-main-sync-audit.md</code> is untracked</td>
+    <td><span class="tag tag-info">INFO</span></td>
+    <td>Working-tree artifact from a sync audit. Add, commit, or ignore — own decision. Not a hygiene defect per se.</td>
+  </tr>
+  <tr>
+    <td>No <code>.eslintcache</code> / <code>coverage/</code> entries</td>
+    <td><span class="tag tag-info">LOW</span></td>
+    <td>Check whether vitest or eslint produce caches in the working tree. If so, add them. The repo uses vitest with jsdom — check for <code>node_modules/.cache/</code> which is already covered by <code>.cache/</code> in gitignore.</td>
+  </tr>
+</table>
+</div>
+
+<!-- ============ 6. WORKING TREE ============ -->
+<h2>6. Current Working Tree State</h2>
+<div class="section">
+<table>
+  <tr><th>File</th><th>State</th><th>Action</th></tr>
+  <tr>
+    <td><code>package-lock.json</code></td>
+    <td><span class="tag tag-warn">MODIFIED (unstaged)</span></td>
+    <td>Inspect with <code>git diff package-lock.json</code>. If it's a Node version mismatch, restore it: <code>git checkout -- package-lock.json</code> after confirming no real change. If it's a legitimate lockfile update, stage and commit it.</td>
+  </tr>
+  <tr>
+    <td><code>AGENTS.md</code></td>
+    <td><span class="tag tag-info">UNTRACKED</span></td>
+    <td>Decide: commit (recommended — it's project instructions) or ignore.</td>
+  </tr>
+  <tr>
+    <td><code>docs/plans/2026-09-11-main-sync-audit.md</code></td>
+    <td><span class="tag tag-info">UNTRACKED</span></td>
+    <td>Own artifact. Clean up or commit as appropriate.</td>
+  </tr>
+</table>
+</div>
+
+<div class="callout ok">
+<strong>Clean working tree aside from 3 files.</strong> No other untracked files (the <code>.gitignore</code> is doing its job — no <code>node_modules/</code>, no <code>.env</code>, no OS artifacts leaking).
+</div>
+
+<!-- ============ 7. TAGGING ============ -->
+<h2>7. Tagging &amp; Releases</h2>
+<div class="section">
+<div class="callout warn">
+<strong>Single tag in history: <code>V1.0</code>.</strong> There is no semver sequence (<code>v2.0.0</code>, <code>v4.3.0</code>, etc.). The README references version 4.3.0 but there is no corresponding Git tag.
+</div>
+<p>The project appears to use version strings in <code>config.js</code> or <code>README.md</code> rather than Git tags for release tracking. This is acceptable for a static-site deployment model (Vercel), but if you ever want <code>git describe</code> to work for debugging production builds, establish a tag convention:</p>
+<ul>
+  <li><strong>Option A (lightweight):</strong> Tag the production deploy commits. E.g. <code>git tag v4.3.0 &lt;deploy-commit&gt; &amp;&amp; git push origin v4.3.0</code>. No need to tag every commit — just the ones that ship to production.</li>
+  <li><strong>Option B (conventional):</strong> Use <code>v&lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;</code> for every release and rely on GitHub Releases as the changelog. This gives you <code>git describe --tags</code> for free.</li>
+  <li><strong>Option C (do nothing):</strong> Keep the current model where version is tracked in <code>config.js</code>. This is fine for Vercel deployments but loses the ability to <code>git checkout v4.3.0</code> to inspect a shipped build.</li>
+</ul>
+</div>
+
+<h3>7b. Tag hygiene issues</h3>
+<div class="section">
+<table>
+  <tr><th>Issue</th><th>Severity</th></tr>
+  <tr>
+    <td><code>V1.0</code> uses uppercase <code>V</code> — inconsistent with semver convention (lowercase <code>v</code>)</td>
+    <td><span class="tag tag-low">LOW</span></td>
+  </tr>
+  <tr>
+    <td>No tags correspond to the current version (4.3.0)</td>
+    <td><span class="tag tag-medium">MEDIUM</span></td>
+  </tr>
+  <tr>
+    <td>No annotated tags (all lightweight) — no tag message, no tagger date metadata</td>
+    <td><span class="tag tag-low">LOW</span></td>
+  </tr>
+</table>
+</div>
+
+<!-- ============ 8. LARGE FILES ============ -->
+<h2>8. Large Files &amp; Blob Analysis</h2>
+<div class="section">
+<table>
+  <tr><th>Rank</th><th>Blob size</th><th>Commit</th><th>Assessment</th></tr>
+  <tr><td>1</td><td>17,867 bytes</td><td><code>a188439</code> (v2 hardening)</td><td><span class="tag tag-info">PROBABLE PLAN FILE</span> — this is the v2 production hardening commit. The large blob is almost certainly a plan or audit document that was committed. Verify with <code>git show a188439 --stat</code>. If it's a doc, consider whether it belongs in Git or in a separate docs-only location.</td></tr>
+  <tr><td>2</td><td>4,321 bytes</td><td><code>054c4a8</code></td><td><span class="tag tag-ok">FINE</span> — well under any threshold</td></tr>
+  <tr><td>3</td><td>2,972 bytes</td><td><code>dd3484e</code></td><td><span class="tag tag-ok">FINE</span></td></tr>
+  <tr><td>4–15</td><td>1,845–2,885 bytes</td><td>various</td><td><span class="tag tag-ok">FINE</span> — all normal source/file sizes</td></tr>
+</table>
+</div>
+
+<div class="callout ok">
+<strong>No large-file problem.</strong> The largest blob in history is 17.8 KB — well within normal bounds for a JavaScript project. There are no binaries, no accidentally-committed <code>node_modules</code>, no asset bloat. The pack is 1.4 MB total. This is a lean repository.
+</div>
+
+<!-- ============ 9. MISSING MECHANISMS ============ -->
+<h2>9. Missing Git Mechanisms</h2>
+
+<h3>9a. <code>.gitattributes</code> — recommended addition</h3>
+<div class="section">
+<p>Without <code>.gitattributes</code>, Git uses platform defaults for line endings and has no binary-detection rules. For a multi-OS project, add this file at the repo root:</p>
+<pre><code># Line endings: normalize to LF on checkout
+* text=auto eol=lf
+
+# Binary files — do not normalize
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.svg text eol=lf
+
+# Generated / lock files — LF only
+package-lock.json text eol=lf
+yarn.lock text eol=lf
+
+# Convex TypeScript — LF only
+convex/**/*.ts text eol=lf
+convex/**/*.js text eol=lf</code></pre>
+<p>This prevents the classic "one contributor on Windows checks in CRLF, everyone else sees a diff of every line" problem. It also prevents Git from storing duplicate blobs for the same file in two line-ending forms.</p>
+</div>
+
+<h3>9b. Pre-commit hooks — currently absent</h3>
+<div class="section">
+<p>There is no <code>.git/hooks/</code> enforcement visible. This repo relies on CI (ESLint + vitest) rather than pre-commit hooks. That's a valid choice for a small team, but consider:</p>
+<ul>
+  <li><strong>Husky</strong> or a simple <strong>pre-commit script</strong> that runs <code>npx eslint --fix</code> on staged <code>.js</code> files before commit. This catches lint drift at commit time rather than at CI time.</li>
+  <li><strong>pre-commit</strong> (the Python-based framework) is another option — it can run <code>eslint</code>, <code>prettier --check</code>, and <code>npm run verify</code> as pre-commit steps without committing to a specific JS toolchain.</li>
+</ul>
+<p>This is a <span class="tag tag-info">NICE-TO-HAVE</span>, not a defect. The current CI-gated approach works.</p>
+</div>
+
+<h3>9c. No signed commits</h3>
+<div class="section">
+<p>None of the commits are GPG-signed. For a personal/small-team project this is fine. If the project ever becomes security-sensitive or multi-organizational, enable commit signing via <code>commit.gpgsign = true</code> in Git config and add verified badges on GitHub.</p>
+</div>
+
+<!-- ============ 10. SECURITY ============ -->
+<h2>10. Security Quick-Check</h2>
+<div class="section">
+<p>Ran high-signal pattern searches across the full commit history for <code>AKIA</code> (AWS access keys), <code>sk-</code> (OpenAI/secret keys), and <code>password</code> (hardcoded credentials) in source files:</p>
+<table>
+  <tr><th>Pattern</th><th>Hits in history</th><th>Assessment</th></tr>
+  <tr>
+    <td><code>AKIA</code> (AWS key prefix)</td>
+    <td><span class="tag tag-ok">NONE</span></td>
+    <td>No AWS keys in history. Safe.</td>
+  </tr>
+  <tr>
+    <td><code>sk-</code> (secret key prefix)</td>
+    <td>One commit touched a file in a "update all dependencies" batch</td>
+    <td><span class="tag tag-warn">REVIEW</span> — the hit was in <code>e6bbff4</code> (copilot dependency update). Verify it's not a real secret by inspecting that commit: <code>git show e6bbff4 --stat</code> and checking which file matched. Likely a false positive (e.g. a <code>SKA</code> variable name or a test fixture).</td>
+  </tr>
+  <tr>
+    <td><code>password</code> (literal)</td>
+    <td><span class="tag tag-ok">NONE</span> in source files</td>
+    <td>No hardcoded passwords found.</td>
+  </tr>
+</table>
+</div>
+
+<div class="callout ok">
+<strong>No secrets detected in Git history.</strong> The one <code>sk-</code> pattern hit is in a copilot dependency-update commit and is likely a false positive. Confirm with a quick <code>git show</code> on that commit if you want to be sure. The <code>.env</code> files are properly gitignored, so no runtime secrets are at risk of being committed going forward.
+</div>
+
+<!-- ============ 11. SUMMARY ============ -->
+<h2>11. Summary of Findings by Severity</h2>
+<div class="section">
+<ul class="findings">
+  <li>
+    <span class="sev sev-high">HIGH</span>
+    <span><strong>20 merged branches still on the remote.</strong> Every one of the 20 branches listed in §3a is fully merged into <code>main</code> and should be deleted. This is the single biggest hygiene issue in the repo. Cost of cleanup: one batch <code>git push origin --delete</code> command. Benefit: branch list goes from 31 to ~11, much easier to navigate, no confusion about what's alive.</span>
+  </li>
+  <li>
+    <span class="sev sev-high">HIGH</span>
+    <span><strong>Author identity fragmentation.</strong> 8 distinct author strings, at least 4 referring to the same human. This makes <code>git shortlog</code>, <code>git blame</code> annotations, and any contributor statistics unreliable. Fix: re-set <code>user.name</code> / <code>user.email</code> consistently on the committing machine, and optionally use <code>git filter-repo</code> or <code>git rebase</code> to coalesce historical identities if a clean record is wanted.</span>
+  </li>
+  <li>
+    <span class="sev sev-medium">MEDIUM</span>
+    <span><strong>No <code>.gitattributes</code>.</strong> For a multi-OS project, this invites line-ending drift. Adding a <code>.gitattributes</code> file is a 5-minute one-time action with long-term payoff.</span>
+  </li>
+  <li>
+    <span class="sev sev-medium">MEDIUM</span>
+    <span><strong>No release tags for current version.</strong> The project is at 4.3.0 but the only tag is <code>V1.0</code>. If you ever need to checkout a shipped build for debugging, you can't. Adding a tag on the production deploy commit is low-cost and high-value.</span>
+  </li>
+  <li>
+    <span class="sev sev-medium">MEDIUM</span>
+    <span><strong><code>package-lock.json</code> is modified in the working tree.</strong> Needs investigation: either a Node version mismatch (restore it) or a legitimate update (commit it). Either way it shouldn't sit unstaged.</span>
+  </li>
+  <li>
+    <span class="sev sev-low">LOW</span>
+    <span><strong>Three <code>worktree-*</code> branches</strong> on the remote look like accidental pushes of local worktree checkouts. Audit and delete if they contain nothing meaningful.</span>
+  </li>
+  <li>
+    <span class="sev sev-low">LOW</span>
+    <span><strong><code>V1.0</code> uses uppercase <code>V</code></strong> — minor inconsistency with semver convention. Only relevant if you add more tags.</span>
+  </li>
+  <li>
+    <span class="sev sev-low">LOW</span>
+    <span><strong>No pre-commit hooks.</strong> CI catches issues, but a light pre-commit step (ESLint + format check) would catch them earlier. Optional.</span>
+  </li>
+  <li>
+    <span class="sev sev-info">INFO</span>
+    <span><strong><code>AGENTS.md</code> is untracked.</strong> It's a project-convention file in the repo root — worth committing, not ignoring.</span>
+  </li>
+  <li>
+    <span class="sev sev-info">INFO</span>
+    <span><strong>Repo is lean.</strong> 1.4 MB pack, 17.8 KB largest blob, 0 garbage. No large-file problem, no binary bloat. Excellent.</span>
+  </li>
+  <li>
+    <span class="sev sev-info">INFO</span>
+    <span><strong>Commit messages are strong.</strong> Recent commits use scoped conventional-commit prefixes with descriptive bodies. This is genuinely good discipline and worth preserving.</span>
+  </li>
+</ul>
+</div>
+
+<!-- ============ 12. ACTION PLAN ============ -->
+<h2>12. Recommended Action Plan</h2>
+<div class="actions">
+<p>Here's the cleanup in priority order. Items marked ✅ are one-command fixes. Items marked 🔨 need a decision first.</p>
+
+<h3>Phase 1 — Quick wins (do today, ~15 minutes)</h3>
+<ol>
+  <li>
+    <strong><span class="check check-ok"></span> Delete the 20 merged branches.</strong>
+    <br>One command batch (run from repo root):
+    <pre>git push origin --delete \
+  alert-autofix-1 alert-autofix-2 alert-autofix-3 \
+  copilot/debug-backend-problems copilot/fix-backend-integration-error \
+  copilot/fix-party-mode-validation-error copilot/investigate-party-prompts \
+  copilot/investigate-screenshot-issue copilot/normal-vole \
+  copilot/optimize-party-mode-display copilot/optimize-turn-based-gameplay \
+  copilot/overhaul-code-for-production copilot/refactor-code-for-production-grade \
+  copilot/refactor-code-for-production-grade-again copilot/toggle-hypotheticals-checkbox \
+  copilot/update-all-dependencies copilot/update-documentation-reviews \
+  copilot/update-party-mode-tiles \
+  feature/main-menu-cta-rename fix/e2e-lint-formatting</pre>
+    <br>Then prune local refs: <code>git fetch origin --prune</code>
+  </li>
+  <li>
+    <strong><span class="check check-ok"></span> Resolve <code>package-lock.json</code>.</strong>
+    <br><code>git diff package-lock.json</code> to see what changed. If it's a Node version artifact, restore: <code>git checkout -- package-lock.json</code>. If it's a real update, stage and commit with a <code>chore(deps): refresh package-lock.json</code> message.
+  </li>
+  <li>
+    <strong><span class="check check-ok"></span> Audit and delete the three <code>worktree-*</code> branches.</strong>
+    <br>First confirm they're empty/no-op: <code>git log origin/worktree-2025-12-13T12-52-46 --oneline -3</code>. If they're just checkout artifacts, delete: <code>git push origin --delete worktree-2025-12-13T12-52-46 worktree-2025-12-13T12-53-25 worktree-2025-12-13T13-23-47</code>.
+  </li>
+</ol>
+
+<h3>Phase 2 — Decisions and setup (do this week, ~30 minutes)</h3>
+<ol start="4">
+  <li>
+    <strong><span class="check check-warn"></span> Decide on <code>AGENTS.md</code>.</strong>
+    <br>If it's project instructions that should ship with the repo, add and commit it. If it's scratch, add it to <code>.gitignore</code>. Either way, resolve the untracked state.
+  </li>
+  <li>
+    <strong><span class="check check-warn"></span> Add <code>.gitattributes</code>.</strong>
+    <br>Create the file at repo root with the content shown in §9a. Commit as <code>chore: add .gitattributes for line-ending normalization</code>. This is backward-compatible — it only affects future checkouts and new blobs.
+  </li>
+  <li>
+    <strong><span class="check check-warn"></span> Establish a tag for the current release.</strong>
+    <br>Find the commit that corresponds to the currently-deployed v4.3.0 (likely <code>73fc11f</code> or its ancestor on <code>main</code>). Tag it: <code>git tag v4.3.0 &lt;commit&gt; &amp;&amp; git push origin v4.3.0</code>. Use lowercase <code>v</code> for convention consistency.
+  </li>
+  <li>
+    <strong><span class="check check-warn"></span> Normalize author identity going forward.</strong>
+    <br>Ensure the committing machine has a single <code>user.name</code> and <code>user.email</code> configured. The historical fragmentation can't be retroactively fixed without a history rewrite (<code>git filter-repo</code>), which is risky on a shared branch — weigh whether it's worth it. For future commits, consistency matters more than the past.
+  </li>
+</ol>
+
+<h3>Phase 3 — Optional hardening (do when relevant)</h3>
+<ol start="8">
+  <li>
+    <strong><span class="check check-info"></span> Set up a pre-commit hook.</strong>
+    <br>Add a lightweight hook that runs <code>npx eslint --fix</code> on staged <code>.js</code> files before commit. Husky or a raw <code>.git/hooks/pre-commit</code> script both work. This is optional — CI already catches violations.
+  </li>
+  <li>
+    <strong><span class="check check-info"></span> Confirm the <code>sk-</code> false positive.</strong>
+    <br><code>git show e6bbff4 --stat</code> and inspect the matching file if you want to be certain no secret leaked in a dependency update. Low probability, but worth a 30-second check.
+  </li>
+  <li>
+    <strong><span class="check check-info"></span> Review <code>origin/feat/lava-timer-online-sync</code> and <code>origin/feat/live-lobby-silly-passcode</code>.</strong>
+    <br>If they're merged into <code>main</code>, delete them (they're not in the merged list above, so they may still be active work). If they're abandoned, archive or delete.
+  </li>
+  <li>
+    <strong><span class="check check-info"></span> Verify <code>origin/v2/production-hardening</code>.</strong>
+    <br>This branch likely predates the v2 ship. If its changes are fully in <code>main</code>, delete it. If it's a staging branch for a future v3, leave it but document its purpose.
+  </li>
+</ol>
+</div>
+
+<!-- ============ 13. METHODOLOGY ============ -->
+<h2>13. Methodology</h2>
+<div class="section">
+<p>This audit was run directly against the local Git repository using the following commands:</p>
+<pre>
+# Identity & history
+git status
+git log --oneline -20
+git log --all --format='%an &lt;%ae&gt;' | sort -u
+git log --all --format='%an' | sort | uniq -c | sort -rn
+git log --all --oneline --no-merges -30
+git log -1 --format='fuller'
+
+# Branches
+git branch -a
+git branch -r --merged origin/main
+git for-each-ref --format='%(refname:short) %(committerdate:iso8601)' refs/remotes/origin/
+git rev-list --all --count
+
+# Integrity
+git count-objects -v
+git verify-pack -v .git/objects/pack/*.pack
+git rev-list --all --objects | git cat-file --batch-check | sort -k3 -n -r | head -15
+git fsck --unreachable
+
+# Working tree
+git ls-files --others --exclude-standard
+git diff --stat
+
+# Security scan
+git log -p --all -S "AKIA" -- "*.js" "*.ts" "*.json" "*.yaml" "*.yml"
+git log -p --all -S "sk-" -- "*.js" "*.ts" "*.json" "*.yaml" "*.yml"
+git log -p --all -S "password" -- "*.js" "*.ts" "*.json"
+
+# Config & metadata
+git config --list --local
+git remote -v
+cat .gitignore
+git tag -l
+</pre>
+<p style="margin-top:.8rem">All findings are based on the actual state of this repository at the time of audit. No assumptions were made about remote state beyond what <code>git fetch</code> had already retrieved.</p>
+</div>
+
+<div class="footer">
+  <span>🐺 ShapeKeeper Git Hygiene Audit — 2026-09-11 — Stored in <code>docs/development/</code></span>
+  <span>Repo: <code>TeacherEvan/ShapeKeeper</code> · 215 commits · 31 branches · Grade: B+</span>
+</div>
+
+</div>
+</body>
+</html>

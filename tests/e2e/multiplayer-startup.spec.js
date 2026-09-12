@@ -54,6 +54,9 @@ test.describe('multiplayer host-guest startup', () => {
 
             await hostPage.getByTestId('ready-button').click();
             await guestPage.getByTestId('ready-button').click();
+            // Allow microtask queue to drain for room subscription updates
+            await hostPage.waitForTimeout(50);
+            await guestPage.waitForTimeout(50);
 
             await expect(hostPage.getByTestId('ready-button')).toContainText('Ready ✓');
             await expect(guestPage.getByTestId('ready-button')).toContainText('Ready ✓');

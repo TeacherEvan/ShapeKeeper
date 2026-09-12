@@ -63,7 +63,13 @@ export async function installSharedMockMultiplayer(
                 if (!room) return null;
                 const roomState = { ...room };
                 delete roomState.gameState;
-                return clone(roomState);
+                const payload = clone(roomState);
+                const localPlayer = payload.players?.find((p) => p.sessionId === initialSessionId);
+                if (localPlayer) {
+                    localPlayer.isYou = true;
+                    payload.isHost = localPlayer.isHost === true;
+                }
+                return payload;
             };
             const getLocalPlayer = (room) =>
                 room?.players.find((player) => player.sessionId === initialSessionId) || null;
@@ -403,6 +409,10 @@ export async function installSharedMockMultiplayer(
                                 remainingConnectedPlayers[0]
                             )
                                 room.hostPlayerId = remainingConnectedPlayers[0].sessionId;
+                            // Update isHost flag on the new host
+                            remainingConnectedPlayers.forEach((player) => {
+                                player.isHost = player.sessionId === room.hostPlayerId;
+                            });
                             if (
                                 room.gameState?.room?.currentPlayerIndex ===
                                     leavingPlayer?.playerIndex &&
@@ -422,6 +432,10 @@ export async function installSharedMockMultiplayer(
                             } else {
                                 if (room.hostPlayerId === initialSessionId)
                                     room.hostPlayerId = room.players[0].sessionId;
+                                // Update isHost flag on the new host
+                                room.players.forEach((player) => {
+                                    player.isHost = player.sessionId === room.hostPlayerId;
+                                });
                                 room.players = room.players.map((player, index) => ({
                                     ...player,
                                     playerIndex: index,

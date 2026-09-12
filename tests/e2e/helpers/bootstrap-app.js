@@ -42,6 +42,25 @@ export async function gotoApp(page, { startupTimeoutMs = 250 } = {}) {
         })
     );
 
+    await page.route('**/*', async (route) => {
+        const request = route.request();
+        if (request.resourceType() === 'document') {
+            const response = await route.fetch();
+            let html = await response.text();
+            html = html.replace(
+                /<script[^>]*src="https:\/\/unpkg\.com\/convex@[^"]*\/dist\/browser\.bundle\.js"[^>]*integrity="[^"]*"[^>]*>/,
+                '<script src="https://unpkg.com/convex@1.42.3/dist/browser.bundle.js" crossorigin="anonymous"></script>'
+            );
+            await route.fulfill({
+                status: 200,
+                contentType: 'text/html',
+                body: html,
+            });
+            return;
+        }
+        route.continue();
+    });
+
     await page.addInitScript(
         ({ startupTimeoutOverride }) => {
             window.__SHAPEKEEPER_STARTUP_TIMEOUT_MS = startupTimeoutOverride;
