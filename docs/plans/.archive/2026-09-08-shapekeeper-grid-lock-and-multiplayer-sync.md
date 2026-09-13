@@ -17,3 +17,27 @@ Proposed fix (awaiting user approval before edit):
 Rollback: git checkout -- for edited files; backup current jobs.json already at /tmp (prior audit).
 References: convex/rooms/settings.ts (updateGridSizeHandler), convex/rooms/shared.ts (passcode), src/ui/LobbyManager.js (placeholder), src/ui/MultiplayerStartup.js (desync), game-state.js (grid application), docs/plans/ (new plan file here).
 External resources used: local source only; NO web_search/web_extract/curl (not needed; source is authoritative). Skill references: devils-dice-guardrails for verification discipline; convex-backend-patterns (loaded via skill_view if Convex edits needed).
+
+---
+
+## Resolution (2026-09-13, surgical-implementation dispatcher)
+
+**Status: ARCHIVED — already implemented on main.**
+
+Both claims A and B were verified against the live tree and found RESOLVED:
+
+- **A (grid-lock):** `src/ui/menu/eventBindings.js:269` calls
+  `window.ShapeKeeperConvex.updateGridSize(newSize)` (host-only guard) →
+  `convex-client/room-operations.js:145` → `convex/rooms.ts:69` →
+  `convex/rooms/settings.ts:4` (hostToken + lobby-status gate). Peer sync via
+  Convex subscription; `syncHandlers.js` applies `roomState.gridSize` to the
+  lobby manager and toggles `.lobby-grid-btn.selected`. Round-trip complete.
+
+- **B (multiplayer sync):** `welcome.js:20` instantiates `LiveLobbyManager`
+  (not the legacy placeholder). `MenuNavigation.subscribeToRoomUpdates()` wires
+  `handleRoomUpdate` → `syncHandlers.handleRoomStateUpdate` → `lobbyManager`
+  (the LiveLobbyManager instance). `DESYNCED` state is reachable on disconnect
+  (`MenuNavigation.js:202`). `buildInviteUrl()` is the canonical invite-link
+  builder per AGENTS.md.
+
+No re-implementation performed. Plan archived as resolved.
