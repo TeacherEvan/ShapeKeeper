@@ -1,91 +1,145 @@
 # AGENTS.md — ShapeKeeper
 
-Browser-based Dots and Boxes game (ShapeKeeper), turn-based multiplayer via Convex, static frontend on Vercel (`shape-keeper.vercel.app`). Pure vanilla JS, no framework. Version: 4.3.0.
+> Operational rules for any AI agent (or human) working in this repo.
+> Skills conform to the live source, not the reverse. If a rule here
+> contradicts what the code does, **update this file to match the code**,
+> not the other way around — the code is the source of truth.
 
-## Dev environment
+## What this is
 
-- Node 22 (CI: `actions/setup-node@v4`, `node-version: '22'`). No `.nvmrc` in repo.
-- **`npm ci` is required first.** This checkout is missing `node_modules`, so `npm run lint`, `npm run test`, and other CLIs error with "not found" until deps are installed.
-- `.env.local` (`CONVEX_DEPLOYMENT` / `CONVEX_DEPLOY_KEY`) is for the local dev backend only (`oceanic-antelope-781`).
-- Prod frontend is wired to prod Convex (`precise-ladybug-504.convex.cloud`) via `config.js` — no build step. Override with a separate script setting `window.CONVEX_URL` loaded BEFORE `config.js`.
-- `file://` does not work: the app boots as browser ES modules. Serve over HTTP.
+A vanilla-JS browser implementation of **Dots and Boxes** ("ShapeKeeper") with
+local hot-seat and online (Convex realtime) multiplayer. Hosted on Vercel.
+Adult-friendly party mode with tile effects.
 
-## Build, test, lint
+## Stack
 
-Run everything from repo root (where `package.json` and `convex/` live).
+- **Frontend:** Vanilla JS (ES modules), no build step, no framework.
+- **Backend:** Convex (`convex/`). `convex dev` for typecheck.
+- **Tests:** Vitest (`**/*.test.js`, `**/*.spec.js`), Playwright (`tests/e2e/`).
+- **Lint:** ESLint flat config (`eslint.config.mjs`).
+- **Hosting:** Vercel static. Build = `echo "No build step required"`.
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | `convex dev` — local Convex dev backend |
-| `npm run serve` | `python -m http.server 8000` |
-| `npm run start` | `npx http-server -p 8000 -o` |
-| `npm run verify` | `npx convex typecheck` + `node -c` syntax checks on `game.js`, `welcome.js`, `convex-client.js` |
-| `npm run lint` | `eslint .` (flat config `eslint.config.mjs` + compat from `.eslintrc.json`) |
-| `npm run lint:fix` | `eslint . --fix` |
-| `npm run format` | `prettier --write .` (`.prettierrc`: semi, singleQuote, tabWidth 4, printWidth 100, trailingComma es5) |
-| `npm run test` | `vitest run` |
-| `npm run test:watch` | `vitest` |
-| `npm run test:e2e` | `playwright test` — full suite under `tests/e2e/` |
-| `npm run test:e2e:smoke` | `playwright test tests/e2e/smoke.spec.js --project=chromium` |
-| `npm run test:e2e:startup` | `playwright test tests/e2e/loading-state.spec.js --project=chromium` |
-| `npm run test:e2e:multiplayer` | `playwright test tests/e2e/multiplayer-startup.spec.js --project=chromium` |
-| `npm run test:e2e:reconnect` | `playwright test tests/e2e/reconnect.spec.js --project=chromium` |
-| `npm run test:e2e:reliability` | `playwright test tests/e2e/multiplayer-sync.spec.js tests/e2e/reconnect.spec.js --project=chromium` |
-| `npm run test:e2e:compat` | Playwright compat matrix: firefox / webkit / mobile-chrome / mobile-safari / tablet-safari |
-| `npm run deploy` | `npx convex deploy --yes` |
-| `npm run deploy:prod` | `npx convex deploy --cmd-url-env-var-name CONVEX_URL --yes` |
+## Working agreements
 
-**Verified state on this checkout:**
+### Repo boundaries
 
-- `npm run verify` currently **fails** at `npx convex typecheck`: resolution errors for `convex/values` (in `convex/rooms.ts`, `convex/games.ts`) and `convex/server` (in `convex/_generated/server.js`). This appears to be an environment / `npx` vs installed-package issue, not a repo-file defect — the same commands pass in CI.
-- `npm run lint` and `npm run test` both fail here until `npm ci` has run.
-- CI (`.github/workflows/ci.yml`) only gates on `npm run lint` + `npm run test`. E2E is intentionally **not** in the required gate because it needs a live Convex backend.
+- **The canonical ShapeKeeper repo is `/home/ewaldt/Documents/VS/GAMES/ShapeKeeper`.**
+  Do NOT create a sibling/duplicate elsewhere. Do NOT scaffold a new project.
+- Edit in place. No `create-next-app`, `npx sv create`, `git clone` into a new dir.
 
-**Vitest specifics:**
+### Tool-owned directories — read-only at execution time
 
-- Config: `vitest.config.mjs`. `environment: 'jsdom'`, `globals: true`.
-- Includes `**/*.test.js` AND `**/*.spec.js` (not just top-level `*.test.js` — there are `*.spec.js` files across the repo and under `tests/`).
-- Excludes `node_modules/**`, `tests/e2e/**`, `**/.vercel/output/**`.
+- `convex/_generated/` — owned by `npx convex dev` / `npx convex codegen`.
+  It PRUNES any file it didn't create. Don't hand-write here; run `npx convex
+  dev --once` to regenerate. If a sidecar `convex dev` is running, kill it
+  before any schema change and restart after.
+- `**/.vercel/output/**` — owned by Vercel.
+- `playwright-report/`, `test-results/` — Vitest/Playwright scratch (gitignored).
 
-**Playwright specifics:**
+Before writing any file under these paths, run the sidecar probe:
+```bash
+ps -ef | grep -E "convex" | grep -v grep
+```
+If a live `convex dev` is running for a DIFFERENT project (e.g. J-pay), it
+only watches that project's `_generated/`. ShapeKeeper's `_generated/` is
+unaffected. If a ShapeKeeper sidecar is running, kill it first.
 
-- Config: `playwright.config.js`. Default base URL `http://127.0.0.1:9323`; override via `PLAYWRIGHT_BASE_URL`.
-- Auto-starts `npx http-server . -p 9323 -a 127.0.0.1 -c-1 --silent` when `PLAYWRIGHT_BASE_URL` is unset and not CI.
-- `chromium` project runs all specs; compat projects (`firefox-compat`, `webkit-compat`, `mobile-chrome-compat`, `mobile-safari-compat`, `tablet-safari-compat`) only run `compatibilitySpecPatterns` (smoke, local-gameplay, loading-state, browser-compatibility, settings-and-theme, achievement-panel, local-setup, winner-screen).
-- E2E requires a live Convex backend reachable at base URL. Install browsers with `npx playwright install --with-deps`.
+### Passcode rules (CRITICAL — product owner 2026-08-25)
 
-## Conventions
+- **Passcode = silly `[Adjective][Animal]` TitleCase.** Examples: `EasterPig`,
+  `SillyRabbit`, `BubblyBunny`. No numbers, no separators, no human names, no
+  real places.
+- Word lists live in `convex/rooms/shared.ts` (`ADJECTIVES`, `ANIMALS`).
+  Both lists must have **≥ 50 entries** and be all-lowercase ASCII.
+- Generation: `generateSillyPasscode()`. Collision-checked at runtime against
+  the live `by_passcode` index. Default list size = 50×50 = 2500 combos
+  (~11 bits entropy); expand the lists, do NOT add numbers/letters, if the
+  space saturates.
+- **Passcode is NOT an env file, NOT a static secret, NOT a random-letter
+  code.** Generated server-side per lobby, returned ONLY to the host on
+  `createRoom`, and never re-exposed by query handlers.
+- Tests: `convex/rooms/shared.test.js` enforces the format invariants
+  (regex, word-list membership, no human-name word starts, ≥ 50 entries).
+  If you add a word that breaks the invariants, the test will catch it
+  BEFORE the linter does.
 
-- ES6+ JS throughout. `const`/`let`, arrow functions, classes (PascalCase). Variables/functions `camelCase`; classes `PascalCase`.
-- `game.js` and `welcome.js` are the authoritative browser-module entry points. `convex-client.js` is loaded as a classic script so it can attach `window.ShapeKeeperConvex`.
-- `convex-client.js` is a thin bootstrap. The real Convex client logic lives in `convex-client/` as per-file IIFEs: `shared.js`, `room-operations.js`, `game-operations.js`, `subscriptions.js`.
-- `dots-and-boxes-game.js` is the main `DotsAndBoxesGame` class. Other top-level modules include `game.js`, `welcome.js`, `config.js`, `constants.js`, `input-handler.js`, `game-state.js`, `game-logic.js`, `renderer.js`, `particle-system.js`, `effect-system.js`, `sound-manager.js`, `animation-system.js`, `tutorial-system.js`, `local-save-replay.js`, `achievement-system.js`, plus `src/` submodules under `core/`, `game/`, `effects/`, `animations/`, `sound/`, `ui/`.
-- `convex/` backend: `schema.ts`, `rooms.ts`, `games.ts`, `log.js`, `tsconfig.json`, plus `auth/`, `rooms/`, `games/`, `_generated/`.
-- Convex client modules use an IIFE pattern closing over `window`. `shared.js` owns connection/session state; `room-operations.js` and `game-operations.js` expose the `window.ShapeKeeperConvex.*` API surface.
-- Line keys are normalized, sorted strings: `'1,2-1,3'` (horizontal), `'1,2-2,2'` (vertical), `'1,1-2,2'` (diagonal). Square keys: `'row,col'`. Grid is 0-indexed rows/cols, origin top-left.
-- `jsconfig.json`: `target ES2022`, `module Node16`, `moduleResolution node16`, `lib ES2022 + DOM`, `checkJs false`, `noEmit true`. Include `*.js` + `**/*.js`, exclude `node_modules`. The README calls VSCode parse errors "cosmetic" — this config is why.
-- `.gitignore` excludes `node_modules/`, `dist/`, `build/`, `.env*`, `.vercel`, `convex/.env*`, `playwright-report/`, `test-results/`, plus dev/AI scratch files: `bench.mjs`, `play-ai-medium.mjs`, `ai-diagnose.mjs`, `ai_*.mjs`, `ai_*.json`, `ai_*.png`, `*.prune/`, `docs/.scratch-audit/`. Do not hand-edit generated/scratch artifacts in those paths.
-- ESLint: `no-unused-vars` is `warn` (ignores `_`-prefixed names), `no-console` is off. Ignores `dist`, `node_modules`, `.vercel/output`, and several `ai_*` bench/diagnose files.
+### Live lobby invariants
 
-## Security headers (`vercel.json`)
+- The host must be able to see players join **in realtime** without a refresh.
+  The `LiveLobbyManager` (online mode) is fed by the Convex subscription
+  callback via `applySnapshot({ room, players })`.
+- The `joinRoom` mutation requires BOTH `roomCode` AND `passcode` for new
+  rooms. Legacy rooms (no passcode) still allow code-only joining.
+- The invite link is `${origin}/?join=${roomCode}&passcode=${passcode}`.
+  Build it via `LiveLobbyManager.buildInviteUrl()`, never by hand in the
+  click handler.
+- URL pre-fill: `getJoinParamsFromUrl(search)` parses `?join=&passcode=`.
+  `welcome.js` calls it on boot and routes the user to the join screen.
+  This is the **only** supported way to deep-link into the join flow.
 
-Production deploy ships strict headers:
+### Code style
 
-- CSP: `default-src 'self'`; `script-src 'self' https://unpkg.com`; `style-src 'self' https://fonts.googleapis.com 'unsafe-inline'`; `font-src 'self' https://fonts.gstatic.com`; `img-src 'self' data:`; `connect-src 'self' https://precise-ladybug-504.convex.cloud https://*.convex.cloud wss://*.convex.cloud https://fonts.googleapis.com https://fonts.gstatic.com`; `frame-ancestors 'none'`; `object-src 'none'`; `base-uri 'self'`; `form-action 'self'`; `upgrade-insecure-requests`. No `unsafe-inline` for script-src.
-- SRI on the Convex browser bundle from `unpkg.com/convex@1.42.3`. If version changes, regenerate the hash:
-  `curl -sSL https://unpkg.com/convex@<ver>/dist/browser.bundle.js | openssl dgst -sha384 -binary | openssl base64 -A`
-  and update the `integrity` attribute in `index.html`.
-- HSTS (`max-age=63072000; includeSubDomains; preload`), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, `X-Frame-Options: DENY`.
-- Cache-Control: HTML files `public, max-age=0, must-revalidate`; `config.js` `public, max-age=300, must-revalidate`.
+- ES modules everywhere. `'use strict'` at the top of IIFE scripts in
+  `convex-client/` and `src/ui/` (legacy pattern; new code uses ESM).
+- TypeScript for `convex/**/*.ts` (strict mode, see `convex/tsconfig.json`).
+- Vanilla JS for everything outside `convex/`.
+- No `any` in new Convex code. Existing `any` in handler args is tolerated
+  for now; tighten when refactoring.
 
-## Pitfalls
+### Quality gates (run in this order before pushing)
 
-- `file://` is not a supported startup path — ES modules require HTTP. Use `npm run serve`, `npm run dev`, or `npm run start`.
-- **Run `npm ci` before lint/test/verify here.** `node_modules` is not present in this checkout; the npm scripts error with "not found" without it.
-- **Expect `npm run verify` to fail on `npx convex typecheck` in this environment** (`convex/values` + `convex/server` resolution errors). CI passes the same check; this is an env/install issue, not a repo-file defect.
-- `npx convex typecheck` is the thing that breaks, not `node -c`. If you only need JS syntax checks, `node -c game.js`, `node -c welcome.js`, `node -c convex-client.js` are the lightweight fallback.
-- E2E tests fail without a reachable Convex backend. They are not in required CI for this reason.
-- Deployment commands must run from repo root (where `package.json` and `convex/` live). Running `vercel` / `convex` from elsewhere deploys/fails incorrectly.
-- `.env.local` is dev-backend only. Prod is configured via `config.js` + a `window.CONVEX_URL` override script loaded before `config.js`.
-- Large grids (50×50+) can hurt performance on older devices (README lists this as a known limitation).
-- `convex-client.js` and `convex-client/` are separate. Don't edit one and assume the other is the same file.
+```bash
+npm run lint                       # eslint .
+npx convex typecheck               # tsc --noEmit on the convex/ project
+npx vitest run                     # all *.test.js + *.spec.js (NOT tests/e2e)
+npm run build                      # echo no-op; kept for CI parity
+npm run test:e2e:smoke             # Playwright smoke (chromium)
+```
+
+CI runs the same gates plus a multi-browser compatibility pass. Don't push
+without lint + typecheck + unit + smoke green.
+
+### Convex schema changes
+
+- Always update `convex/schema.ts` first.
+- Run `npx convex dev --once` (NOT `dev`) to regenerate `_generated/`.
+- The `passcode` column is `v.optional(v.string())` to keep legacy rooms
+  valid. If you add a required field, write a migration plan in
+  `docs/plans/YYYY-MM-DD-…` first.
+
+### Conventional commits
+
+```
+feat(lobby): …
+fix(join): …
+docs(lobby): …
+chore(deps): …
+test(lobby): …
+```
+
+Scope to the area you touched. Body explains WHY, not WHAT (the diff shows
+WHAT). One concern per commit; do not mix a refactor with a feature.
+
+## Pitfalls (dated)
+
+- **2026-08-25 — passcode-vs-env confusion.** Earlier draft proposals tried
+  to use a static passcode from env or a per-process secret. The product
+  owner explicitly rejected this: "use random generate names as passcodes not
+  random letters, its not a fucking env file!" Passcode is per-lobby, server
+  generated, never persisted outside the `rooms` table.
+- **2026-08-25 — passcode-number drift.** First-pass implementation included
+  a numeric suffix for collision resistance. The owner rejected it: "No
+  numbers." Pure word combos, period.
+- **2026-08-25 — human-name pitfall.** "Bobcat" + "Cosmic" reads as
+  "CosmicBobcat" → contains "Bob" as a word start. Removed "bobcat" from the
+  animal list to satisfy the "no human names" intent without sacrificing
+  the whimsy of the format.
+- **Pre-2026-08-25 — lobby placeholder.** The legacy `LobbyManager` is
+  described in its own header as "a UI placeholder. Real multiplayer requires
+  backend integration (Convex/Firebase/etc.)". The new `LiveLobbyManager`
+  supersedes it for online mode; the legacy class is kept for the no-backend
+  fallback (no Convex deployment available).
+- **Pre-2026-08-25 — Convex sidecar ownership.** A live `npx convex dev`
+  regenerates `convex/_generated/` on every change and **prunes any file it
+  didn't create**. Hand-editing files there is a guaranteed loss; use
+  `npx convex dev --once` and let it own that directory.

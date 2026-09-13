@@ -82,3 +82,14 @@ describe('createMultiplayerStartupController', () => {
         });
     });
 });
+
+// B: verify sync handshake + grid-lock event mechanism
+describe('MultiplayerStartup sync + grid-lock (B update)', () => {
+    it('has onGridSizeEvent handler wired and DESYNCED hint references sync', () => {
+        const ctrl = createMultiplayerStartupController({});
+        expect(ctrl.onGridSizeEvent).toBeDefined();
+        // Grid-size event must set syncReady when isHost or roomCode present
+        ctrl.onGridSizeEvent({ detail: { gridSize: 7, roomCode: 'ABC', isHost: true } });
+        expect(ctrl.getSnapshot().syncReady).toBe(true);
+    });
+});

@@ -1,16 +1,14 @@
-import { generateHostToken, hashToken } from '../auth/token';
-import { generateSecureRoomCode, DEFAULT_COLORS } from './shared';
-import { log, errorLog, warn } from '../log';
+import { DEFAULT_COLORS, generateRoomCode, generateSillyPasscode } from './shared';
 
 export async function createRoomHandler(ctx: any, args: any) {
-    log('[createRoom] Starting room creation', {
+    console.log('[createRoom] Starting room creation', {
         sessionId: args.sessionId,
         playerName: args.playerName,
         gridSize: args.gridSize,
         partyMode: args.partyMode,
     });
 
-    let roomCode = generateSecureRoomCode();
+    let roomCode = generateRoomCode();
     let existingRoom = await ctx.db
         .query('rooms')
         .withIndex('by_code', (q: any) => q.eq('roomCode', roomCode))
@@ -19,21 +17,44 @@ export async function createRoomHandler(ctx: any, args: any) {
     let collisionCount = 0;
     while (existingRoom) {
         collisionCount++;
-        log('[createRoom] Room code collision detected', { roomCode, collisionCount });
-        roomCode = generateSecureRoomCode();
+        console.log('[createRoom] Room code collision detected', { roomCode, collisionCount });
+        roomCode = generateRoomCode();
         existingRoom = await ctx.db
             .query('rooms')
             .withIndex('by_code', (q: any) => q.eq('roomCode', roomCode))
             .first();
     }
 
+    // Generate a silly [Adjective][Animal] passcode (e.g. "EasterPig") and
+    // collision-check against any in-flight lobby. 50 * 50 = 2500 combos at
+    // the default list size; the loop terminates on the first unique code.
+    let passcode = generateSillyPasscode();
+    let passcodeCollision = await ctx.db
+        .query('rooms')
+        .withIndex('by_passcode', (q: any) => q.eq('passcode', passcode))
+        .first();
+    let passcodeCollisionCount = 0;
+    while (passcodeCollision) {
+        passcodeCollisionCount++;
+        if (passcodeCollisionCount > 32) {
+            // Safety bail: 32 attempts at 1/2500 each is ~1.3% chance of needing
+            // 33. The lists are intentionally large enough that the loop almost
+            // always exits on the first try; this is a belt-and-braces guard.
+            console.error('[createRoom] Could not generate unique passcode', { attempts: passcodeCollisionCount });
+            return { error: 'Could not allocate a unique passcode; please retry.' };
+        }
+        passcode = generateSillyPasscode();
+        passcodeCollision = await ctx.db
+            .query('rooms')
+            .withIndex('by_passcode', (q: any) => q.eq('passcode', passcode))
+            .first();
+    }
+
     const now = Date.now();
-    const hostToken = generateHostToken();
-    const hostTokenHash = await hashToken(hostToken);
     const roomId = await ctx.db.insert('rooms', {
         roomCode,
+        passcode,
         hostPlayerId: args.sessionId,
-        hostTokenHash: hostTokenHash ?? undefined,
         gridSize: args.gridSize,
         partyMode: args.partyMode !== false,
         status: 'lobby',
@@ -42,7 +63,7 @@ export async function createRoomHandler(ctx: any, args: any) {
         updatedAt: now,
     });
 
-    log('[createRoom] Room created successfully', { roomId, roomCode });
+    console.log('[createRoom] Room created successfully', { roomId, roomCode, passcode });
 
     await ctx.db.insert('players', {
         roomId,
@@ -56,19 +77,16 @@ export async function createRoomHandler(ctx: any, args: any) {
         joinedAt: now,
     });
 
-    log('[createRoom] Host player added', { roomId, sessionId: args.sessionId });
-    // The hostToken is shown ONCE. The browser must stash it in sessionStorage
-    // and pass it on every host-gated mutation. The server only stores the
-    // SHA-256 hash, so a leak of the room row cannot be used to forge host
-    // actions.
-    return { roomId, roomCode, hostToken };
+    console.log('[createRoom] Host player added', { roomId, sessionId: args.sessionId });
+    return { roomId, roomCode, passcode };
 }
 
 export async function joinRoomHandler(ctx: any, args: any) {
-    log('[joinRoom] Join request', {
+    console.log('[joinRoom] Join request', {
         roomCode: args.roomCode,
         sessionId: args.sessionId,
         playerName: args.playerName,
+        hasPasscode: typeof args.passcode === 'string' && args.passcode.length > 0,
     });
 
     const room = await ctx.db
@@ -77,14 +95,33 @@ export async function joinRoomHandler(ctx: any, args: any) {
         .first();
 
     if (!room) {
-        log('[joinRoom] Error: Room not found', { roomCode: args.roomCode });
+        console.log('[joinRoom] Error: Room not found', { roomCode: args.roomCode });
         return { error: 'Room not found' };
     }
 
-    log('[joinRoom] Room found', { roomId: room._id, status: room.status });
+    console.log('[joinRoom] Room found', {
+        roomId: room._id,
+        status: room.status,
+        hasStoredPasscode: typeof room.passcode === 'string' && room.passcode.length > 0,
+    });
+
+    // Validate passcode: rooms created after the lobby-passcode feature ship
+    // require the silly passcode. Legacy rooms (room.passcode is undefined or
+    // empty) still allow code-only joining for backwards compatibility.
+    if (room.passcode) {
+        const supplied = typeof args.passcode === 'string' ? args.passcode : '';
+        if (supplied.length === 0) {
+            console.log('[joinRoom] Error: Passcode required', { roomCode: args.roomCode });
+            return { error: 'This lobby requires a passcode. Ask the host to share it.' };
+        }
+        if (supplied !== room.passcode) {
+            console.log('[joinRoom] Error: Incorrect passcode', { roomCode: args.roomCode });
+            return { error: 'Incorrect passcode. Check the link or ask the host.' };
+        }
+    }
 
     if (room.status !== 'lobby') {
-        log('[joinRoom] Error: Game already in progress', {
+        console.log('[joinRoom] Error: Game already in progress', {
             roomId: room._id,
             status: room.status,
         });
@@ -99,7 +136,7 @@ export async function joinRoomHandler(ctx: any, args: any) {
         .first();
 
     if (existingPlayer) {
-        log('[joinRoom] Player rejoining', {
+        console.log('[joinRoom] Player rejoining', {
             roomId: room._id,
             playerId: existingPlayer._id,
         });
@@ -115,10 +152,10 @@ export async function joinRoomHandler(ctx: any, args: any) {
         .withIndex('by_room', (q: any) => q.eq('roomId', room._id))
         .collect();
 
-    log('[joinRoom] Current players', { roomId: room._id, playerCount: players.length });
+    console.log('[joinRoom] Current players', { roomId: room._id, playerCount: players.length });
 
     if (players.length >= 6) {
-        log('[joinRoom] Error: Room is full', {
+        console.log('[joinRoom] Error: Room is full', {
             roomId: room._id,
             playerCount: players.length,
         });
@@ -140,7 +177,7 @@ export async function joinRoomHandler(ctx: any, args: any) {
         joinedAt: Date.now(),
     });
 
-    log('[joinRoom] Player added successfully', {
+    console.log('[joinRoom] Player added successfully', {
         roomId: room._id,
         playerId,
         playerIndex: players.length,
@@ -152,7 +189,7 @@ export async function joinRoomHandler(ctx: any, args: any) {
 }
 
 export async function leaveRoomHandler(ctx: any, args: any) {
-    log('[leaveRoom] Leave request', {
+    console.log('[leaveRoom] Leave request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
     });
@@ -165,7 +202,7 @@ export async function leaveRoomHandler(ctx: any, args: any) {
         .first();
 
     if (!player) {
-        log('[leaveRoom] Error: Player not found', {
+        console.log('[leaveRoom] Error: Player not found', {
             roomId: args.roomId,
             sessionId: args.sessionId,
         });
@@ -174,11 +211,11 @@ export async function leaveRoomHandler(ctx: any, args: any) {
 
     const room = await ctx.db.get(args.roomId);
     if (!room) {
-        log('[leaveRoom] Error: Room not found', { roomId: args.roomId });
+        console.log('[leaveRoom] Error: Room not found', { roomId: args.roomId });
         return { error: 'Room not found' };
     }
 
-    log('[leaveRoom] Processing leave', {
+    console.log('[leaveRoom] Processing leave', {
         roomId: args.roomId,
         playerId: player._id,
         roomStatus: room.status,
@@ -221,7 +258,7 @@ export async function leaveRoomHandler(ctx: any, args: any) {
         await ctx.db.patch(player._id, { isConnected: false });
         await ctx.db.patch(args.roomId, roomUpdates);
 
-        log('[leaveRoom] In-match leave processed', {
+        console.log('[leaveRoom] In-match leave processed', {
             playerId: player._id,
             transferredHostTo: roomUpdates.hostPlayerId || null,
             transferredTurnTo: roomUpdates.currentPlayerIndex ?? null,
@@ -237,18 +274,18 @@ export async function leaveRoomHandler(ctx: any, args: any) {
     }
 
     await ctx.db.delete(player._id);
-    log('[leaveRoom] Player removed from lobby', { playerId: player._id });
+    console.log('[leaveRoom] Player removed from lobby', { playerId: player._id });
 
     const remainingPlayers = await ctx.db
         .query('players')
         .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
         .collect();
 
-    log('[leaveRoom] Remaining players', { count: remainingPlayers.length });
+    console.log('[leaveRoom] Remaining players', { count: remainingPlayers.length });
 
     if (remainingPlayers.length === 0) {
         await ctx.db.delete(args.roomId);
-        log('[leaveRoom] Room deleted (no remaining players)', { roomId: args.roomId });
+        console.log('[leaveRoom] Room deleted (no remaining players)', { roomId: args.roomId });
         return { success: true, roomDeleted: true };
     }
 
@@ -258,7 +295,7 @@ export async function leaveRoomHandler(ctx: any, args: any) {
             hostPlayerId: newHost.sessionId,
             updatedAt: Date.now(),
         });
-        log('[leaveRoom] Host transferred', {
+        console.log('[leaveRoom] Host transferred', {
             oldHost: args.sessionId,
             newHost: newHost.sessionId,
         });
@@ -268,12 +305,12 @@ export async function leaveRoomHandler(ctx: any, args: any) {
         await ctx.db.patch(remainingPlayers[index]._id, { playerIndex: index });
     }
 
-    log('[leaveRoom] Players reindexed', { count: remainingPlayers.length });
+    console.log('[leaveRoom] Players reindexed', { count: remainingPlayers.length });
     return { success: true };
 }
 
 export async function toggleReadyHandler(ctx: any, args: any) {
-    log('[toggleReady] Toggle ready request', {
+    console.log('[toggleReady] Toggle ready request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
     });
@@ -286,7 +323,7 @@ export async function toggleReadyHandler(ctx: any, args: any) {
         .first();
 
     if (!player) {
-        log('[toggleReady] Error: Player not found', {
+        console.log('[toggleReady] Error: Player not found', {
             roomId: args.roomId,
             sessionId: args.sessionId,
         });
@@ -297,7 +334,7 @@ export async function toggleReadyHandler(ctx: any, args: any) {
     await ctx.db.patch(player._id, { isReady: newReadyState });
     await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
 
-    log('[toggleReady] Ready status toggled', {
+    console.log('[toggleReady] Ready status toggled', {
         playerId: player._id,
         playerName: player.name,
         oldReady: player.isReady,
@@ -308,7 +345,7 @@ export async function toggleReadyHandler(ctx: any, args: any) {
 }
 
 export async function updatePlayerHandler(ctx: any, args: any) {
-    log('[updatePlayer] Update player request', {
+    console.log('[updatePlayer] Update player request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
         updates: { name: args.name, color: args.color },
@@ -322,7 +359,7 @@ export async function updatePlayerHandler(ctx: any, args: any) {
         .first();
 
     if (!player) {
-        log('[updatePlayer] Error: Player not found', {
+        console.log('[updatePlayer] Error: Player not found', {
             roomId: args.roomId,
             sessionId: args.sessionId,
         });
@@ -342,7 +379,7 @@ export async function updatePlayerHandler(ctx: any, args: any) {
         );
 
         if (colorInUse) {
-            log('[updatePlayer] Error: Color already in use', {
+            console.log('[updatePlayer] Error: Color already in use', {
                 requestedColor: args.color,
                 playerId: player._id,
             });
@@ -354,6 +391,6 @@ export async function updatePlayerHandler(ctx: any, args: any) {
     await ctx.db.patch(player._id, updates);
     await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
 
-    log('[updatePlayer] Player updated successfully', { playerId: player._id, updates });
+    console.log('[updatePlayer] Player updated successfully', { playerId: player._id, updates });
     return { success: true };
 }

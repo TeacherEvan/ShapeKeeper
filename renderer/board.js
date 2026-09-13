@@ -187,6 +187,29 @@ export function drawSquaresWithAnimations(game) {
             }
         }
 
+        // Opponent-tap indicator: a small ✋ in the top-right of the square,
+        // visible to BOTH players (it's a public signal that this box was
+        // successfully tapped — the owner can see the threat, the tapper
+        // can see their hit land). Only shown when the square has been tapped
+        // AND the multiplier has not been revealed yet.
+        if (
+            !game.revealedMultipliers.has(squareKey) &&
+            game.squareTaps &&
+            (game.squareTaps[squareKey] ?? 0) > 0
+        ) {
+            const tapFontSize = Math.max(10, Math.min(game.cellSize * 0.35, 22));
+            game.ctx.font = `${tapFontSize}px Arial`;
+            game.ctx.textAlign = 'right';
+            game.ctx.textBaseline = 'top';
+            // Soft red on the hand to signal "you've been hit" — visible
+            // without obscuring the owner label.
+            game.ctx.fillStyle = 'rgba(255, 80, 80, 0.9)';
+            game.ctx.fillText('✋', x + game.cellSize - 4, y + 4);
+            // Reset text alignment for the next draw.
+            game.ctx.textAlign = 'center';
+            game.ctx.textBaseline = 'middle';
+        }
+
         drawTileEffectIndicator(game, squareKey, x, y, player);
     }
 

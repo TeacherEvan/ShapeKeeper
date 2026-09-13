@@ -5,13 +5,8 @@ export default defineSchema({
     // Game rooms/sessions
     rooms: defineTable({
         roomCode: v.string(), // 6-character code for joining
+        passcode: v.optional(v.string()), // silly [Adjective][Animal] (e.g. "EasterPig"). Optional for pre-migration rooms.
         hostPlayerId: v.string(), // Session ID of the host
-        // SHA-256 of the server-issued hostToken. Created in createRoom and
-        // required by every host-gated mutation. Optional only because rooms
-        // created before this deploy do not have it; the auth helper
-        // isAuthorisedHost falls back to a sessionId-only check for those
-        // legacy rooms.
-        hostTokenHash: v.optional(v.string()),
         gridSize: v.number(), // 5, 10, 20, or 30
         partyMode: v.optional(v.boolean()), // Party mode enabled (tile effects)
         status: v.union(v.literal('lobby'), v.literal('playing'), v.literal('finished')),
@@ -24,10 +19,9 @@ export default defineSchema({
         turnEndTime: v.optional(v.number()), // server epoch (ms) when current turn ends
         lastTurnClientSentAt: v.optional(v.number()), // client send timestamp of last move
         lastTurnServerReceivedAt: v.optional(v.number()), // server receipt timestamp of last move
-        // Legacy field from prior schema version; kept for backwards compatibility
-        securityVersion: v.optional(v.number()),
     })
         .index('by_code', ['roomCode'])
+        .index('by_passcode', ['passcode'])
         .index('by_status', ['status']),
 
     // Players in rooms
@@ -69,11 +63,20 @@ export default defineSchema({
                 value: v.optional(v.number()),
             })
         ),
-        // Set by revealMultiplierHandler on first successful reveal. Stops a
-        // hostile client from re-calling revealMultiplier to apply the bonus
-        // a second time. The browser's revealedMultipliers Set is UI-only;
-        // this is the authoritative flag.
-        multiplierRevealed: v.optional(v.boolean()),
+        // Opponent tap mechanic (multiplayer only): every tap by an opponent
+        // reduces the effective multiplier to 0.5x (capped). Taps on the
+        // owner's own square, on already-revealed squares, or on truth-or-dare
+        // squares are no-ops (see `tapSquareHandler`). Default = 0.
+        taps: v.optional(v.number()),
+        // The post-tap effective multiplier (cached on the row so the game-state
+        // subscription doesn't have to recompute it for every client). Server is
+        // the source of truth; clients render the value as-is.
+        effectiveMultiplier: v.optional(
+            v.object({
+                type: v.union(v.literal('multiplier'), v.literal('truthOrDare')),
+                value: v.optional(v.number()),
+            })
+        ),
         createdAt: v.number(),
     })
         .index('by_room', ['roomId'])

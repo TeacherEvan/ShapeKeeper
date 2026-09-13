@@ -11,6 +11,7 @@ import {
     announceTurnMessage,
     executeEffect,
     revealMultiplier,
+    tapSquare,
 } from './effect-system/gameplay.js';
 import { initializeMultipliers, initializeTileEffects } from './effect-system/init.js';
 import { closeEffectModal, createEffectModal, showEffectModal } from './effect-system/modal.js';
@@ -108,6 +109,14 @@ export class EffectSystem {
      */
     async revealMultiplier(squareKey) {
         return revealMultiplier(this, squareKey);
+    }
+
+    /**
+     * Opponent-tap mechanic: see `effect-system/gameplay.js#tapSquare`.
+     * Exposed here so the input handler can call `game.tapSquare(key)`.
+     */
+    async tapSquare(squareKey) {
+        return tapSquare(this, squareKey);
     }
 
     announceTurnMessage(text, color, durationMs = 2000) {

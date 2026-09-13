@@ -115,6 +115,13 @@ export class LobbyManager {
 
     setGridSize(size) {
         this.gridSize = size;
+        // A: grid-lock mechanism — persist to Convex when host + lobby status allows (see convex/rooms/settings.ts updateGridSizeHandler)
+        // Real sync via Convex subscription wired in LiveLobbyManager / MultiplayerStartup (B). This hook ensures local state locks.
+        window.dispatchEvent(
+            new CustomEvent('lobby:gridSizeChanged', {
+                detail: { gridSize: size, roomCode: this.roomCode, isHost: this.isHost },
+            })
+        );
     }
 
     canStartGame() {
