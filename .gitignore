@@ -49,3 +49,6 @@ ai_*.json
 *.prune/
 
 docs/.scratch-audit/
+
+# V2 surgical-implementation audit scratch (local-only, never commit)
+docs/.scratch-audit/
