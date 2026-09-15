@@ -4,12 +4,8 @@ import { Renderer } from '../renderer.js';
 import { drawLavaTimer } from '../renderer/lava-timer.js';
 import { createTurnClockController } from '../src/timing/turn-clock-controller.js';
 
-// Honest integration proof for the online-play + lava-clock regression:
-// `isOnline` is the signal the lava renderer AND the per-frame turn-clock tick
-// gate on (renderer.js:109, dots-and-boxes-game.js:929). It is set false in
-// game-state.js and must be flipped true when an online room game is created
-// (initializeMultiplayerGame). If it stays false, online matches render no lava
-// clock and never tick the countdown — exactly the reported symptoms.
+// Integration proof: lava timer now renders in ALL game modes when feature flag is on.
+// The isOnline flag is no longer a gate for lava timer rendering (only for turn clock).
 
 function makeMockCtx() {
     const log = { calls: [] };
@@ -30,7 +26,7 @@ function makeMockCtx() {
     return { ctx, log };
 }
 
-function makeOnlineGame() {
+function makeGame() {
     const { ctx, log } = makeMockCtx();
     return {
         ctx,
@@ -56,18 +52,19 @@ beforeEach(() => {
     FEATURE_FLAGS.FEATURE_SYNC_RESILIENCE = true;
 });
 
-describe('online match must set isOnline=true (regression guard)', () => {
-    it('lava timer layer is a no-op while isOnline=false', () => {
-        const game = makeOnlineGame();
+describe('lava timer renders in all game modes (not gated by isOnline)', () => {
+    it('lava timer layer renders when isOnline=false (new behavior)', () => {
+        const game = makeGame();
         game.isOnline = false;
+        game.turnRemainingMs = 7200;
         const renderer = new Renderer(game);
         renderer.drawLavaTimerLayer();
-        // drawLavaTimer should never have been invoked -> no fillText for countdown
-        expect(game._log.calls.some((c) => c.prop === 'fillText')).toBe(false);
+        // drawLavaTimer should be invoked -> fillText for countdown
+        expect(game._log.calls.some((c) => c.prop === 'fillText')).toBe(true);
     });
 
-    it('lava timer layer renders once isOnline=true', () => {
-        const game = makeOnlineGame();
+    it('lava timer layer renders when isOnline=true', () => {
+        const game = makeGame();
         game.isOnline = true;
         game.turnRemainingMs = 7200;
         const renderer = new Renderer(game);
@@ -75,10 +72,9 @@ describe('online match must set isOnline=true (regression guard)', () => {
         expect(game._log.calls.some((c) => c.prop === 'fillText')).toBe(true);
     });
 
-    it('turn-clock tick populates turnRemainingMs only when isOnline (game-side gate)', () => {
+    it('turn-clock tick still gated by isOnline in game loop', () => {
         // The game-side gate (dots-and-boxes-game.js) only calls ctrl.tick() when
-        // isOnline is true. Replicate that contract: clock must advance for an
-        // online match, and must be unreachable (stay null) for an offline one.
+        // isOnline is true. This test verifies that contract still holds.
         const now = 1_700_000_000_000;
         const realNow = Date.now;
         Date.now = () => now;

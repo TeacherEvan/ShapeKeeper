@@ -1,5 +1,5 @@
 import { AnimationSystem } from './animation-system.js';
-import { GAME_CONSTANTS } from './constants.js';
+import { GAME_CONSTANTS, FEATURE_FLAGS } from './constants.js';
 import { EffectSystem } from './effect-system.js';
 import { GameLogic } from './game-logic.js';
 import { GameState } from './game-state.js';
@@ -965,6 +965,17 @@ export class DotsAndBoxesGame {
             if (ctrl) ctrl.tick();
         }
 
+        // House rule: skip expired turns for local lava timer (matches online behavior)
+        // When turnRemainingMs reaches 0 or below, advance to next player
+        if (
+            (this.isOnline || FEATURE_FLAGS.FEATURE_LAVA_TIMER) &&
+            this.turnRemainingMs !== null &&
+            this.turnRemainingMs <= 0 &&
+            !this.isDestroyed
+        ) {
+            this.handleTurnExpiration();
+        }
+
         if (!this.isDestroyed) {
             const rafId = requestAnimationFrame(() => this.animate());
             this.disposables.addRAF(rafId);
@@ -992,6 +1003,27 @@ export class DotsAndBoxesGame {
             selectedDot: this.selectedDot,
             selectionRibbonActive: Boolean(this.selectionRibbon),
         };
+    }
+
+    /**
+     * Handle turn expiration - skip to next player when timer runs out.
+     * House rule for local lava timer and online matches.
+     */
+    handleTurnExpiration() {
+        if (this.isOnline && window.ShapeKeeperConvex) {
+            // Online: server will handle turn advancement via subscription
+            // Just clear the local timer to avoid repeated triggers
+            this.turnRemainingMs = null;
+        } else {
+            // Local: manually advance to next player
+            this.gameState.switchToNextPlayer();
+            // Reset timer for next player if lava timer is enabled
+            if (FEATURE_FLAGS.FEATURE_LAVA_TIMER) {
+                // The turn clock controller will be re-seeded by the next frame
+                // or we can set a default turn time
+                this.turnRemainingMs = 10000; // 10 seconds default
+            }
+        }
     }
 
     /**

@@ -11,7 +11,7 @@ test.describe('multiplayer host-guest startup', () => {
             startupTimeoutMs: 1500,
         });
 
-        const { hostPage, guestPage } = session;
+        const { hostPage, guestPage, generatedPasscode } = session;
         const hostPageErrors = [];
         const guestPageErrors = [];
         const hostConsoleErrors = [];
@@ -44,6 +44,7 @@ test.describe('multiplayer host-guest startup', () => {
             await guestPage.getByTestId('join-game-button').click();
             await expect(guestPage.getByTestId('join-screen')).toHaveClass(/active/);
             await guestPage.getByTestId('join-room-code-input').fill('QAT123');
+            await guestPage.getByTestId('join-room-passcode-input').fill(generatedPasscode);
             await guestPage.getByTestId('join-player-name-input').fill('Guest');
             await guestPage.getByTestId('join-room-button').click();
 

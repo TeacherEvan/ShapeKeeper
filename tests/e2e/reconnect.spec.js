@@ -39,7 +39,7 @@ async function bootstrapLiveMatch(browser, options = {}) {
         ...options,
     });
 
-    const { hostPage, guestPage } = session;
+    const { hostPage, guestPage, generatedPasscode } = session;
     const hostErrors = trackPageErrors(hostPage);
     const guestErrors = trackPageErrors(guestPage);
 
@@ -50,6 +50,7 @@ async function bootstrapLiveMatch(browser, options = {}) {
     await guestPage.getByTestId('join-game-button').click();
     await expect(guestPage.getByTestId('join-screen')).toHaveClass(/active/);
     await guestPage.getByTestId('join-room-code-input').fill(roomCode);
+    await guestPage.getByTestId('join-room-passcode-input').fill(generatedPasscode);
     await guestPage.getByTestId('join-player-name-input').fill('Guest');
     await guestPage.getByTestId('join-room-button').click();
 

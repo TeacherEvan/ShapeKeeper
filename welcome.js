@@ -12,6 +12,7 @@ import {
 } from './src/ui/MenuNavigation.js';
 import { initializeTheme } from './src/ui/ThemeManager.js';
 import { WelcomeAnimation } from './src/ui/WelcomeAnimation.js';
+import { showScreen } from './src/ui/ScreenTransition.js';
 
 // Initialize core instances
 let welcomeAnimation = null;
@@ -20,6 +21,9 @@ let welcomeAnimation = null;
 let liveLobbyManager = new LiveLobbyManager();
 let lobbyManager = liveLobbyManager; // alias used by MenuNavigation (online path)
 let game = null;
+
+console.log('[welcome] Module loaded, search:', window.location.search);
+window.__welcomeModuleLoaded = true;
 
 // Set dependencies for menu navigation
 setMenuNavigationDependencies({
@@ -36,58 +40,59 @@ if (document.readyState === 'loading') {
 }
 
 function initializeApp() {
-    // Initialize theme
-    initializeTheme();
+    console.log('[welcome] initializeApp running, search:', window.location.search);
+    try {
+        // Initialize theme
+        initializeTheme();
 
-    // Initialize welcome animation
-    welcomeAnimation = new WelcomeAnimation();
+        // Initialize welcome animation
+        welcomeAnimation = new WelcomeAnimation();
 
-    // Update menu navigation dependencies with the animation instance
-    setMenuNavigationDependencies({
-        lobbyManager,
-        welcomeAnimation,
-        game,
-    });
+        // Update menu navigation dependencies with the animation instance
+        setMenuNavigationDependencies({
+            lobbyManager,
+            welcomeAnimation,
+            game,
+        });
 
-    // Initialize menu navigation
-    initializeMenuNavigation();
+        // Initialize menu navigation
+        initializeMenuNavigation();
 
-    // Pre-fill the join screen from an invite link, if present.
-    // `?join=ABC123&passcode=EasterPig` on the URL jumps the user to the
-    // join screen with the inputs filled in and the button enabled.
-    const joinParams = getJoinParamsFromUrl();
-    if (joinParams) {
-        prefillJoinScreen(joinParams);
+        // Pre-fill the join screen from an invite link, if present.
+        // `?join=LOBBY` on the URL jumps the user to the join screen with
+        // the lobby name pre-filled.
+        const joinParams = getJoinParamsFromUrl();
+        console.log('[welcome] joinParams:', joinParams);
+        if (joinParams) {
+            prefillJoinScreen(joinParams);
+        }
+    } catch (err) {
+        console.error('[welcome] initializeApp error:', err);
     }
 }
 
 /**
- * Move the user to the join screen and populate the code/passcode/name
- * inputs. Called when the page loads with `?join=…` URL params.
+ * Move the user to the join screen and populate the lobby name input.
+ * Called when the page loads with `?join=…` URL params.
  * @param {{roomCode: string, passcode: string|null}} params
  */
 function prefillJoinScreen(params) {
-    const joinScreen = document.getElementById('joinScreen');
     const codeInput = document.getElementById('joinRoomCode');
-    const passcodeInput = document.getElementById('joinRoomPasscode');
     const nameInput = document.getElementById('joinPlayerName');
-    if (!joinScreen || !codeInput) return;
+    if (!codeInput) return;
 
-    // Hide every other screen, show join.
-    document.querySelectorAll('.screen').forEach((s) => {
-        s.hidden = true;
-        s.setAttribute('aria-hidden', 'true');
-    });
-    joinScreen.hidden = false;
-    joinScreen.setAttribute('aria-hidden', 'false');
+    showScreen('joinScreen');
 
     codeInput.value = params.roomCode;
-    if (passcodeInput) passcodeInput.value = params.passcode || '';
     if (nameInput) nameInput.focus();
+
+    // Store the passcode on the lobbyManager for use when joining
+    if (params.passcode && lobbyManager) {
+        lobbyManager.passcode = params.passcode;
+    }
 
     // Re-run the validation handler so the Join button enables.
     codeInput.dispatchEvent(new Event('input', { bubbles: true }));
-    if (passcodeInput) passcodeInput.dispatchEvent(new Event('input', { bubbles: true }));
     if (nameInput) nameInput.dispatchEvent(new Event('input', { bubbles: true }));
 }
 

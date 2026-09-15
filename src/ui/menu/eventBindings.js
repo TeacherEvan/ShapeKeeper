@@ -196,34 +196,22 @@ export function bindMenuEventHandlers(deps) {
     });
 
     const joinRoomCodeInput = document.getElementById('joinRoomCode');
-    const joinRoomPasscodeInput = document.getElementById('joinRoomPasscode');
     const joinPlayerNameInput = document.getElementById('joinPlayerName');
     const joinRoomBtn = document.getElementById('joinRoomBtn');
 
     function validateJoinInputs() {
-        const codeValid = joinRoomCodeInput.value.length === 6;
         const nameValid = joinPlayerNameInput.value.trim().length > 0;
-        // Passcode is optional at the UI level — the server enforces it for
-        // passcode-gated rooms. If the room has no passcode, the input can be
-        // empty; if it has one, the server will reject an empty value.
-        joinRoomBtn.disabled = !(codeValid && nameValid);
+        // Lobby name is optional - user can leave blank to join any open lobby
+        joinRoomBtn.disabled = !nameValid;
     }
 
     joinRoomCodeInput.addEventListener('input', (event) => {
-        event.target.value = event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        // Allow alphanumeric and spaces for lobby names
+        event.target.value = event.target.value.slice(0, 32);
         validateJoinInputs();
     });
 
     joinPlayerNameInput.addEventListener('input', validateJoinInputs);
-    if (joinRoomPasscodeInput) {
-        joinRoomPasscodeInput.addEventListener('input', () => {
-            // Passcode is Adjective+Animal TitleCase; allow letters only.
-            joinRoomPasscodeInput.value = joinRoomPasscodeInput.value
-                .replace(/[^A-Za-z]/g, '')
-                .slice(0, 32);
-            validateJoinInputs();
-        });
-    }
 
     document.getElementById('backToMenuFromJoin').addEventListener('click', () => {
         showScreen('mainMenuScreen');
@@ -231,14 +219,17 @@ export function bindMenuEventHandlers(deps) {
 
     joinRoomBtn.addEventListener('click', async () => {
         const { lobbyManager } = getState();
-        const roomCode = joinRoomCodeInput.value;
+        const lobbyName = joinRoomCodeInput.value.trim();
         const playerName = joinPlayerNameInput.value.trim();
-        const passcode = (joinRoomPasscodeInput?.value || '').trim();
 
         if (window.ShapeKeeperConvex) {
             setStartupState(STARTUP_STATES.CREATING_OR_JOINING_ROOM, { visible: false });
-            showToast('Joining room...', 'info', 2000);
-            const result = await window.ShapeKeeperConvex.joinRoom(roomCode, playerName, passcode);
+            showToast('Joining lobby...', 'info', 2000);
+            const result = await window.ShapeKeeperConvex.joinRoom(
+                lobbyName || 'default',
+                playerName,
+                lobbyManager?.passcode || ''
+            );
 
             if (result.error) {
                 showToast('Error: ' + result.error, 'error');
@@ -248,9 +239,9 @@ export function bindMenuEventHandlers(deps) {
             subscribeToRoomUpdates();
             setStartupState(STARTUP_STATES.ROOM_SUBSCRIBED, { visible: false });
 
-            lobbyManager.roomCode = roomCode.toUpperCase();
+            lobbyManager.roomCode = result.roomCode || lobbyName || 'default';
             lobbyManager.isHost = false;
-            showToast('Joined room: ' + roomCode.toUpperCase(), 'success', 3000);
+            showToast('Joined lobby', 'success', 3000);
             updateLobbyUI();
             showScreen('lobbyScreen');
         } else {

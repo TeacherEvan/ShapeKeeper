@@ -80,14 +80,14 @@
                             class="menu-btn secondary"
                             data-testid="create-game-button"
                         >
-                            HOST AGAINST FRIENDS
+                            CREATE LOBBY
                         </button>
                         <button
                             id="joinGameBtn"
                             class="menu-btn secondary"
                             data-testid="join-game-button"
                         >
-                            JOIN AGAINST FRIENDS
+                            JOIN LOBBY
                         </button>
                     </div>
                     <button id="themeToggle" class="theme-toggle" aria-label="Switch to dark mode">
@@ -325,46 +325,23 @@
             >
                 <canvas id="joinCanvas"></canvas>
                 <div class="welcome-container">
-                    <h1 id="joinScreenTitle">Join Game</h1>
-                    <p class="credit">Enter the room code to join</p>
+                    <h1 id="joinScreenTitle">Join Lobby</h1>
+                    <p class="credit">Enter a lobby name to join or create</p>
 
                     <div class="setup-section">
-                        <h2>Room Code</h2>
+                        <h2>Lobby Name</h2>
                         <label class="field-label" for="joinRoomCode"
-                            >Enter six-character room code</label
+                            >Enter lobby name (optional - leave blank to join any open lobby)</label
                         >
                         <input
                             type="text"
                             id="joinRoomCode"
                             class="room-code-input"
                             data-testid="join-room-code-input"
-                            placeholder="Enter code"
-                            maxlength="6"
-                            aria-label="Room code"
-                        />
-                    </div>
-
-                    <div class="setup-section">
-                        <h2>Lobby Passcode</h2>
-                        <label class="field-label" for="joinRoomPasscode"
-                            >Enter the silly passcode the host shared</label
-                        >
-                        <input
-                            type="text"
-                            id="joinRoomPasscode"
-                            class="room-code-input passcode-input"
-                            data-testid="join-room-passcode-input"
-                            placeholder="e.g. EasterPig"
+                            placeholder="Enter lobby name or leave blank"
                             maxlength="32"
-                            spellcheck="false"
-                            autocomplete="off"
-                            aria-label="Lobby passcode"
+                            aria-label="Lobby name"
                         />
-                        <p class="field-hint">
-                            Newer lobbies require a passcode (e.g.
-                            <code>EasterPig</code>). The host shares this in the
-                            invite link.
-                        </p>
                     </div>
 
                     <div class="setup-section">
@@ -389,9 +366,8 @@
                             id="joinRoomBtn"
                             class="start-btn"
                             data-testid="join-room-button"
-                            disabled
                         >
-                            Join Room
+                            Join Lobby
                         </button>
                     </div>
                 </div>

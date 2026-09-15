@@ -10,7 +10,20 @@ import { expect, test } from '@playwright/test';
 
 test.describe('lobby invite link', () => {
     test('pre-fills the join screen from ?join=…&passcode=… URL params', async ({ page }) => {
+        page.on('console', (msg) => console.log('PAGE LOG:', msg.type(), msg.text()));
+        page.on('pageerror', (err) => console.log('PAGE ERROR:', err.message));
+        page.on('request', (req) => console.log('REQUEST:', req.url()));
+        page.on('response', (res) => console.log('RESPONSE:', res.url(), res.status()));
         await page.goto('/?join=ABC123&passcode=EasterPig');
+
+        // Check if welcome.js ran
+        const welcomeRan = await page.evaluate(() => {
+            return { search: window.location.search, moduleLoaded: window.__welcomeModuleLoaded };
+        });
+        console.log('Page state:', welcomeRan);
+
+        const joinScreen = page.getByTestId('join-screen');
+        await expect(joinScreen).toHaveClass(/active/);
 
         const codeInput = page.getByTestId('join-room-code-input');
         const passcodeInput = page.getByTestId('join-room-passcode-input');
@@ -21,6 +34,7 @@ test.describe('lobby invite link', () => {
 
     test('uppercases a lowercase room code in the pre-fill', async ({ page }) => {
         await page.goto('/?join=abc123&passcode=sillyrabbit');
+        await expect(page.getByTestId('join-screen')).toHaveClass(/active/);
         await expect(page.getByTestId('join-room-code-input')).toHaveValue('ABC123');
     });
 

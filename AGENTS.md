@@ -44,7 +44,7 @@ If a live `convex dev` is running for a DIFFERENT project (e.g. J-pay), it
 only watches that project's `_generated/`. ShapeKeeper's `_generated/` is
 unaffected. If a ShapeKeeper sidecar is running, kill it first.
 
-### Passcode rules (CRITICAL — product owner 2026-08-25)
+### Passcode rules (LEGACY — product owner 2026-08-25, updated 2026-09-14)
 
 - **Passcode = silly `[Adjective][Animal]` TitleCase.** Examples: `EasterPig`,
   `SillyRabbit`, `BubblyBunny`. No numbers, no separators, no human names, no
@@ -62,20 +62,36 @@ unaffected. If a ShapeKeeper sidecar is running, kill it first.
   (regex, word-list membership, no human-name word starts, ≥ 50 entries).
   If you add a word that breaks the invariants, the test will catch it
   BEFORE the linter does.
+- **2026-09-14 UPDATE:** The default "LOBBY" room no longer requires a passcode.
+  Passcodes are only used for named custom lobbies (created via `createRoom`
+  with a custom name). The `joinRoom` mutation accepts an empty passcode for
+  the default lobby.
 
 ### Live lobby invariants
 
 - The host must be able to see players join **in realtime** without a refresh.
   The `LiveLobbyManager` (online mode) is fed by the Convex subscription
   callback via `applySnapshot({ room, players })`.
-- The `joinRoom` mutation requires BOTH `roomCode` AND `passcode` for new
-  rooms. Legacy rooms (no passcode) still allow code-only joining.
-- The invite link is `${origin}/?join=${roomCode}&passcode=${passcode}`.
-  Build it via `LiveLobbyManager.buildInviteUrl()`, never by hand in the
-  click handler.
-- URL pre-fill: `getJoinParamsFromUrl(search)` parses `?join=&passcode=`.
-  `welcome.js` calls it on boot and routes the user to the join screen.
+- The `joinRoom` mutation accepts a lobby name (optional) and player name.
+  The default lobby uses code "LOBBY" with no passcode. Custom named lobbies
+  may still use passcodes.
+- The invite link is `${origin}/?join=${roomCode}`. Build it via
+  `LiveLobbyManager.buildInviteUrl()`, never by hand in the click handler.
+- URL pre-fill: `getJoinParamsFromUrl(search)` parses `?join=`. `welcome.js`
+  calls it on boot and routes the user to the join screen.
   This is the **only** supported way to deep-link into the join flow.
+
+### Lava Timer (FR-1 / NFR-2)
+
+- The lava timer particle background now renders in **ALL game modes** (local,
+  AI, and online) when the `FEATURE_LAVA_TIMER` flag is enabled. The `isOnline`
+  gate has been removed from `Renderer.drawLavaTimerLayer()`.
+- Expired turns are automatically skipped: when `turnRemainingMs <= 0`, the
+  local game advances to the next player (house rule matching online behavior).
+  See `DotsAndBoxesGame.handleTurnExpiration()`.
+- The turn clock controller (`turn-clock-controller.js`) still requires
+  `isOnline=true` to tick the authoritative server countdown; the lava visual
+  effect runs independently.
 
 ### Code style
 

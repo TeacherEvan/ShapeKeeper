@@ -502,6 +502,165 @@ export function processClick(handler, x, y) {
     handler.game.draw();
 }
 
+function getClientCoordinates(handler, event) {
+    const rect = handler.canvas.getBoundingClientRect();
+    return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+    };
+}
+
+function getSelectionDistance(handler, x, y, dot) {
+    const dotX = handler.game.offsetX + dot.col * handler.game.cellSize;
+    const dotY = handler.game.offsetY + dot.row * handler.game.cellSize;
+    return Math.sqrt(Math.pow(x - dotX, 2) + Math.pow(y - dotY, 2));
+}
+
+function tryDrawFromSelection(handler, endDot, { sameDotClears }) {
+    if (handler.game.selectedDot) {
+        if (
+            handler.game.selectedDot.row === endDot.row &&
+            handler.game.selectedDot.col === endDot.col
+        ) {
+            if (sameDotClears) {
+                handler.game.selectedDot = null;
+                handler.selectionLocked = false;
+                handler.syncPreviewState();
+                handler.game.draw();
+            }
+            return;
+        }
+        if (areAdjacent(handler.game.selectedDot, endDot)) {
+            handler.game.drawLine(handler.game.selectedDot, endDot);
+            handler.selectionLocked = false;
+        } else {
+            handler.game.animationSystem.triggerInvalidLineFlash(
+                handler.game.selectedDot,
+                endDot,
+                handler.game.offsetX,
+                handler.game.offsetY,
+                handler.game.cellSize
+            );
+            handler.game.selectedDot = endDot;
+            handler.selectionLocked = true;
+        }
+    } else if (!handler.selectionLocked) {
+        handler.game.selectedDot = endDot;
+        handler.game.tutorialSystem?.onDotSelected?.(endDot);
+        handler.selectionLocked = true;
+    }
+    handler.setKeyboardFocusDot(endDot, { announce: false });
+    handler.game.draw();
+}
+
+function releasePointerCapture(handler, pointerId) {
+    try {
+        handler.canvas.releasePointerCapture(pointerId);
+    } catch (_) {
+        // ignore
+    }
+}
+
+export function handlePointerDown(handler, event) {
+    if (handler.activePointers.has(event.pointerId)) {
+        return;
+    }
+    handler.activePointers.set(event.pointerId, { x: 0, y: 0 });
+    handler.canvas.setPointerCapture(event.pointerId);
+    const { x, y } = getClientCoordinates(handler, event);
+    const clickedCell = getSquareAtPosition(handler, x, y);
+    if (handleCellInteraction(handler, clickedCell)) {
+        handler.activePointers.delete(event.pointerId);
+        releasePointerCapture(handler, event.pointerId);
+        handler.selectionRibbon = null;
+        handler.syncPreviewState();
+        handler.game.draw();
+        return;
+    }
+    const startDot = handler.getNearestDot(x, y);
+    const selectionRadius =
+        handler.game.cellSize *
+        (handler.game.selectionRadiusMultiplier || (event.pointerType === 'touch' ? 0.68 : 0.5));
+    if (startDot && getSelectionDistance(handler, x, y, startDot) <= selectionRadius) {
+        handler.game.selectedDot = startDot;
+        handler.game.tutorialSystem?.onDotSelected?.(startDot);
+        handler.selectionLocked = true;
+        handler.setKeyboardFocusDot(startDot, { announce: false });
+        handler.game.draw();
+    }
+}
+
+export function handlePointerMove(handler, event) {
+    if (!handler.activePointers.has(event.pointerId)) {
+        if (event.pointerType !== 'touch') {
+            handleMouseMove(handler, event);
+        }
+        return;
+    }
+    const now = Date.now();
+    const throttleMs =
+        event.pointerType === 'touch'
+            ? handler.game.touchMoveThrottleMs || 24
+            : handler.game.pointerMoveThrottleMs || 16;
+    if (now - handler.lastPointerMoveTime < throttleMs) {
+        return;
+    }
+    handler.lastPointerMoveTime = now;
+    const { x, y } = getClientCoordinates(handler, event);
+    const pointer = handler.activePointers.get(event.pointerId);
+    pointer.x = x;
+    pointer.y = y;
+    updateSelectionRibbon(handler, x, y);
+}
+
+export function handlePointerUp(handler, event) {
+    if (!handler.activePointers.has(event.pointerId)) {
+        return;
+    }
+    const now = Date.now();
+    if (event.pointerType === 'touch') {
+        handler.lastTouchTime = now;
+    }
+    const { x, y } = getClientCoordinates(handler, event);
+    const pointer = handler.activePointers.get(event.pointerId);
+    const clickedCell = getSquareAtPosition(handler, x, y);
+    if (handleCellInteraction(handler, clickedCell)) {
+        handler.activePointers.delete(event.pointerId);
+        releasePointerCapture(handler, event.pointerId);
+        handler.selectionRibbon = null;
+        handler.syncPreviewState();
+        handler.game.draw();
+        return;
+    }
+    const endDot = handler.getNearestDot(x, y);
+    const selectionRadius =
+        handler.game.cellSize *
+        (handler.game.selectionRadiusMultiplier || (event.pointerType === 'touch' ? 0.68 : 0.5));
+    if (endDot && getSelectionDistance(handler, x, y, endDot) <= selectionRadius) {
+        tryDrawFromSelection(handler, endDot, {
+            sameDotClears: pointer?.startedWithSelection === true,
+        });
+    } else if (handler.game.selectedDot) {
+        handler.selectionLocked = true;
+    }
+    handler.activePointers.delete(event.pointerId);
+    releasePointerCapture(handler, event.pointerId);
+    handler.selectionRibbon = null;
+    handler.syncPreviewState();
+    handler.game.draw();
+}
+
+export function handlePointerCancel(handler, event) {
+    if (!handler.activePointers.has(event.pointerId)) {
+        return;
+    }
+    handler.activePointers.delete(event.pointerId);
+    releasePointerCapture(handler, event.pointerId);
+    handler.selectionRibbon = null;
+    handler.syncPreviewState();
+    handler.game.draw();
+}
+
 export function updateSelectionRibbon(handler, x, y) {
     if (!handler.game.selectedDot) {
         handler.selectionRibbon = null;

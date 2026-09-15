@@ -9,11 +9,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LiveLobbyManager, getJoinParamsFromUrl } from './LiveLobbyManager.js';
 
 describe('LiveLobbyManager — initial state', () => {
-    it('starts in idle with no room/passcode/players', () => {
+    it('starts in idle with no room/players', () => {
         const m = new LiveLobbyManager();
         expect(m.status).toBe('idle');
         expect(m.roomCode).toBeNull();
-        expect(m.passcode).toBeNull();
         expect(m.players).toEqual([]);
         expect(m.isHost).toBe(false);
     });
@@ -25,12 +24,11 @@ describe('LiveLobbyManager — applySnapshot', () => {
         m = new LiveLobbyManager();
     });
 
-    it('applies room fields and stores passcode', () => {
+    it('applies room fields', () => {
         m.applySnapshot({
             room: {
                 _id: 'r1',
                 roomCode: 'ABC123',
-                passcode: 'EasterPig',
                 hostPlayerId: 's1',
                 gridSize: 10,
                 status: 'lobby',
@@ -39,7 +37,6 @@ describe('LiveLobbyManager — applySnapshot', () => {
         });
         expect(m.roomId).toBe('r1');
         expect(m.roomCode).toBe('ABC123');
-        expect(m.passcode).toBe('EasterPig');
         expect(m.hostSessionId).toBe('s1');
         expect(m.gridSize).toBe(10);
         expect(m.status).toBe('lobby');
@@ -90,15 +87,6 @@ describe('LiveLobbyManager — applySnapshot', () => {
         });
         expect(m.isHost).toBe(true);
     });
-
-    it('handles a legacy room without passcode (backward compat)', () => {
-        m.applySnapshot({
-            room: { _id: 'r1', roomCode: 'XYZ789' /* no passcode */ },
-            players: [],
-        });
-        expect(m.passcode).toBeNull();
-        expect(m.roomCode).toBe('XYZ789');
-    });
 });
 
 describe('LiveLobbyManager — subscription lifecycle', () => {
@@ -137,15 +125,7 @@ describe('LiveLobbyManager — buildInviteUrl', () => {
         expect(m.buildInviteUrl({ base: 'https://example.com' })).toBeNull();
     });
 
-    it('builds a URL with both code and passcode when present', () => {
-        const m = new LiveLobbyManager();
-        m.roomCode = 'ABC123';
-        m.passcode = 'EasterPig';
-        const url = m.buildInviteUrl({ base: 'https://example.com' });
-        expect(url).toBe('https://example.com/?join=ABC123&passcode=EasterPig');
-    });
-
-    it('builds a URL with only the code for legacy rooms', () => {
+    it('builds a URL with only the code', () => {
         const m = new LiveLobbyManager();
         m.roomCode = 'ABC123';
         const url = m.buildInviteUrl({ base: 'https://example.com' });
@@ -155,9 +135,8 @@ describe('LiveLobbyManager — buildInviteUrl', () => {
     it('strips a trailing slash from the base', () => {
         const m = new LiveLobbyManager();
         m.roomCode = 'ABC123';
-        m.passcode = 'SillyRabbit';
         const url = m.buildInviteUrl({ base: 'https://example.com/' });
-        expect(url).toBe('https://example.com/?join=ABC123&passcode=SillyRabbit');
+        expect(url).toBe('https://example.com/?join=ABC123');
     });
 });
 
@@ -200,40 +179,29 @@ describe('getJoinParamsFromUrl', () => {
     it('returns {roomCode} when only ?join is set', () => {
         expect(getJoinParamsFromUrl('?join=ABC123')).toEqual({
             roomCode: 'ABC123',
-            passcode: null,
-        });
-    });
-
-    it('returns {roomCode, passcode} when both set', () => {
-        expect(getJoinParamsFromUrl('?join=ABC123&passcode=EasterPig')).toEqual({
-            roomCode: 'ABC123',
-            passcode: 'EasterPig',
         });
     });
 
     it('uppercases the room code (matches Convex by_code index behavior)', () => {
-        expect(getJoinParamsFromUrl('?join=abc123&passcode=easterpig')).toEqual({
+        expect(getJoinParamsFromUrl('?join=abc123')).toEqual({
             roomCode: 'ABC123',
-            passcode: 'easterpig',
         });
     });
 
     it('accepts the leading-? or not', () => {
-        expect(getJoinParamsFromUrl('join=ABC123&passcode=EasterPig')).toEqual({
+        expect(getJoinParamsFromUrl('join=ABC123')).toEqual({
             roomCode: 'ABC123',
-            passcode: 'EasterPig',
         });
     });
 });
 
 describe('invite link round-trip (buildInviteUrl -> getJoinParamsFromUrl)', () => {
-    it('a generated URL is parseable back to the same code + passcode', () => {
+    it('a generated URL is parseable back to the same code', () => {
         const m = new LiveLobbyManager();
         m.roomCode = 'ABC123';
-        m.passcode = 'EasterPig';
         const url = m.buildInviteUrl({ base: 'https://example.com' });
         const parsed = getJoinParamsFromUrl(new URL(url).search);
-        expect(parsed).toEqual({ roomCode: 'ABC123', passcode: 'EasterPig' });
+        expect(parsed).toEqual({ roomCode: 'ABC123' });
     });
 
     it('a generated URL without passcode still parses (legacy room)', () => {
@@ -241,6 +209,6 @@ describe('invite link round-trip (buildInviteUrl -> getJoinParamsFromUrl)', () =
         m.roomCode = 'ABC123';
         const url = m.buildInviteUrl({ base: 'https://example.com' });
         const parsed = getJoinParamsFromUrl(new URL(url).search);
-        expect(parsed).toEqual({ roomCode: 'ABC123', passcode: null });
+        expect(parsed).toEqual({ roomCode: 'ABC123' });
     });
 });
