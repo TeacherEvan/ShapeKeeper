@@ -1,22 +1,40 @@
-import { DEFAULT_COLORS } from './shared';
-
-const DEFAULT_LOBBY_CODE = 'LOBBY';
+import { generateHostToken, hashToken } from '../auth/token';
+import { generateSecureRoomCode, DEFAULT_COLORS } from './shared';
+import { log, errorLog, warn } from '../log';
 
 export async function createRoomHandler(ctx: any, args: any) {
-    console.log('[createRoom] Starting room creation', {
+    log('[createRoom] Starting room creation', {
         sessionId: args.sessionId,
         playerName: args.playerName,
         gridSize: args.gridSize,
         partyMode: args.partyMode,
     });
 
-    const roomCode = DEFAULT_LOBBY_CODE;
+    let roomCode = generateSecureRoomCode();
+    let existingRoom = await ctx.db
+        .query('rooms')
+        .withIndex('by_code', (q: any) => q.eq('roomCode', roomCode))
+        .first();
+
+    let collisionCount = 0;
+    while (existingRoom) {
+        collisionCount++;
+        log('[createRoom] Room code collision detected', { roomCode, collisionCount });
+        roomCode = generateSecureRoomCode();
+        existingRoom = await ctx.db
+            .query('rooms')
+            .withIndex('by_code', (q: any) => q.eq('roomCode', roomCode))
+            .first();
+    }
 
     const now = Date.now();
+    const hostToken = generateHostToken();
+    const hostTokenHash = await hashToken(hostToken);
     const roomId = await ctx.db.insert('rooms', {
         roomCode,
         passcode: undefined,
         hostPlayerId: args.sessionId,
+        hostTokenHash: hostTokenHash ?? undefined,
         gridSize: args.gridSize,
         partyMode: args.partyMode !== false,
         status: 'lobby',
@@ -25,7 +43,7 @@ export async function createRoomHandler(ctx: any, args: any) {
         updatedAt: now,
     });
 
-    console.log('[createRoom] Room created successfully', { roomId, roomCode });
+    log('[createRoom] Room created successfully', { roomId, roomCode });
 
     await ctx.db.insert('players', {
         roomId,
@@ -39,12 +57,16 @@ export async function createRoomHandler(ctx: any, args: any) {
         joinedAt: now,
     });
 
-    console.log('[createRoom] Host player added', { roomId });
-    return { roomId, roomCode };
+    log('[createRoom] Host player added', { roomId, sessionId: args.sessionId });
+    // The hostToken is shown ONCE. The browser must stash it in sessionStorage
+    // and pass it on every host-gated mutation. The server only stores the
+    // SHA-256 hash, so a leak of the room row cannot be used to forge host
+    // actions.
+    return { roomId, roomCode, hostToken };
 }
 
 export async function joinRoomHandler(ctx: any, args: any) {
-    console.log('[joinRoom] Join request', {
+    log('[joinRoom] Join request', {
         roomCode: args.roomCode,
         playerName: args.playerName,
     });
@@ -55,17 +77,14 @@ export async function joinRoomHandler(ctx: any, args: any) {
         .first();
 
     if (!room) {
-        console.log('[joinRoom] Error: Room not found', { roomCode: args.roomCode });
+        log('[joinRoom] Error: Room not found', { roomCode: args.roomCode });
         return { error: 'Room not found' };
     }
 
-    console.log('[joinRoom] Room found', {
-        roomId: room._id,
-        status: room.status,
-    });
+    log('[joinRoom] Room found', { roomId: room._id, status: room.status });
 
     if (room.status !== 'lobby') {
-        console.log('[joinRoom] Error: Game already in progress', {
+        log('[joinRoom] Error: Game already in progress', {
             roomId: room._id,
             status: room.status,
         });
@@ -80,7 +99,7 @@ export async function joinRoomHandler(ctx: any, args: any) {
         .first();
 
     if (existingPlayer) {
-        console.log('[joinRoom] Player rejoining', {
+        log('[joinRoom] Player rejoining', {
             roomId: room._id,
             playerId: existingPlayer._id,
         });
@@ -96,10 +115,10 @@ export async function joinRoomHandler(ctx: any, args: any) {
         .withIndex('by_room', (q: any) => q.eq('roomId', room._id))
         .collect();
 
-    console.log('[joinRoom] Current players', { roomId: room._id, playerCount: players.length });
+    log('[joinRoom] Current players', { roomId: room._id, playerCount: players.length });
 
     if (players.length >= 6) {
-        console.log('[joinRoom] Error: Room is full', {
+        log('[joinRoom] Error: Room is full', {
             roomId: room._id,
             playerCount: players.length,
         });
@@ -121,7 +140,7 @@ export async function joinRoomHandler(ctx: any, args: any) {
         joinedAt: Date.now(),
     });
 
-    console.log('[joinRoom] Player added successfully', {
+    log('[joinRoom] Player added successfully', {
         roomId: room._id,
         playerId,
         playerIndex: players.length,
@@ -133,7 +152,7 @@ export async function joinRoomHandler(ctx: any, args: any) {
 }
 
 export async function leaveRoomHandler(ctx: any, args: any) {
-    console.log('[leaveRoom] Leave request', {
+    log('[leaveRoom] Leave request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
     });
@@ -146,7 +165,7 @@ export async function leaveRoomHandler(ctx: any, args: any) {
         .first();
 
     if (!player) {
-        console.log('[leaveRoom] Error: Player not found', {
+        log('[leaveRoom] Error: Player not found', {
             roomId: args.roomId,
             sessionId: args.sessionId,
         });
@@ -155,11 +174,11 @@ export async function leaveRoomHandler(ctx: any, args: any) {
 
     const room = await ctx.db.get(args.roomId);
     if (!room) {
-        console.log('[leaveRoom] Error: Room not found', { roomId: args.roomId });
+        log('[leaveRoom] Error: Room not found', { roomId: args.roomId });
         return { error: 'Room not found' };
     }
 
-    console.log('[leaveRoom] Processing leave', {
+    log('[leaveRoom] Processing leave', {
         roomId: args.roomId,
         playerId: player._id,
         roomStatus: room.status,
@@ -202,7 +221,7 @@ export async function leaveRoomHandler(ctx: any, args: any) {
         await ctx.db.patch(player._id, { isConnected: false });
         await ctx.db.patch(args.roomId, roomUpdates);
 
-        console.log('[leaveRoom] In-match leave processed', {
+        log('[leaveRoom] In-match leave processed', {
             playerId: player._id,
             transferredHostTo: roomUpdates.hostPlayerId || null,
             transferredTurnTo: roomUpdates.currentPlayerIndex ?? null,
@@ -218,18 +237,18 @@ export async function leaveRoomHandler(ctx: any, args: any) {
     }
 
     await ctx.db.delete(player._id);
-    console.log('[leaveRoom] Player removed from lobby', { playerId: player._id });
+    log('[leaveRoom] Player removed from lobby', { playerId: player._id });
 
     const remainingPlayers = await ctx.db
         .query('players')
         .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
         .collect();
 
-    console.log('[leaveRoom] Remaining players', { count: remainingPlayers.length });
+    log('[leaveRoom] Remaining players', { count: remainingPlayers.length });
 
     if (remainingPlayers.length === 0) {
         await ctx.db.delete(args.roomId);
-        console.log('[leaveRoom] Room deleted (no remaining players)', { roomId: args.roomId });
+        log('[leaveRoom] Room deleted (no remaining players)', { roomId: args.roomId });
         return { success: true, roomDeleted: true };
     }
 
@@ -239,7 +258,7 @@ export async function leaveRoomHandler(ctx: any, args: any) {
             hostPlayerId: newHost.sessionId,
             updatedAt: Date.now(),
         });
-        console.log('[leaveRoom] Host transferred', {
+        log('[leaveRoom] Host transferred', {
             oldHost: args.sessionId,
             newHost: newHost.sessionId,
         });
@@ -249,12 +268,12 @@ export async function leaveRoomHandler(ctx: any, args: any) {
         await ctx.db.patch(remainingPlayers[index]._id, { playerIndex: index });
     }
 
-    console.log('[leaveRoom] Players reindexed', { count: remainingPlayers.length });
+    log('[leaveRoom] Players reindexed', { count: remainingPlayers.length });
     return { success: true };
 }
 
 export async function toggleReadyHandler(ctx: any, args: any) {
-    console.log('[toggleReady] Toggle ready request', {
+    log('[toggleReady] Toggle ready request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
     });
@@ -267,7 +286,7 @@ export async function toggleReadyHandler(ctx: any, args: any) {
         .first();
 
     if (!player) {
-        console.log('[toggleReady] Error: Player not found', {
+        log('[toggleReady] Error: Player not found', {
             roomId: args.roomId,
             sessionId: args.sessionId,
         });
@@ -278,7 +297,7 @@ export async function toggleReadyHandler(ctx: any, args: any) {
     await ctx.db.patch(player._id, { isReady: newReadyState });
     await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
 
-    console.log('[toggleReady] Ready status toggled', {
+    log('[toggleReady] Ready status toggled', {
         playerId: player._id,
         playerName: player.name,
         oldReady: player.isReady,
@@ -289,7 +308,7 @@ export async function toggleReadyHandler(ctx: any, args: any) {
 }
 
 export async function updatePlayerHandler(ctx: any, args: any) {
-    console.log('[updatePlayer] Update player request', {
+    log('[updatePlayer] Update player request', {
         roomId: args.roomId,
         sessionId: args.sessionId,
         updates: { name: args.name, color: args.color },
@@ -303,7 +322,7 @@ export async function updatePlayerHandler(ctx: any, args: any) {
         .first();
 
     if (!player) {
-        console.log('[updatePlayer] Error: Player not found', {
+        log('[updatePlayer] Error: Player not found', {
             roomId: args.roomId,
             sessionId: args.sessionId,
         });
@@ -323,7 +342,7 @@ export async function updatePlayerHandler(ctx: any, args: any) {
         );
 
         if (colorInUse) {
-            console.log('[updatePlayer] Error: Color already in use', {
+            log('[updatePlayer] Error: Color already in use', {
                 requestedColor: args.color,
                 playerId: player._id,
             });
@@ -335,6 +354,6 @@ export async function updatePlayerHandler(ctx: any, args: any) {
     await ctx.db.patch(player._id, updates);
     await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
 
-    console.log('[updatePlayer] Player updated successfully', { playerId: player._id, updates });
+    log('[updatePlayer] Player updated successfully', { playerId: player._id, updates });
     return { success: true };
 }

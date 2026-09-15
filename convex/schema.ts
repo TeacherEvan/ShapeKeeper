@@ -7,6 +7,12 @@ export default defineSchema({
         roomCode: v.string(), // 6-character code for joining
         passcode: v.optional(v.string()), // silly [Adjective][Animal] (e.g. "EasterPig"). Optional for pre-migration rooms.
         hostPlayerId: v.string(), // Session ID of the host
+        // SHA-256 of the server-issued hostToken. Created in createRoom and
+        // required by every host-gated mutation. Optional only because rooms
+        // created before this deploy do not have it; the auth helper
+        // isAuthorisedHost falls back to a sessionId-only check for those
+        // legacy rooms.
+        hostTokenHash: v.optional(v.string()),
         gridSize: v.number(), // 5, 10, 20, or 30
         partyMode: v.optional(v.boolean()), // Party mode enabled (tile effects)
         status: v.union(v.literal('lobby'), v.literal('playing'), v.literal('finished')),
@@ -63,22 +69,25 @@ export default defineSchema({
                 value: v.optional(v.number()),
             })
         ),
-        // Opponent tap mechanic (multiplayer only): every tap by an opponent
-        // reduces the effective multiplier to 0.5x (capped). Taps on the
-        // owner's own square, on already-revealed squares, or on truth-or-dare
-        // squares are no-ops (see `tapSquareHandler`). Default = 0.
-        taps: v.optional(v.number()),
-        // The post-tap effective multiplier (cached on the row so the game-state
-        // subscription doesn't have to recompute it for every client). Server is
-        // the source of truth; clients render the value as-is.
-        effectiveMultiplier: v.optional(
-            v.object({
-                type: v.union(v.literal('multiplier'), v.literal('truthOrDare')),
-                value: v.optional(v.number()),
-            })
-        ),
+        // Set by revealMultiplierHandler on first successful reveal. Stops a
+        // hostile client from re-calling revealMultiplier to apply the bonus
+        // a second time. The browser's revealedMultipliers Set is UI-only;
+        // this is the authoritative flag.
+        multiplierRevealed: v.optional(v.boolean()),
         createdAt: v.number(),
     })
         .index('by_room', ['roomId'])
         .index('by_room_and_key', ['roomId', 'squareKey']),
+
+    // Per-sessionId sliding-window rate-limit buckets (N9 follow-up).
+    // Keyed by `${action}:${sessionId}` so a single client cannot bypass
+    // the limit by joining a new room. Window state lives here, not on
+    // the room document, because rate limits are per-actor, not per-room.
+    // The convex-helpers `@convex-dev/rate-limiter` package is the
+    // production-grade replacement when this branch adopts it.
+    rateLimits: defineTable({
+        key: v.string(), // e.g. "drawLine:session_abc"
+        windowStart: v.number(), // server epoch (ms) when the current window began
+        count: v.number(), // requests consumed in the current window
+    }).index('by_key', ['key']),
 });

@@ -37,29 +37,15 @@ function dispatchCanvasPointerEvent(
     type,
     { clientX, clientY, pointerId = 1, pointerType = 'touch', button = 0 }
 ) {
-    // Use PointerEvent if available, otherwise create a generic event with pointer properties
-    let event;
-    try {
-        event = new PointerEvent(type, {
-            bubbles: true,
-            cancelable: true,
-            clientX,
-            clientY,
-            pointerId,
-            pointerType,
-            button,
-        });
-    } catch {
-        event = new Event(type, { bubbles: true, cancelable: true });
-        for (const [key, value] of Object.entries({
-            clientX,
-            clientY,
-            pointerId,
-            pointerType,
-            button,
-        })) {
-            Object.defineProperty(event, key, { configurable: true, value });
-        }
+    const event = new Event(type, { bubbles: true, cancelable: true });
+    for (const [key, value] of Object.entries({
+        clientX,
+        clientY,
+        pointerId,
+        pointerType,
+        button,
+    })) {
+        Object.defineProperty(event, key, { configurable: true, value });
     }
     event.preventDefault = vi.fn();
     canvas.dispatchEvent(event);
@@ -237,7 +223,7 @@ describe('Root InputHandler canvas lifecycle', () => {
         handler.destroy();
     });
 
-    it.skip('cancels an active pointer without drawing or losing the selected start dot', () => {
+    it('cancels an active pointer without drawing or losing the selected start dot', () => {
         const canvas = createCanvas();
         const handler = new InputHandler(canvas, game);
 

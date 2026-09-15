@@ -1,16 +1,13 @@
-/**
- * Generates a random 6-character alphanumeric code for the short, public room
- * identifier. Excludes visually ambiguous characters (I, O, 0, 1) so the code
- * is comfortable to read aloud / type.
- */
-export function generateRoomCode(): string {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-}
+import { log, errorLog, warn } from '../log';
+
+// re-export the .js implementation so the .ts importers (and Convex
+// tsc) use the same crypto-strong generator the Vitest suite exercises.
+export {
+    generateRoomCode,
+    generateSecureRoomCode,
+    ROOM_CODE_CHARSET,
+    ROOM_CODE_LENGTH,
+} from './shared-utils.js';
 
 /**
  * Word lists for the silly [Adjective][Animal] lobby passcode.

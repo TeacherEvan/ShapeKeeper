@@ -81,12 +81,10 @@ test.describe('local gameplay canvas input', () => {
 
         const { offsetX, offsetY, cellSize } = await getCanvasGeometry(page);
         const canvas = page.locator('#gameCanvas');
-        const box = await canvas.boundingBox();
-        if (!box) throw new Error('Canvas bounding box not found');
+        const start = { x: offsetX, y: offsetY };
+        const end = { x: offsetX + cellSize, y: offsetY };
 
-        const start = { x: box.x + offsetX, y: box.y + offsetY };
-        const end = { x: box.x + offsetX + cellSize, y: box.y + offsetY };
-
+        await canvas.hover({ position: start });
         await page.mouse.move(start.x, start.y);
         await page.mouse.down();
         await page.mouse.move(end.x, end.y, { steps: 8 });

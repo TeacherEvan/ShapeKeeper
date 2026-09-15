@@ -43,14 +43,14 @@ export function handleRoomStateUpdate(roomState, deps) {
     lobbyManager.roomCode = roomState.roomCode;
     lobbyManager.gridSize = roomState.gridSize;
 
-    // The server strips hostPlayerId / sessionId from the public projection
-    // and computes isHost / isYou server-side. Read those flags instead of
-    // comparing sessionIds that no longer exist on the response.
-    const nextIsHost = roomState.isHost === true;
+    // The server computes isHost/isYou against the requesting sessionId;
+    // the public getRoomByCode response strips every player's sessionId,
+    // so the client cannot (and must not) re-derive these locally.
+    const nextIsHost = roomState.isHost;
     const previousGameIsHost = game?.isMultiplayer ? game.isHost : null;
     lobbyManager.isHost = nextIsHost;
 
-    const myPlayer = roomState.players.find((player) => player.isYou === true);
+    const myPlayer = roomState.players.find((player) => player.isYou);
     lobbyManager.myPlayerId = myPlayer?._id || null;
     lobbyManager.isReady = myPlayer?.isReady || false;
 
@@ -74,7 +74,7 @@ export function handleRoomStateUpdate(roomState, deps) {
         name: player.name,
         color: player.color,
         isReady: player.isReady,
-        isHost: player.isHost === true,
+        isHost: roomState.isHost,
         playerNumber: player.playerNumber || index + 1,
     }));
 
