@@ -1,55 +1,17 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import {
-    createRoomHandler,
-    joinRoomHandler,
-    leaveRoomHandler,
-    toggleReadyHandler,
-    updatePlayerHandler,
-} from './rooms/mutations';
-import { getRoomByCodeHandler, getRoomHandler } from './rooms/queries';
-import { startGameHandler, updateGridSizeHandler, updatePartyModeHandler } from './rooms/settings';
-import { log, errorLog, warn } from './log';
 
 // Create a new room
-export const createRoom = mutation({
-    args: {
-        sessionId: v.string(),
-        playerName: v.string(),
-        gridSize: v.number(),
-        partyMode: v.optional(v.boolean()),
-    },
-    handler: createRoomHandler,
-});
+export { createRoom } from './mutations/createRoom';
 
 // Join an existing room
-export const joinRoom = mutation({
-    args: {
-        roomCode: v.string(),
-        sessionId: v.string(),
-        playerName: v.string(),
-        passcode: v.optional(v.string()), // Required for rooms with a passcode (post 2026-08-25); legacy rooms may omit.
-    },
-    handler: joinRoomHandler,
-});
+export { joinRoom } from './mutations/joinRoom';
 
 // Leave a room
-export const leaveRoom = mutation({
-    args: {
-        roomId: v.id('rooms'),
-        sessionId: v.string(),
-    },
-    handler: leaveRoomHandler,
-});
+export { leaveRoom } from './mutations/leaveRoom';
 
 // Toggle ready status
-export const toggleReady = mutation({
-    args: {
-        roomId: v.id('rooms'),
-        sessionId: v.string(),
-    },
-    handler: toggleReadyHandler,
-});
+export { toggleReady } from './mutations/toggleReady';
 
 // Update player settings (name, color)
 export const updatePlayer = mutation({
@@ -87,15 +49,8 @@ export const updatePartyMode = mutation({
     handler: updatePartyModeHandler,
 });
 
-// Get room by code (for joining). sessionId is optional; when supplied, the
-// response includes server-computed isHost / isYou flags.
-export const getRoomByCode = query({
-    args: {
-        roomCode: v.string(),
-        sessionId: v.optional(v.string()),
-    },
-    handler: getRoomByCodeHandler,
-});
+// Get room by code (for joining)
+export { getRoomByCode } from './queries/roomQueries';
 
 // Get room state (for subscriptions). sessionId is optional; when supplied,
 // the response includes isHost / isYou flags.
@@ -107,12 +62,5 @@ export const getRoom = query({
     handler: getRoomHandler,
 });
 
-// Start the game (host only).
-export const startGame = mutation({
-    args: {
-        roomId: v.id('rooms'),
-        sessionId: v.string(),
-        hostToken: v.optional(v.string()),
-    },
-    handler: startGameHandler,
-});
+// Start the game (host only)
+export { startGame } from './mutations/startGame';
