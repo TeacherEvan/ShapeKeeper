@@ -3,11 +3,9 @@ import { Renderer } from '../renderer.js';
 import { FEATURE_FLAGS, GAME_CONSTANTS } from '../constants.js';
 
 /**
- * Honest integration proof (second-pass fix): the feature is only useful if the
- * lava clock actually DRAWS behind the dots in an online match — not merely if a
- * flag boolean flips. Renderer.drawLavaTimerLayer() (renderer.js:107) is the real
- * gate; it is skipped for non-online games, so we exercise it with isOnline=true
- * and a turn countdown, using an injected mock 2D context (jsdom has no canvas).
+ * Honest integration proof: the lava clock now draws in ALL game modes
+ * (not just online) when the feature flag is on. Renderer.drawLavaTimerLayer()
+ * no longer checks isOnline; it only checks FEATURE_LAVA_TIMER.
  */
 
 function makeMockCtx() {
@@ -62,12 +60,12 @@ function makeGame() {
     };
 }
 
-describe('lava timer actually renders behind dots (online match)', () => {
+describe('lava timer actually renders behind dots (all game modes)', () => {
     beforeEach(() => {
         FEATURE_FLAGS.FEATURE_LAVA_TIMER = true;
     });
 
-    it('draws the lava layer at 40% opacity with a centered countdown when online + flag on', () => {
+    it('draws the lava layer at 40% opacity with a centered countdown when flag on', () => {
         const game = makeGame();
         const renderer = new Renderer(game);
         renderer.drawLavaTimerLayer();
@@ -82,13 +80,14 @@ describe('lava timer actually renders behind dots (online match)', () => {
         expect(game.lava.particles.length).toBeGreaterThan(0);
     });
 
-    it('does NOT render lava for a local (non-online) game even with flag on', () => {
+    it('renders lava for a local (non-online) game with flag on', () => {
         const game = makeGame();
         game.isOnline = false;
         const renderer = new Renderer(game);
         renderer.drawLavaTimerLayer();
-        expect(game._log.text.length).toBe(0);
-        expect(game._log.alpha.length).toBe(0);
+        // Should now render even for non-online games
+        expect(game._log.text.length).toBeGreaterThan(0);
+        expect(game._log.alpha).toContain(GAME_CONSTANTS.LAVA_OPACITY);
     });
 
     it('does NOT render lava when the feature flag is off', () => {

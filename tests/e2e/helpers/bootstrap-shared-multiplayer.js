@@ -1,5 +1,139 @@
 const SHARED_BACKEND_STORAGE_KEY = '__shapekeeper_e2e_shared_backend__';
 const DEFAULT_SHARED_COLORS = ['#ff0000', '#0000ff', '#00ff00', '#ff8c00', '#8b00ff', '#00ffff'];
+const ADJECTIVES = [
+    'silly',
+    'bubbly',
+    'wobbly',
+    'mighty',
+    'tiny',
+    'cosmic',
+    'crispy',
+    'dizzy',
+    'eager',
+    'fancy',
+    'fluffy',
+    'fuzzy',
+    'giddy',
+    'goofy',
+    'jolly',
+    'jumpy',
+    'lucky',
+    'mellow',
+    'nutty',
+    'perky',
+    'plucky',
+    'quirky',
+    'sassy',
+    'scruffy',
+    'sleepy',
+    'sneaky',
+    'spooky',
+    'squishy',
+    'stinky',
+    'sunny',
+    'tippy',
+    'wiggly',
+    'yappy',
+    'zany',
+    'brave',
+    'clever',
+    'dapper',
+    'dashing',
+    'easter',
+    'fabled',
+    'gentle',
+    'glorious',
+    'happy',
+    'heroic',
+    'kindly',
+    'lavish',
+    'lively',
+    'merry',
+    'noble',
+    'plump',
+    'prancy',
+    'snazzy',
+    'sparkly',
+    'spritely',
+    'starry',
+    'stormy',
+    'toasty',
+    'twirly',
+    'wacky',
+    'whimsy',
+];
+const ANIMALS = [
+    'pig',
+    'rabbit',
+    'wombat',
+    'otter',
+    'panda',
+    'badger',
+    'beaver',
+    'bison',
+    'buffalo',
+    'camel',
+    'chinchilla',
+    'cobra',
+    'crane',
+    'donkey',
+    'duck',
+    'falcon',
+    'ferret',
+    'fox',
+    'gazelle',
+    'gecko',
+    'gorilla',
+    'hamster',
+    'hedgehog',
+    'hippo',
+    'hyena',
+    'iguana',
+    'jaguar',
+    'koala',
+    'lemur',
+    'leopard',
+    'llama',
+    'meerkat',
+    'mongoose',
+    'narwhal',
+    'ostrich',
+    'panther',
+    'pelican',
+    'pony',
+    'puffin',
+    'python',
+    'quokka',
+    'raccoon',
+    'reindeer',
+    'sloth',
+    'snail',
+    'sparrow',
+    'squirrel',
+    'stingray',
+    'tapir',
+    'toucan',
+    'walrus',
+    'weasel',
+    'yak',
+    'zebra',
+    'anteater',
+    'armadillo',
+    'cougar',
+    'dingo',
+    'eland',
+    'ibis',
+    'marmot',
+    'ocelot',
+    'okapi',
+];
+
+function generateSillyPasscode() {
+    const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+    const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+    const cap = (w) => w.charAt(0).toUpperCase() + w.slice(1);
+    return cap(adj) + cap(animal);
+}
 
 export async function installSharedMockMultiplayer(
     page,
@@ -7,6 +141,7 @@ export async function installSharedMockMultiplayer(
         sessionId,
         defaultPlayerName,
         roomCode = 'ABC123',
+        passcode,
         gridSize = 5,
         partyMode = false,
         resetSharedState = false,
@@ -17,6 +152,7 @@ export async function installSharedMockMultiplayer(
             sessionId: initialSessionId,
             defaultPlayerName: initialPlayerName,
             roomCode: initialRoomCode,
+            passcode: initialPasscode,
             gridSize: initialGridSize,
             partyMode: initialPartyMode,
             resetSharedState: shouldResetSharedState,
@@ -315,9 +451,11 @@ export async function installSharedMockMultiplayer(
                     const sharedState = ensureSharedState();
                     const normalizedCode = initialRoomCode.toUpperCase();
                     const roomId = `room_${normalizedCode}`;
+                    const generatedPasscode = initialPasscode || generateSillyPasscode();
                     sharedState.rooms[roomId] = {
                         roomId,
                         roomCode: normalizedCode,
+                        passcode: generatedPasscode,
                         gridSize: requestedGridSize || initialGridSize,
                         hostPlayerId: initialSessionId,
                         partyMode: requestedPartyMode ?? initialPartyMode,
@@ -336,7 +474,7 @@ export async function installSharedMockMultiplayer(
                     currentRoomId = roomId;
                     writeSharedState(sharedState);
                     notifySubscribers('create-room');
-                    return { roomCode: normalizedCode, roomId };
+                    return { roomCode: normalizedCode, roomId, passcode: generatedPasscode };
                 },
                 async getGameState() {
                     await waitFor(transportConfig.snapshotDelayMs);
@@ -353,10 +491,27 @@ export async function installSharedMockMultiplayer(
                 getSessionId() {
                     return initialSessionId;
                 },
-                async joinRoom(joinCode, playerName) {
+                async joinRoom(joinCode, playerName, suppliedPasscode) {
                     const sharedState = ensureSharedState();
                     const room = getRoomByCode(sharedState, joinCode);
                     if (!room) return { error: 'Room not found' };
+
+                    // Validate passcode: rooms created after the lobby-passcode feature
+                    // require the silly passcode. Legacy rooms (room.passcode undefined/empty)
+                    // still allow code-only joining for backwards compatibility.
+                    if (room.passcode) {
+                        const provided =
+                            typeof suppliedPasscode === 'string' ? suppliedPasscode : '';
+                        if (provided.length === 0) {
+                            return {
+                                error: 'This lobby requires a passcode. Ask the host to share it.',
+                            };
+                        }
+                        if (provided !== room.passcode) {
+                            return { error: 'Incorrect passcode. Check the link or ask the host.' };
+                        }
+                    }
+
                     const existingPlayer = room.players.find(
                         (player) => player.sessionId === initialSessionId
                     );
@@ -651,6 +806,7 @@ export async function installSharedMockMultiplayer(
             sessionId,
             defaultPlayerName,
             roomCode,
+            passcode,
             gridSize,
             partyMode,
             resetSharedState,
@@ -662,7 +818,7 @@ export async function installSharedMockMultiplayer(
 
 export async function createSharedMockMultiplayerPages(
     browser,
-    { roomCode = 'ABC123', gridSize = 5, partyMode = false, startupTimeoutMs = 1000 } = {}
+    { roomCode = 'ABC123', passcode, gridSize = 5, partyMode = false, startupTimeoutMs = 1000 } = {}
 ) {
     const { gotoApp } = await import('./bootstrap-app.js');
     const context = await browser.newContext();
@@ -672,10 +828,13 @@ export async function createSharedMockMultiplayerPages(
     await gotoApp(hostPage, { startupTimeoutMs });
     await gotoApp(guestPage, { startupTimeoutMs });
 
+    const generatedPasscode = passcode || generateSillyPasscode();
+
     await installSharedMockMultiplayer(hostPage, {
         sessionId: 'session_host',
         defaultPlayerName: 'Host',
         roomCode,
+        passcode: generatedPasscode,
         gridSize,
         partyMode,
         resetSharedState: true,
@@ -685,6 +844,7 @@ export async function createSharedMockMultiplayerPages(
         sessionId: 'session_guest',
         defaultPlayerName: 'Guest',
         roomCode,
+        passcode: generatedPasscode,
         gridSize,
         partyMode,
     });
@@ -693,6 +853,7 @@ export async function createSharedMockMultiplayerPages(
         context,
         guestPage,
         hostPage,
+        generatedPasscode,
         async cleanup() {
             await context.close();
         },

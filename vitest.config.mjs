@@ -6,5 +6,6 @@ export default defineConfig({
         include: ['**/*.test.js', '**/*.spec.js', '**/*.test.ts', '**/*.spec.ts'],
         exclude: ['node_modules/**', 'tests/e2e/**', '**/.vercel/output/**', 'docs/**'],
         globals: true,
+        setupFiles: ['vitest.setup.js'],
     },
 });

@@ -199,7 +199,9 @@ export class InputHandler {
     }
 
     handlePointerCancel(e) {
-        handlePointerCancel(this, e);
+        if (typeof handlePointerCancel === 'function') {
+            handlePointerCancel(this, e);
+        }
     }
 
     // Backwards-compatible entry points for existing integrations/tests.
