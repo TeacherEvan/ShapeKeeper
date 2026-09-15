@@ -59,10 +59,8 @@ export function bindMenuEventHandlers(deps) {
             setStartupState(STARTUP_STATES.ROOM_SUBSCRIBED, { visible: false });
 
             lobbyManager.roomCode = result.roomCode;
-            lobbyManager.passcode = result.passcode || null;
             lobbyManager.isHost = true;
-            const passcodeSuffix = result.passcode ? ` · Passcode: ${result.passcode}` : '';
-            showToast(`Room ${result.roomCode} created${passcodeSuffix}`, 'success', 4000);
+            showToast(`Room ${result.roomCode} created`, 'success', 4000);
         } else {
             lobbyManager.createRoom(playerName);
         }
@@ -196,16 +194,12 @@ export function bindMenuEventHandlers(deps) {
     });
 
     const joinRoomCodeInput = document.getElementById('joinRoomCode');
-    const joinRoomPasscodeInput = document.getElementById('joinRoomPasscode');
     const joinPlayerNameInput = document.getElementById('joinPlayerName');
     const joinRoomBtn = document.getElementById('joinRoomBtn');
 
     function validateJoinInputs() {
         const codeValid = joinRoomCodeInput.value.length === 6;
         const nameValid = joinPlayerNameInput.value.trim().length > 0;
-        // Passcode is optional at the UI level — the server enforces it for
-        // passcode-gated rooms. If the room has no passcode, the input can be
-        // empty; if it has one, the server will reject an empty value.
         joinRoomBtn.disabled = !(codeValid && nameValid);
     }
 
@@ -215,15 +209,6 @@ export function bindMenuEventHandlers(deps) {
     });
 
     joinPlayerNameInput.addEventListener('input', validateJoinInputs);
-    if (joinRoomPasscodeInput) {
-        joinRoomPasscodeInput.addEventListener('input', () => {
-            // Passcode is Adjective+Animal TitleCase; allow letters only.
-            joinRoomPasscodeInput.value = joinRoomPasscodeInput.value
-                .replace(/[^A-Za-z]/g, '')
-                .slice(0, 32);
-            validateJoinInputs();
-        });
-    }
 
     document.getElementById('backToMenuFromJoin').addEventListener('click', () => {
         showScreen('mainMenuScreen');
@@ -233,12 +218,11 @@ export function bindMenuEventHandlers(deps) {
         const { lobbyManager } = getState();
         const roomCode = joinRoomCodeInput.value;
         const playerName = joinPlayerNameInput.value.trim();
-        const passcode = (joinRoomPasscodeInput?.value || '').trim();
 
         if (window.ShapeKeeperConvex) {
             setStartupState(STARTUP_STATES.CREATING_OR_JOINING_ROOM, { visible: false });
             showToast('Joining room...', 'info', 2000);
-            const result = await window.ShapeKeeperConvex.joinRoom(roomCode, playerName, passcode);
+            const result = await window.ShapeKeeperConvex.joinRoom(roomCode, playerName);
 
             if (result.error) {
                 showToast('Error: ' + result.error, 'error');
@@ -297,8 +281,7 @@ export function bindMenuEventHandlers(deps) {
 
     /**
      * Copy Invite Link button. The URL is built by LiveLobbyManager
-     * (or, for legacy lobbies, by the existing getState().lobbyManager) and
-     * contains BOTH the room code and the passcode (if any). Falls back to a
+     * and contains only the room code. Falls back to a
      * manual-select input if `navigator.clipboard` is unavailable (e.g.
      * insecure context) so the user can always copy.
      */
@@ -313,7 +296,6 @@ export function bindMenuEventHandlers(deps) {
                 url = lobbyManager.buildInviteUrl();
             } else if (lobbyManager && lobbyManager.roomCode) {
                 const params = new URLSearchParams({ join: lobbyManager.roomCode });
-                if (lobbyManager.passcode) params.set('passcode', lobbyManager.passcode);
                 url = `${window.location.origin}/?${params.toString()}`;
             }
             if (!url) {

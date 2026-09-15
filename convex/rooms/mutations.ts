@@ -1,4 +1,6 @@
-import { DEFAULT_COLORS, generateRoomCode, generateSillyPasscode } from './shared';
+import { DEFAULT_COLORS } from './shared';
+
+const DEFAULT_LOBBY_CODE = 'LOBBY';
 
 export async function createRoomHandler(ctx: any, args: any) {
     console.log('[createRoom] Starting room creation', {
@@ -8,52 +10,12 @@ export async function createRoomHandler(ctx: any, args: any) {
         partyMode: args.partyMode,
     });
 
-    let roomCode = generateRoomCode();
-    let existingRoom = await ctx.db
-        .query('rooms')
-        .withIndex('by_code', (q: any) => q.eq('roomCode', roomCode))
-        .first();
-
-    let collisionCount = 0;
-    while (existingRoom) {
-        collisionCount++;
-        console.log('[createRoom] Room code collision detected', { roomCode, collisionCount });
-        roomCode = generateRoomCode();
-        existingRoom = await ctx.db
-            .query('rooms')
-            .withIndex('by_code', (q: any) => q.eq('roomCode', roomCode))
-            .first();
-    }
-
-    // Generate a silly [Adjective][Animal] passcode (e.g. "EasterPig") and
-    // collision-check against any in-flight lobby. 50 * 50 = 2500 combos at
-    // the default list size; the loop terminates on the first unique code.
-    let passcode = generateSillyPasscode();
-    let passcodeCollision = await ctx.db
-        .query('rooms')
-        .withIndex('by_passcode', (q: any) => q.eq('passcode', passcode))
-        .first();
-    let passcodeCollisionCount = 0;
-    while (passcodeCollision) {
-        passcodeCollisionCount++;
-        if (passcodeCollisionCount > 32) {
-            // Safety bail: 32 attempts at 1/2500 each is ~1.3% chance of needing
-            // 33. The lists are intentionally large enough that the loop almost
-            // always exits on the first try; this is a belt-and-braces guard.
-            console.error('[createRoom] Could not generate unique passcode', { attempts: passcodeCollisionCount });
-            return { error: 'Could not allocate a unique passcode; please retry.' };
-        }
-        passcode = generateSillyPasscode();
-        passcodeCollision = await ctx.db
-            .query('rooms')
-            .withIndex('by_passcode', (q: any) => q.eq('passcode', passcode))
-            .first();
-    }
+    const roomCode = DEFAULT_LOBBY_CODE;
 
     const now = Date.now();
     const roomId = await ctx.db.insert('rooms', {
         roomCode,
-        passcode,
+        passcode: undefined,
         hostPlayerId: args.sessionId,
         gridSize: args.gridSize,
         partyMode: args.partyMode !== false,
@@ -63,7 +25,7 @@ export async function createRoomHandler(ctx: any, args: any) {
         updatedAt: now,
     });
 
-    console.log('[createRoom] Room created successfully', { roomId, roomCode, passcode });
+    console.log('[createRoom] Room created successfully', { roomId, roomCode });
 
     await ctx.db.insert('players', {
         roomId,
@@ -78,14 +40,13 @@ export async function createRoomHandler(ctx: any, args: any) {
     });
 
     console.log('[createRoom] Host player added', { roomId });
-    return { roomId, roomCode, passcode };
+    return { roomId, roomCode };
 }
 
 export async function joinRoomHandler(ctx: any, args: any) {
     console.log('[joinRoom] Join request', {
         roomCode: args.roomCode,
         playerName: args.playerName,
-        hasPasscode: typeof args.passcode === 'string' && args.passcode.length > 0,
     });
 
     const room = await ctx.db
@@ -101,23 +62,7 @@ export async function joinRoomHandler(ctx: any, args: any) {
     console.log('[joinRoom] Room found', {
         roomId: room._id,
         status: room.status,
-        hasStoredPasscode: typeof room.passcode === 'string' && room.passcode.length > 0,
     });
-
-    // Validate passcode: rooms created after the lobby-passcode feature ship
-    // require the silly passcode. Legacy rooms (room.passcode is undefined or
-    // empty) still allow code-only joining for backwards compatibility.
-    if (room.passcode) {
-        const supplied = typeof args.passcode === 'string' ? args.passcode : '';
-        if (supplied.length === 0) {
-            console.log('[joinRoom] Error: Passcode required', { roomCode: args.roomCode });
-            return { error: 'This lobby requires a passcode. Ask the host to share it.' };
-        }
-        if (supplied !== room.passcode) {
-            console.log('[joinRoom] Error: Incorrect passcode', { roomCode: args.roomCode });
-            return { error: 'Incorrect passcode. Check the link or ask the host.' };
-        }
-    }
 
     if (room.status !== 'lobby') {
         console.log('[joinRoom] Error: Game already in progress', {

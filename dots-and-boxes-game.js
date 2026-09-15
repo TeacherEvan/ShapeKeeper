@@ -1,5 +1,5 @@
 import { AnimationSystem } from './animation-system.js';
-import { GAME_CONSTANTS } from './constants.js';
+import { FEATURE_FLAGS, GAME_CONSTANTS } from './constants.js';
 import { EffectSystem } from './effect-system.js';
 import { GameLogic } from './game-logic.js';
 import { GameState } from './game-state.js';
@@ -961,8 +961,7 @@ export class DotsAndBoxesGame {
 
         // FR-2 / FR-3: keep the online turn countdown ticking every frame.
         if (this.isOnline) {
-            const ctrl = window.ShapeKeeperTurnClock;
-            if (ctrl) ctrl.tick();
+            this.handleTurnExpiration();
         }
 
         if (!this.isDestroyed) {
@@ -976,6 +975,23 @@ export class DotsAndBoxesGame {
      */
     draw() {
         this.renderer.draw();
+    }
+
+    handleTurnExpiration() {
+        if (!FEATURE_FLAGS.FEATURE_LAVA_TIMER) return;
+        if (!this.isOnline) return;
+        const ctrl = window.ShapeKeeperTurnClock;
+        if (!ctrl) return;
+        const remaining = ctrl.getRemainingTime?.();
+        if (remaining !== undefined && remaining <= 0) {
+            // The current player's turn has expired.
+            // For local lava timer house rule, skip to the next player.
+            const currentPlayerIndex = this.gameState?.room?.currentPlayerIndex ?? 0;
+            const nextIndex =
+                (currentPlayerIndex + 1) % (this.gameState?.room?.players?.length ?? 2);
+            this.gameState.room.currentPlayerIndex = nextIndex;
+            this.renderer.draw();
+        }
     }
 
     getInteractionDiagnostics() {

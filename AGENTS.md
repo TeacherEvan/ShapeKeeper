@@ -68,14 +68,27 @@ unaffected. If a ShapeKeeper sidecar is running, kill it first.
 - The host must be able to see players join **in realtime** without a refresh.
   The `LiveLobbyManager` (online mode) is fed by the Convex subscription
   callback via `applySnapshot({ room, players })`.
-- The `joinRoom` mutation requires BOTH `roomCode` AND `passcode` for new
-  rooms. Legacy rooms (no passcode) still allow code-only joining.
-- The invite link is `${origin}/?join=${roomCode}&passcode=${passcode}`.
+- The `joinRoom` mutation accepts an optional lobby name. Default lobbies
+  use the code `LOBBY` with no passcode required. Legacy rooms (no passcode)
+  still allow code-only joining.
+- The invite link is `${origin}/?join=${roomCode}`.
   Build it via `LiveLobbyManager.buildInviteUrl()`, never by hand in the
   click handler.
-- URL pre-fill: `getJoinParamsFromUrl(search)` parses `?join=&passcode=`.
+- URL pre-fill: `getJoinParamsFromUrl(search)` parses `?join=`.
   `welcome.js` calls it on boot and routes the user to the join screen.
   This is the **only** supported way to deep-link into the join flow.
+
+### Lava Timer (FR-1 / FR-2 / FR-3)
+
+- The lava timer renders for **all game modes** (local and online), not
+  just online matches. The `isOnline` gate was removed from `renderer.js`.
+- Feature flag `FEATURE_LAVA_TIMER` (default OFF) controls rendering.
+  Enable at runtime via `window.FEATURE_LAVA_TIMER`.
+- `handleTurnExpiration()` in `dots-and-boxes-game.js` handles the
+  local lava timer house rule: when a player's turn expires, the turn
+  advances to the next player.
+- Timing constants live in `constants.js` (`TIMING_CONSTANTS`).
+- The turn clock controller is at `src/timing/turn-clock-controller.js`.
 
 ### Code style
 

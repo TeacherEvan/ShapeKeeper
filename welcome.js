@@ -53,8 +53,8 @@ function initializeApp() {
     initializeMenuNavigation();
 
     // Pre-fill the join screen from an invite link, if present.
-    // `?join=ABC123&passcode=EasterPig` on the URL jumps the user to the
-    // join screen with the inputs filled in and the button enabled.
+    // `?join=ABC123` on the URL jumps the user to the join screen with the
+    // code input filled in and the button enabled.
     const joinParams = getJoinParamsFromUrl();
     if (joinParams) {
         prefillJoinScreen(joinParams);
@@ -62,14 +62,13 @@ function initializeApp() {
 }
 
 /**
- * Move the user to the join screen and populate the code/passcode/name
+ * Move the user to the join screen and populate the code/name
  * inputs. Called when the page loads with `?join=…` URL params.
- * @param {{roomCode: string, passcode: string|null}} params
+ * @param {{roomCode: string}} params
  */
 function prefillJoinScreen(params) {
     const joinScreen = document.getElementById('joinScreen');
     const codeInput = document.getElementById('joinRoomCode');
-    const passcodeInput = document.getElementById('joinRoomPasscode');
     const nameInput = document.getElementById('joinPlayerName');
     if (!joinScreen || !codeInput) return;
 
@@ -82,12 +81,10 @@ function prefillJoinScreen(params) {
     joinScreen.setAttribute('aria-hidden', 'false');
 
     codeInput.value = params.roomCode;
-    if (passcodeInput) passcodeInput.value = params.passcode || '';
     if (nameInput) nameInput.focus();
 
     // Re-run the validation handler so the Join button enables.
     codeInput.dispatchEvent(new Event('input', { bubbles: true }));
-    if (passcodeInput) passcodeInput.dispatchEvent(new Event('input', { bubbles: true }));
     if (nameInput) nameInput.dispatchEvent(new Event('input', { bubbles: true }));
 }
 

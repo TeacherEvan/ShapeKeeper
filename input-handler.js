@@ -20,10 +20,6 @@ import {
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
-    handleClick,
-    handleMouseMove,
-    processClick,
-    updateSelectionRibbon,
 } from './input-handler/pointer-controls.js';
 import { getDotSelectionRadiusMultiplier, getNearestDot } from './utils.js';
 
@@ -49,8 +45,6 @@ export class InputHandler {
             pointerUp: this.handlePointerUp.bind(this),
             pointerCancel: this.handlePointerCancel.bind(this),
             lostPointerCapture: this.handlePointerCancel.bind(this),
-            click: this.handleClick.bind(this),
-            mouseMove: this.handleMouseMove.bind(this),
             keyDown: this.handleKeyDown.bind(this),
             focus: this.handleCanvasFocus.bind(this),
             blur: this.handleCanvasBlur.bind(this),
@@ -78,7 +72,6 @@ export class InputHandler {
         this.canvas.addEventListener('lostpointercapture', this._boundHandlers.lostPointerCapture);
 
         this.canvas.setAttribute('tabindex', this.canvas.getAttribute('tabindex') || '0');
-        this.canvas.addEventListener('click', this._boundHandlers.click);
         this.canvas.addEventListener('keydown', this._boundHandlers.keyDown);
         this.canvas.addEventListener('focus', this._boundHandlers.focus);
         this.canvas.addEventListener('blur', this._boundHandlers.blur);
@@ -100,7 +93,6 @@ export class InputHandler {
             'lostpointercapture',
             this._boundHandlers.lostPointerCapture
         );
-        this.canvas.removeEventListener('click', this._boundHandlers.click);
         this.canvas.removeEventListener('keydown', this._boundHandlers.keyDown);
         this.canvas.removeEventListener('focus', this._boundHandlers.focus);
         this.canvas.removeEventListener('blur', this._boundHandlers.blur);
@@ -194,14 +186,6 @@ export class InputHandler {
         );
     }
 
-    handleClick(e) {
-        handleClick(this, e);
-    }
-
-    handleMouseMove(e) {
-        handleMouseMove(this, e);
-    }
-
     handlePointerDown(e) {
         handlePointerDown(this, e);
     }
@@ -231,16 +215,8 @@ export class InputHandler {
         this.handlePointerUp(e);
     }
 
-    processClick(x, y) {
-        processClick(this, x, y);
-    }
-
     getSquareAtPosition(x, y) {
         return getSquareAtPosition(this, x, y);
-    }
-
-    updateSelectionRibbon(x, y) {
-        updateSelectionRibbon(this, x, y);
     }
 
     getState() {

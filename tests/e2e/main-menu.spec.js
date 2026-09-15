@@ -18,14 +18,14 @@ const MENU_CONTRACT = [
         primary: true,
     },
     {
-        label: 'HOST AGAINST FRIENDS',
+        label: 'CREATE LOBBY',
         id: 'createGameBtn',
         testId: 'create-game-button',
         screen: 'lobbyScreen',
         primary: false,
     },
     {
-        label: 'JOIN AGAINST FRIENDS',
+        label: 'JOIN LOBBY',
         id: 'joinGameBtn',
         testId: 'join-game-button',
         screen: 'joinScreen',
@@ -33,7 +33,13 @@ const MENU_CONTRACT = [
     },
 ];
 
-const RETIRED_LABELS = ['Create Game', 'Join Game', 'Local Play (2 Players)'];
+const RETIRED_LABELS = [
+    'Create Game',
+    'Join Game',
+    'Local Play (2 Players)',
+    'HOST AGAINST FRIENDS',
+    'JOIN AGAINST FRIENDS',
+];
 
 test.describe('main menu CTA contract', () => {
     test('exposes the three renamed calls to action', async ({ page }) => {
@@ -102,18 +108,18 @@ test.describe('main menu CTA contract', () => {
         await expect(page.locator('#localOpponentType')).toHaveValue('human');
     });
 
-    test('routes HOST AGAINST FRIENDS to the lobby screen', async ({ page }) => {
+    test('routes CREATE LOBBY to the lobby screen', async ({ page }) => {
         await gotoApp(page);
 
-        await page.getByRole('button', { name: 'HOST AGAINST FRIENDS', exact: true }).click();
+        await page.getByRole('button', { name: 'CREATE LOBBY', exact: true }).click();
 
         await expect(page.locator('#lobbyScreen')).toHaveClass(/active/);
     });
 
-    test('routes JOIN AGAINST FRIENDS to the join screen', async ({ page }) => {
+    test('routes JOIN LOBBY to the join screen', async ({ page }) => {
         await gotoApp(page);
 
-        await page.getByRole('button', { name: 'JOIN AGAINST FRIENDS', exact: true }).click();
+        await page.getByRole('button', { name: 'JOIN LOBBY', exact: true }).click();
 
         await expect(page.getByTestId('join-screen')).toHaveClass(/active/);
         await expect(page.getByTestId('join-room-code-input')).toBeVisible();

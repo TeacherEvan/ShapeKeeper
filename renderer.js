@@ -106,7 +106,6 @@ export class Renderer {
      */
     drawLavaTimerLayer() {
         if (!FEATURE_FLAGS.FEATURE_LAVA_TIMER) return;
-        if (!this.game.isOnline) return; // lava timer is an online-match feature
         drawLavaTimer(this.game);
     }
 

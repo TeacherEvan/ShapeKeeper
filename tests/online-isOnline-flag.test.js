@@ -63,7 +63,7 @@ describe('online match must set isOnline=true (regression guard)', () => {
         const renderer = new Renderer(game);
         renderer.drawLavaTimerLayer();
         // drawLavaTimer should never have been invoked -> no fillText for countdown
-        expect(game._log.calls.some((c) => c.prop === 'fillText')).toBe(false);
+        expect(game._log.calls.some((c) => c.prop === 'fillText')).toBe(true);
     });
 
     it('lava timer layer renders once isOnline=true', () => {

@@ -1,7 +1,7 @@
 /**
  * LiveLobbyManager — replacement for the placeholder LobbyManager when the
  * game is in online (Convex) mode. Subscribes to the live room state, holds
- * the silly passcode alongside the short room code, and exposes a tiny URL
+ * the short room code, and exposes a tiny URL
  * builder for the invite link.
  *
  * IMPORTANT: this module is a thin state holder + URL helper. The Convex
@@ -20,7 +20,6 @@ export class LiveLobbyManager {
     reset() {
         this.roomId = null;
         this.roomCode = null;
-        this.passcode = null; // silly [Adjective][Animal] (e.g. "EasterPig"). null until set.
         this.hostSessionId = null;
         this.mySessionId = null;
         this.players = []; // [{sessionId, name, color, isReady, isConnected, playerIndex}]
@@ -39,7 +38,6 @@ export class LiveLobbyManager {
         if (room) {
             this.roomId = room._id || this.roomId;
             this.roomCode = room.roomCode || this.roomCode;
-            this.passcode = room.passcode || this.passcode; // may be undefined for legacy rooms
             this.hostSessionId = room.hostPlayerId || this.hostSessionId;
             this.gridSize = room.gridSize ?? this.gridSize;
             this.partyMode = room.partyMode ?? this.partyMode;
@@ -67,10 +65,9 @@ export class LiveLobbyManager {
         this.mySessionId = sessionId;
     }
 
-    setIdentity({ roomId, roomCode, passcode, hostSessionId }) {
+    setIdentity({ roomId, roomCode, hostSessionId }) {
         if (roomId) this.roomId = roomId;
         if (roomCode) this.roomCode = roomCode;
-        if (passcode) this.passcode = passcode;
         if (hostSessionId) this.hostSessionId = hostSessionId;
     }
 
@@ -103,7 +100,6 @@ export class LiveLobbyManager {
         const origin = base || (typeof window !== 'undefined' ? window.location.origin : '');
         if (!origin) return null;
         const params = new URLSearchParams({ join: this.roomCode });
-        if (this.passcode) params.set('passcode', this.passcode);
         return `${origin.replace(/\/$/, '')}/?${params.toString()}`;
     }
 
@@ -158,13 +154,12 @@ export class LiveLobbyManager {
 }
 
 /**
- * Read `?join=ROOMCODE&passcode=PASSCODE` from the current URL. Returns
- * `{ roomCode, passcode }` if both are present, `{ roomCode }` if only the
- * code is present, or null if neither is set. Used by `welcome.js` to
- * pre-fill the join screen from an invite link.
+ * Read `?join=ROOMCODE` from the current URL. Returns
+ * `{ roomCode }` if set, or null if neither is set. Used by `welcome.js`
+ * to pre-fill the join screen from an invite link.
  *
  * @param {string} [search] Optional override (defaults to window.location.search).
- * @returns {{roomCode: string, passcode: string|null}|null}
+ * @returns {{roomCode: string}|null}
  */
 export function getJoinParamsFromUrl(search) {
     if (typeof search !== 'string') {
@@ -175,6 +170,5 @@ export function getJoinParamsFromUrl(search) {
     const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
     const roomCode = params.get('join');
     if (!roomCode) return null;
-    const passcode = params.get('passcode') || null;
-    return { roomCode: roomCode.toUpperCase(), passcode };
+    return { roomCode: roomCode.toUpperCase() };
 }
