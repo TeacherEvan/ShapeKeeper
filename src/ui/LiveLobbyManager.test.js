@@ -176,21 +176,31 @@ describe('getJoinParamsFromUrl', () => {
         expect(getJoinParamsFromUrl('?foo=bar')).toBeNull();
     });
 
-    it('returns {roomCode} when only ?join is set', () => {
+    it('returns {roomCode, passcode: null} when only ?join is set', () => {
         expect(getJoinParamsFromUrl('?join=ABC123')).toEqual({
             roomCode: 'ABC123',
+            passcode: null,
+        });
+    });
+
+    it('returns {roomCode, passcode} when both set', () => {
+        expect(getJoinParamsFromUrl('?join=ABC123&passcode=EasterPig')).toEqual({
+            roomCode: 'ABC123',
+            passcode: 'EasterPig',
         });
     });
 
     it('uppercases the room code (matches Convex by_code index behavior)', () => {
-        expect(getJoinParamsFromUrl('?join=abc123')).toEqual({
+        expect(getJoinParamsFromUrl('?join=abc123&passcode=easterpig')).toEqual({
             roomCode: 'ABC123',
+            passcode: 'easterpig',
         });
     });
 
     it('accepts the leading-? or not', () => {
-        expect(getJoinParamsFromUrl('join=ABC123')).toEqual({
+        expect(getJoinParamsFromUrl('join=ABC123&passcode=EasterPig')).toEqual({
             roomCode: 'ABC123',
+            passcode: 'EasterPig',
         });
     });
 });
@@ -201,7 +211,7 @@ describe('invite link round-trip (buildInviteUrl -> getJoinParamsFromUrl)', () =
         m.roomCode = 'ABC123';
         const url = m.buildInviteUrl({ base: 'https://example.com' });
         const parsed = getJoinParamsFromUrl(new URL(url).search);
-        expect(parsed).toEqual({ roomCode: 'ABC123' });
+        expect(parsed).toEqual({ roomCode: 'ABC123', passcode: null });
     });
 
     it('a generated URL without passcode still parses (legacy room)', () => {
@@ -209,6 +219,6 @@ describe('invite link round-trip (buildInviteUrl -> getJoinParamsFromUrl)', () =
         m.roomCode = 'ABC123';
         const url = m.buildInviteUrl({ base: 'https://example.com' });
         const parsed = getJoinParamsFromUrl(new URL(url).search);
-        expect(parsed).toEqual({ roomCode: 'ABC123' });
+        expect(parsed).toEqual({ roomCode: 'ABC123', passcode: null });
     });
 });
