@@ -77,14 +77,13 @@ export async function createRoomHandler(ctx: any, args: any) {
         joinedAt: now,
     });
 
-    console.log('[createRoom] Host player added', { roomId, sessionId: args.sessionId });
+    console.log('[createRoom] Host player added', { roomId });
     return { roomId, roomCode, passcode };
 }
 
 export async function joinRoomHandler(ctx: any, args: any) {
     console.log('[joinRoom] Join request', {
         roomCode: args.roomCode,
-        sessionId: args.sessionId,
         playerName: args.playerName,
         hasPasscode: typeof args.passcode === 'string' && args.passcode.length > 0,
     });
