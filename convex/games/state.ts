@@ -1,8 +1,20 @@
 import { isAuthorisedHostAsync } from '../auth/token';
 import { POPULATE_PLAYER_INDEX } from './shared';
-import { validateLineKey } from './line-validation';
+import { validateLineKey } from './line_validation';
 import { log, errorLog, warn } from '../log';
-import { checkRateLimit } from '../rate-limit';
+import { checkRateLimit } from '../rate_limit';
+
+export function computeEffectiveMultiplier(multiplier: any, taps: number): any {
+    if (multiplier === null) return null;
+    if (multiplier === undefined) return undefined;
+    if (!multiplier) return undefined;
+    if (multiplier.type === 'truthOrDare') return multiplier;
+    if (multiplier.type === 'multiplier') {
+        if (taps === 0 || taps === undefined) return multiplier;
+        return { type: 'multiplier', value: 0.5 };
+    }
+    return multiplier;
+}
 
 export async function getGameStateHandler(ctx: any, args: any) {
     const room = await ctx.db.get(args.roomId);

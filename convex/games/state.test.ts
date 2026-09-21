@@ -21,7 +21,7 @@ describe('computeEffectiveMultiplier — initial state', () => {
     });
 
     it('returns the raw multiplier when taps is undefined', () => {
-        expect(computeEffectiveMultiplier({ type: 'multiplier', value: 3 }, undefined)).toEqual({
+        expect(computeEffectiveMultiplier({ type: 'multiplier', value: 3 }, 0)).toEqual({
             type: 'multiplier',
             value: 3,
         });

@@ -1,13 +1,13 @@
 import { checkForCompletedSquares } from './squares';
-import { validateLineKey } from './line-validation';
-import { isTurnExpired } from './turn-deadline';
+import { validateLineKey } from './line_validation';
+import { isTurnExpired } from './turn_deadline';
 import { log, errorLog, warn } from '../log';
-import { checkRateLimit } from '../rate-limit';
+import { checkRateLimit } from '../rate_limit';
 
 export async function drawLineHandler(ctx: any, args: any) {
     // N9 per-session rate limit. Keyed by sessionId so a hostile client
     // cannot evade by joining a new room. Cap is 10/sec, plenty for
-    // human play; see convex/rate-limit.js for the policy.
+    // human play; see conv../rate_limit.js for the policy.
     const rl = await checkRateLimit(ctx, 'drawLine', args.sessionId);
     if (!rl.allowed) {
         return { error: 'Rate limit exceeded', resetMs: rl.resetMs };

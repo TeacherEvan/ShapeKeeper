@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { drawLineHandler } from './games/draw';
+import { POPULATE_PLAYER_INDEX } from './games/shared';
 import { log, errorLog, warn } from './log';
 import {
     endGameHandler,
