@@ -52,7 +52,7 @@ describe('mutations/leaveRoom', () => {
         const db = makeDb({ player, room });
         const ctx: any = { db };
 
-        const res = await (leaveRoom as any).handler(ctx, { roomId: 'r1', sessionId: 's1' });
+        const res = await (leaveRoom as any)._handler(ctx, { roomId: 'r1', sessionId: 's1' });
         expect(res).toEqual({ success: true, disconnected: true });
         expect(db.patch).toHaveBeenCalledWith('p1', { isConnected: false });
     });
@@ -63,7 +63,7 @@ describe('mutations/leaveRoom', () => {
         const db = makeDb({ player, room, remaining: [] });
         const ctx: any = { db };
 
-        const res = await (leaveRoom as any).handler(ctx, { roomId: 'r1', sessionId: 's1' });
+        const res = await (leaveRoom as any)._handler(ctx, { roomId: 'r1', sessionId: 's1' });
         expect(res).toEqual({ success: true, roomDeleted: true });
         expect(db.delete).toHaveBeenCalledWith('p1');
         expect(db.delete).toHaveBeenCalledWith('r1');
@@ -79,7 +79,7 @@ describe('mutations/leaveRoom', () => {
         const db = makeDb({ player, room, remaining });
         const ctx: any = { db };
 
-        const res = await (leaveRoom as any).handler(ctx, { roomId: 'r1', sessionId: 's1' });
+        const res = await (leaveRoom as any)._handler(ctx, { roomId: 'r1', sessionId: 's1' });
         expect(res).toEqual({ success: true });
         expect(db.patch).toHaveBeenCalledWith('r1', expect.objectContaining({ hostPlayerId: 's2' }));
         expect(db.patch).toHaveBeenCalledWith('p2', { playerIndex: 0 });

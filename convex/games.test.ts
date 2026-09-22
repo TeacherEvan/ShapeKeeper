@@ -76,21 +76,24 @@ describe('convex/games handlers (unit)', () => {
                 players: () => ({
                     withIndex: () => ({ first: vi.fn(async () => playerDoc) }),
                 }),
+                rateLimits: () => ({
+                    withIndex: () => ({ unique: vi.fn(async () => null) }),
+                }),
             },
         });
 
         const ctx: any = { db: mockDb };
 
         // Act
-        const result = await (games.revealMultiplier as any).handler(ctx, {
+        const result = await (games.revealMultiplier as any)._handler(ctx, {
             roomId: 'room1',
             sessionId: 'sess-A',
             squareKey: '0,0',
         });
 
-        // Assert
-        expect(result).toEqual({ success: true, multiplier: squareDoc.multiplier });
-        expect(mockDb.patch).toHaveBeenCalledWith('playerA', { score: 6 });
+        // Assert: player score 2 + (multiplier value 3 - 1) = 4
+        expect(result).toEqual({ success: true, multiplier: squareDoc.multiplier, taps: 0 });
+        expect(mockDb.patch).toHaveBeenCalledWith('playerA', { score: 4 });
     });
 
     it('populateLines: inserts non-existent lines and returns count', async () => {
@@ -116,7 +119,7 @@ describe('convex/games handlers (unit)', () => {
         const ctx: any = { db: mockDb };
         const lineKeys = ['0,0-0,1', '1,0-1,1'];
 
-        const res = await (games.populateLines as any).handler(ctx, {
+        const res = await (games.populateLines as any)._handler(ctx, {
             roomId: 'room1',
             sessionId: 'host-sess',
             lineKeys,
@@ -166,7 +169,7 @@ describe('convex/games handlers (unit)', () => {
 
         const ctx: any = { db: mockDb };
 
-        const res = await (games.drawLine as any).handler(ctx, {
+        const res = await (games.drawLine as any)._handler(ctx, {
             roomId: 'room1',
             sessionId: 'sess-A',
             lineKey: '1,0-1,1',
@@ -193,6 +196,7 @@ describe('convex/games handlers (unit)', () => {
             '0,0-0,1', // top
             '0,1-1,1', // right
             '1,0-1,1', // bottom
+            '0,0-1,0', // left (the line being drawn - included because applyLine runs first)
         ].map((k) => ({ lineKey: k }));
 
         const mockDb = createMockDb({
@@ -208,14 +212,14 @@ describe('convex/games handlers (unit)', () => {
                     }),
                 }),
                 squares: () => ({
-                    withIndex: () => ({ collect: vi.fn(async () => []) }),
+                    withIndex: () => ({ collect: vi.fn(async () => []), first: vi.fn(async () => null) }),
                 }),
             },
         });
 
         const ctx: any = { db: mockDb };
 
-        const res = await (games.drawLine as any).handler(ctx, {
+        const res = await (games.drawLine as any)._handler(ctx, {
             roomId: 'room1',
             sessionId: 'sess-A',
             lineKey: '0,0-1,0', // left side completes the square
@@ -239,8 +243,16 @@ describe('convex/games handlers (unit)', () => {
         const playerA = { _id: 'pA', sessionId: 'sess-A', playerIndex: 0, score: 0, name: 'A' };
         const playerB = { _id: 'pB', sessionId: 'sess-B', playerIndex: 1, score: 0, name: 'B' };
 
-        // Lines such that drawing '0,1-1,1' will complete a triangle (orthogonal example)
-        const existingLines = [{ lineKey: '0,0-0,1' }, { lineKey: '0,0-1,0' }];
+        // Lines such that drawing diagonal '0,0-1,1' will complete triangles
+        // TL triangle: vertices (0,0), (1,1), (0,1) - edges: diagonal (0,0-1,1), vertical (1,1-0,1), horizontal (0,1-0,0)
+        // BR triangle: vertices (0,0), (1,1), (1,0) - edges: diagonal (0,0-1,1), horizontal (1,1-1,0), vertical (1,0-0,0)
+        const existingLines = [
+            { lineKey: '0,0-0,1' }, // top horizontal
+            { lineKey: '0,0-1,0' }, // left vertical
+            { lineKey: '1,0-1,1' }, // bottom horizontal
+            { lineKey: '0,1-1,1' }, // right vertical
+            { lineKey: '0,0-1,1' }, // diagonal (the line being drawn - included because applyLine runs first)
+        ];
 
         const mockDb = createMockDb({
             get: (id: any) => (id === 'room1' ? roomDoc : null),
@@ -255,20 +267,20 @@ describe('convex/games handlers (unit)', () => {
                     }),
                 }),
                 squares: () => ({
-                    withIndex: () => ({ collect: vi.fn(async () => []) }),
+                    withIndex: () => ({ collect: vi.fn(async () => []), first: vi.fn(async () => null) }),
                 }),
                 triangles: () => ({
-                    withIndex: () => ({ collect: vi.fn(async () => []) }),
+                    withIndex: () => ({ collect: vi.fn(async () => []), first: vi.fn(async () => null) }),
                 }),
             },
         });
 
         const ctx: any = { db: mockDb };
 
-        const res = await (games.drawLine as any).handler(ctx, {
+        const res = await (games.drawLine as any)._handler(ctx, {
             roomId: 'room1',
             sessionId: 'sess-A',
-            lineKey: '0,1-1,1', // completes triangle
+            lineKey: '0,0-1,1', // diagonal completes triangles
         });
 
         expect(res.success).toBe(true);

@@ -25,54 +25,34 @@ export async function checkForCompletedTriangles(
 
   // Determine potential triangles based on line type
   if (Math.abs(r1 - r2) === 1 && Math.abs(c1 - c2) === 1) {
-    // Diagonal line - can complete triangles in adjacent cells
+    // Diagonal line - can complete 2 triangles (one on each side of the diagonal)
     const row = Math.min(r1, r2);
     const col = Math.min(c1, c2);
 
-    // Top-left triangle
-    if (row > 0 && col > 0) {
+    // Triangle 1: Upper-left (uses diagonal, top edge, right edge)
+    // Vertices: (row, col), (row+1, col+1), (row, col+1)
+    // Edges: diagonal (row,col)-(row+1,col+1), vertical (row+1,col+1)-(row,col+1), horizontal (row,col+1)-(row,col)
+    if (row < gridSize - 1 && col < gridSize - 1) {
       potentialTriangles.push({
-        key: `tri-${row - 1},${col - 1}-TL`,
+        key: `tri-${row},${col}-TL`,
         vertices: [
-          { row: row - 1, col: col - 1 },
-          { row: row - 1, col: col },
-          { row: row, col: col - 1 },
+          { row, col },
+          { row: row + 1, col: col + 1 },
+          { row, col: col + 1 },
         ],
       });
     }
 
-    // Top-right triangle
-    if (row > 0 && col < gridSize - 1) {
-      potentialTriangles.push({
-        key: `tri-${row - 1},${col}-TR`,
-        vertices: [
-          { row: row - 1, col: col },
-          { row: row - 1, col: col + 1 },
-          { row: row, col: col + 1 },
-        ],
-      });
-    }
-
-    // Bottom-left triangle
-    if (row < gridSize - 1 && col > 0) {
-      potentialTriangles.push({
-        key: `tri-${row},${col - 1}-BL`,
-        vertices: [
-          { row: row, col: col - 1 },
-          { row: row + 1, col: col - 1 },
-          { row: row + 1, col: col },
-        ],
-      });
-    }
-
-    // Bottom-right triangle
+    // Triangle 2: Lower-right (uses diagonal, bottom edge, left edge)
+    // Vertices: (row, col), (row+1, col+1), (row+1, col)
+    // Edges: diagonal (row,col)-(row+1,col+1), horizontal (row+1,col+1)-(row+1,col), vertical (row+1,col)-(row,col)
     if (row < gridSize - 1 && col < gridSize - 1) {
       potentialTriangles.push({
         key: `tri-${row},${col}-BR`,
         vertices: [
-          { row: row, col: col + 1 },
-          { row: row + 1, col: col },
+          { row, col },
           { row: row + 1, col: col + 1 },
+          { row: row + 1, col },
         ],
       });
     }
@@ -90,7 +70,7 @@ export async function checkForCompletedTriangles(
           vertices: [
             { row: row - 1, col: col - 1 },
             { row: row - 1, col: col },
-            { row: row, col: col - 1 },
+            { row, col: col - 1 },
           ],
         });
       }
@@ -102,7 +82,7 @@ export async function checkForCompletedTriangles(
           vertices: [
             { row: row - 1, col: col },
             { row: row - 1, col: col + 1 },
-            { row: row, col: col + 1 },
+            { row, col: col + 1 },
           ],
         });
       }
@@ -115,9 +95,9 @@ export async function checkForCompletedTriangles(
         potentialTriangles.push({
           key: `tri-${row},${col - 1}-BL`,
           vertices: [
-            { row: row, col: col - 1 },
+            { row, col: col - 1 },
             { row: row + 1, col: col - 1 },
-            { row: row + 1, col: col },
+            { row: row + 1, col },
           ],
         });
       }
@@ -127,8 +107,8 @@ export async function checkForCompletedTriangles(
         potentialTriangles.push({
           key: `tri-${row},${col}-BR`,
           vertices: [
-            { row: row, col: col + 1 },
-            { row: row + 1, col: col },
+            { row, col: col + 1 },
+            { row: row + 1, col },
             { row: row + 1, col: col + 1 },
           ],
         });
@@ -148,7 +128,7 @@ export async function checkForCompletedTriangles(
           vertices: [
             { row: row - 1, col: col - 1 },
             { row: row - 1, col: col },
-            { row: row, col: col - 1 },
+            { row, col: col - 1 },
           ],
         });
       }
@@ -158,9 +138,9 @@ export async function checkForCompletedTriangles(
         potentialTriangles.push({
           key: `tri-${row},${col - 1}-BL`,
           vertices: [
-            { row: row, col: col - 1 },
+            { row, col: col - 1 },
             { row: row + 1, col: col - 1 },
-            { row: row + 1, col: col },
+            { row: row + 1, col },
           ],
         });
       }
@@ -175,7 +155,7 @@ export async function checkForCompletedTriangles(
           vertices: [
             { row: row - 1, col: col },
             { row: row - 1, col: col + 1 },
-            { row: row, col: col + 1 },
+            { row, col: col + 1 },
           ],
         });
       }
@@ -185,8 +165,8 @@ export async function checkForCompletedTriangles(
         potentialTriangles.push({
           key: `tri-${row},${col}-BR`,
           vertices: [
-            { row: row, col: col + 1 },
-            { row: row + 1, col: col },
+            { row, col: col + 1 },
+            { row: row + 1, col },
             { row: row + 1, col: col + 1 },
           ],
         });

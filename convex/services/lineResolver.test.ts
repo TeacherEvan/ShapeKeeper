@@ -45,7 +45,7 @@ describe('lineResolver.resolveLineEffects', () => {
     it('updates score and retains turn when square completed and ends game when all squares done', async () => {
         const room = { _id: 'r1', gridSize: 2, currentPlayerIndex: 0 }; // 1 total square
         const ctx = makeCtx({
-            squares: [],
+            squares: [{ squareKey: '0,0' }], // Return the completed square for game over check
             players: [{ playerIndex: 0 }, { playerIndex: 1 }],
             __newLineKey: '0,0-1,0',
         });

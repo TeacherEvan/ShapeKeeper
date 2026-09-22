@@ -22,12 +22,22 @@ export async function checkForCompletedSquares(
   const potentialSquares: Array<{ row: number; col: number }> = [];
 
   // Determine which squares this line could complete
-  if (r1 === r2) {
+  // Only horizontal and vertical lines can complete squares
+  const isHorizontal = r1 === r2;
+  const isVertical = c1 === c2;
+  const isDiagonal = Math.abs(r1 - r2) === 1 && Math.abs(c1 - c2) === 1;
+
+  if (isDiagonal) {
+    // Diagonal lines cannot complete squares
+    return [];
+  }
+
+  if (isHorizontal) {
     // Horizontal line - check squares above and below
     const col = Math.min(c1, c2);
     if (r1 > 0) potentialSquares.push({ row: r1 - 1, col }); // Square above
     if (r1 < gridSize - 1) potentialSquares.push({ row: r1, col }); // Square below
-  } else {
+  } else if (isVertical) {
     // Vertical line - check squares left and right
     const row = Math.min(r1, r2);
     if (c1 > 0) potentialSquares.push({ row, col: c1 - 1 }); // Square left

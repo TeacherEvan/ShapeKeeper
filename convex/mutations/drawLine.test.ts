@@ -55,7 +55,7 @@ describe('mutations/drawLine (integration-style unit tests)', () => {
         });
 
         const ctx: any = { db: mockDb };
-        const res = await (drawLine as any).handler(ctx, {
+        const res = await (drawLine as any)._handler(ctx, {
             roomId: 'r1',
             sessionId: 'sess',
             lineKey: '0,0-0,1',
@@ -81,14 +81,14 @@ describe('mutations/drawLine (integration-style unit tests)', () => {
                         first: async () => null,
                     }),
                 }),
-                squares: () => ({ withIndex: () => ({ collect: async () => [] }) }),
+                squares: () => ({ withIndex: () => ({ collect: async () => [], first: async () => null }) }),
                 triangles: () => ({ withIndex: () => ({ collect: async () => [] }) }),
             },
         });
 
         const ctx: any = { db: mockDb };
 
-        const res = await (drawLine as any).handler(ctx, {
+        const res = await (drawLine as any)._handler(ctx, {
             roomId: 'r1',
             sessionId: 'sess-A',
             lineKey: '1,0-1,1',
@@ -110,6 +110,7 @@ describe('mutations/drawLine (integration-style unit tests)', () => {
             { lineKey: '0,0-0,1' },
             { lineKey: '0,1-1,1' },
             { lineKey: '1,0-1,1' },
+            { lineKey: '0,0-1,0' },
         ];
 
         const mockDb = createMockDb({
@@ -122,14 +123,14 @@ describe('mutations/drawLine (integration-style unit tests)', () => {
                         first: async () => null,
                     }),
                 }),
-                squares: () => ({ withIndex: () => ({ collect: async () => [] }) }),
+                squares: () => ({ withIndex: () => ({ collect: async () => [], first: async () => null }) }),
                 triangles: () => ({ withIndex: () => ({ collect: async () => [] }) }),
             },
         });
 
         const ctx: any = { db: mockDb };
 
-        const res = await (drawLine as any).handler(ctx, {
+        const res = await (drawLine as any)._handler(ctx, {
             roomId: 'r1',
             sessionId: 'sess-A',
             lineKey: '0,0-1,0',

@@ -70,12 +70,13 @@
         return result;
     }
 
-    async function joinRoom(roomCode, playerName) {
+    async function joinRoom(roomCode, playerName, passcode = '') {
         const args = {
             roomCode: roomCode.toUpperCase(),
             sessionId: shared.getSessionId(),
             playerName,
         };
+        if (passcode) args.passcode = passcode;
         const result = await shared.runMutation(shared.api.rooms.joinRoom, args, 'joining room');
 
         if (result?.roomId) {

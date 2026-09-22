@@ -20,6 +20,7 @@ export class LiveLobbyManager {
     reset() {
         this.roomId = null;
         this.roomCode = null;
+        this.passcode = null;
         this.hostSessionId = null;
         this.mySessionId = null;
         this.players = []; // [{sessionId, name, color, isReady, isConnected, playerIndex}]
@@ -38,6 +39,7 @@ export class LiveLobbyManager {
         if (room) {
             this.roomId = room._id || this.roomId;
             this.roomCode = room.roomCode || this.roomCode;
+            this.passcode = room.passcode ?? this.passcode;
             this.hostSessionId = room.hostPlayerId || this.hostSessionId;
             this.gridSize = room.gridSize ?? this.gridSize;
             this.partyMode = room.partyMode ?? this.partyMode;
@@ -65,10 +67,11 @@ export class LiveLobbyManager {
         this.mySessionId = sessionId;
     }
 
-    setIdentity({ roomId, roomCode, hostSessionId }) {
+    setIdentity({ roomId, roomCode, hostSessionId, passcode }) {
         if (roomId) this.roomId = roomId;
         if (roomCode) this.roomCode = roomCode;
         if (hostSessionId) this.hostSessionId = hostSessionId;
+        if (passcode !== undefined) this.passcode = passcode;
     }
 
     attachSubscription(unsubscribe) {
@@ -100,6 +103,7 @@ export class LiveLobbyManager {
         const origin = base || (typeof window !== 'undefined' ? window.location.origin : '');
         if (!origin) return null;
         const params = new URLSearchParams({ join: this.roomCode });
+        if (this.passcode) params.set('passcode', this.passcode);
         return `${origin.replace(/\/$/, '')}/?${params.toString()}`;
     }
 
@@ -169,6 +173,7 @@ export function getJoinParamsFromUrl(search) {
     if (!search) return null;
     const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
     const roomCode = params.get('join');
+    const passcode = params.get('passcode');
     if (!roomCode) return null;
-    return { roomCode: roomCode.toUpperCase() };
+    return { roomCode: roomCode.toUpperCase(), passcode };
 }

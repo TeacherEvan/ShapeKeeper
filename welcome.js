@@ -69,6 +69,7 @@ function initializeApp() {
 function prefillJoinScreen(params) {
     const joinScreen = document.getElementById('joinScreen');
     const codeInput = document.getElementById('joinRoomCode');
+    const passcodeInput = document.getElementById('joinRoomPasscode');
     const nameInput = document.getElementById('joinPlayerName');
     if (!joinScreen || !codeInput) return;
 
@@ -81,10 +82,14 @@ function prefillJoinScreen(params) {
     joinScreen.setAttribute('aria-hidden', 'false');
 
     codeInput.value = params.roomCode;
+    if (passcodeInput && params.passcode) {
+        passcodeInput.value = params.passcode;
+    }
     if (nameInput) nameInput.focus();
 
     // Re-run the validation handler so the Join button enables.
     codeInput.dispatchEvent(new Event('input', { bubbles: true }));
+    if (passcodeInput) passcodeInput.dispatchEvent(new Event('input', { bubbles: true }));
     if (nameInput) nameInput.dispatchEvent(new Event('input', { bubbles: true }));
 }
 

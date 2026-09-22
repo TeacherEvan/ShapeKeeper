@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
-import { DEFAULT_COLORS, generateRoomCode } from '../utils/roomUtils';
+import { DEFAULT_COLORS, generateRoomCode, getHostTokenHash } from '../utils/roomUtils';
 
 export const createRoom = mutation({
   args: {
@@ -27,11 +27,16 @@ export const createRoom = mutation({
         .first();
     }
 
+    // Generate host token for this room
+    const hostToken = crypto.randomUUID();
+    const hostTokenHash = await getHostTokenHash(hostToken);
+
     const now = Date.now();
 
     const roomId = await ctx.db.insert('rooms', {
       roomCode,
       hostPlayerId: args.sessionId,
+      hostTokenHash,
       gridSize: args.gridSize,
       partyMode: args.partyMode !== false,
       status: 'lobby',
@@ -52,6 +57,6 @@ export const createRoom = mutation({
       joinedAt: now,
     });
 
-    return { roomId, roomCode };
+    return { roomId, roomCode, hostToken };
   },
 });

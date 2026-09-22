@@ -320,6 +320,40 @@
                     <p class="credit">Enter the room code to join</p>
 
                     <div class="setup-section">
+                        <h2>Room Code</h2>
+                        <label class="field-label" for="joinRoomCode"
+                            >Enter the 6-character room code</label
+                        >
+                        <input
+                            type="text"
+                            id="joinRoomCode"
+                            class="name-input"
+                            data-testid="join-room-code-input"
+                            placeholder="ABC123"
+                            maxlength="6"
+                            aria-label="Room code"
+                            autocomplete="off"
+                        />
+                    </div>
+
+                    <div class="setup-section">
+                        <h2>Passcode (if required)</h2>
+                        <label class="field-label" for="joinRoomPasscode"
+                            >Enter the lobby passcode</label
+                        >
+                        <input
+                            type="text"
+                            id="joinRoomPasscode"
+                            class="name-input"
+                            data-testid="join-room-passcode-input"
+                            placeholder="SillyRabbit"
+                            maxlength="20"
+                            aria-label="Lobby passcode"
+                            autocomplete="off"
+                        />
+                    </div>
+
+                    <div class="setup-section">
                         <h2>Your Name</h2>
                         <label class="field-label" for="joinPlayerName"
                             >Enter your display name</label

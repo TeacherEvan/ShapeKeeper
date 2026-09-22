@@ -36,7 +36,7 @@ function makeDb(options: MakeDbOptions = {}) {
 describe('queries/roomQueries', () => {
     it('getRoomByCode returns null when room not found', async () => {
         const ctx: any = { db: makeDb({ room: null }) };
-        const res = await (getRoomByCode as any).handler(ctx, { roomCode: 'NOPE' });
+        const res = await (getRoomByCode as any)._handler(ctx, { roomCode: 'NOPE' });
         expect(res).toBeNull();
     });
 
@@ -48,14 +48,14 @@ describe('queries/roomQueries', () => {
         ];
         const ctx: any = { db: makeDb({ room, players }) };
 
-        const res = await (getRoomByCode as any).handler(ctx, { roomCode: 'ABC123' });
+        const res = await (getRoomByCode as any)._handler(ctx, { roomCode: 'ABC123' });
         expect(res.roomCode).toBe('ABC123');
         expect(res.players[0].name).toBe('A');
     });
 
     it('getRoom returns null when room missing', async () => {
         const ctx: any = { db: makeDb({ room: null }) };
-        const res = await (getRoom as any).handler(ctx, { roomId: 'missing' });
+        const res = await (getRoom as any)._handler(ctx, { roomId: 'missing' });
         expect(res).toBeNull();
     });
 
@@ -68,7 +68,7 @@ describe('queries/roomQueries', () => {
         ];
         const ctx: any = { db: makeDb({ room, players }) };
 
-        const res = await (getRoom as any).handler(ctx, { roomId: 'r1' });
+        const res = await (getRoom as any)._handler(ctx, { roomId: 'r1' });
         expect(res._id).toBe('r1');
         expect(res.players.map((p: any) => p.name)).toEqual(['A', 'B', 'C']);
     });

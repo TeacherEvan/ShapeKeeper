@@ -7,6 +7,7 @@ export const joinRoom = mutation({
     roomCode: v.string(),
     sessionId: v.string(),
     playerName: v.string(),
+    passcode: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const room = await ctx.db
@@ -16,6 +17,16 @@ export const joinRoom = mutation({
 
     if (!room) return { error: 'Room not found' };
     if (room.status !== 'lobby') return { error: 'Game already in progress' };
+
+    // Validate passcode if room has one
+    if (room.passcode) {
+      if (!args.passcode) {
+        return { error: 'This lobby requires a passcode. Ask the host to share it.' };
+      }
+      if (args.passcode !== room.passcode) {
+        return { error: 'Incorrect passcode. Check the link or ask the host.' };
+      }
+    }
 
     const existingPlayer = await ctx.db
       .query('players')

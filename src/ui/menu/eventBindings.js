@@ -194,6 +194,7 @@ export function bindMenuEventHandlers(deps) {
     });
 
     const joinRoomCodeInput = document.getElementById('joinRoomCode');
+    const joinRoomPasscodeInput = document.getElementById('joinRoomPasscode');
     const joinPlayerNameInput = document.getElementById('joinPlayerName');
     const joinRoomBtn = document.getElementById('joinRoomBtn');
 
@@ -208,6 +209,8 @@ export function bindMenuEventHandlers(deps) {
         validateJoinInputs();
     });
 
+    joinRoomPasscodeInput?.addEventListener('input', validateJoinInputs);
+
     joinPlayerNameInput.addEventListener('input', validateJoinInputs);
 
     document.getElementById('backToMenuFromJoin').addEventListener('click', () => {
@@ -217,12 +220,13 @@ export function bindMenuEventHandlers(deps) {
     joinRoomBtn.addEventListener('click', async () => {
         const { lobbyManager } = getState();
         const roomCode = joinRoomCodeInput.value;
+        const passcode = joinRoomPasscodeInput?.value || '';
         const playerName = joinPlayerNameInput.value.trim();
 
         if (window.ShapeKeeperConvex) {
             setStartupState(STARTUP_STATES.CREATING_OR_JOINING_ROOM, { visible: false });
             showToast('Joining room...', 'info', 2000);
-            const result = await window.ShapeKeeperConvex.joinRoom(roomCode, playerName);
+            const result = await window.ShapeKeeperConvex.joinRoom(roomCode, playerName, passcode);
 
             if (result.error) {
                 showToast('Error: ' + result.error, 'error');
@@ -233,6 +237,7 @@ export function bindMenuEventHandlers(deps) {
             setStartupState(STARTUP_STATES.ROOM_SUBSCRIBED, { visible: false });
 
             lobbyManager.roomCode = roomCode.toUpperCase();
+            if (passcode) lobbyManager.setIdentity({ passcode });
             lobbyManager.isHost = false;
             showToast('Joined room: ' + roomCode.toUpperCase(), 'success', 3000);
             updateLobbyUI();

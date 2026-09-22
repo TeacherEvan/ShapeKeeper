@@ -19,7 +19,7 @@ describe('rooms.createRoom', () => {
     const db = makeDb();
     const ctx: any = { db };
 
-    const res = await (createRoom as any).handler(ctx, {
+    const res = await (createRoom as any)._handler(ctx, {
       sessionId: 'sess-1',
       playerName: 'Evan',
       gridSize: 4,

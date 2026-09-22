@@ -32,7 +32,7 @@ describe('mutations/startGame', () => {
     it('returns error when room not found', async () => {
         const db = makeDb({ room: null });
         const ctx: any = { db };
-        const res = await (startGame as any).handler(ctx, { roomId: 'r1', sessionId: 's1' });
+        const res = await (startGame as any)._handler(ctx, { roomId: 'r1', sessionId: 's1' });
         expect(res).toEqual({ error: 'Room not found' });
     });
 
@@ -40,7 +40,7 @@ describe('mutations/startGame', () => {
         const room = { _id: 'r1', hostPlayerId: 'host', status: 'lobby' };
         const db = makeDb({ room, players: [{}, {}] });
         const ctx: any = { db };
-        const res = await (startGame as any).handler(ctx, { roomId: 'r1', sessionId: 's1' });
+        const res = await (startGame as any)._handler(ctx, { roomId: 'r1', sessionId: 's1' });
         expect(res).toEqual({ error: 'Only the host can start the game' });
     });
 
@@ -53,7 +53,7 @@ describe('mutations/startGame', () => {
         const db = makeDb({ room, players });
         const ctx: any = { db };
 
-        const res = await (startGame as any).handler(ctx, {
+        const res = await (startGame as any)._handler(ctx, {
             roomId: 'r1',
             sessionId: 'host',
         });

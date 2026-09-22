@@ -45,7 +45,7 @@ describe('mutations/joinRoom', () => {
         const db = makeDb({ room: null });
         const ctx: any = { db };
 
-        const res = await (joinRoom as any).handler(ctx, {
+        const res = await (joinRoom as any)._handler(ctx, {
             roomCode: 'NOPE',
             sessionId: 's1',
             playerName: 'A',
@@ -58,7 +58,7 @@ describe('mutations/joinRoom', () => {
         const db = makeDb({ room, players: [] });
         const ctx: any = { db };
 
-        const res = await (joinRoom as any).handler(ctx, {
+        const res = await (joinRoom as any)._handler(ctx, {
             roomCode: 'ABC123',
             sessionId: 's2',
             playerName: 'B',
@@ -75,7 +75,7 @@ describe('mutations/joinRoom', () => {
         const db = makeDb({ room, players });
         const ctx: any = { db };
 
-        const res = await (joinRoom as any).handler(ctx, {
+        const res = await (joinRoom as any)._handler(ctx, {
             roomCode: 'ABC123',
             sessionId: 'sX',
             playerName: 'TooMany',

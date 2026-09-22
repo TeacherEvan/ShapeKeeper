@@ -179,18 +179,21 @@ describe('getJoinParamsFromUrl', () => {
     it('returns {roomCode} when ?join is set', () => {
         expect(getJoinParamsFromUrl('?join=ABC123')).toEqual({
             roomCode: 'ABC123',
+            passcode: null,
         });
     });
 
     it('uppercases the room code', () => {
         expect(getJoinParamsFromUrl('?join=abc123')).toEqual({
             roomCode: 'ABC123',
+            passcode: null,
         });
     });
 
     it('accepts the leading-? or not', () => {
         expect(getJoinParamsFromUrl('join=ABC123')).toEqual({
             roomCode: 'ABC123',
+            passcode: null,
         });
     });
 });
@@ -201,6 +204,6 @@ describe('invite link round-trip (buildInviteUrl -> getJoinParamsFromUrl)', () =
         m.roomCode = 'ABC123';
         const url = m.buildInviteUrl({ base: 'https://example.com' });
         const parsed = getJoinParamsFromUrl(new URL(url).search);
-        expect(parsed).toEqual({ roomCode: 'ABC123' });
+        expect(parsed).toEqual({ roomCode: 'ABC123', passcode: null });
     });
 });

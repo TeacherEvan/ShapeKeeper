@@ -69,14 +69,66 @@ when the flow is more than 2–3 calls.
 <!--/IRONBEE:PLATFORM:browser-->
 
 <!--IRONBEE:PLATFORM:node-->
-<!-- Node platform is OFF for this project. Enable it with the `ironbeeDevTools.platform.node.enable`
-     setting to debug running Node.js processes. While OFF, do NOT call node debug tools (`debug_*`) —
-     they only attach to Node/V8 processes and there is no node MCP server running. -->
+<!-- Node platform is ENABLED for this project (ironbee-dt-node MCP server). -->
+
+## Node platform: non-blocking Node.js debugging
+
+Verify Node.js runtime behavior with the IronBee DevTools node tools (`debug_*`) instead of guessing
+from code. Attach to a running process, set non-blocking probes at the changed code, exercise the path
+so the probe fires, and read the snapshots.
+
+### ⚠️ Node tools are ONLY for Node.js runtimes
+
+`debug_*` wraps the V8 inspector. It does NOT work for Java, Python, Go, Rust, Ruby, .NET, PHP, or any
+other runtime. If you see `pom.xml`, `build.gradle`, `requirements.txt`, `pyproject.toml`, `go.mod`,
+`Cargo.toml`, etc., the backend is not Node.js — do not call `debug_*`; use the backend platform
+instead.
+
+### Node tools & flow
+
+- **Connect** by PID, process name, port, WebSocket URL, or Docker container (`debug_connect`).
+- **Probe** the changed code without pausing it: `debug_put-tracepoint` / `debug_put-logpoint` /
+  `debug_put-exceptionpoint`, then exercise the path and read `debug_get-probe-snapshots` (or
+  `debug_get-logs`).
+- **Resolve** bundled/minified stack frames to original source with `debug_resolve-source-location`.
+- **Disconnect** (`debug_disconnect`) when done.
+
+Pass criteria: the process connected and a probe actually triggered (or a log path was used with no
+unexpected ERROR entries).
 <!--/IRONBEE:PLATFORM:node-->
 
 <!--IRONBEE:PLATFORM:backend-->
-<!-- Backend platform is OFF for this project. Enable it with the `ironbeeDevTools.platform.backend.enable`
-     setting to verify backend services via real protocol calls, log capture, or database inspection.
-     While OFF, do NOT call backend tools (`request_*`, `log_*`, `db_*`) — there is no backend MCP
-     server running. -->
+<!-- Backend platform is ENABLED for this project (ironbee-dt-backend MCP server). -->
+
+## Backend platform: runtime-agnostic verification
+
+Verify backend services with the IronBee DevTools backend tools — language- and framework-independent.
+Satisfy the verification by **any one of three evidence paths**: a real protocol call, server-log
+inspection, or direct database inspection. Pick whichever fits the change.
+
+### Evidence paths
+
+- **Protocol call** — drive the affected endpoint and inspect the result: `request_http` (HTTP/1.1 +
+  HTTP/2), `request_grpc`, `request_graphql`, `request_websocket-*`, or `request_replay`. A 4xx/5xx is a
+  normal result, not a transport error. Cookie jar (`request_*-cookies`) and default headers/metadata
+  (`request_set-default-headers` / `request_set-default-metadata`) persist across calls.
+- **Log evidence** — `log_register-source` (file / docker / kubernetes) → `log_read` (supports `tail` /
+  `since` / `until` / `pattern` / `level` / `parseJson` + `jsonFilter` / `contextBefore` / `contextAfter`
+  / `select` / `coalesce`) or `log_follow` → `log_get-followed`. Returned lines are auto-redacted.
+- **DB evidence** — `db_connect` (named, prefer `connectionStringEnv`, read-only by default) → schema
+  discovery (`db_list-tables` / `db_describe-table`), reads (`db_query`), or before/after state
+  (`db_snapshot` + `db_diff`, or `db_watch-changes` + `db_get-changes`). Postgres / MySQL / SQLite.
+
+### Trace correlation
+
+Every backend call auto-injects the active W3C `traceparent`, so the resulting `traceId` chains into
+`log_read { pattern: <traceId> }`. `o11y_new-trace-id` / `o11y_set-trace-context` /
+`o11y_get-trace-context` pin a trace across a multi-tool flow.
+
+### Backend rules
+
+- Don't infer behavior from code — exercise at least one evidence path against the running service.
+- Keep DB connections read-only unless a write is explicitly required (`db_connect` with `allowWrites`,
+  then `db_transaction-begin({ writable: true })` / `db_seed` / `db_run-script`).
+- Prefer one `execute` script for multi-step flows (e.g. `db_snapshot` → `request_http` → `db_diff`).
 <!--/IRONBEE:PLATFORM:backend-->

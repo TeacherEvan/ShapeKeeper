@@ -6,39 +6,185 @@ export function drawDynamicBackground(game) {
     const targetHue = 220 + scoreDiff * 2;
     game.backgroundHue += (targetHue - game.backgroundHue) * 0.02;
 
+    const time = Date.now() / 3000;
+
     const gradient = game.ctx.createRadialGradient(
-        game.logicalWidth / 2,
-        game.logicalHeight / 2,
+        game.logicalWidth / 2 + Math.sin(time) * 30,
+        game.logicalHeight / 2 + Math.cos(time * 0.7) * 20,
         0,
         game.logicalWidth / 2,
         game.logicalHeight / 2,
-        Math.max(game.logicalWidth, game.logicalHeight)
+        Math.max(game.logicalWidth, game.logicalHeight) * 0.7
     );
 
     if (isDark) {
-        gradient.addColorStop(0, `hsla(${game.backgroundHue}, 20%, 12%, 0.3)`);
-        gradient.addColorStop(1, `hsla(${game.backgroundHue + 30}, 15%, 8%, 0.2)`);
+        gradient.addColorStop(0, `hsla(${game.backgroundHue}, 25%, 14%, 0.4)`);
+        gradient.addColorStop(0.4, `hsla(${game.backgroundHue + 20}, 20%, 10%, 0.3)`);
+        gradient.addColorStop(1, `hsla(${game.backgroundHue + 40}, 15%, 6%, 0.2)`);
     } else {
-        gradient.addColorStop(0, `hsla(${game.backgroundHue}, 15%, 98%, 0.3)`);
-        gradient.addColorStop(1, `hsla(${game.backgroundHue + 30}, 10%, 95%, 0.2)`);
+        gradient.addColorStop(0, `hsla(${game.backgroundHue}, 20%, 99%, 0.4)`);
+        gradient.addColorStop(0.4, `hsla(${game.backgroundHue + 20}, 15%, 96%, 0.3)`);
+        gradient.addColorStop(1, `hsla(${game.backgroundHue + 40}, 10%, 93%, 0.2)`);
     }
 
     game.ctx.fillStyle = gradient;
     game.ctx.fillRect(0, 0, game.logicalWidth, game.logicalHeight);
+
+    drawSubtleGridPattern(game, isDark);
+    drawFloatingGeometry(game, isDark, time);
+}
+
+function drawSubtleGridPattern(game, isDark) {
+    const gridSize = 40;
+    const lineColor = isDark ? 'rgba(100, 100, 140, 0.03)' : 'rgba(80, 80, 120, 0.02)';
+
+    game.ctx.strokeStyle = lineColor;
+    game.ctx.lineWidth = 0.5;
+
+    const offsetX = (Date.now() / 2000) % gridSize;
+    const offsetY = (Date.now() / 3000) % gridSize;
+
+    game.ctx.beginPath();
+    for (let x = -offsetX; x < game.logicalWidth + gridSize; x += gridSize) {
+        game.ctx.moveTo(x, 0);
+        game.ctx.lineTo(x, game.logicalHeight);
+    }
+    for (let y = -offsetY; y < game.logicalHeight + gridSize; y += gridSize) {
+        game.ctx.moveTo(0, y);
+        game.ctx.lineTo(game.logicalWidth, y);
+    }
+    game.ctx.stroke();
+}
+
+function drawFloatingGeometry(game, isDark, time) {
+    // Skip in test environments where ctx.rotate may not exist (jsdom)
+    if (typeof game.ctx.rotate !== 'function') return;
+
+    if (!game.backgroundGeometry) {
+        game.backgroundGeometry = [];
+        const count = isDark ? 8 : 6;
+        for (let i = 0; i < count; i++) {
+            game.backgroundGeometry.push({
+                x: Math.random() * game.logicalWidth,
+                y: Math.random() * game.logicalHeight,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3,
+                size: 40 + Math.random() * 60,
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: (Math.random() - 0.5) * 0.002,
+                type: ['circle', 'square', 'triangle', 'hexagon'][Math.floor(Math.random() * 4)],
+                opacity: 0.02 + Math.random() * 0.03,
+                hue: 200 + Math.random() * 80,
+            });
+        }
+    }
+
+    for (const geo of game.backgroundGeometry) {
+        geo.x += geo.vx;
+        geo.y += geo.vy;
+        geo.rotation += geo.rotationSpeed;
+
+        if (geo.x < -geo.size) geo.x = game.logicalWidth + geo.size;
+        if (geo.x > game.logicalWidth + geo.size) geo.x = -geo.size;
+        if (geo.y < -geo.size) geo.y = game.logicalHeight + geo.size;
+        if (geo.y > game.logicalHeight + geo.size) geo.y = -geo.size;
+
+        game.ctx.save();
+        game.ctx.translate(geo.x, geo.y);
+        game.ctx.rotate(geo.rotation);
+        game.ctx.globalAlpha = geo.opacity * (0.7 + 0.3 * Math.sin(time * 2 + geo.x * 0.01));
+        game.ctx.strokeStyle = `hsla(${geo.hue}, 60%, ${isDark ? '70%' : '40%'}, 1)`;
+        game.ctx.lineWidth = 1;
+        game.ctx.fillStyle = `hsla(${geo.hue}, 60%, ${isDark ? '60%' : '50%'}, ${geo.opacity * 0.5})`;
+
+        const s = geo.size;
+        switch (geo.type) {
+            case 'circle':
+                game.ctx.beginPath();
+                game.ctx.arc(0, 0, s, 0, Math.PI * 2);
+                game.ctx.stroke();
+                break;
+            case 'square':
+                game.ctx.strokeRect(-s, -s, s * 2, s * 2);
+                break;
+            case 'triangle':
+                game.ctx.beginPath();
+                game.ctx.moveTo(0, -s);
+                game.ctx.lineTo(s * 0.866, s * 0.5);
+                game.ctx.lineTo(-s * 0.866, s * 0.5);
+                game.ctx.closePath();
+                game.ctx.stroke();
+                break;
+            case 'hexagon':
+                game.ctx.beginPath();
+                for (let j = 0; j < 6; j++) {
+                    const angle = (j / 6) * Math.PI * 2;
+                    game.ctx.lineTo(Math.cos(angle) * s, Math.sin(angle) * s);
+                }
+                game.ctx.closePath();
+                game.ctx.stroke();
+                break;
+        }
+        game.ctx.restore();
+    }
 }
 
 export function drawAmbientParticles(game) {
     const now = Date.now() / 1000;
 
-    game.ambientParticles.forEach((particle) => {
-        const xOffset = Math.sin(now + particle.phase) * 0.5;
-        const yOffset = Math.cos(now * 0.7 + particle.phase) * 0.3;
+    if (!game.ambientParticles || game.ambientParticles.length === 0) {
+        game.ambientParticles = [];
+        const count = 40;
+        for (let i = 0; i < count; i++) {
+            game.ambientParticles.push({
+                x: Math.random() * game.logicalWidth,
+                y: Math.random() * game.logicalHeight,
+                baseX: Math.random() * game.logicalWidth,
+                baseY: Math.random() * game.logicalHeight,
+                phase: Math.random() * Math.PI * 2,
+                size: 1.5 + Math.random() * 2.5,
+                opacity: 0.15 + Math.random() * 0.25,
+                speed: 0.3 + Math.random() * 0.4,
+                amplitude: 20 + Math.random() * 40,
+                type: ['circle', 'square'][Math.floor(Math.random() * 2)],
+            });
+        }
+    }
 
-        game.ctx.fillStyle = `rgba(100, 100, 120, ${particle.opacity})`;
-        game.ctx.beginPath();
-        game.ctx.arc(particle.x + xOffset, particle.y + yOffset, particle.size, 0, Math.PI * 2);
-        game.ctx.fill();
+    game.ambientParticles.forEach((particle) => {
+        const xOffset = Math.sin(now * particle.speed + particle.phase) * particle.amplitude;
+        const yOffset =
+            Math.cos(now * particle.speed * 0.7 + particle.phase) * particle.amplitude * 0.6;
+
+        const x = particle.baseX + xOffset;
+        const y = particle.baseY + yOffset;
+
+        if (x < -10) particle.baseX = game.logicalWidth + 10;
+        if (x > game.logicalWidth + 10) particle.baseX = -10;
+        if (y < -10) particle.baseY = game.logicalHeight + 10;
+        if (y > game.logicalHeight + 10) particle.baseY = -10;
+
+        game.ctx.globalAlpha = particle.opacity * (0.5 + 0.5 * Math.sin(now * 2 + particle.phase));
+        game.ctx.fillStyle = isDarkMode() ? '#64748b' : '#94a3b8';
+
+        if (particle.type === 'square') {
+            game.ctx.fillRect(
+                x - particle.size,
+                y - particle.size,
+                particle.size * 2,
+                particle.size * 2
+            );
+        } else {
+            game.ctx.beginPath();
+            game.ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+            game.ctx.fill();
+        }
     });
+    game.ctx.globalAlpha = 1;
+}
+
+function isDarkMode() {
+    return document.documentElement.getAttribute('data-theme') === 'dark';
 }
 
 export function drawTouchVisuals(game) {

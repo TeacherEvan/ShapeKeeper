@@ -19,7 +19,7 @@ describe('mutations/toggleReady', () => {
     it('returns error when player not found', async () => {
         const db = makeDb(null);
         const ctx: any = { db };
-        const res = await (toggleReady as any).handler(ctx, {
+        const res = await (toggleReady as any)._handler(ctx, {
             roomId: 'r1',
             sessionId: 's1',
         });
@@ -31,7 +31,7 @@ describe('mutations/toggleReady', () => {
         const db = makeDb(player);
         const ctx: any = { db };
 
-        const res = await (toggleReady as any).handler(ctx, {
+        const res = await (toggleReady as any)._handler(ctx, {
             roomId: 'r1',
             sessionId: 's1',
         });

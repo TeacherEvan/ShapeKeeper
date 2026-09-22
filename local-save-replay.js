@@ -47,7 +47,7 @@ function validatePlayerEffects(effects) {
     });
 }
 
-function isValidSnapshot(snapshot) {
+export function isValidSnapshot(snapshot) {
     if (!isPlainObject(snapshot)) {
         return false;
     }

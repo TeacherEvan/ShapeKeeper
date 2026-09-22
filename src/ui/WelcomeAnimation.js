@@ -1,9 +1,8 @@
 /**
  * ShapeKeeper Welcome Screen Animation
  * Implements flocking behavior (boids algorithm) with spatial partitioning for performance
+ * Enhanced with modern visual effects: connection lines, mouse interaction, particle trails
  *
- * TODO: [OPTIMIZATION] Consider using Web Workers for particle physics calculations
- * TODO: [OPTIMIZATION] Implement offscreen canvas for particle pre-rendering
  * @module ui/WelcomeAnimation
  */
 
@@ -11,44 +10,63 @@ export class WelcomeAnimation {
     constructor() {
         this.canvas = document.getElementById('welcomeCanvas');
         this.ctx = this.canvas.getContext('2d');
-        this.floatingParticles = []; // Renamed from 'dots' for semantic clarity
-        this.particleCount = 150; // Total number of particles in animation
-        this.animationFrameId = null; // Renamed for clarity
+        this.floatingParticles = [];
+        this.particleCount = 120;
+        this.animationFrameId = null;
         this.isDimmed = false;
-        this.spatialPartitionGrid = null; // Renamed for clarity
-        this.partitionCellSize = 100; // Size of each cell in spatial grid
+        this.spatialPartitionGrid = null;
+        this.partitionCellSize = 120;
+        this.mousePosition = { x: -1000, y: -1000 };
+        this.mouseInfluenceRadius = 200;
+        this.connectionDistance = 140;
+        this.particleTypes = ['circle', 'square', 'triangle', 'diamond'];
+        this.colorPalette = {
+            light: [
+                { primary: '#2563eb', secondary: '#3b82f6', accent: '#60a5fa' }, // Blue
+                { primary: '#7c3aed', secondary: '#8b5cf6', accent: '#a78bfa' }, // Purple
+                { primary: '#059669', secondary: '#10b981', accent: '#34d399' }, // Emerald
+                { primary: '#dc2626', secondary: '#ef4444', accent: '#f87171' }, // Red
+            ],
+            dark: [
+                { primary: '#60a5fa', secondary: '#93c5fd', accent: '#bfdbfe' },
+                { primary: '#a78bfa', secondary: '#c4b5fd', accent: '#ddd6fe' },
+                { primary: '#34d399', secondary: '#6ee7b7', accent: '#a7f3d0' },
+                { primary: '#f87171', secondary: '#fca5a5', accent: '#fecaca' },
+            ],
+        };
 
         this.initializeCanvas();
         this.createParticles();
         this.startAnimationLoop();
 
-        // Handle window resize with debounced callback
         window.addEventListener('resize', () => this.handleViewportResize());
+        this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+        this.canvas.addEventListener('mouseleave', () => this.handleMouseLeave());
+        this.canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e), {
+            passive: true,
+        });
+        this.canvas.addEventListener('touchend', () => this.handleMouseLeave());
     }
 
-    /**
-     * Initialize canvas dimensions and spatial partitioning
-     */
     initializeCanvas() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
+        const dpr = window.devicePixelRatio || 1;
+        this.canvas.width = window.innerWidth * dpr;
+        this.canvas.height = window.innerHeight * dpr;
+        this.canvas.style.width = window.innerWidth + 'px';
+        this.canvas.style.height = window.innerHeight + 'px';
+        this.ctx.scale(dpr, dpr);
+        this.logicalWidth = window.innerWidth;
+        this.logicalHeight = window.innerHeight;
         this.initializeSpatialPartitioning();
     }
 
-    /**
-     * Handle viewport resize events
-     */
     handleViewportResize() {
         this.initializeCanvas();
     }
 
-    /**
-     * Initialize spatial partitioning grid for performance optimization
-     * Reduces O(n²) neighbor lookups to O(n)
-     */
     initializeSpatialPartitioning() {
-        this.gridCols = Math.ceil(this.canvas.width / this.partitionCellSize);
-        this.gridRows = Math.ceil(this.canvas.height / this.partitionCellSize);
+        this.gridCols = Math.ceil(this.logicalWidth / this.partitionCellSize);
+        this.gridRows = Math.ceil(this.logicalHeight / this.partitionCellSize);
         this.spatialPartitionGrid = Array(this.gridRows)
             .fill(null)
             .map(() =>
@@ -58,18 +76,13 @@ export class WelcomeAnimation {
             );
     }
 
-    /**
-     * Update spatial partition grid with current particle positions
-     */
     updateSpatialPartitionGrid() {
-        // Clear grid
         for (let row of this.spatialPartitionGrid) {
             for (let cell of row) {
                 cell.length = 0;
             }
         }
 
-        // Assign particles to grid cells
         for (let particle of this.floatingParticles) {
             const gridX = Math.floor(particle.x / this.partitionCellSize);
             const gridY = Math.floor(particle.y / this.partitionCellSize);
@@ -79,17 +92,11 @@ export class WelcomeAnimation {
         }
     }
 
-    /**
-     * Get neighboring particles within the spatial partition
-     * @param {Object} particle - The particle to find neighbors for
-     * @returns {Array} Array of neighboring particles
-     */
     getNeighboringParticles(particle) {
         const gridX = Math.floor(particle.x / this.partitionCellSize);
         const gridY = Math.floor(particle.y / this.partitionCellSize);
         const neighbors = [];
 
-        // Check surrounding cells (3x3 grid around particle)
         for (let dy = -1; dy <= 1; dy++) {
             for (let dx = -1; dx <= 1; dx++) {
                 const nx = gridX + dx;
@@ -103,9 +110,6 @@ export class WelcomeAnimation {
         return neighbors;
     }
 
-    /**
-     * Transition animation to game screen (dimmed mode)
-     */
     transitionToGameScreen() {
         const gameCanvas = document.getElementById('gameBackgroundCanvas');
         if (gameCanvas) {
@@ -116,9 +120,6 @@ export class WelcomeAnimation {
         }
     }
 
-    /**
-     * Transition animation back to main menu
-     */
     transitionToMainMenu() {
         const welcomeCanvas = document.getElementById('welcomeCanvas');
         if (welcomeCanvas) {
@@ -129,7 +130,6 @@ export class WelcomeAnimation {
         }
     }
 
-    // Legacy method names for backward compatibility
     moveToGameScreen() {
         this.transitionToGameScreen();
     }
@@ -137,74 +137,53 @@ export class WelcomeAnimation {
         this.transitionToMainMenu();
     }
 
-    /**
-     * Create initial particle set with randomized properties
-     */
     createParticles() {
-        const particleColors = [
-            '#FF0000',
-            '#FF4500',
-            '#FF6B00',
-            '#FF8C00',
-            '#FFA500',
-            '#FFD700',
-            '#FFFF00',
-            '#00FF00',
-            '#00FF7F',
-            '#00FFFF',
-            '#0080FF',
-            '#0000FF',
-            '#4B0082',
-            '#8B00FF',
-            '#FF00FF',
-            '#FF1493',
-            '#FF69B4',
-            '#00CED1',
-            '#20B2AA',
-            '#3CB371',
-            '#9370DB',
-            '#BA55D3',
-            '#FF6347',
-            '#FF4500',
-            '#DC143C',
-        ];
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const palette = this.colorPalette[isDark ? 'dark' : 'light'];
 
         for (let i = 0; i < this.particleCount; i++) {
+            const colorSet = palette[Math.floor(Math.random() * palette.length)];
+            const colorVariant = Math.random();
+            let color;
+            if (colorVariant < 0.4) color = colorSet.primary;
+            else if (colorVariant < 0.7) color = colorSet.secondary;
+            else color = colorSet.accent;
+
             this.floatingParticles.push({
-                x: Math.random() * this.canvas.width,
-                y: Math.random() * this.canvas.height,
-                vx: (Math.random() - 0.5) * 2,
-                vy: (Math.random() - 0.5) * 2,
-                color: particleColors[Math.floor(Math.random() * particleColors.length)],
-                size: 3 + Math.random() * 4,
-                neighborhoodRadius: 100,
-                maxSpeed: 2,
-                maxForce: 0.05,
+                x: Math.random() * this.logicalWidth,
+                y: Math.random() * this.logicalHeight,
+                vx: (Math.random() - 0.5) * 1.5,
+                vy: (Math.random() - 0.5) * 1.5,
+                color,
+                baseColor: color,
+                size: 2 + Math.random() * 3,
+                baseSize: 2 + Math.random() * 3,
+                type: this.particleTypes[Math.floor(Math.random() * this.particleTypes.length)],
+                neighborhoodRadius: 120,
+                maxSpeed: 1.8,
+                maxForce: 0.04,
+                trail: [],
+                maxTrailLength: 8,
+                pulsePhase: Math.random() * Math.PI * 2,
+                pulseSpeed: 0.02 + Math.random() * 0.03,
             });
         }
     }
 
-    /**
-     * Apply boids/flocking algorithm for fish-like movement
-     * Optimized with spatial partitioning for O(n) performance
-     * @param {Object} particle - The particle to apply flocking behavior to
-     */
     applyFlockingBehavior(particle) {
         let separation = { x: 0, y: 0 };
         let alignment = { x: 0, y: 0 };
         let cohesion = { x: 0, y: 0 };
         let neighborCount = 0;
 
-        // Get neighbors using spatial partitioning for better performance
         const nearbyParticles = this.getNeighboringParticles(particle);
 
-        // Check neighbors (only nearby particles now, huge performance improvement)
         for (let other of nearbyParticles) {
             if (other === particle) continue;
 
             const dx = other.x - particle.x;
             const dy = other.y - particle.y;
-            const distSq = dx * dx + dy * dy; // Use squared distance to avoid sqrt
+            const distSq = dx * dx + dy * dy;
             const maxDistSq = particle.neighborhoodRadius * particle.neighborhoodRadius;
 
             if (distSq < maxDistSq && distSq > 0) {
@@ -212,36 +191,43 @@ export class WelcomeAnimation {
 
                 const dist = Math.sqrt(distSq);
 
-                // Separation: steer away from neighbors
-                if (dist < 25) {
+                if (dist < 30) {
                     separation.x -= dx / dist;
                     separation.y -= dy / dist;
                 }
 
-                // Alignment: steer towards average heading of neighbors
                 alignment.x += other.vx;
                 alignment.y += other.vy;
 
-                // Cohesion: steer towards average position of neighbors
                 cohesion.x += other.x;
                 cohesion.y += other.y;
             }
         }
 
+        // Mouse/touch influence
+        const mouseDx = this.mousePosition.x - particle.x;
+        const mouseDy = this.mousePosition.y - particle.y;
+        const mouseDistSq = mouseDx * mouseDx + mouseDy * mouseDy;
+        const mouseInfluenceRadiusSq = this.mouseInfluenceRadius * this.mouseInfluenceRadius;
+
+        if (mouseDistSq < mouseInfluenceRadiusSq && mouseDistSq > 0) {
+            const mouseDist = Math.sqrt(mouseDistSq);
+            const influence = 1 - mouseDist / this.mouseInfluenceRadius;
+            particle.vx -= (mouseDx / mouseDist) * influence * 0.5;
+            particle.vy -= (mouseDy / mouseDist) * influence * 0.5;
+        }
+
         if (neighborCount > 0) {
-            // Average the alignment
             alignment.x /= neighborCount;
             alignment.y /= neighborCount;
 
-            // Calculate cohesion center
             cohesion.x = cohesion.x / neighborCount - particle.x;
             cohesion.y = cohesion.y / neighborCount - particle.y;
         }
 
-        // Apply forces with different weights
-        const separationWeight = 1.5;
+        const separationWeight = 1.8;
         const alignmentWeight = 1.0;
-        const cohesionWeight = 1.0;
+        const cohesionWeight = 0.8;
 
         particle.vx += separation.x * separationWeight * particle.maxForce;
         particle.vy += separation.y * separationWeight * particle.maxForce;
@@ -250,7 +236,6 @@ export class WelcomeAnimation {
         particle.vx += cohesion.x * cohesionWeight * particle.maxForce * 0.01;
         particle.vy += cohesion.y * cohesionWeight * particle.maxForce * 0.01;
 
-        // Limit speed
         const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
         if (speed > particle.maxSpeed) {
             particle.vx = (particle.vx / speed) * particle.maxSpeed;
@@ -258,73 +243,168 @@ export class WelcomeAnimation {
         }
     }
 
-    /**
-     * Update all particle positions based on flocking behavior
-     */
     updateParticlePositions() {
-        // Update spatial grid for efficient neighbor lookups
         this.updateSpatialPartitionGrid();
 
         for (let particle of this.floatingParticles) {
-            // Apply flocking behavior
+            particle.trail.push({ x: particle.x, y: particle.y });
+            if (particle.trail.length > particle.maxTrailLength) {
+                particle.trail.shift();
+            }
+
             this.applyFlockingBehavior(particle);
 
-            // Update position
             particle.x += particle.vx;
             particle.y += particle.vy;
 
-            // Wrap around edges
-            if (particle.x < 0) particle.x = this.canvas.width;
-            if (particle.x > this.canvas.width) particle.x = 0;
-            if (particle.y < 0) particle.y = this.canvas.height;
-            if (particle.y > this.canvas.height) particle.y = 0;
+            particle.pulsePhase += particle.pulseSpeed;
+            particle.size = particle.baseSize * (0.8 + 0.2 * Math.sin(particle.pulsePhase));
+
+            if (particle.x < 0) particle.x = this.logicalWidth;
+            if (particle.x > this.logicalWidth) particle.x = 0;
+            if (particle.y < 0) particle.y = this.logicalHeight;
+            if (particle.y > this.logicalHeight) particle.y = 0;
         }
     }
 
-    /**
-     * Render particles to the canvas
-     */
+    handleMouseMove(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        this.mousePosition.x = e.clientX - rect.left;
+        this.mousePosition.y = e.clientY - rect.top;
+    }
+
+    handleTouchMove(e) {
+        if (e.touches.length > 0) {
+            const rect = this.canvas.getBoundingClientRect();
+            this.mousePosition.x = e.touches[0].clientX - rect.left;
+            this.mousePosition.y = e.touches[0].clientY - rect.top;
+        }
+    }
+
+    handleMouseLeave() {
+        this.mousePosition.x = -1000;
+        this.mousePosition.y = -1000;
+    }
+
+    drawParticleShape(ctx, particle, x, y, size, alpha) {
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = particle.color;
+
+        switch (particle.type) {
+            case 'circle':
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+            case 'square':
+                ctx.fillRect(x - size, y - size, size * 2, size * 2);
+                break;
+            case 'triangle':
+                ctx.beginPath();
+                ctx.moveTo(x, y - size);
+                ctx.lineTo(x + size, y + size);
+                ctx.lineTo(x - size, y + size);
+                ctx.closePath();
+                ctx.fill();
+                break;
+            case 'diamond':
+                ctx.beginPath();
+                ctx.moveTo(x, y - size);
+                ctx.lineTo(x + size, y);
+                ctx.lineTo(x, y + size);
+                ctx.lineTo(x - size, y);
+                ctx.closePath();
+                ctx.fill();
+                break;
+        }
+    }
+
     renderParticles() {
-        // Clear with slight fade for trail effect (dimmed in game mode)
-        // Read background color from CSS variables for theme support
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const baseBg = isDark ? '26, 26, 46' : '255, 255, 255'; // --bg-primary RGB values
-        const fadeAlpha = this.isDimmed ? 0.3 : 0.1;
+        const baseBg = isDark ? '22, 24, 28' : '252, 251, 247';
+        const fadeAlpha = this.isDimmed ? 0.25 : 0.08;
         const bgColor = `rgba(${baseBg}, ${fadeAlpha})`;
         this.ctx.fillStyle = bgColor;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw particles (dimmed in game mode)
-        const particleAlpha = this.isDimmed ? 0.3 : 1.0;
-        for (let particle of this.floatingParticles) {
-            this.ctx.beginPath();
-            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        const particleAlpha = this.isDimmed ? 0.25 : 0.85;
 
-            if (this.isDimmed) {
-                // Convert hex to rgba with reduced opacity
-                const r = parseInt(particle.color.slice(1, 3), 16);
-                const g = parseInt(particle.color.slice(3, 5), 16);
-                const b = parseInt(particle.color.slice(5, 7), 16);
-                this.ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${particleAlpha})`;
-            } else {
-                this.ctx.fillStyle = particle.color;
-            }
-            this.ctx.fill();
+        // Draw connections first (behind particles)
+        this.drawConnections(particleAlpha);
+
+        // Draw particle trails
+        this.drawTrails(particleAlpha);
+
+        // Draw particles
+        for (let particle of this.floatingParticles) {
+            this.drawParticleShape(
+                this.ctx,
+                particle,
+                particle.x,
+                particle.y,
+                particle.size,
+                particleAlpha
+            );
         }
     }
 
-    /**
-     * Main animation loop
-     */
+    drawConnections(alpha) {
+        this.ctx.strokeStyle = `rgba(100, 100, 120, ${alpha * 0.15})`;
+        this.ctx.lineWidth = 0.8;
+
+        for (let i = 0; i < this.floatingParticles.length; i++) {
+            const p1 = this.floatingParticles[i];
+            const nearby = this.getNeighboringParticles(p1);
+
+            for (let p2 of nearby) {
+                if (p1 === p2) continue;
+
+                const dx = p2.x - p1.x;
+                const dy = p2.y - p1.y;
+                const distSq = dx * dx + dy * dy;
+
+                if (distSq < this.connectionDistance * this.connectionDistance) {
+                    const opacity =
+                        alpha *
+                        0.15 *
+                        (1 - distSq / (this.connectionDistance * this.connectionDistance));
+                    this.ctx.strokeStyle = `rgba(100, 100, 120, ${opacity})`;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(p1.x, p1.y);
+                    this.ctx.lineTo(p2.x, p2.y);
+                    this.ctx.stroke();
+                }
+            }
+        }
+    }
+
+    drawTrails(alpha) {
+        for (let particle of this.floatingParticles) {
+            if (particle.trail.length < 2) continue;
+
+            const trailAlpha = alpha * 0.4;
+            this.ctx.strokeStyle = particle.color;
+            this.ctx.globalAlpha = trailAlpha;
+            this.ctx.lineWidth = 1.5;
+            this.ctx.lineCap = 'round';
+            this.ctx.lineJoin = 'round';
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(particle.trail[0].x, particle.trail[0].y);
+            for (let i = 1; i < particle.trail.length; i++) {
+                this.ctx.lineTo(particle.trail[i].x, particle.trail[i].y);
+            }
+            this.ctx.stroke();
+        }
+        this.ctx.globalAlpha = 1;
+    }
+
     startAnimationLoop() {
         this.updateParticlePositions();
         this.renderParticles();
         this.animationFrameId = requestAnimationFrame(() => this.startAnimationLoop());
     }
 
-    /**
-     * Stop the animation loop
-     */
     stopAnimation() {
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
@@ -332,7 +412,6 @@ export class WelcomeAnimation {
         }
     }
 
-    // Legacy methods for backward compatibility
     stop() {
         this.stopAnimation();
     }
