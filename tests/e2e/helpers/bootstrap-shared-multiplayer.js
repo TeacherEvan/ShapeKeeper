@@ -775,6 +775,25 @@ export async function installSharedMockMultiplayer(
                     notifySubscribers('update-grid-size');
                     return { success: true };
                 },
+                async updateTurnDuration(turnDurationSeconds) {
+                    const sharedState = ensureSharedState();
+                    const room = getActiveRoom(sharedState);
+                    if (!room) return { error: 'Not in a room' };
+                    const seconds = Number(turnDurationSeconds);
+                    if (
+                        !Number.isFinite(seconds) ||
+                        !Number.isInteger(seconds) ||
+                        seconds < 0 ||
+                        seconds > 600
+                    ) {
+                        return { error: 'Invalid turn duration' };
+                    }
+                    room.turnDurationSeconds = seconds;
+                    room.updatedAt = Date.now();
+                    writeSharedState(sharedState);
+                    notifySubscribers('update-turn-duration');
+                    return { success: true, turnDurationSeconds: seconds };
+                },
                 async updatePartyMode(nextPartyMode) {
                     const sharedState = ensureSharedState();
                     const room = getActiveRoom(sharedState);

@@ -255,6 +255,24 @@
                                 </button>
                             </div>
                         </div>
+                        <div class="setting-row">
+                            <label for="lobbyTurnDuration">Allowed Time (seconds):</label>
+                            <input
+                                type="number"
+                                id="lobbyTurnDuration"
+                                class="turn-duration-input"
+                                data-testid="lobby-turn-duration"
+                                min="0"
+                                max="600"
+                                step="1"
+                                value="10"
+                                placeholder="e.g. 10 (0 = no limit)"
+                                aria-describedby="turnDurationHint"
+                            />
+                            <span id="turnDurationHint" class="setting-hint">
+                                Lava-timer countdown per turn. Runs out &rarr; turn is skipped. 0 = no limit.
+                            </span>
+                        </div>
                     </div>
 
                     <div class="players-section">

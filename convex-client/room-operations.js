@@ -174,6 +174,23 @@
         );
     }
 
+    async function updateTurnDuration(turnDurationSeconds) {
+        if (!shared.state.currentRoomId) {
+            return { error: 'Not in a room' };
+        }
+
+        return shared.runMutation(
+            shared.api.rooms.updateTurnDuration,
+            {
+                roomId: shared.state.currentRoomId,
+                sessionId: shared.getSessionId(),
+                hostToken: getHostToken(shared.state.currentRoomId),
+                turnDurationSeconds,
+            },
+            'updating turn duration'
+        );
+    }
+
     async function startGame(_roomId) {
         if (!shared.state.currentRoomId) {
             return { error: 'Not in a room' };
@@ -227,5 +244,6 @@
         updateGridSize,
         updatePartyMode,
         updatePlayer,
+        updateTurnDuration,
     };
 })(window);

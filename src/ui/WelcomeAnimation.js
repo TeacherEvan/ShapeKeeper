@@ -321,7 +321,7 @@ export class WelcomeAnimation {
 
     renderParticles() {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const baseBg = isDark ? '22, 24, 28' : '252, 251, 247';
+        const baseBg = isDark ? '12, 8, 30' : '255, 255, 255';
         const fadeAlpha = this.isDimmed ? 0.25 : 0.08;
         const bgColor = `rgba(${baseBg}, ${fadeAlpha})`;
         this.ctx.fillStyle = bgColor;

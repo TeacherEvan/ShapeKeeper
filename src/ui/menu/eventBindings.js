@@ -270,6 +270,53 @@ export function bindMenuEventHandlers(deps) {
         });
     });
 
+    // Allowed Time (free-form seconds input, host only). Debounced change
+    // handler pushes to the server; the server validates (0-600, whole
+    // numbers) and the next room snapshot re-renders the input.
+    const turnDurationInput = document.getElementById('lobbyTurnDuration');
+    if (turnDurationInput) {
+        let debounceTimer = null;
+        turnDurationInput.addEventListener('change', async () => {
+            const { lobbyManager } = getState();
+            if (!lobbyManager.isHost) return;
+
+            const raw = turnDurationInput.value.trim();
+            // Empty or 0 = no limit
+            const seconds = raw === '' || parseInt(raw, 10) === 0 ? 0 : parseInt(raw, 10);
+
+            if (raw !== '' && (!Number.isInteger(seconds) || seconds < 0)) {
+                showToast('Allowed Time must be a whole number of seconds (0 = no limit)', 'error');
+                turnDurationInput.value =
+                    lobbyManager.turnDurationSeconds > 0
+                        ? String(lobbyManager.turnDurationSeconds)
+                        : '0';
+                return;
+            }
+
+            if (debounceTimer) clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(async () => {
+                if (window.ShapeKeeperConvex) {
+                    const result = await window.ShapeKeeperConvex.updateTurnDuration(seconds);
+                    if (result.error) {
+                        showToast('Error: ' + result.error, 'error');
+                        return;
+                    }
+                    lobbyManager.turnDurationSeconds = seconds;
+                    showToast(
+                        seconds === 0
+                            ? 'Allowed Time: no limit'
+                            : `Allowed Time: ${seconds}s per turn`,
+                        'success',
+                        2000
+                    );
+                } else {
+                    lobbyManager.turnDurationSeconds = seconds;
+                }
+                updateLobbyUI();
+            }, 300);
+        });
+    }
+
     document.getElementById('copyCodeBtn').addEventListener('click', () => {
         const code = document.getElementById('roomCode').textContent;
         navigator.clipboard.writeText(code).then(() => {

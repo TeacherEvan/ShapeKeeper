@@ -22,6 +22,9 @@ export { updatePlayer } from './mutations/updatePlayer';
 // this deploy (the handler falls back to a sessionId-only check for those).
 export { updateGridSize } from './mutations/updateGridSize';
 
+// Update the per-turn Allowed Time countdown (host only, lobby only).
+export { updateTurnDuration } from './mutations/updateTurnDuration';
+
 // Update party mode (host only).
 export { updatePartyMode } from './mutations/updatePartyMode';
 
