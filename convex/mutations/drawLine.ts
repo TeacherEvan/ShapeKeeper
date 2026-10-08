@@ -25,6 +25,23 @@ export const drawLine = mutation({
         );
         if (!validation.ok) {
             console.log('[drawLine] Validation failed', { error: validation.error });
+            // Allowed Time skip: propagate the structured expiry payload so
+            // the client can distinguish "turn skipped" from a hard error.
+            const expiry = validation as unknown as {
+                turnExpired?: boolean;
+                skippedPlayerIndex: number;
+                skippedPlayerName: string | null;
+                nextPlayerIndex: number;
+            };
+            if (expiry.turnExpired) {
+                return {
+                    error: validation.error,
+                    turnExpired: true,
+                    skippedPlayerIndex: expiry.skippedPlayerIndex,
+                    skippedPlayerName: expiry.skippedPlayerName,
+                    nextPlayerIndex: expiry.nextPlayerIndex,
+                };
+            }
             return { error: validation.error };
         }
 

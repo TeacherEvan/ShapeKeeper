@@ -8,6 +8,16 @@ export async function validateDrawLine(
   if (!room) return { ok: false, error: 'Room not found' };
   if (room.status !== 'playing') return { ok: false, error: 'Game not in progress' };
 
+  // Allowed Time enforcement (runs BEFORE the turn-ownership check): an
+  // expired turn means the server may have already skipped that player,
+  // so the requesting sessionId can legitimately differ from the (now
+  // advanced) currentPlayerIndex. The skip wins over the ownership error.
+  const { enforceTurnDeadline } = await import('./turnDeadlineEnforcer');
+  const expiry = await enforceTurnDeadline(ctx, room, roomId);
+  if (expiry) {
+    return { ok: false, error: 'Turn deadline expired', ...expiry };
+  }
+
   const players = await ctx.db
     .query('players')
     .withIndex('by_room', (q: any) => q.eq('roomId', roomId))
