@@ -26,6 +26,7 @@ export class LiveLobbyManager {
         this.players = []; // [{sessionId, name, color, isReady, isConnected, playerIndex}]
         this.isHost = false;
         this.gridSize = 5;
+        this.turnDurationSeconds = 10; // Allowed Time: lava-timer countdown per turn (0 = no limit)
         this.partyMode = false;
         this.status = 'idle'; // 'idle' | 'lobby' | 'playing' | 'finished'
         this._unsubscribe = null;
@@ -42,6 +43,7 @@ export class LiveLobbyManager {
             this.passcode = room.passcode ?? this.passcode;
             this.hostSessionId = room.hostPlayerId || this.hostSessionId;
             this.gridSize = room.gridSize ?? this.gridSize;
+            this.turnDurationSeconds = room.turnDurationSeconds ?? this.turnDurationSeconds;
             this.partyMode = room.partyMode ?? this.partyMode;
             this.status = room.status || this.status;
         }

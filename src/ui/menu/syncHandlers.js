@@ -42,6 +42,11 @@ export function handleRoomStateUpdate(roomState, deps) {
     multiplayerStartup.setLastRoomState(roomState);
     lobbyManager.roomCode = roomState.roomCode;
     lobbyManager.gridSize = roomState.gridSize;
+    // Allowed Time: mirror the room's configured turn countdown (seconds)
+    // into the lobby manager so the control reflects it for everyone.
+    if (typeof roomState.turnDurationSeconds === 'number') {
+        lobbyManager.turnDurationSeconds = roomState.turnDurationSeconds;
+    }
 
     // The server computes isHost/isYou against the requesting sessionId;
     // the public getRoomByCode response strips every player's sessionId,

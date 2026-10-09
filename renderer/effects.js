@@ -18,13 +18,13 @@ export function drawDynamicBackground(game) {
     );
 
     if (isDark) {
-        gradient.addColorStop(0, `hsla(${game.backgroundHue}, 25%, 14%, 0.4)`);
-        gradient.addColorStop(0.4, `hsla(${game.backgroundHue + 20}, 20%, 10%, 0.3)`);
-        gradient.addColorStop(1, `hsla(${game.backgroundHue + 40}, 15%, 6%, 0.2)`);
+        gradient.addColorStop(0, `hsla(${game.backgroundHue}, 95%, 50%, 0.3)`);
+        gradient.addColorStop(0.4, `hsla(${game.backgroundHue + 20}, 90%, 45%, 0.2)`);
+        gradient.addColorStop(1, `hsla(${game.backgroundHue + 40}, 85%, 38%, 0.15)`);
     } else {
-        gradient.addColorStop(0, `hsla(${game.backgroundHue}, 20%, 99%, 0.4)`);
-        gradient.addColorStop(0.4, `hsla(${game.backgroundHue + 20}, 15%, 96%, 0.3)`);
-        gradient.addColorStop(1, `hsla(${game.backgroundHue + 40}, 10%, 93%, 0.2)`);
+        gradient.addColorStop(0, `hsla(${game.backgroundHue}, 92%, 62%, 0.3)`);
+        gradient.addColorStop(0.4, `hsla(${game.backgroundHue + 20}, 88%, 58%, 0.2)`);
+        gradient.addColorStop(1, `hsla(${game.backgroundHue + 40}, 85%, 55%, 0.15)`);
     }
 
     game.ctx.fillStyle = gradient;

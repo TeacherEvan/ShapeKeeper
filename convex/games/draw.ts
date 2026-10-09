@@ -1,6 +1,7 @@
 import { checkForCompletedSquares } from './squares';
 import { validateLineKey } from './line_validation';
 import { isTurnExpired } from './turn_deadline';
+import { computeTurnEndTime, resolveTurnDurationMs } from './turn_duration';
 import { log, errorLog, warn } from '../log';
 import { checkRateLimit } from '../rate_limit';
 
@@ -33,10 +34,50 @@ export async function drawLineHandler(ctx: any, args: any) {
         return { error: 'Game not in progress' };
     }
 
-    // Authoritative server-side turn deadline. The browser renders a 10s
+    // Authoritative server-side turn deadline. The browser renders the
     // countdown, but a hostile client could bypass that and call this
     // mutation directly; the server must enforce the window itself.
+    //
+    // Allowed Time feature: when the timer has run out, the server SKIPS
+    // the timed-out player (advances the turn, re-arms the clock) and
+    // returns turnExpired:true — the late move is rejected, but the match
+    // is never stalled by a frozen or hostile client. Skipping is only
+    // possible when a time limit is configured (duration > 0).
     if (isTurnExpired(room)) {
+        const turnDurationMs = resolveTurnDurationMs(room);
+        if (turnDurationMs > 0) {
+            const skipPlayers = await ctx.db
+                .query('players')
+                .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
+                .collect();
+            const sortedSkipPlayers = skipPlayers.sort(
+                (a: any, b: any) => a.playerIndex - b.playerIndex
+            );
+            const skippedIndex = room.currentPlayerIndex;
+            const nextIndex = (skippedIndex + 1) % sortedSkipPlayers.length;
+            const skippedAt = Date.now();
+            const rearmedEnd = computeTurnEndTime(room, skippedAt);
+            await ctx.db.patch(args.roomId, {
+                currentPlayerIndex: nextIndex,
+                turnStartTime: skippedAt,
+                turnEndTime: rearmedEnd,
+                lastTurnClientSentAt: null,
+                lastTurnServerReceivedAt: null,
+                updatedAt: skippedAt,
+            });
+            warn('[drawLine] Turn expired — player skipped', {
+                roomId: args.roomId,
+                skippedPlayerIndex: skippedIndex,
+                skippedPlayerName: sortedSkipPlayers[skippedIndex]?.name,
+                nextPlayerIndex: nextIndex,
+            });
+            return {
+                error: 'Turn deadline expired',
+                turnExpired: true,
+                skippedPlayerIndex: skippedIndex,
+                nextPlayerIndex: nextIndex,
+            };
+        }
         log('[drawLine] Error: Turn deadline expired', {
             roomId: args.roomId,
             turnEndTime: room.turnEndTime,
@@ -175,10 +216,12 @@ export async function drawLineHandler(ctx: any, args: any) {
 
     if (completedSquares.length === 0) {
         const nextPlayerIndex = (room.currentPlayerIndex + 1) % sortedPlayers.length;
-        // Re-arm the turn countdown for the next player (FR-2 / FR-3).
+        // Re-arm the turn countdown for the next player (FR-2 / FR-3),
+        // using the host-configured Allowed Time (falls back to 10s).
+        // A duration of 0 (no limit) leaves turnEndTime null.
         timingPatch.currentPlayerIndex = nextPlayerIndex;
         timingPatch.turnStartTime = serverReceivedAt;
-        timingPatch.turnEndTime = serverReceivedAt + 10000;
+        timingPatch.turnEndTime = computeTurnEndTime(room, serverReceivedAt);
         await ctx.db.patch(args.roomId, timingPatch);
         log('[drawLine] Turn advanced', {
             fromPlayerIndex: room.currentPlayerIndex,

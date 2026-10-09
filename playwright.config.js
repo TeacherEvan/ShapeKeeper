@@ -27,7 +27,18 @@ export default defineConfig({
     projects: [
         {
             name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
+            use: {
+                ...devices['Desktop Chrome'],
+                // System Chrome (Playwright's bundled chromium is unavailable on
+                // Ubuntu 26.04). Override with PLAYWRIGHT_CHROMIUM_EXECUTABLE.
+                ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+                    ? {
+                          launchOptions: {
+                              executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE,
+                          },
+                      }
+                    : {}),
+            },
         },
         {
             name: 'firefox-compat',

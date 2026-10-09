@@ -54,7 +54,18 @@ export async function resolveLineEffects(
     const players = await ctx.db.query('players').withIndex('by_room', (q: any) => q.eq('roomId', roomId)).collect();
     const sortedPlayers = players.sort((a: any, b: any) => a.playerIndex - b.playerIndex);
     const nextPlayerIndex = (room.currentPlayerIndex + 1) % sortedPlayers.length;
-    await ctx.db.patch(roomId, { currentPlayerIndex: nextPlayerIndex, updatedAt: Date.now() });
+    // Re-arm the Allowed Time countdown for the next player. Uses the
+    // room's configured duration (default 10s; 0 = no limit -> undefined).
+    const now = Date.now();
+    const { computeTurnEndTime } = await import('../games/turn_duration');
+    await ctx.db.patch(roomId, {
+      currentPlayerIndex: nextPlayerIndex,
+      turnStartTime: now,
+      turnEndTime: computeTurnEndTime(room, now),
+      lastTurnClientSentAt: undefined,
+      lastTurnServerReceivedAt: undefined,
+      updatedAt: now,
+    });
     return {
       completedSquares: 0,
       completedTriangles: completedTriangles.length,

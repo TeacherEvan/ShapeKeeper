@@ -48,6 +48,21 @@ export function updateLobbyUI(lobbyManager) {
         btn.style.opacity = lobbyManager.isHost ? '1' : '0.5';
     });
 
+    // Allowed Time control: reflects the room's turnDurationSeconds and is
+    // host-editable (guests get a read-only display). 0 = "No limit".
+    const turnDurationInput = document.getElementById('lobbyTurnDuration');
+    if (turnDurationInput) {
+        const seconds = Number.isFinite(lobbyManager.turnDurationSeconds)
+            ? lobbyManager.turnDurationSeconds
+            : 10;
+        const displayValue = seconds > 0 ? String(seconds) : '0';
+        if (document.activeElement !== turnDurationInput) {
+            turnDurationInput.value = displayValue;
+        }
+        turnDurationInput.disabled = !lobbyManager.isHost;
+        turnDurationInput.placeholder = 'seconds (0 = no limit)';
+    }
+
     const readyBtn = document.getElementById('readyBtn');
     if (readyBtn) {
         readyBtn.setAttribute('aria-pressed', String(Boolean(lobbyManager.isReady)));

@@ -15,6 +15,7 @@ import {
     validateLocalSavePayload,
 } from './local-save-replay.js';
 import { showToast } from './src/ui/Toast.js';
+import { announceAlert } from './src/ui/AccessibilityAnnouncer.js';
 import { notifyAchievementUnlock, renderAchievementPanel } from './src/ui/AchievementPanel.js';
 import { getDotRenderRadius } from './utils.js';
 import { TutorialSystem } from './tutorial-system.js';
@@ -285,7 +286,19 @@ export class DotsAndBoxesGame {
                     clientSentAt: Date.now(),
                 });
                 if (result.error) {
-                    console.error('[Game] Error drawing line:', result.error);
+                    if (result.turnExpired) {
+                        // Allowed Time ran out mid-flight: the server skipped
+                        // this player and re-armed the turn for the next one.
+                        // Surface it (toast + accessible announcement) instead
+                        // of a silent console log.
+                        showToast('⏱ Time ran out — your turn was skipped', 'warning', 3000);
+                        announceAlert('Time ran out. Your turn was skipped.');
+                    } else {
+                        console.error('[Game] Error drawing line:', result.error);
+                    }
+                    this.selectedDot = null;
+                    this.selectionLocked = false;
+                    this.selectionRibbon = null;
                     return;
                 }
                 this.selectedDot = null;
