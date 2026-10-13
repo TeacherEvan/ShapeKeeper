@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
+import { armTurnTimer } from '../games/turnTimer';
 
 export const startGame = mutation({
   args: {
@@ -19,7 +20,11 @@ export const startGame = mutation({
     const allReady = players.every((p: any) => p.isReady || p.sessionId === room.hostPlayerId);
     if (!allReady) return { error: 'All players must be ready' };
 
-    await ctx.db.patch(args.roomId, { status: 'playing', currentPlayerIndex: 0, updatedAt: Date.now() });
+    await armTurnTimer(ctx, args.roomId, room, Date.now(), {
+      status: 'playing',
+      currentPlayerIndex: 0,
+      updatedAt: Date.now(),
+    });
 
     return { success: true };
   },

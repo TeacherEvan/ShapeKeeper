@@ -23,6 +23,7 @@ export default defineSchema({
         // online turn countdown. Clients derive their local countdown from these.
         turnStartTime: v.optional(v.number()), // server epoch (ms) when current turn began
         turnEndTime: v.optional(v.number()), // server epoch (ms) when current turn ends
+        turnDurationMs: v.optional(v.number()), // 0/undefined = Off; see convex/games/turnTimer.ts
         lastTurnClientSentAt: v.optional(v.number()), // client send timestamp of last move
         lastTurnServerReceivedAt: v.optional(v.number()), // server receipt timestamp of last move
     })

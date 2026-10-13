@@ -1,6 +1,7 @@
 import { checkForCompletedSquares } from './squares';
 import { validateLineKey } from './lineValidation';
 import { isTurnExpired } from './turnDeadline';
+import { armTurnTimer } from './turnTimer';
 import { log, errorLog, warn } from '../log';
 import { checkRateLimit } from '../rateLimit';
 
@@ -173,20 +174,22 @@ export async function drawLineHandler(ctx: any, args: any) {
         updatedAt: serverReceivedAt,
     };
 
+    const nextIndex =
+        completedSquares.length === 0
+            ? (room.currentPlayerIndex + 1) % sortedPlayers.length
+            : room.currentPlayerIndex;
+    await armTurnTimer(ctx, args.roomId, room, serverReceivedAt, {
+        ...timingPatch,
+        currentPlayerIndex: nextIndex,
+    });
+
     if (completedSquares.length === 0) {
-        const nextPlayerIndex = (room.currentPlayerIndex + 1) % sortedPlayers.length;
-        // Re-arm the turn countdown for the next player (FR-2 / FR-3).
-        timingPatch.currentPlayerIndex = nextPlayerIndex;
-        timingPatch.turnStartTime = serverReceivedAt;
-        timingPatch.turnEndTime = serverReceivedAt + 10000;
-        await ctx.db.patch(args.roomId, timingPatch);
         log('[drawLine] Turn advanced', {
             fromPlayerIndex: room.currentPlayerIndex,
-            toPlayerIndex: nextPlayerIndex,
-            nextPlayerName: sortedPlayers[nextPlayerIndex]?.name,
+            toPlayerIndex: nextIndex,
+            nextPlayerName: sortedPlayers[nextIndex]?.name,
         });
     } else {
-        await ctx.db.patch(args.roomId, timingPatch);
         log('[drawLine] Turn retained (shape completed)', {
             playerIndex: currentPlayer.playerIndex,
             playerName: currentPlayer.name,

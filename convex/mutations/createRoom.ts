@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
 import { DEFAULT_COLORS, generateRoomCode, getHostTokenHash } from '../utils/roomUtils';
+import { DEFAULT_TURN_DURATION_MS } from '../games/turnTimer';
 
 export const createRoom = mutation({
   args: {
@@ -39,6 +40,7 @@ export const createRoom = mutation({
       hostPlayerId: args.sessionId,
       hostTokenHash,
       gridSize: args.gridSize,
+      turnDurationMs: DEFAULT_TURN_DURATION_MS,
       status: 'lobby',
       currentPlayerIndex: 0,
       createdAt: now,

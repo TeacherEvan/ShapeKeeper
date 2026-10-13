@@ -72,4 +72,25 @@ describe('queries/roomQueries', () => {
         expect(res._id).toBe('r1');
         expect(res.players.map((p: any) => p.name)).toEqual(['A', 'B', 'C']);
     });
+
+    it('projects turn timing and duration metadata to client', async () => {
+        const room = {
+            _id: 'r1',
+            roomCode: 'XYZ',
+            status: 'playing',
+            turnStartTime: 1000,
+            turnEndTime: 16000,
+            turnDurationMs: 15000,
+            lastTurnClientSentAt: 950,
+            lastTurnServerReceivedAt: 1000,
+        };
+        const ctx: any = { db: makeDb({ room, players: [] }) };
+
+        const res = await (getRoom as any)._handler(ctx, { roomId: 'r1' });
+        expect(res.turnStartTime).toBe(1000);
+        expect(res.turnEndTime).toBe(16000);
+        expect(res.turnDurationMs).toBe(15000);
+        expect(res.lastTurnClientSentAt).toBe(950);
+        expect(res.lastTurnServerReceivedAt).toBe(1000);
+    });
 });

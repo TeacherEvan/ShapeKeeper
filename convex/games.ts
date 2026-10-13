@@ -1,7 +1,8 @@
 import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { internalMutation, mutation, query } from './_generated/server';
 import { drawLineHandler } from './games/draw';
 import { POPULATE_PLAYER_INDEX } from './games/shared';
+import { expireTurnHandler } from './games/turnTimer';
 import { log, errorLog, warn } from './log';
 import {
     endGameHandler,
@@ -11,6 +12,11 @@ import {
     revealMultiplierHandler,
     tapSquareHandler,
 } from './games/state';
+
+export const expireTurn = internalMutation({
+    args: { roomId: v.id('rooms'), expectedTurnEndTime: v.number() },
+    handler: expireTurnHandler,
+});
 
 // Draw a line (make a move). Rate-limited, lineKey-validated, deadline-enforced.
 export const drawLine = mutation({

@@ -140,6 +140,7 @@ describe('convex/games handlers (unit)', () => {
             currentPlayerIndex: 0,
             gridSize: 3,
             hostPlayerId: 'host',
+            turnDurationMs: 15000,
         };
         const playerA = { _id: 'pA', sessionId: 'sess-A', playerIndex: 0, score: 0, name: 'A' };
         const playerB = { _id: 'pB', sessionId: 'sess-B', playerIndex: 1, score: 0, name: 'B' };
@@ -171,7 +172,7 @@ describe('convex/games handlers (unit)', () => {
             },
         });
 
-        const ctx: any = { db: mockDb };
+        const ctx: any = { db: mockDb, scheduler: { runAt: vi.fn() } };
 
         const res = await (games.drawLine as any)._handler(ctx, {
             roomId: 'room1',
@@ -184,15 +185,21 @@ describe('convex/games handlers (unit)', () => {
         expect(res.keepTurn).toBe(false);
         // Should have inserted the line
         expect((mockDb.__calls.inserts as any[]).some((i: any) => i.table === 'lines')).toBeTruthy();
-        // Should have advanced the turn to playerIndex 1
+        // Should have advanced the turn to playerIndex 1 with new turnEndTime
         expect(mockDb.patch).toHaveBeenCalledWith(
             'room1',
-            expect.objectContaining({ currentPlayerIndex: 1 })
+            expect.objectContaining({ currentPlayerIndex: 1, turnEndTime: expect.any(Number) })
         );
     });
 
     it('drawLine: completes a square, inserts square, updates player score and retains turn', async () => {
-        const roomDoc = { _id: 'room1', status: 'playing', currentPlayerIndex: 0, gridSize: 3 };
+        const roomDoc = {
+            _id: 'room1',
+            status: 'playing',
+            currentPlayerIndex: 0,
+            gridSize: 3,
+            turnDurationMs: 15000,
+        };
         const playerA = { _id: 'pA', sessionId: 'sess-A', playerIndex: 0, score: 1, name: 'A' };
         const playerB = { _id: 'pB', sessionId: 'sess-B', playerIndex: 1, score: 0, name: 'B' };
 
@@ -233,7 +240,7 @@ describe('convex/games handlers (unit)', () => {
             return origInsert(table, doc);
         });
 
-        const ctx: any = { db: mockDb };
+        const ctx: any = { db: mockDb, scheduler: { runAt: vi.fn() } };
 
         const res = await (games.drawLine as any)._handler(ctx, {
             roomId: 'room1',
@@ -248,10 +255,10 @@ describe('convex/games handlers (unit)', () => {
         expect((mockDb.__calls.inserts as any[]).some((i: any) => i.table === 'squares')).toBeTruthy();
         // Player score should be incremented by 1 (existing score 1 -> 2)
         expect(mockDb.patch).toHaveBeenCalledWith('pA', expect.objectContaining({ score: 2 }));
-        // Should NOT advance currentPlayerIndex (turn retained)
+        // Retains turn (same currentPlayerIndex) with new turnEndTime
         expect(mockDb.patch).toHaveBeenCalledWith(
             'room1',
-            expect.not.objectContaining({ currentPlayerIndex: expect.anything() })
+            expect.objectContaining({ currentPlayerIndex: 0, turnEndTime: expect.any(Number) })
         );
     });
 });

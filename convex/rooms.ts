@@ -21,6 +21,7 @@ export { updatePlayer } from './mutations/updatePlayer';
 // hostTokenHash. Optional for backwards compat with rooms created before
 // this deploy (the handler falls back to a sessionId-only check for those).
 export { updateGridSize } from './mutations/updateGridSize';
+export { updateTurnDuration } from './mutations/updateTurnDuration';
 
 
 // Get room by code (for joining)

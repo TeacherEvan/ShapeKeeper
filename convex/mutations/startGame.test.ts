@@ -45,13 +45,14 @@ describe('mutations/startGame', () => {
     });
 
     it('starts game when all ready and at least 2 players', async () => {
-        const room = { _id: 'r1', hostPlayerId: 'host', status: 'lobby' };
+        const room = { _id: 'r1', hostPlayerId: 'host', status: 'lobby', turnDurationMs: 15000 };
         const players = [
             { isReady: true, sessionId: 'p1' },
             { isReady: true, sessionId: 'p2' },
         ];
         const db = makeDb({ room, players });
-        const ctx: any = { db };
+        const scheduler = { runAt: vi.fn() };
+        const ctx: any = { db, scheduler };
 
         const res = await (startGame as any)._handler(ctx, {
             roomId: 'r1',
@@ -60,7 +61,11 @@ describe('mutations/startGame', () => {
         expect(res).toEqual({ success: true });
         expect(db.patch).toHaveBeenCalledWith(
             'r1',
-            expect.objectContaining({ status: 'playing' })
+            expect.objectContaining({
+                status: 'playing',
+                turnEndTime: expect.any(Number),
+            })
         );
+        expect(scheduler.runAt).toHaveBeenCalled();
     });
 });
