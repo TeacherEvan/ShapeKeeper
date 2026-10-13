@@ -65,9 +65,12 @@ export const FEATURE_FLAGS = {
     FEATURE_SYNC_RESILIENCE: false,
 };
 
+export const TURN_TIMER_OPTIONS_MS = [0, 10000, 15000, 30000, 60000]; // 0 = Off
+export const DEFAULT_TURN_DURATION_MS = 15000;
+
 // Turn / network timing (FR-2, FR-3)
 export const TIMING_CONSTANTS = {
-    TURN_DURATION_MS: 10000, // 10s countdown
+    TURN_DURATION_MS: DEFAULT_TURN_DURATION_MS, // 15s countdown default
     LAG_PAUSE_THRESHOLD_MS: 600, // packet/heartbeat latency above this pauses clock
     CLOCK_OFFSET_EMA_ALPHA: 0.2, // smoothing factor (0.2 new, 0.8 old)
     COUNTDOWN_QUANTIZE_MS: 100, // display quantized to 0.1s
