@@ -1,7 +1,7 @@
 export const LOCAL_SAVE_STORAGE_KEY = 'shapekeeper.local.save.v1';
 export const LOCAL_SAVE_VERSION = 1;
 
-import { TIMING_CONSTANTS } from './constants.js';
+import { TIMING_CONSTANTS, TURN_TIMER_OPTIONS_MS } from './constants.js';
 
 const LINE_KEY_PATTERN = /^\d+,\d+-\d+,\d+$/;
 const CELL_KEY_PATTERN = /^\d+,\d+$/;
@@ -166,6 +166,9 @@ function normalizeConfig(config) {
         player2Color: config.player2Color,
         localMode: config.localMode,
         aiDifficulty: config.aiDifficulty,
+        turnDurationMs: TURN_TIMER_OPTIONS_MS.includes(config.turnDurationMs)
+            ? config.turnDurationMs
+            : 0,
     };
 }
 
@@ -180,6 +183,7 @@ export function createLocalSavePayload(game) {
             localMode: game.localMode,
             player1Color: game.player1Color,
             player2Color: game.player2Color,
+            turnDurationMs: game.turnDurationMs ?? 0,
         },
         replayIndex: game.replayIndex,
         state: game.captureMoveSnapshot(),

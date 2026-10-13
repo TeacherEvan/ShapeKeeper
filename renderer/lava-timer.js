@@ -59,9 +59,10 @@ export function drawLavaTimer(game, remainingMs) {
     const ctx = game.ctx;
     if (!ctx) return;
     const lava = ensureLavaSystem(game);
+    if (remainingMs == null && game.turnRemainingMs == null) return;
     if (!lava.initialized) initLavaSystem(game);
 
-    const remaining = remainingMs != null ? remainingMs : (game.turnRemainingMs ?? 0);
+    const remaining = remainingMs != null ? remainingMs : game.turnRemainingMs;
 
     // Advance physics (behind dots, 40% opacity max).
     updateLavaParticles(lava.particles, game, remaining);

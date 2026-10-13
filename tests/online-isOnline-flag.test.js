@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { FEATURE_FLAGS } from '../constants.js';
 import { Renderer } from '../renderer.js';
-import { drawLavaTimer } from '../renderer/lava-timer.js';
 import { createTurnClockController } from '../src/timing/turn-clock-controller.js';
 
 // Honest integration proof for the online-play + lava-clock regression:
@@ -63,7 +62,7 @@ describe('online match must set isOnline=true (regression guard)', () => {
         const renderer = new Renderer(game);
         renderer.drawLavaTimerLayer();
         // drawLavaTimer should never have been invoked -> no fillText for countdown
-        expect(game._log.calls.some((c) => c.prop === 'fillText')).toBe(true);
+        expect(game._log.calls.some((c) => c.prop === 'fillText')).toBe(false);
     });
 
     it('lava timer layer renders once isOnline=true', () => {

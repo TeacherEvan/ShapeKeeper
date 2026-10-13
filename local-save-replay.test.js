@@ -109,4 +109,47 @@ describe('local save payload validation', () => {
         expect(result.ok).toBe(false);
         expect(result.type).toBe('invalid');
     });
+
+    it('normalizes turnDurationMs correctly (missing -> 0, round-trip 15000, invalid -> 0)', () => {
+        const validSnapshot = createSnapshot();
+        const basePayload = {
+            mode: 'local',
+            version: LOCAL_SAVE_VERSION,
+            config: {
+                gridSize: 5,
+                player1Color: '#ff0000',
+                player2Color: '#0000ff',
+                localMode: 'human',
+                aiDifficulty: 'medium',
+            },
+            replayIndex: 0,
+            state: validSnapshot,
+            initialSnapshot: validSnapshot,
+            moveHistory: [],
+            redoHistory: [],
+        };
+
+        // Missing field (old save) -> 0
+        const missingResult = validateLocalSavePayload(basePayload);
+        expect(missingResult.ok).toBe(true);
+        expect(missingResult.payload.config.turnDurationMs).toBe(0);
+
+        // Valid round-trip -> 15000
+        const valid15k = {
+            ...basePayload,
+            config: { ...basePayload.config, turnDurationMs: 15000 },
+        };
+        const validResult = validateLocalSavePayload(valid15k);
+        expect(validResult.ok).toBe(true);
+        expect(validResult.payload.config.turnDurationMs).toBe(15000);
+
+        // Invalid duration -> 0
+        const invalidDuration = {
+            ...basePayload,
+            config: { ...basePayload.config, turnDurationMs: 99999 },
+        };
+        const invalidResult = validateLocalSavePayload(invalidDuration);
+        expect(invalidResult.ok).toBe(true);
+        expect(invalidResult.payload.config.turnDurationMs).toBe(0);
+    });
 });

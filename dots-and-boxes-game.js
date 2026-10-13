@@ -21,6 +21,8 @@ import { TutorialSystem } from './tutorial-system.js';
 import { findOptimalMinimaxMove } from './src/ai/MinimaxEngine.js';
 import { DisposableRegistry } from './src/lifecycle/DisposableRegistry.js';
 import { AccessibleGridTree } from './src/a11y/AccessibleGridTree.js';
+import { createLocalTurnTimer } from './src/timing/local-turn-timer.js';
+import { maybeAnnounceTimeLow } from './src/timing/time-warning.js';
 
 export class DotsAndBoxesGame {
     static POPULATE_PLAYER_ID = GAME_CONSTANTS.POPULATE_PLAYER_ID;
@@ -35,6 +37,9 @@ export class DotsAndBoxesGame {
         this.player1Color = player1Color;
         this.player2Color = player2Color;
         this.options = options;
+        this.turnDurationMs = options.turnDurationMs ?? 0;
+        this.localTurnTimer = null;
+        this.localTurnCounter = 0;
 
         // Initialize canvas and context
         this.canvas = document.getElementById('gameCanvas');
@@ -93,11 +98,20 @@ export class DotsAndBoxesGame {
         });
         this.disposables.addRAF(focusRaf);
 
+        this.disposables.addEventListener(document, 'visibilitychange', () => {
+            if (document.hidden) {
+                this.localTurnTimer?.pause();
+            } else {
+                this.localTurnTimer?.resume();
+            }
+        });
+
         // Start the game
         this.renderer.draw();
         this.uiManager.updateUI();
         this.showAchievementLoadIssueIfNeeded();
         this.renderAchievementPanel();
+        this.initLocalTurnTimer();
         this.animate();
 
         // Hide loading skeleton unless startup flow is waiting on an
@@ -433,6 +447,8 @@ export class DotsAndBoxesGame {
                 completedSquaresCount: completedSquares.length,
             });
 
+            this.restartLocalTurnTimer();
+
             if (!this.isMultiplayer && this.localMode === 'ai' && !this.gameState.isGameOver()) {
                 this.scheduleAITurn();
             }
@@ -760,6 +776,7 @@ export class DotsAndBoxesGame {
         this.redoHistory.push(lastMove);
         this.replayIndex = this.moveHistory.length;
         this.restoreMoveSnapshot(lastMove.before);
+        this.restartLocalTurnTimer();
     }
 
     redoMove() {
@@ -776,6 +793,7 @@ export class DotsAndBoxesGame {
         this.moveHistory.push(nextMove);
         this.replayIndex = this.moveHistory.length;
         this.restoreMoveSnapshot(nextMove.after);
+        this.restartLocalTurnTimer();
     }
 
     getSnapshotForReplayIndex(index) {
@@ -899,8 +917,9 @@ export class DotsAndBoxesGame {
         this.moveHistory = JSON.parse(JSON.stringify(payload.moveHistory));
         this.redoHistory = JSON.parse(JSON.stringify(payload.redoHistory));
         this.replayIndex = payload.replayIndex;
-
+        this.turnDurationMs = payload.config.turnDurationMs ?? 0;
         this.restoreMoveSnapshot(payload.state);
+        this.initLocalTurnTimer();
         this.uiManager.updateReplayControls();
         this.renderAchievementPanel();
         return true;
@@ -950,13 +969,15 @@ export class DotsAndBoxesGame {
 
         const ambientRedraw = this.particleSystem.ambientParticles.length > 0 && now % 48 < 16;
 
-        if (hasActiveAnimations || ambientRedraw) {
+        if (hasActiveAnimations || ambientRedraw || this.turnRemainingMs != null) {
             this.renderer.draw();
         }
 
-        // FR-2 / FR-3: keep the online turn countdown ticking every frame.
+        // FR-2 / FR-3: keep the turn countdown ticking every frame (online and local).
         if (this.isOnline) {
             this.handleTurnExpiration();
+        } else {
+            this.tickLocalTurnTimer();
         }
 
         if (!this.isDestroyed) {
@@ -972,20 +993,59 @@ export class DotsAndBoxesGame {
         this.renderer.draw();
     }
 
+    initLocalTurnTimer() {
+        const flagOn = FEATURE_FLAGS.FEATURE_LAVA_TIMER === true;
+        const tutorial = this.tutorialSystem?.isActive?.() === true;
+        const ms = this.isMultiplayer || !flagOn || tutorial ? 0 : this.turnDurationMs;
+        this.localTurnTimer = createLocalTurnTimer({ durationMs: ms });
+        this.restartLocalTurnTimer();
+    }
+
+    restartLocalTurnTimer() {
+        const timer = this.localTurnTimer;
+        if (!timer?.enabled) return;
+        this.localTurnCounter += 1;
+        if (this.gameState.isGameOver() || this.isAITurn()) {
+            timer.stop();
+            this.turnRemainingMs = null;
+            return;
+        }
+        timer.start();
+    }
+
+    tickLocalTurnTimer() {
+        const timer = this.localTurnTimer;
+        if (!timer?.enabled) return;
+        this.turnRemainingMs = timer.remainingMs();
+        if (timer.consumeExpiry()) {
+            this.expireLocalTurn();
+        } else if (this.turnRemainingMs != null) {
+            maybeAnnounceTimeLow(
+                this,
+                this.localTurnCounter,
+                this.turnRemainingMs,
+                timer.durationMs
+            );
+        }
+    }
+
+    expireLocalTurn() {
+        this.selectedDot = null;
+        this.selectionLocked = false;
+        this.selectionRibbon = null;
+        this.comboCount = 0;
+        this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
+        this.uiManager.updateUI();
+        this.restartLocalTurnTimer();
+        if (this.localMode === 'ai') this.scheduleAITurn();
+        this.renderer.draw();
+    }
+
     handleTurnExpiration() {
-        if (!FEATURE_FLAGS.FEATURE_LAVA_TIMER) return;
-        if (!this.isOnline) return;
         const ctrl = window.ShapeKeeperTurnClock;
-        if (!ctrl) return;
-        const remaining = ctrl.getRemainingTime?.();
-        if (remaining !== undefined && remaining <= 0) {
-            // The current player's turn has expired.
-            // For local lava timer house rule, skip to the next player.
-            const currentPlayerIndex = this.gameState?.room?.currentPlayerIndex ?? 0;
-            const nextIndex =
-                (currentPlayerIndex + 1) % (this.gameState?.room?.players?.length ?? 2);
-            this.gameState.room.currentPlayerIndex = nextIndex;
-            this.renderer.draw();
+        const remaining = ctrl?.tick?.();
+        if (remaining != null) {
+            maybeAnnounceTimeLow(this, ctrl.getTurnKey?.(), remaining, ctrl.getDurationMs?.());
         }
     }
 

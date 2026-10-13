@@ -128,8 +128,8 @@ export function getNearestDot(
     gridCols,
     selectionRadiusMultiplier = 0.5
 ) {
-    const col = Math.round((x - offsetX) / cellSize);
-    const row = Math.round((y - offsetY) / cellSize);
+    const col = Math.round((x - offsetX) / cellSize) + 0;
+    const row = Math.round((y - offsetY) / cellSize) + 0;
 
     if (row < 0 || row >= gridRows || col < 0 || col >= gridCols) {
         return null;

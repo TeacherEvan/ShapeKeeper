@@ -15,11 +15,14 @@ import {
 import { toggleTheme } from '../ThemeManager.js';
 import { showToast } from '../Toast.js';
 
+let _lastLocalConfig = null;
+
 function buildLocalGameFromConfig(config) {
     return new DotsAndBoxesGame(config.gridSize, config.player1Color, config.player2Color, {
         localMode: config.localMode,
         aiDifficulty: config.aiDifficulty,
         tutorialEnabled: config.tutorialEnabled,
+        turnDurationMs: config.turnDurationMs ?? 0,
     });
 }
 
@@ -109,6 +112,12 @@ export function bindMenuEventHandlers(deps) {
             localOpponentType.value = 'human';
         }
         syncLocalAIControls();
+        const localTimerEl = document.getElementById('localTurnTimerSection');
+        if (localTimerEl) {
+            localTimerEl.hidden = !(
+                window.FEATURE_FLAGS?.FEATURE_LAVA_TIMER ?? window.FEATURE_LAVA_TIMER
+            );
+        }
         showScreen('localSetupScreen');
     });
 
@@ -139,6 +148,7 @@ export function bindMenuEventHandlers(deps) {
         const localMode = localOpponentType?.value === 'ai' ? 'ai' : 'human';
         const aiDifficulty = localAIDifficulty?.value || 'medium';
         const tutorialEnabled = Boolean(localTutorialMode?.checked);
+        const turnDurationMs = Number(document.getElementById('localTurnTimer')?.value ?? 0);
 
         if (welcomeAnimation) {
             welcomeAnimation.moveToGameScreen();
@@ -147,16 +157,17 @@ export function bindMenuEventHandlers(deps) {
         showScreen('gameScreen');
         requestFullscreen();
 
-        setActiveGame(
-            buildLocalGameFromConfig({
-                gridSize: getSelectedGridSize(),
-                player1Color,
-                player2Color,
-                localMode,
-                aiDifficulty,
-                tutorialEnabled,
-            })
-        );
+        const config = {
+            gridSize: getSelectedGridSize(),
+            player1Color,
+            player2Color,
+            localMode,
+            aiDifficulty,
+            tutorialEnabled,
+            turnDurationMs,
+        };
+        _lastLocalConfig = config;
+        setActiveGame(buildLocalGameFromConfig(config));
     });
 
     document.getElementById('loadLocalGame')?.addEventListener('click', () => {
@@ -181,6 +192,8 @@ export function bindMenuEventHandlers(deps) {
             showToast('Unable to apply saved local game.', 'error');
             return;
         }
+
+        _lastLocalConfig = savedPayloadResult.payload.config;
 
         if (welcomeAnimation) {
             welcomeAnimation.moveToGameScreen();
