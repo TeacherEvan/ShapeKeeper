@@ -7,7 +7,7 @@ export {
     generateSecureRoomCode,
     ROOM_CODE_CHARSET,
     ROOM_CODE_LENGTH,
-} from './shared_utils.js';
+} from './sharedUtils.js';
 
 /**
  * Word lists for the silly [Adjective][Animal] lobby passcode.

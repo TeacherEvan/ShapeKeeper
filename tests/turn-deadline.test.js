@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isTurnExpired } from '../convex/games/turn-deadline.js';
+import { isTurnExpired } from '../convex/games/turnDeadline.js';
 
 describe('isTurnExpired', () => {
     it('returns false when no turnEndTime is set on the room', () => {
