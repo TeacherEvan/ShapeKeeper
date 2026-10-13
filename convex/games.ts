@@ -12,8 +12,26 @@ import {
     tapSquareHandler,
 } from './games/state';
 
-// Draw a line (make a move) - delegated to extracted module
-export { drawLine } from './mutations/drawLine';
+// Draw a line (make a move). Rate-limited, lineKey-validated, deadline-enforced.
+export const drawLine = mutation({
+    args: {
+        roomId: v.id('rooms'),
+        sessionId: v.string(),
+        lineKey: v.string(),
+        clientSentAt: v.optional(v.number()),
+    },
+    handler: drawLineHandler,
+});
+
+// Opponent tap: reduce a completed opponent square's multiplier (see docs/feature-opponent-tap.md).
+export const tapSquare = mutation({
+    args: {
+        roomId: v.id('rooms'),
+        sessionId: v.string(),
+        squareKey: v.string(),
+    },
+    handler: tapSquareHandler,
+});
 
 // Get game state (lines and squares)
 export const getGameState = query({
