@@ -282,6 +282,26 @@ export function bindMenuEventHandlers(deps) {
         });
     });
 
+    const lobbyTimerSelect = document.getElementById('lobbyTurnTimer');
+    if (lobbyTimerSelect) {
+        let previousTimerValue = lobbyTimerSelect.value;
+        lobbyTimerSelect.addEventListener('focus', () => {
+            previousTimerValue = lobbyTimerSelect.value;
+        });
+        lobbyTimerSelect.addEventListener('change', async (event) => {
+            const newValue = event.target.value;
+            if (window.ShapeKeeperConvex) {
+                const result = await window.ShapeKeeperConvex.updateTurnDuration(Number(newValue));
+                if (result?.error) {
+                    showToast('Error: ' + result.error, 'error');
+                    lobbyTimerSelect.value = previousTimerValue;
+                    return;
+                }
+                previousTimerValue = newValue;
+            }
+        });
+    }
+
     document.getElementById('copyCodeBtn').addEventListener('click', () => {
         const code = document.getElementById('roomCode').textContent;
         navigator.clipboard.writeText(code).then(() => {

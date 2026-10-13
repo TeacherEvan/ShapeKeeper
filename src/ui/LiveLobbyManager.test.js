@@ -31,6 +31,7 @@ describe('LiveLobbyManager — applySnapshot', () => {
                 roomCode: 'ABC123',
                 hostPlayerId: 's1',
                 gridSize: 10,
+                turnDurationMs: 30000,
                 status: 'lobby',
             },
             players: [],
@@ -39,6 +40,7 @@ describe('LiveLobbyManager — applySnapshot', () => {
         expect(m.roomCode).toBe('ABC123');
         expect(m.hostSessionId).toBe('s1');
         expect(m.gridSize).toBe(10);
+        expect(m.turnDurationMs).toBe(30000);
         expect(m.status).toBe('lobby');
     });
 

@@ -81,4 +81,20 @@ describe('createTurnClockController (FR-2 / FR-3 client integration)', () => {
         expect(game.turnRemainingMs).toBeNull();
         expect(ctrl.tick()).toBeNull();
     });
+
+    it('turnEndTime removed -> tick() returns null', () => {
+        const game = makeGame();
+        const ctrl = createTurnClockController(game);
+        ctrl.onAuthoritativeRoom({ turnEndTime: NOW + 9000, turnDurationMs: 15000 });
+        expect(ctrl.tick()).toBe(9000);
+        expect(ctrl.getDurationMs()).toBe(15000);
+        expect(ctrl.getTurnKey()).toBe(NOW + 9000);
+
+        // Room update with no turnEndTime (e.g. game paused or reset or untimed)
+        ctrl.onAuthoritativeRoom({ turnEndTime: undefined, turnDurationMs: 0 });
+        expect(ctrl.tick()).toBeNull();
+        expect(game.turnRemainingMs).toBeNull();
+        expect(ctrl.getDurationMs()).toBe(0);
+        expect(ctrl.getTurnKey()).toBeNull();
+    });
 });

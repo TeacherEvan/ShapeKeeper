@@ -82,6 +82,12 @@ export function handleRoomStateUpdate(roomState, deps) {
         btn.classList.toggle('selected', parseInt(btn.dataset.size) === roomState.gridSize);
     });
 
+    const lobbyTurnTimer = document.getElementById('lobbyTurnTimer');
+    if (lobbyTurnTimer) {
+        lobbyTurnTimer.value = String(roomState.turnDurationMs ?? 0);
+        lobbyTurnTimer.disabled = !roomState.isHost;
+    }
+
     const readyBtn = document.getElementById('readyBtn');
     if (readyBtn) {
         readyBtn.textContent = lobbyManager.isReady ? 'Ready ✓' : 'Ready';

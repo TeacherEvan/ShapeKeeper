@@ -48,6 +48,11 @@ export function updateLobbyUI(lobbyManager) {
         btn.style.opacity = lobbyManager.isHost ? '1' : '0.5';
     });
 
+    const lobbyTurnTimer = document.getElementById('lobbyTurnTimer');
+    if (lobbyTurnTimer) {
+        lobbyTurnTimer.disabled = !lobbyManager.isHost;
+    }
+
     const readyBtn = document.getElementById('readyBtn');
     if (readyBtn) {
         readyBtn.setAttribute('aria-pressed', String(Boolean(lobbyManager.isReady)));

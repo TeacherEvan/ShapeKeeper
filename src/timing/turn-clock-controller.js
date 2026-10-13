@@ -18,6 +18,8 @@ export function createTurnClockController(game) {
     const clock = createClockSync();
     let lastTurnEndTime = null;
     let lastLatencySampleMs = 0;
+    let lastDurationMs = 0;
+    let turnKey = null;
 
     return {
         clock,
@@ -29,6 +31,8 @@ export function createTurnClockController(game) {
          */
         onAuthoritativeRoom(room) {
             if (!room) return;
+            lastDurationMs = room.turnDurationMs ?? 0;
+            turnKey = room.turnEndTime ?? null;
 
             // Seed the clock offset from the last move's RTT sample (FR-2).
             if (
@@ -52,9 +56,7 @@ export function createTurnClockController(game) {
                 }
             }
 
-            if (typeof room.turnEndTime === 'number') {
-                lastTurnEndTime = room.turnEndTime;
-            }
+            lastTurnEndTime = typeof room.turnEndTime === 'number' ? room.turnEndTime : null;
         },
 
         /**
@@ -79,9 +81,19 @@ export function createTurnClockController(game) {
             return lastLatencySampleMs;
         },
 
+        getDurationMs() {
+            return lastDurationMs;
+        },
+
+        getTurnKey() {
+            return turnKey;
+        },
+
         /** Clear turn state (match finished / left). */
         clear() {
             lastTurnEndTime = null;
+            lastDurationMs = 0;
+            turnKey = null;
             game.turnRemainingMs = null;
             clock.reset();
         },
