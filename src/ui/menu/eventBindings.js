@@ -15,7 +15,7 @@ import {
 import { toggleTheme } from '../ThemeManager.js';
 import { showToast } from '../Toast.js';
 
-let _lastLocalConfig = null;
+let lastLocalConfig = null;
 
 function buildLocalGameFromConfig(config) {
     return new DotsAndBoxesGame(config.gridSize, config.player1Color, config.player2Color, {
@@ -166,7 +166,7 @@ export function bindMenuEventHandlers(deps) {
             tutorialEnabled,
             turnDurationMs,
         };
-        _lastLocalConfig = config;
+        lastLocalConfig = config;
         setActiveGame(buildLocalGameFromConfig(config));
     });
 
@@ -193,7 +193,7 @@ export function bindMenuEventHandlers(deps) {
             return;
         }
 
-        _lastLocalConfig = savedPayloadResult.payload.config;
+        lastLocalConfig = savedPayloadResult.payload.config;
 
         if (welcomeAnimation) {
             welcomeAnimation.moveToGameScreen();
@@ -485,14 +485,47 @@ export function bindMenuEventHandlers(deps) {
         }
     });
 
-    document.getElementById('playAgain').addEventListener('click', () => {
-        const { welcomeAnimation } = getState();
+    async function requestOnlineRematch() {
+        const btn = document.getElementById('playAgain');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Waiting for opponent…';
+        }
+        if (window.ShapeKeeperConvex?.requestRematch) {
+            const result = await window.ShapeKeeperConvex.requestRematch();
+            if (result?.error) {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Play Again';
+                }
+                showToast('Rematch failed: ' + result.error, 'error');
+            }
+        }
+    }
+
+    document.getElementById('winnerMainMenu')?.addEventListener('click', async () => {
+        const { game, welcomeAnimation } = getState();
+        if (game?.isMultiplayer && window.ShapeKeeperConvex?.getCurrentRoomId?.()) {
+            await teardownMultiplayerSession({ leaveRoom: true });
+            return;
+        }
         showScreen('mainMenuScreen');
         setActiveGame(null);
         resetStartupState();
+        welcomeAnimation?.moveBackToMainMenu();
+    });
 
-        if (welcomeAnimation) {
-            welcomeAnimation.moveBackToMainMenu();
+    document.getElementById('playAgain')?.addEventListener('click', async () => {
+        const { game } = getState();
+        if (game?.isMultiplayer && window.ShapeKeeperConvex?.getCurrentRoomId?.()) {
+            await requestOnlineRematch();
+            return;
         }
+        if (lastLocalConfig) {
+            showScreen('gameScreen');
+            setActiveGame(buildLocalGameFromConfig(lastLocalConfig));
+            return;
+        }
+        document.getElementById('winnerMainMenu')?.click();
     });
 }
