@@ -11,6 +11,7 @@
 
 import { GAME_CONSTANTS, TIMING_CONSTANTS } from '../constants.js';
 import { initializeLavaParticles, updateLavaParticles } from '../particle-system/lava-particles.js';
+import { prefersReducedMotion } from '../utils.js';
 
 /**
  * Format remaining milliseconds into a jitter-free, quantized display string.
@@ -65,7 +66,9 @@ export function drawLavaTimer(game, remainingMs) {
     const remaining = remainingMs != null ? remainingMs : game.turnRemainingMs;
 
     // Advance physics (behind dots, 40% opacity max).
-    updateLavaParticles(lava.particles, game, remaining);
+    if (!prefersReducedMotion()) {
+        updateLavaParticles(lava.particles, game, remaining);
+    }
 
     ctx.save();
     ctx.globalAlpha = GAME_CONSTANTS.LAVA_OPACITY;

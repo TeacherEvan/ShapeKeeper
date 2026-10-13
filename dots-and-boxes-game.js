@@ -16,7 +16,7 @@ import {
 } from './local-save-replay.js';
 import { showToast } from './src/ui/Toast.js';
 import { notifyAchievementUnlock, renderAchievementPanel } from './src/ui/AchievementPanel.js';
-import { getDotRenderRadius } from './utils.js';
+import { getDotRenderRadius, prefersReducedMotion } from './utils.js';
 import { TutorialSystem } from './tutorial-system.js';
 import { findOptimalMinimaxMove } from './src/ai/MinimaxEngine.js';
 import { DisposableRegistry } from './src/lifecycle/DisposableRegistry.js';
@@ -397,7 +397,7 @@ export class DotsAndBoxesGame {
                 });
                 this.soundManager.playSquareSound(this.comboCount);
 
-                if (totalShapes >= 2) {
+                if (totalShapes >= 2 && !prefersReducedMotion()) {
                     this.shakeIntensity = totalShapes * 2;
                 }
             }

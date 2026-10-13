@@ -27,6 +27,7 @@ import {
 import { drawDots, drawKeyboardFocusDot, drawSelectedDot } from './renderer/markers.js';
 import { drawLavaTimer } from './renderer/lava-timer.js';
 import { FEATURE_FLAGS } from './constants.js';
+import { prefersReducedMotion } from './utils.js';
 
 export class Renderer {
     constructor(game) {
@@ -44,7 +45,7 @@ export class Renderer {
         this.drawLavaTimerLayer();
 
         this.game.ctx.save();
-        if (this.game.shakeIntensity > 0.1) {
+        if (this.game.shakeIntensity > 0.1 && !prefersReducedMotion()) {
             this.game.ctx.translate(
                 (Math.random() - 0.5) * this.game.shakeIntensity,
                 (Math.random() - 0.5) * this.game.shakeIntensity

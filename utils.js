@@ -175,3 +175,11 @@ export function compactAnimationArray(arr, now, keepPredicate) {
     }
     arr.length = writeIndex;
 }
+
+export function prefersReducedMotion() {
+    return (
+        typeof window !== 'undefined' &&
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    );
+}

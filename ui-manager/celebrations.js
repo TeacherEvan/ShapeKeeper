@@ -4,6 +4,7 @@
 
 import { announceStatus } from '../src/ui/AccessibilityAnnouncer.js';
 import { showScreen } from '../src/ui/ScreenTransition.js';
+import { prefersReducedMotion } from '../utils.js';
 
 function getTurnIndicator() {
     return document.getElementById('turnIndicator');
@@ -148,7 +149,8 @@ function buildWinnerScoreEntry(player, rankIndex, winner) {
     return entry;
 }
 
-function launchConfetti(accentColor) {
+export function launchConfetti(accentColor) {
+    if (prefersReducedMotion()) return;
     const canvas = document.createElement('canvas');
     canvas.id = 'confettiCanvas';
     canvas.style.cssText =
@@ -225,7 +227,8 @@ function launchConfetti(accentColor) {
     animate();
 }
 
-function launchFireworks(accentColor) {
+export function launchFireworks(accentColor) {
+    if (prefersReducedMotion()) return;
     const canvas = document.createElement('canvas');
     canvas.id = 'fireworksCanvas';
     canvas.style.cssText =

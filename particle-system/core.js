@@ -1,7 +1,9 @@
 import { GAME_CONSTANTS } from '../constants.js';
+import { prefersReducedMotion } from '../utils.js';
 
 export function initializeAmbientParticles(system) {
     system.ambientParticles = [];
+    if (prefersReducedMotion()) return;
     // Spread ambient particles across the real board dimensions so they cover
     // the canvas instead of a hardcoded 800x600 box (AUD-3).
     const width = system.logicalWidth || 800;
