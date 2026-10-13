@@ -14,10 +14,9 @@
  * - Proper cleanup of subscriptions and resources
  * - Automatic reconnection handling
  *
- * TODO: [OPTIMIZATION] Add offline queue for actions when connection drops
- * TODO: [ARCHITECTURE] Consider implementing optimistic updates for immediate UI feedback
+ * Mutations issued while offline are queued and retried in order by the Convex client; see tests/e2e/reconnect.spec.js.
+ *
  * TODO: [ARCHITECTURE] Move to Redis for scalability in high-traffic scenarios
- * TODO: [SECURITY] Add rate limiting for mutations to prevent abuse
  */
 
 'use strict';
