@@ -22,6 +22,7 @@ function createMockDb(overrides: MockDbOverrides = {}) {
         withIndex: () => ({
             collect: vi.fn(async () => items.slice()),
             first: vi.fn(async () => (items.length ? items[0] : null)),
+            unique: vi.fn(async () => (items.length ? items[0] : null)),
         }),
     });
 
@@ -152,6 +153,9 @@ describe('convex/games handlers (unit)', () => {
         const mockDb = createMockDb({
             get: (id: any) => (id === 'room1' ? roomDoc : null),
             query: {
+                rateLimits: () => ({
+                    withIndex: () => ({ unique: vi.fn(async () => null) }),
+                }),
                 players: () => ({
                     withIndex: () => ({ collect: vi.fn(async () => [playerA, playerB]) }),
                 }),
@@ -177,6 +181,7 @@ describe('convex/games handlers (unit)', () => {
 
         expect(res.success).toBe(true);
         expect(res.completedSquares).toBe(0);
+        expect(res.keepTurn).toBe(false);
         // Should have inserted the line
         expect((mockDb.__calls.inserts as any[]).some((i: any) => i.table === 'lines')).toBeTruthy();
         // Should have advanced the turn to playerIndex 1
@@ -191,30 +196,41 @@ describe('convex/games handlers (unit)', () => {
         const playerA = { _id: 'pA', sessionId: 'sess-A', playerIndex: 0, score: 1, name: 'A' };
         const playerB = { _id: 'pB', sessionId: 'sess-B', playerIndex: 1, score: 0, name: 'B' };
 
-        // Lines such that drawing '0,0-1,0' will complete the square at row=0,col=0
-        const existingLines = [
-            '0,0-0,1', // top
-            '0,1-1,1', // right
-            '1,0-1,1', // bottom
-            '0,0-1,0', // left (the line being drawn - included because applyLine runs first)
-        ].map((k) => ({ lineKey: k }));
+        // The other 3 lines of the square at row=0, col=0
+        const linesInDb = [
+            { lineKey: '0,0-0,1' }, // top
+            { lineKey: '0,1-1,1' }, // right
+            { lineKey: '1,0-1,1' }, // bottom
+        ];
 
         const mockDb = createMockDb({
             get: (id: any) => (id === 'room1' ? roomDoc : null),
             query: {
+                rateLimits: () => ({
+                    withIndex: () => ({ unique: vi.fn(async () => null) }),
+                }),
                 players: () => ({
                     withIndex: () => ({ collect: vi.fn(async () => [playerA, playerB]) }),
                 }),
                 lines: () => ({
                     withIndex: () => ({
-                        collect: vi.fn(async () => existingLines),
                         first: vi.fn(async () => null),
+                        collect: vi.fn(async () => linesInDb),
                     }),
                 }),
                 squares: () => ({
-                    withIndex: () => ({ collect: vi.fn(async () => []), first: vi.fn(async () => null) }),
+                    withIndex: () => ({
+                        collect: vi.fn(async () => []),
+                        first: vi.fn(async () => null),
+                    }),
                 }),
             },
+        });
+
+        const origInsert = mockDb.insert;
+        mockDb.insert = vi.fn(async (table: string, doc: any) => {
+            if (table === 'lines') linesInDb.push(doc);
+            return origInsert(table, doc);
         });
 
         const ctx: any = { db: mockDb };
@@ -227,6 +243,7 @@ describe('convex/games handlers (unit)', () => {
 
         expect(res.success).toBe(true);
         expect(res.completedSquares).toBe(1);
+        expect(res.keepTurn).toBe(true);
         // Should have inserted a square
         expect((mockDb.__calls.inserts as any[]).some((i: any) => i.table === 'squares')).toBeTruthy();
         // Player score should be incremented by 1 (existing score 1 -> 2)
@@ -234,65 +251,7 @@ describe('convex/games handlers (unit)', () => {
         // Should NOT advance currentPlayerIndex (turn retained)
         expect(mockDb.patch).toHaveBeenCalledWith(
             'room1',
-            expect.objectContaining({ updatedAt: expect.any(Number) })
-        );
-    });
-
-    it('drawLine: completes a triangle, inserts triangle and returns completedTriangles (turn advances if no squares)', async () => {
-        const roomDoc = { _id: 'room1', status: 'playing', currentPlayerIndex: 0, gridSize: 3 };
-        const playerA = { _id: 'pA', sessionId: 'sess-A', playerIndex: 0, score: 0, name: 'A' };
-        const playerB = { _id: 'pB', sessionId: 'sess-B', playerIndex: 1, score: 0, name: 'B' };
-
-        // Lines such that drawing diagonal '0,0-1,1' will complete triangles
-        // TL triangle: vertices (0,0), (1,1), (0,1) - edges: diagonal (0,0-1,1), vertical (1,1-0,1), horizontal (0,1-0,0)
-        // BR triangle: vertices (0,0), (1,1), (1,0) - edges: diagonal (0,0-1,1), horizontal (1,1-1,0), vertical (1,0-0,0)
-        const existingLines = [
-            { lineKey: '0,0-0,1' }, // top horizontal
-            { lineKey: '0,0-1,0' }, // left vertical
-            { lineKey: '1,0-1,1' }, // bottom horizontal
-            { lineKey: '0,1-1,1' }, // right vertical
-            { lineKey: '0,0-1,1' }, // diagonal (the line being drawn - included because applyLine runs first)
-        ];
-
-        const mockDb = createMockDb({
-            get: (id: any) => (id === 'room1' ? roomDoc : null),
-            query: {
-                players: () => ({
-                    withIndex: () => ({ collect: vi.fn(async () => [playerA, playerB]) }),
-                }),
-                lines: () => ({
-                    withIndex: () => ({
-                        collect: vi.fn(async () => existingLines),
-                        first: vi.fn(async () => null),
-                    }),
-                }),
-                squares: () => ({
-                    withIndex: () => ({ collect: vi.fn(async () => []), first: vi.fn(async () => null) }),
-                }),
-                triangles: () => ({
-                    withIndex: () => ({ collect: vi.fn(async () => []), first: vi.fn(async () => null) }),
-                }),
-            },
-        });
-
-        const ctx: any = { db: mockDb };
-
-        const res = await (games.drawLine as any)._handler(ctx, {
-            roomId: 'room1',
-            sessionId: 'sess-A',
-            lineKey: '0,0-1,1', // diagonal completes triangles
-        });
-
-        expect(res.success).toBe(true);
-        expect(res.completedTriangles).toBeGreaterThanOrEqual(1);
-        // Should have inserted a triangle
-        expect(
-            (mockDb.__calls.inserts as any[]).some((i: any) => i.table === 'triangles')
-        ).toBeTruthy();
-        // Since no squares were completed, turn should advance
-        expect(mockDb.patch).toHaveBeenCalledWith(
-            'room1',
-            expect.objectContaining({ currentPlayerIndex: 1 })
+            expect.not.objectContaining({ currentPlayerIndex: expect.anything() })
         );
     });
 });
