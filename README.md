@@ -1,4 +1,7 @@
 # ShapeKeeper
+
+<img src="assets/branding/shape-keeper-hero.jpg" alt="The Shape Keeper holding a glowing polyhedron in a constellation of neon shapes" width="384" />
+
 ![Game Version](https://img.shields.io/badge/version-4.3.0-blue)
 
 A modern, browser-based implementation of the classic Dots and Boxes game (reimagined as ShapeKeeper) with adaptive landscape layouts, smooth animations, and touch support.

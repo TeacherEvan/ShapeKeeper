@@ -9,22 +9,22 @@ test.describe('Settings: theme and sound toggles', () => {
         await gotoApp(page);
 
         const root = page.locator('html');
-        // default theme is light
-        await expect(root).toHaveAttribute('data-theme', 'light');
+        // default theme is the cosmic void (dark)
+        await expect(root).toHaveAttribute('data-theme', 'dark');
 
         const themeToggle = page.locator('#themeToggle');
-        await expect(themeToggle).toHaveAttribute('aria-label', 'Switch to dark mode');
-
-        await themeToggle.click();
-        await expect(root).toHaveAttribute('data-theme', 'dark');
         await expect(themeToggle).toHaveAttribute('aria-label', 'Switch to light mode');
 
+        await themeToggle.click();
+        await expect(root).toHaveAttribute('data-theme', 'light');
+        await expect(themeToggle).toHaveAttribute('aria-label', 'Switch to dark mode');
+
         const stored = await page.evaluate(() => localStorage.getItem('shapekeeper_theme'));
-        expect(stored).toBe('dark');
+        expect(stored).toBe('light');
 
         // reload and confirm persistence
         await page.reload();
-        await expect(root).toHaveAttribute('data-theme', 'dark');
+        await expect(root).toHaveAttribute('data-theme', 'light');
     });
 
     test('sound toggle flips muted state and icon', async ({ page }) => {

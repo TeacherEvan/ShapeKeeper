@@ -1,0 +1,326 @@
+/*
+ * ShapeKeeper — Cosmic Identity ("SHAPE KEEPER" / PICKABOO)
+ * Loaded LAST so it repaints the token system for the cosmic-void brand drawn
+ * from assets/branding/shape-keeper-hero.jpg: deep-space backdrops, electric
+ * cyan "keeper" ink, neon-magenta "party" ink, solar amber and neon-lime accents,
+ * and the SHAPE KEEPER wordmark split cyan->blue / magenta->violet.
+ *
+ * Themes: data-theme="dark"  = "void"  (default — matches the promo art)
+ *         data-theme="light" = "dawn"  (daylight nebula variant of the toggle)
+ * Substrate is a soft nebula wash ONLY — no grid lines (product owner:
+ * "Remove colour gridlines!!!").
+ */
+
+/* ───────────────────────── TOKENS — dawn (light) ───────────────────────── */
+:root {
+    --bg-primary: #f4f1ff;
+    --bg-secondary: #e8e3ff;
+    --bg-tertiary: #d9d2ff;
+    --bg-elevated: #ffffff;
+    --text-primary: #131a2e;
+    --text-secondary: #454f70;
+    --text-tertiary: #5b6487; /* AA on #f4f1ff (was #6f7895 = 3.97:1) */
+    --text-inverse: #f6f9ff;
+    --border-color: #c8c1f0;
+    --border-strong: #a89cf0;
+
+    --accent-primary: #0a6d95; /* cosmic cyan — deep enough for inverse text */
+    --accent-primary-hover: #085a7c;
+    --accent-primary-strong: #085a7c;
+    --accent-primary-light: #d6f2fb;
+    --accent-secondary: #7a12d6; /* nebula magenta */
+    --accent-secondary-hover: #660ca8;
+    --accent-secondary-strong: #660ca8;
+    --accent-secondary-light: #ecd9ff;
+    --accent-success: #0d7a6a;
+    --accent-success-hover: #0a6255;
+    --accent-success-light: #d3f5ef;
+    --accent-warning: #a2590a; /* solar amber */
+    --accent-warning-hover: #8a4a06;
+    --accent-warning-strong: #8a4a06;
+    --accent-warning-light: #fdeccd;
+    --accent-danger: #b3234f;
+    --accent-danger-hover: #96153f;
+    --accent-danger-strong: #96153f;
+    --accent-danger-light: #ffdbe6;
+    --accent-neutral: #5f6a86;
+    --accent-neutral-strong: #4a5470;
+
+    --canvas-bg: rgba(244, 241, 255, 0.94);
+    --shadow-color: rgba(19, 26, 46, 0.16);
+    --shadow-color-strong: rgba(19, 26, 46, 0.22);
+
+    /* rgba helper channels for legacy hardcoded-color repaints */
+    --accent-primary-rgb: 10, 109, 149;
+    --accent-secondary-rgb: 122, 18, 214;
+    --accent-danger-rgb: 179, 35, 79;
+    --text-ink-rgb: 19, 26, 46;
+    --grid-line: rgba(19, 26, 46, 0.08);
+    --ink-mark: #8d84c6;
+
+    /* cosmic brand tokens — wordmark + nebula wash + glow */
+    --cosmic-cyan: #00f0ff;
+    --cosmic-blue: #0088ff;
+    --cosmic-magenta: #e000ff;
+    --cosmic-violet: #8a00ff;
+    --cosmic-amber: #ffc700;
+    --cosmic-lime: #22ff00;
+    --cosmic-void: #030611;
+    --cosmic-glow: 0.35;
+    --wordmark-a-from: #0a86ad;
+    --wordmark-a-to: #1746b8;
+    --wordmark-b-from: #a01ad6;
+    --wordmark-b-to: #5f0bb0;
+    --nebula-1: rgba(0, 136, 255, 0.16);
+    --nebula-2: rgba(224, 0, 255, 0.12);
+    --nebula-3: rgba(34, 255, 0, 0.07);
+}
+
+/* ───────────────────────── TOKENS — void (dark, default) ───────────────────────── */
+[data-theme='dark'] {
+    --bg-primary: #030611;
+    --bg-secondary: #0a1230;
+    --bg-tertiary: #0f1c3f;
+    --bg-elevated: #0b1430;
+    --text-primary: #e8f4ff;
+    --text-secondary: #9db8d4;
+    --text-tertiary: #6c85a6;
+    --text-inverse: #030611;
+    --border-color: #1e3260;
+    --border-strong: #2e4a86;
+
+    --accent-primary: #00f0ff;
+    --accent-primary-hover: #6ff8ff;
+    --accent-primary-strong: #6ff8ff;
+    --accent-primary-light: #05323c;
+    --accent-secondary: #e000ff;
+    --accent-secondary-hover: #ff5cff;
+    --accent-secondary-strong: #ff5cff;
+    --accent-secondary-light: #3a0540;
+    --accent-success: #22ff00;
+    --accent-success-hover: #7dff5c;
+    --accent-success-light: #0b2a05;
+    --accent-warning: #ffc700;
+    --accent-warning-hover: #ffd94d;
+    --accent-warning-strong: #ffd94d;
+    --accent-warning-light: #3a2a05;
+    --accent-danger: #ff4d6d;
+    --accent-danger-hover: #ff8098;
+    --accent-danger-strong: #ff8098;
+    --accent-danger-light: #3a0713;
+    --accent-neutral: #7c93b5;
+    --accent-neutral-strong: #9db8d4;
+
+    --canvas-bg: rgba(3, 6, 17, 0.94);
+    --shadow-color: rgba(0, 0, 0, 0.55);
+    --shadow-color-strong: rgba(0, 0, 0, 0.7);
+
+    --accent-primary-rgb: 0, 240, 255;
+    --accent-secondary-rgb: 224, 0, 255;
+    --accent-danger-rgb: 255, 77, 109;
+    --text-ink-rgb: 232, 244, 255;
+    --grid-line: rgba(232, 244, 255, 0.08);
+    --ink-mark: #1f5f8c;
+
+    --cosmic-glow: 0.6;
+    --wordmark-a-from: #00f0ff;
+    --wordmark-a-to: #0088ff;
+    --wordmark-b-from: #ff5cff;
+    --wordmark-b-to: #8a00ff;
+    --nebula-1: rgba(0, 240, 255, 0.17);
+    --nebula-2: rgba(224, 0, 255, 0.15);
+    --nebula-3: rgba(34, 255, 0, 0.06);
+}
+
+/* Status surfaces follow the repainted ink channels */
+:root {
+    --status-success-surface: rgba(10, 109, 149, 0.12);
+    --status-warning-surface: rgba(162, 89, 10, 0.14);
+    --status-danger-surface: rgba(179, 35, 79, 0.12);
+    --status-info-surface: rgba(10, 109, 149, 0.12);
+}
+
+[data-theme='dark'] {
+    --status-success-surface: rgba(0, 240, 255, 0.16);
+    --status-warning-surface: rgba(255, 199, 0, 0.16);
+    --status-danger-surface: rgba(255, 77, 109, 0.16);
+    --status-info-surface: rgba(0, 240, 255, 0.18);
+}
+
+/* ───────────────────────── COSMIC SUBSTRATE ───────────────────────── */
+/* Soft nebula wash only — deliberately no linear-gradient grid pattern. */
+.screen,
+#gameScreen {
+    background-color: var(--bg-primary);
+    background-image:
+        radial-gradient(120% 80% at 8% -12%, var(--nebula-1), transparent 62%),
+        radial-gradient(110% 75% at 96% -6%, var(--nebula-2), transparent 64%),
+        radial-gradient(140% 90% at 50% 118%, var(--nebula-3), transparent 66%);
+    background-repeat: no-repeat;
+}
+
+#winnerScreen {
+    background-color: var(--bg-primary);
+    background-image:
+        radial-gradient(120% 90% at 50% -10%, var(--nebula-2), transparent 60%),
+        radial-gradient(120% 80% at 12% 110%, var(--nebula-1), transparent 60%);
+}
+
+/* ───────────────────────── BRAND PLATE (main-menu hero art) ───────────────────────── */
+.brand-plate-frame {
+    margin: 0 auto 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: plateRise 0.8s var(--easing-emphasis) both;
+}
+
+.brand-plate {
+    display: block;
+    width: min(88%, 340px);
+    /* `height: auto` must be explicit: the width/height presentational hints on
+       the <img> would otherwise pin the box to the attribute value and defeat
+       both the intrinsic 16:9 ratio and the baked crop of the promo art (which
+       carries its own title + PICKABOO lockup below y=225). */
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    background: var(--cosmic-void);
+    box-shadow:
+        var(--shadow-strong),
+        0 0 34px rgba(var(--accent-primary-rgb), 0.18);
+    filter: saturate(1.06) contrast(1.04);
+}
+
+@keyframes plateRise {
+    0% {
+        opacity: 0;
+        transform: translateY(14px) scale(0.97);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Keep the menu above the fold on short viewports — the wordmark carries the brand. */
+@media screen and (max-height: 640px) {
+    .brand-plate-frame {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .brand-plate-frame {
+        animation: none;
+    }
+}
+
+/* ───────────────────────── SHAPE KEEPER WORDMARK ───────────────────────── */
+.welcome-container h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.22em;
+}
+
+.wordmark-shape,
+.wordmark-keeper {
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.wordmark-shape {
+    background-image: linear-gradient(180deg, var(--wordmark-a-from), var(--wordmark-a-to));
+    filter: drop-shadow(0 0 18px rgba(0, 240, 255, var(--cosmic-glow)));
+}
+
+.wordmark-keeper {
+    background-image: linear-gradient(180deg, var(--wordmark-b-from), var(--wordmark-b-to));
+    /* The accessible name stays a single word ("ShapeKeeper"); the visual break
+       between SHAPE and KEEPER is pure spacing. */
+    margin-left: 0.2em;
+    filter: drop-shadow(0 0 18px rgba(224, 0, 255, var(--cosmic-glow)));
+}
+
+/* Dimension line under titles → cyan→magenta brand rule */
+.welcome-container h1::after,
+.lobby-header h1::after,
+.winner-container h1::after {
+    height: 3px;
+    border-radius: 2px;
+    background-image: linear-gradient(90deg, var(--wordmark-a-from), var(--wordmark-b-from));
+    background-size: 96px 3px;
+    background-position: center;
+    background-repeat: no-repeat;
+    box-shadow: 0 0 12px rgba(var(--accent-secondary-rgb), 0.4);
+}
+
+/* ───────────────────────── ACTION INK ───────────────────────── */
+.menu-btn,
+.start-btn {
+    background-image: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-strong));
+    letter-spacing: 0.06em;
+    box-shadow:
+        0 6px 20px rgba(var(--accent-primary-rgb), 0.28),
+        0 0 0 1px rgba(var(--accent-primary-rgb), 0.35) inset;
+}
+
+.menu-btn:hover,
+.start-btn:hover:not(:disabled) {
+    background-image: linear-gradient(135deg, var(--accent-primary-strong), var(--accent-primary));
+    box-shadow:
+        0 10px 30px rgba(var(--accent-primary-rgb), 0.34),
+        0 0 0 1px rgba(var(--accent-primary-rgb), 0.5) inset;
+}
+
+.menu-btn.secondary {
+    background-image: linear-gradient(
+        135deg,
+        var(--accent-secondary),
+        var(--accent-secondary-strong)
+    );
+    box-shadow:
+        0 6px 20px rgba(var(--accent-secondary-rgb), 0.3),
+        0 0 0 1px rgba(var(--accent-secondary-rgb), 0.35) inset;
+}
+
+.menu-btn.secondary:hover {
+    background-image: linear-gradient(
+        135deg,
+        var(--accent-secondary-strong),
+        var(--accent-secondary)
+    );
+    box-shadow:
+        0 10px 30px rgba(var(--accent-secondary-rgb), 0.36),
+        0 0 0 1px rgba(var(--accent-secondary-rgb), 0.5) inset;
+}
+
+/* ───────────────────────── KEEPER PANELS ───────────────────────── */
+.blueprint-card,
+.lobby-settings,
+.players-section,
+.your-settings,
+.room-code-section,
+.winner-container,
+.final-score-entry,
+.checkbox-setting {
+    background: rgba(var(--text-ink-rgb), 0.03);
+    border-color: var(--border-color);
+    box-shadow:
+        var(--shadow-soft),
+        0 0 26px rgba(var(--accent-primary-rgb), 0.06);
+}
+
+.theme-toggle {
+    color: var(--text-primary);
+}
