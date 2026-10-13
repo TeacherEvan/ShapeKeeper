@@ -31,6 +31,7 @@ test.describe('Settings: theme and sound toggles', () => {
         // soundToggle lives in the in-game HUD, so start a local game first
         await gotoApp(page);
         await page.locator('#localPlayBtn').click();
+        await expect(page.locator('#localSetupScreen')).toHaveClass(/active/);
         await page.locator('.local-grid-btn[data-size="5"]').click();
         await page.locator('#startLocalGame').click();
         await expect(page.getByTestId('game-screen')).toHaveClass(/active/);

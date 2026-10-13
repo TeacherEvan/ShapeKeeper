@@ -50,4 +50,11 @@ test.describe('Local setup options', () => {
         await tutorial.check();
         await expect(tutorial).toBeChecked();
     });
+
+    test('colour-blind-safe button sets Okabe-Ito colors', async ({ page }) => {
+        await openLocalSetup(page);
+        await page.locator('#colorblindPalette').click();
+        await expect(page.locator('#player1Color')).toHaveValue('#0072b2');
+        await expect(page.locator('#player2Color')).toHaveValue('#e69f00');
+    });
 });

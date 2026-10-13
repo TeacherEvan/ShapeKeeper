@@ -22,13 +22,18 @@
     position: relative;
     z-index: 1;
     max-width: 42rem;
-    margin: auto;
+    margin: 0 auto;
     padding: clamp(1.5rem, 3vw, 2.5rem);
     text-align: center;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: safe center;
+}
+
+#localSetupScreen .welcome-container,
+#joinScreen .welcome-container {
+    justify-content: flex-start;
 }
 
 .welcome-container h1 {

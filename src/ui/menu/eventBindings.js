@@ -141,6 +141,19 @@ export function bindMenuEventHandlers(deps) {
         showScreen('mainMenuScreen');
     });
 
+    document.getElementById('colorblindPalette')?.addEventListener('click', () => {
+        const p1 = document.getElementById('player1Color');
+        const p2 = document.getElementById('player2Color');
+        if (p1) {
+            p1.value = '#0072B2';
+            p1.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (p2) {
+            p2.value = '#E69F00';
+            p2.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    });
+
     document.getElementById('startLocalGame').addEventListener('click', () => {
         const { welcomeAnimation } = getState();
         const player1Color = document.getElementById('player1Color').value;
