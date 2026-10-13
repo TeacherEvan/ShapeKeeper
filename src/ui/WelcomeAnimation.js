@@ -20,20 +20,27 @@ export class WelcomeAnimation {
         this.mouseInfluenceRadius = 200;
         this.connectionDistance = 140;
         this.particleTypes = ['circle', 'square', 'triangle', 'diamond'];
+        // Cosmic "Shape Keeper" palette — electric cyan, neon magenta, deep blue
+        // and solar amber, sampled from assets/branding/shape-keeper-hero.jpg.
         this.colorPalette = {
             light: [
-                { primary: '#2563eb', secondary: '#3b82f6', accent: '#60a5fa' }, // Blue
-                { primary: '#7c3aed', secondary: '#8b5cf6', accent: '#a78bfa' }, // Purple
-                { primary: '#059669', secondary: '#10b981', accent: '#34d399' }, // Emerald
-                { primary: '#dc2626', secondary: '#ef4444', accent: '#f87171' }, // Red
+                { primary: '#0a86ad', secondary: '#2bb8d6', accent: '#7fe3f5' }, // Cosmic cyan
+                { primary: '#8a12d6', secondary: '#b45cf0', accent: '#dcb0ff' }, // Nebula magenta
+                { primary: '#1f4fd8', secondary: '#4d7bf0', accent: '#a9c2ff' }, // Deep blue
+                { primary: '#a2590a', secondary: '#d98a1f', accent: '#f6c96b' }, // Solar amber
             ],
             dark: [
-                { primary: '#60a5fa', secondary: '#93c5fd', accent: '#bfdbfe' },
-                { primary: '#a78bfa', secondary: '#c4b5fd', accent: '#ddd6fe' },
-                { primary: '#34d399', secondary: '#6ee7b7', accent: '#a7f3d0' },
-                { primary: '#f87171', secondary: '#fca5a5', accent: '#fecaca' },
+                { primary: '#00f0ff', secondary: '#0088ff', accent: '#7ffcff' }, // Cosmic cyan
+                { primary: '#e000ff', secondary: '#8a00ff', accent: '#ff8cff' }, // Nebula magenta
+                { primary: '#ffc700', secondary: '#ff8c00', accent: '#ffe680' }, // Solar amber
+                { primary: '#22ff00', secondary: '#7dff5c', accent: '#c8ffb0' }, // Neon lime
             ],
         };
+        // Canvas clear colour + constellation link ink per theme. These mirror the
+        // cosmic substrate tokens in styles/cosmic-identity.css so the animated
+        // canvas never tints the page off-brand.
+        this.canvasTint = { light: '244, 241, 255', dark: '3, 6, 17' };
+        this.constellationInk = { light: '10, 109, 149', dark: '0, 240, 255' };
 
         this.initializeCanvas();
         this.createParticles();
@@ -319,9 +326,14 @@ export class WelcomeAnimation {
         }
     }
 
-    renderParticles() {
+    /** Resolve a `{ light, dark }` token map against the live document theme. */
+    themedInk(tokenMap) {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const baseBg = isDark ? '12, 8, 30' : '255, 255, 255';
+        return isDark ? tokenMap.dark : tokenMap.light;
+    }
+
+    renderParticles() {
+        const baseBg = this.themedInk(this.canvasTint);
         const fadeAlpha = this.isDimmed ? 0.25 : 0.08;
         const bgColor = `rgba(${baseBg}, ${fadeAlpha})`;
         this.ctx.fillStyle = bgColor;
@@ -349,7 +361,8 @@ export class WelcomeAnimation {
     }
 
     drawConnections(alpha) {
-        this.ctx.strokeStyle = `rgba(100, 100, 120, ${alpha * 0.15})`;
+        const linkInk = this.themedInk(this.constellationInk);
+        this.ctx.strokeStyle = `rgba(${linkInk}, ${alpha * 0.15})`;
         this.ctx.lineWidth = 0.8;
 
         for (let i = 0; i < this.floatingParticles.length; i++) {
@@ -368,7 +381,7 @@ export class WelcomeAnimation {
                         alpha *
                         0.15 *
                         (1 - distSq / (this.connectionDistance * this.connectionDistance));
-                    this.ctx.strokeStyle = `rgba(100, 100, 120, ${opacity})`;
+                    this.ctx.strokeStyle = `rgba(${linkInk}, ${opacity})`;
                     this.ctx.beginPath();
                     this.ctx.moveTo(p1.x, p1.y);
                     this.ctx.lineTo(p2.x, p2.y);

@@ -5,7 +5,10 @@
  */
 
 const STORAGE_KEY = 'shapekeeper_theme';
-const DEFAULT_THEME = 'light';
+// Cosmic identity default: the "void" theme is the brand look (see
+// styles/cosmic-identity.css); 'light' is the daylight "dawn" nebula variant.
+// index.html ships data-theme="dark" so there is no flash before this runs.
+const DEFAULT_THEME = 'dark';
 
 /**
  * Initialize theme from localStorage or default

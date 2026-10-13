@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -15,7 +15,7 @@
             content="game, ShapeKeeper, dots and boxes, multiplayer, browser game"
         />
         <meta name="author" content="Teacher Evan" />
-        <meta name="theme-color" content="#4CAF50" />
+        <meta name="theme-color" content="#030611" />
 
         <!-- Open Graph / Social -->
         <meta property="og:title" content="ShapeKeeper" />
@@ -24,12 +24,20 @@
             content="A modern territory capture game with multiplayer support"
         />
         <meta property="og:type" content="website" />
-
-        <!-- Favicon -->
-        <link
-            rel="icon"
-            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>"
+        <meta property="og:url" content="https://shape-keeper.vercel.app/" />
+        <meta property="og:image" content="https://shape-keeper.vercel.app/assets/branding/shape-keeper-hero.jpg" />
+        <meta property="og:image:width" content="384" />
+        <meta property="og:image:height" content="305" />
+        <meta
+            property="og:image:alt"
+            content="The Shape Keeper holding a glowing polyhedron in a constellation of neon shapes"
         />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://shape-keeper.vercel.app/assets/branding/shape-keeper-hero.jpg" />
+
+        <!-- Favicon: hexagonal ShapeKeeper mark (matches assets/branding/shape-keeper-mark.svg) -->
+        <link rel="icon" type="image/svg+xml" href="assets/branding/shape-keeper-mark.svg" />
+        <link rel="apple-touch-icon" href="assets/branding/shape-keeper-mark.svg" />
 
         <!-- Preload critical CSS -->
         <link rel="stylesheet" href="styles.css" />
@@ -68,7 +76,21 @@
             >
                 <canvas id="welcomeCanvas" aria-hidden="true"></canvas>
                 <div class="welcome-container">
-                    <h1 id="mainMenuTitle">ShapeKeeper</h1>
+                    <figure class="brand-plate-frame">
+                        <img
+                            class="brand-plate"
+                            src="assets/branding/shape-keeper-plate.jpg"
+                            alt="The Shape Keeper: a hooded figure holding a glowing polyhedron among neon geometric shapes"
+                            width="384"
+                            height="216"
+                            decoding="async"
+                        />
+                    </figure>
+                    <h1 id="mainMenuTitle">
+                        <span class="wordmark-shape">Shape</span><span class="wordmark-keeper"
+                            >Keeper</span
+                        >
+                    </h1>
                     <p class="credit">Created by Teacher Evan</p>
 
                     <div class="menu-options">
