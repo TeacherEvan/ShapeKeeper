@@ -31,8 +31,12 @@ describe('convex module hygiene', () => {
             for (const m of text.matchAll(re)) {
                 const base = resolve(dirname(file), m[1]);
                 const candidates = [
-                    base, `${base}.ts`, `${base}.js`, `${base}.tsx`,
-                    join(base, 'index.ts'), join(base, 'index.js'),
+                    base,
+                    `${base}.ts`,
+                    `${base}.js`,
+                    `${base}.tsx`,
+                    join(base, 'index.ts'),
+                    join(base, 'index.js'),
                     base.replace(/\.js$/, '.ts'),
                 ];
                 if (!candidates.some((c) => existsSync(c) && statSync(c).isFile())) {
