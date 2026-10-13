@@ -30,6 +30,8 @@ describe('rooms.createRoom', () => {
     expect(res.roomCode).toHaveLength(6);
     // Room inserted and player inserted
     expect(db.__calls.inserts.some((i: any) => i.table === 'rooms')).toBeTruthy();
+    const roomInsert = db.__calls.inserts.find((i: any) => i.table === 'rooms');
+    expect(roomInsert.doc.partyMode).toBeUndefined();
     expect(db.__calls.inserts.some((i: any) => i.table === 'players')).toBeTruthy();
   });
 });

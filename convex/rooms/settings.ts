@@ -47,52 +47,6 @@ export async function updateGridSizeHandler(ctx: any, args: any) {
     return { success: true };
 }
 
-export async function updatePartyModeHandler(ctx: any, args: any) {
-    log('[updatePartyMode] Update party mode request', {
-        roomId: args.roomId,
-        sessionId: args.sessionId,
-        newPartyMode: args.partyMode,
-    });
-
-    const room = await ctx.db.get(args.roomId);
-    if (!room) {
-        log('[updatePartyMode] Error: Room not found', { roomId: args.roomId });
-        return { error: 'Room not found' };
-    }
-
-    if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
-        log('[updatePartyMode] Error: Unauthorized host', {
-            roomId: args.roomId,
-            requestingSession: args.sessionId,
-            hostSession: room.hostPlayerId,
-            hasHostTokenHash: Boolean(room.hostTokenHash),
-            hasPresentedToken: Boolean(args.hostToken),
-        });
-        return { error: 'Unauthorized' };
-    }
-
-    if (room.status !== 'lobby') {
-        log('[updatePartyMode] Error: Game in progress', {
-            roomId: args.roomId,
-            status: room.status,
-        });
-        return { error: 'Cannot change party mode while game is in progress' };
-    }
-
-    await ctx.db.patch(args.roomId, {
-        partyMode: args.partyMode,
-        updatedAt: Date.now(),
-    });
-
-    log('[updatePartyMode] Party mode updated', {
-        roomId: args.roomId,
-        oldPartyMode: room.partyMode,
-        newPartyMode: args.partyMode,
-    });
-
-    return { success: true };
-}
-
 export async function startGameHandler(ctx: any, args: any) {
     log('[startGame] Start game request', {
         roomId: args.roomId,
@@ -167,7 +121,6 @@ export async function startGameHandler(ctx: any, args: any) {
         roomId: args.roomId,
         playerCount: players.length,
         gridSize: room.gridSize,
-        partyMode: room.partyMode,
     });
 
     return { success: true };

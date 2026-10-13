@@ -7,7 +7,6 @@ export async function createRoomHandler(ctx: any, args: any) {
         sessionId: args.sessionId,
         playerName: args.playerName,
         gridSize: args.gridSize,
-        partyMode: args.partyMode,
     });
 
     let roomCode = generateSecureRoomCode();
@@ -36,7 +35,6 @@ export async function createRoomHandler(ctx: any, args: any) {
         hostPlayerId: args.sessionId,
         hostTokenHash: hostTokenHash ?? undefined,
         gridSize: args.gridSize,
-        partyMode: args.partyMode !== false,
         status: 'lobby',
         currentPlayerIndex: 0,
         createdAt: now,

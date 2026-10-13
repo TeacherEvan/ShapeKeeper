@@ -7,6 +7,7 @@ export const createRoom = mutation({
     sessionId: v.string(),
     playerName: v.string(),
     gridSize: v.number(),
+    // DEPRECATED: Party Mode removed; accepted and ignored for backward compatibility. Do not use.
     partyMode: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
@@ -38,7 +39,6 @@ export const createRoom = mutation({
       hostPlayerId: args.sessionId,
       hostTokenHash,
       gridSize: args.gridSize,
-      partyMode: args.partyMode !== false,
       status: 'lobby',
       currentPlayerIndex: 0,
       createdAt: now,

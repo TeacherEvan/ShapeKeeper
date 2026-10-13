@@ -14,7 +14,7 @@ export default defineSchema({
         // legacy rooms.
         hostTokenHash: v.optional(v.string()),
         gridSize: v.number(), // 5, 10, 20, or 30
-        partyMode: v.optional(v.boolean()), // Party mode enabled (tile effects)
+        partyMode: v.optional(v.boolean()), // DEPRECATED: Party Mode removed; accepted and ignored for backward compatibility. Do not use.
         status: v.union(v.literal('lobby'), v.literal('playing'), v.literal('finished')),
         currentPlayerIndex: v.number(), // Index into players array for current turn
         createdAt: v.number(),

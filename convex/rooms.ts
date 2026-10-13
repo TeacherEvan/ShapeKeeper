@@ -22,8 +22,6 @@ export { updatePlayer } from './mutations/updatePlayer';
 // this deploy (the handler falls back to a sessionId-only check for those).
 export { updateGridSize } from './mutations/updateGridSize';
 
-// Update party mode (host only).
-export { updatePartyMode } from './mutations/updatePartyMode';
 
 // Get room by code (for joining)
 export { getRoomByCode } from './queries/roomQueries';

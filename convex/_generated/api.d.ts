@@ -23,7 +23,6 @@ import type * as mutations_leaveRoom from "../mutations/leaveRoom.js";
 import type * as mutations_startGame from "../mutations/startGame.js";
 import type * as mutations_toggleReady from "../mutations/toggleReady.js";
 import type * as mutations_updateGridSize from "../mutations/updateGridSize.js";
-import type * as mutations_updatePartyMode from "../mutations/updatePartyMode.js";
 import type * as mutations_updatePlayer from "../mutations/updatePlayer.js";
 import type * as queries_roomQueries from "../queries/roomQueries.js";
 import type * as rateLimit from "../rateLimit.js";
@@ -58,7 +57,6 @@ declare const fullApi: ApiFromModules<{
   "mutations/startGame": typeof mutations_startGame;
   "mutations/toggleReady": typeof mutations_toggleReady;
   "mutations/updateGridSize": typeof mutations_updateGridSize;
-  "mutations/updatePartyMode": typeof mutations_updatePartyMode;
   "mutations/updatePlayer": typeof mutations_updatePlayer;
   "queries/roomQueries": typeof queries_roomQueries;
   rateLimit: typeof rateLimit;
