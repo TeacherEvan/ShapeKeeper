@@ -27,6 +27,7 @@ const DEFAULT_WINDOWS = {
     // allow a short burst for retries but cap the long-term rate.
     revealMultiplier: { max: 4, windowMs: 5000 },
     populateLines: { max: 4, windowMs: 5000 },
+    requestRematch: { max: 4, windowMs: 5000 },
 };
 
 export async function checkRateLimit(ctx, action, sessionId, opts = {}) {

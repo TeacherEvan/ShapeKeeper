@@ -10,6 +10,7 @@ describe('live game API surface', () => {
         'endGame',
         'resetGame',
         'populateLines',
+        'requestRematch',
     ])('registers %s', (name) => {
         expect((games as any)[name]).toBeDefined();
     });

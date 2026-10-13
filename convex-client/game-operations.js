@@ -128,11 +128,27 @@
         );
     }
 
+    async function requestRematch() {
+        if (!shared.state.currentRoomId) {
+            return { error: 'Not in a room' };
+        }
+
+        return shared.runMutation(
+            shared.api.games.requestRematch,
+            {
+                roomId: shared.state.currentRoomId,
+                sessionId: shared.getSessionId(),
+            },
+            'requesting rematch'
+        );
+    }
+
     windowObject.ShapeKeeperConvexGameOperations = {
         drawLine,
         endGame,
         getGameState,
         populateLines,
+        requestRematch,
         resetGame,
         revealMultiplier,
         tapSquare,

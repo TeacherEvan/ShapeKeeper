@@ -16,7 +16,12 @@ export const getRoomByCode = query({
       .withIndex('by_room', (q: any) => q.eq('roomId', room._id))
       .collect();
 
-    return { ...room, players: players.sort((a: any, b: any) => a.playerIndex - b.playerIndex) };
+    const { rematchVotes, ...roomData } = room;
+    return {
+      ...roomData,
+      rematchVoteCount: (rematchVotes ?? []).length,
+      players: players.sort((a: any, b: any) => a.playerIndex - b.playerIndex),
+    };
   },
 });
 
@@ -31,6 +36,11 @@ export const getRoom = query({
       .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
       .collect();
 
-    return { ...room, players: players.sort((a: any, b: any) => a.playerIndex - b.playerIndex) };
+    const { rematchVotes, ...roomData } = room;
+    return {
+      ...roomData,
+      rematchVoteCount: (rematchVotes ?? []).length,
+      players: players.sort((a: any, b: any) => a.playerIndex - b.playerIndex),
+    };
   },
 });

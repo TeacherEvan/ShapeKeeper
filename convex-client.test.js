@@ -131,6 +131,10 @@ describe('Connection Pooling (window.ShapeKeeperConvex)', () => {
         // Removed listener must not receive further notifications.
         expect(seen.length).toBe(beforeLen);
     });
+
+    it('exposes requestRematch on ShapeKeeperConvex', () => {
+        expect(typeof window.ShapeKeeperConvex.requestRematch).toBe('function');
+    });
 });
 
 describe('Connection Lifecycle', () => {

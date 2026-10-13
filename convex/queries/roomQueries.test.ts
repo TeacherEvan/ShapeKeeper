@@ -93,4 +93,18 @@ describe('queries/roomQueries', () => {
         expect(res.lastTurnClientSentAt).toBe(950);
         expect(res.lastTurnServerReceivedAt).toBe(1000);
     });
+
+    it('strips rematchVotes array and exposes rematchVoteCount', async () => {
+        const room = {
+            _id: 'r1',
+            roomCode: 'XYZ',
+            status: 'finished',
+            rematchVotes: ['sess-1', 'sess-2'],
+        };
+        const ctx: any = { db: makeDb({ room, players: [] }) };
+
+        const res = await (getRoom as any)._handler(ctx, { roomId: 'r1' });
+        expect(res.rematchVoteCount).toBe(2);
+        expect((res as any).rematchVotes).toBeUndefined();
+    });
 });

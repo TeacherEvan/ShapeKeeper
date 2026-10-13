@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { internalMutation, mutation, query } from './_generated/server';
 import { drawLineHandler } from './games/draw';
+import { requestRematchHandler } from './games/rematch';
 import { POPULATE_PLAYER_INDEX } from './games/shared';
 import { expireTurnHandler } from './games/turnTimer';
 import { log, errorLog, warn } from './log';
@@ -76,6 +77,15 @@ export const resetGame = mutation({
         hostToken: v.optional(v.string()),
     },
     handler: resetGameHandler,
+});
+
+// Request rematch (consent-based, requires all connected players).
+export const requestRematch = mutation({
+    args: {
+        roomId: v.id('rooms'),
+        sessionId: v.string(),
+    },
+    handler: requestRematchHandler,
 });
 
 /**

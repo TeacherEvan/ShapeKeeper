@@ -12,6 +12,7 @@ import type * as auth_token from "../auth/token.js";
 import type * as games from "../games.js";
 import type * as games_draw from "../games/draw.js";
 import type * as games_lineValidation from "../games/lineValidation.js";
+import type * as games_rematch from "../games/rematch.js";
 import type * as games_shared from "../games/shared.js";
 import type * as games_squares from "../games/squares.js";
 import type * as games_state from "../games/state.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   games: typeof games;
   "games/draw": typeof games_draw;
   "games/lineValidation": typeof games_lineValidation;
+  "games/rematch": typeof games_rematch;
   "games/shared": typeof games_shared;
   "games/squares": typeof games_squares;
   "games/state": typeof games_state;

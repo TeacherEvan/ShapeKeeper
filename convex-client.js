@@ -57,6 +57,7 @@
         getGameState: gameOperations.getGameState,
         endGame: gameOperations.endGame,
         resetGame: gameOperations.resetGame,
+        requestRematch: gameOperations.requestRematch,
         getCurrentRoomId: shared.getCurrentRoomId,
         setCurrentRoomId: shared.setCurrentRoomId,
         closeConnection: shared.closeConnection,

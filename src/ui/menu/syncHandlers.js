@@ -4,9 +4,12 @@
 
 import { DotsAndBoxesGame } from '../../../dots-and-boxes-game.js';
 import { createTurnClockController } from '../../timing/turn-clock-controller.js';
+import { showScreen } from '../ScreenTransition.js';
+import { announceStatus } from '../AccessibilityAnnouncer.js';
 
 // turnClockController is module-scoped, reset on new match.
 let turnClockController = null;
+let announcedRematchVote = false;
 
 export function handleRoomStateUpdate(roomState, deps) {
     const {
@@ -227,13 +230,42 @@ export function handleAuthoritativeGameState(gameState, deps) {
 
     game.uiManager.updatePopulateButtonVisibility();
 
-    if (gameState.room?.status === 'finished' && !game.gameOverHandled) {
-        // Use a dedicated flag rather than `game.isGameOver`. Elsewhere the
-        // game-over state is a METHOD on gameState (`this.gameState.isGameOver()`),
-        // so overwriting `game.isGameOver` as a boolean here causes a
-        // property/method collision that breaks those checks.
-        game.gameOverHandled = true;
-        game.showWinner();
+    if (gameState.room?.status === 'finished') {
+        if (!game.gameOverHandled) {
+            game.gameOverHandled = true;
+            game.showWinner();
+        }
+        if ((gameState.room.rematchVoteCount ?? 0) > 0 && !announcedRematchVote) {
+            const isWinnerScreenActive =
+                document.getElementById('winnerScreen')?.classList?.contains('active') &&
+                !document.getElementById('winnerScreen')?.hidden;
+            if (isWinnerScreenActive) {
+                announcedRematchVote = true;
+                announceStatus('Opponent wants a rematch');
+            }
+        }
+    } else {
+        announcedRematchVote = false;
+    }
+
+    if (gameState.room?.status === 'playing' && game.gameOverHandled) {
+        game.gameOverHandled = false;
+        game.lines?.clear?.();
+        game.lineOwners?.clear?.();
+        game.lineDrawings = [];
+        game.pulsatingLines = [];
+        game.squares = {};
+        game.squareMultipliers = {};
+        if (game.squareTaps) game.squareTaps = {};
+        game.claimedCells?.clear?.();
+        game.scores[1] = 0;
+        game.scores[2] = 0;
+        const btn = document.getElementById('playAgain');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Play Again';
+        }
+        showScreen('gameScreen');
     }
 
     game.draw();

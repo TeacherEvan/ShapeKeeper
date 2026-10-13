@@ -235,6 +235,37 @@ export async function endGameHandler(ctx: any, args: any) {
     return { success: true };
 }
 
+export async function clearRoomBoard(ctx: any, roomId: any, opts: { resetReady: boolean }) {
+    const lines = await ctx.db
+        .query('lines')
+        .withIndex('by_room', (q: any) => q.eq('roomId', roomId))
+        .collect();
+    for (const line of lines) {
+        await ctx.db.delete(line._id);
+    }
+    log('[resetGame] Lines deleted', { count: lines.length });
+
+    const squares = await ctx.db
+        .query('squares')
+        .withIndex('by_room', (q: any) => q.eq('roomId', roomId))
+        .collect();
+    for (const square of squares) {
+        await ctx.db.delete(square._id);
+    }
+    log('[resetGame] Squares deleted', { count: squares.length });
+
+    const players = await ctx.db
+        .query('players')
+        .withIndex('by_room', (q: any) => q.eq('roomId', roomId))
+        .collect();
+    for (const player of players) {
+        await ctx.db.patch(player._id, opts.resetReady ? { score: 0, isReady: false } : { score: 0 });
+    }
+    log('[resetGame] Player scores reset', { playerCount: players.length });
+
+    return { linesDeleted: lines.length, squaresDeleted: squares.length, playersReset: players.length };
+}
+
 export async function resetGameHandler(ctx: any, args: any) {
     log('[resetGame] Reset request', {
         roomId: args.roomId,
@@ -258,32 +289,9 @@ export async function resetGameHandler(ctx: any, args: any) {
         return { error: 'Unauthorized' };
     }
 
-    const lines = await ctx.db
-        .query('lines')
-        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
-        .collect();
-    for (const line of lines) {
-        await ctx.db.delete(line._id);
-    }
-    log('[resetGame] Lines deleted', { count: lines.length });
-
-    const squares = await ctx.db
-        .query('squares')
-        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
-        .collect();
-    for (const square of squares) {
-        await ctx.db.delete(square._id);
-    }
-    log('[resetGame] Squares deleted', { count: squares.length });
-
-    const players = await ctx.db
-        .query('players')
-        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
-        .collect();
-    for (const player of players) {
-        await ctx.db.patch(player._id, { score: 0, isReady: false });
-    }
-    log('[resetGame] Player scores reset', { playerCount: players.length });
+    const { linesDeleted, squaresDeleted, playersReset } = await clearRoomBoard(ctx, args.roomId, {
+        resetReady: true,
+    });
 
     await ctx.db.patch(args.roomId, {
         status: 'lobby',
@@ -295,9 +303,9 @@ export async function resetGameHandler(ctx: any, args: any) {
 
     log('[resetGame] Game reset complete', {
         roomId: args.roomId,
-        linesDeleted: lines.length,
-        squaresDeleted: squares.length,
-        playersReset: players.length,
+        linesDeleted,
+        squaresDeleted,
+        playersReset,
     });
 
     return { success: true };
