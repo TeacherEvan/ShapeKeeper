@@ -47,14 +47,13 @@
     shared.getHostToken = getHostToken;
     shared.clearHostToken = clearHostToken;
 
-    async function createRoom(playerName, gridSize, partyMode = false) {
+    async function createRoom(playerName, gridSize) {
         const result = await shared.runMutation(
             shared.api.rooms.createRoom,
             {
                 sessionId: shared.getSessionId(),
                 playerName,
                 gridSize,
-                partyMode,
             },
             'creating room'
         );
@@ -157,23 +156,6 @@
         );
     }
 
-    async function updatePartyMode(partyMode) {
-        if (!shared.state.currentRoomId) {
-            return { error: 'Not in a room' };
-        }
-
-        return shared.runMutation(
-            shared.api.rooms.updatePartyMode,
-            {
-                roomId: shared.state.currentRoomId,
-                sessionId: shared.getSessionId(),
-                hostToken: getHostToken(shared.state.currentRoomId),
-                partyMode,
-            },
-            'updating party mode'
-        );
-    }
-
     async function startGame(_roomId) {
         if (!shared.state.currentRoomId) {
             return { error: 'Not in a room' };
@@ -225,7 +207,6 @@
         startGame,
         toggleReady,
         updateGridSize,
-        updatePartyMode,
         updatePlayer,
     };
 })(window);

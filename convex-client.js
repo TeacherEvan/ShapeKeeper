@@ -44,7 +44,6 @@
         toggleReady: roomOperations.toggleReady,
         updatePlayer: roomOperations.updatePlayer,
         updateGridSize: roomOperations.updateGridSize,
-        updatePartyMode: roomOperations.updatePartyMode,
         startGame: roomOperations.startGame,
         drawLine: gameOperations.drawLine,
         revealMultiplier: gameOperations.revealMultiplier,
