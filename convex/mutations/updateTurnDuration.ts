@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
 import { getHostTokenHash } from '../utils/roomUtils';
 import { ALLOWED_TURN_DURATIONS_MS } from '../games/turnTimer';
+import { checkRateLimit } from '../rateLimit';
 
 export const updateTurnDuration = mutation({
     args: {
@@ -11,6 +12,9 @@ export const updateTurnDuration = mutation({
         turnDurationMs: v.number(),
     },
     handler: async (ctx, args) => {
+        const rl = await checkRateLimit(ctx, 'updateTurnDuration', args.sessionId);
+        if (!rl.allowed) return { error: 'Rate limit exceeded', resetMs: rl.resetMs };
+
         const room = await ctx.db.get(args.roomId);
         if (!room) return { error: 'Room not found' };
 

@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
 import { DEFAULT_COLORS, generateRoomCode, getHostTokenHash } from '../utils/roomUtils';
 import { DEFAULT_TURN_DURATION_MS } from '../games/turnTimer';
+import { checkRateLimit } from '../rateLimit';
 
 export const createRoom = mutation({
   args: {
@@ -12,6 +13,9 @@ export const createRoom = mutation({
     partyMode: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const rl = await checkRateLimit(ctx, 'createRoom', args.sessionId);
+    if (!rl.allowed) return { error: 'Rate limit exceeded', resetMs: rl.resetMs };
+
     // Generate unique room code
     let roomCode = generateRoomCode();
     let existingRoom = await ctx.db

@@ -19,8 +19,29 @@ interface MakeDbOptions {
 function makeDb(options: MakeDbOptions = {}) {
     const { room = null, players = [] } = options;
     const calls: any = { inserts: [], patches: [] };
+    const store = new Map<string, any>();
     return {
         query: vi.fn((tableName: string) => {
+            if (tableName === 'rateLimits') {
+                return {
+                    withIndex: (_idx: string, buildFilter: any) => {
+                        const filterArgs: any = {};
+                        buildFilter({
+                            eq: (k: string, v: any) => {
+                                filterArgs[k] = v;
+                            },
+                        });
+                        return {
+                            unique: async () => {
+                                for (const row of store.values()) {
+                                    if (row.key === filterArgs.key) return row;
+                                }
+                                return null;
+                            },
+                        };
+                    },
+                };
+            }
             if (tableName === 'rooms') {
                 return { withIndex: () => ({ first: async () => room }) } as any;
             }
@@ -32,10 +53,17 @@ function makeDb(options: MakeDbOptions = {}) {
             return { withIndex: () => ({ first: async () => null, collect: async () => [] }) } as any;
         }),
         insert: vi.fn(async (table: string, doc: any) => {
+            const id = `${table}_id_${calls.inserts.length + 1}`;
+            const row = { _id: id, ...doc };
+            store.set(id, row);
             calls.inserts.push({ table, doc });
-            return `${table}_id_${calls.inserts.length}`;
+            return id;
         }),
-        patch: vi.fn(async () => true),
+        patch: vi.fn(async (id: string, patch: any) => {
+            const row = store.get(id);
+            if (row) Object.assign(row, patch);
+            return true;
+        }),
         __calls: calls,
     } as any;
 }
@@ -81,5 +109,30 @@ describe('mutations/joinRoom', () => {
             playerName: 'TooMany',
         });
         expect(res).toEqual({ error: 'Room is full (max 6 players)' });
+    });
+
+    it('rate limits after 10 calls within 10s', async () => {
+        const room: MockRoom = { _id: 'room-1', roomCode: 'ABC123', status: 'lobby' };
+        const db = makeDb({ room, players: [] });
+        const ctx: any = { db };
+
+        for (let i = 0; i < 10; i++) {
+            const res = await (joinRoom as any)._handler(ctx, {
+                roomCode: 'ABC123',
+                sessionId: 'spammer',
+                playerName: `Player${i}`,
+            });
+            expect(res.error).toBeUndefined();
+        }
+
+        const blocked = await (joinRoom as any)._handler(ctx, {
+            roomCode: 'ABC123',
+            sessionId: 'spammer',
+            playerName: 'Player10',
+        });
+        expect(blocked).toEqual({
+            error: 'Rate limit exceeded',
+            resetMs: expect.any(Number),
+        });
     });
 });

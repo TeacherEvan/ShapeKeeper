@@ -28,6 +28,12 @@ const DEFAULT_WINDOWS = {
     revealMultiplier: { max: 4, windowMs: 5000 },
     populateLines: { max: 4, windowMs: 5000 },
     requestRematch: { max: 4, windowMs: 5000 },
+    tapSquare: { max: 6, windowMs: 5000 },
+    createRoom: { max: 5, windowMs: 60000 },
+    joinRoom: { max: 10, windowMs: 10000 },
+    toggleReady: { max: 10, windowMs: 5000 },
+    updatePlayer: { max: 10, windowMs: 5000 },
+    updateTurnDuration: { max: 6, windowMs: 5000 },
 };
 
 export async function checkRateLimit(ctx, action, sessionId, opts = {}) {

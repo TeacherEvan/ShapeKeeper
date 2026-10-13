@@ -146,6 +146,11 @@ export async function revealMultiplierHandler(ctx: any, args: any) {
  *   - truthOrDare squares are immune to taps.
  */
 export async function tapSquareHandler(ctx: any, args: any) {
+    const rl = await checkRateLimit(ctx, 'tapSquare', args.sessionId);
+    if (!rl.allowed) {
+        return { error: 'Rate limit exceeded', resetMs: rl.resetMs };
+    }
+
     console.log('[tapSquare] Tap request', {
         roomId: args.roomId,
         sessionId: args.sessionId,

@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
+import { checkRateLimit } from '../rateLimit';
 
 export const updatePlayer = mutation({
     args: {
@@ -9,6 +10,9 @@ export const updatePlayer = mutation({
         color: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
+        const rl = await checkRateLimit(ctx, 'updatePlayer', args.sessionId);
+        if (!rl.allowed) return { error: 'Rate limit exceeded', resetMs: rl.resetMs };
+
         const player = await ctx.db
             .query('players')
             .withIndex('by_room_and_session', (q: any) => q.eq('roomId', args.roomId).eq('sessionId', args.sessionId))

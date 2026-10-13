@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
 import { DEFAULT_COLORS } from '../utils/roomUtils';
+import { checkRateLimit } from '../rateLimit';
 
 export const joinRoom = mutation({
   args: {
@@ -10,6 +11,9 @@ export const joinRoom = mutation({
     passcode: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const rl = await checkRateLimit(ctx, 'joinRoom', args.sessionId);
+    if (!rl.allowed) return { error: 'Rate limit exceeded', resetMs: rl.resetMs };
+
     const room = await ctx.db
       .query('rooms')
       .withIndex('by_code', (q: any) => q.eq('roomCode', args.roomCode.toUpperCase()))

@@ -15,7 +15,7 @@ function makeMockCtx() {
     let nextId = 0;
     return {
         db: {
-            query: (table) => ({
+            query: (_table) => ({
                 withIndex: (_name, buildFilter) => {
                     const filterArgs = {};
                     const builder = {
@@ -45,8 +45,8 @@ function makeMockCtx() {
                     };
                 },
             }),
-            insert: async (table, doc) => {
-                const id = `${table}:${++nextId}`;
+            insert: async (_table, doc) => {
+                const id = `${_table}:${++nextId}`;
                 const row = { _id: id, _creationTime: Date.now(), ...doc };
                 store.set(id, row);
                 return id;
@@ -69,7 +69,18 @@ describe('checkRateLimit (N9 follow-up)', () => {
 
     it('exposes the canonical action list', () => {
         expect(RATE_LIMIT_ACTIONS).toEqual(
-            expect.arrayContaining(['drawLine', 'revealMultiplier', 'populateLines'])
+            expect.arrayContaining([
+                'drawLine',
+                'revealMultiplier',
+                'populateLines',
+                'requestRematch',
+                'tapSquare',
+                'createRoom',
+                'joinRoom',
+                'toggleReady',
+                'updatePlayer',
+                'updateTurnDuration',
+            ])
         );
     });
 

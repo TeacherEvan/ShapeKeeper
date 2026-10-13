@@ -6,7 +6,7 @@
  * never halves further, and truthOrDare is immune.
  */
 import { describe, it, expect } from 'vitest';
-import { computeEffectiveMultiplier } from './state';
+import { computeEffectiveMultiplier, tapSquareHandler } from './state';
 
 describe('computeEffectiveMultiplier — initial state', () => {
     it('returns the raw multiplier when taps = 0', () => {
@@ -77,5 +77,69 @@ describe('computeEffectiveMultiplier — null/undefined', () => {
 
     it('returns undefined when multiplier is undefined', () => {
         expect(computeEffectiveMultiplier(undefined, 0)).toBeUndefined();
+    });
+});
+
+describe('tapSquareHandler rate limiting', () => {
+    it('rate limits after 6 calls within 5s', async () => {
+        const store = new Map();
+        const db: any = {
+            query: (table: string) => {
+                if (table === 'rateLimits') {
+                    return {
+                        withIndex: (_idx: string, buildFilter: any) => {
+                            const filterArgs: any = {};
+                            buildFilter({
+                                eq: (k: string, v: any) => {
+                                    filterArgs[k] = v;
+                                },
+                            });
+                            return {
+                                unique: async () => {
+                                    for (const row of store.values()) {
+                                        if (row.key === filterArgs.key) return row;
+                                    }
+                                    return null;
+                                },
+                            };
+                        },
+                    };
+                }
+                return {
+                    withIndex: () => ({ first: async () => null }),
+                };
+            },
+            insert: async (table: string, doc: any) => {
+                const id = `${table}_id_${store.size + 1}`;
+                store.set(id, { _id: id, ...doc });
+                return id;
+            },
+            patch: async (id: string, patch: any) => {
+                const row = store.get(id);
+                if (row) Object.assign(row, patch);
+                return true;
+            },
+            get: async () => null,
+        };
+        const ctx: any = { db };
+
+        for (let i = 0; i < 6; i++) {
+            const res = await tapSquareHandler(ctx, {
+                roomId: 'r1',
+                sessionId: 'spammer',
+                squareKey: '0,0',
+            });
+            expect(res).toEqual({ error: 'Room not found' });
+        }
+
+        const blocked = await tapSquareHandler(ctx, {
+            roomId: 'r1',
+            sessionId: 'spammer',
+            squareKey: '0,0',
+        });
+        expect(blocked).toEqual({
+            error: 'Rate limit exceeded',
+            resetMs: expect.any(Number),
+        });
     });
 });
