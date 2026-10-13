@@ -4,28 +4,33 @@ import { EffectSystem } from './effect-system.js';
 
 function makeGame(overrides = {}) {
     return {
-        tileEffects: {},
-        revealedEffects: new Set(),
-        gameLogic: { getCellOwnerForEffects: vi.fn(() => 1), parseSquareKey: (k) => k },
-        soundManager: { playEffectRevealSound: vi.fn() },
-        particleSystem: { createEffectParticles: vi.fn() },
+        gridRows: 6,
+        gridCols: 6,
+        squareMultipliers: {},
+        revealedMultipliers: new Set(),
+        scores: { 1: 5, 2: 3 },
+        squares: { '0,0': 1 },
         draw: vi.fn(),
+        uiManager: { updateUI: vi.fn() },
+        animationSystem: { triggerMultiplierAnimation: vi.fn() },
+        particleSystem: { createMultiplierParticles: vi.fn() },
+        gameLogic: { parseSquareKey: (_k) => ({ row: 0, col: 0 }) },
+        offsetX: 0,
+        offsetY: 0,
+        cellSize: 50,
         ...overrides,
     };
 }
 
-describe('EffectSystem — delegation & modal', () => {
-    it('constructs and creates the effect modal via the injected factory', () => {
+describe('EffectSystem — delegation', () => {
+    it('constructs and sets game reference', () => {
         const game = makeGame();
         const sys = new EffectSystem(game);
         expect(sys.game).toBe(game);
-        // createEffectModal runs on construction (real import); just ensure state is sane
-        expect(sys.pendingEffect).toBeNull();
-        expect(sys.oracleVisionActive).toBe(false);
     });
 
     it('initializeMultipliers delegates to the game multiplier store', () => {
-        const game = makeGame({ gridRows: 6, gridCols: 6, squareMultipliers: {} });
+        const game = makeGame();
         const sys = new EffectSystem(game);
         sys.initializeMultipliers();
         // 5x5 grid of squares => 25 squares, every square gets a multiplier
@@ -36,70 +41,43 @@ describe('EffectSystem — delegation & modal', () => {
         }
     });
 
-    it('initializeTileEffects is a no-op when party mode is disabled', () => {
+    it('revealMultiplier applies multiplier in local mode', async () => {
         const game = makeGame({
-            gridRows: 6,
-            gridCols: 6,
-            partyModeEnabled: false,
-            tileEffects: {},
+            squareMultipliers: { '0,0': { type: 'multiplier', value: 2 } },
         });
         const sys = new EffectSystem(game);
-        sys.initializeTileEffects();
-        expect(Object.keys(game.tileEffects).length).toBe(0);
+        await sys.revealMultiplier('0,0');
+        expect(game.revealedMultipliers.has('0,0')).toBe(true);
+        expect(game.scores[1]).toBe(10); // 5 * 2
+        expect(game.draw).toHaveBeenCalled();
     });
 
-    it('initializeTileEffects populates a trap+powerup on every square in party mode', () => {
+    it('tapSquare collapses opponent square multiplier in local mode', async () => {
         const game = makeGame({
-            gridRows: 4,
-            gridCols: 4,
-            partyModeEnabled: true,
-            tileEffects: {},
+            squareMultipliers: { '0,0': { type: 'multiplier', value: 3 } },
         });
         const sys = new EffectSystem(game);
-        sys.initializeTileEffects();
-        const entries = Object.entries(game.tileEffects);
-        expect(entries.length).toBe(9); // 3x3 squares
-        for (const [, e] of entries) {
-            expect(['trap', 'powerup']).toContain(e.type);
-            expect(e.revealed).toBe(false);
-        }
+        await sys.tapSquare('0,0');
+        expect(game.squareMultipliers['0,0']).toEqual({ type: 'multiplier', value: 0.5 });
+        expect(game.draw).toHaveBeenCalled();
     });
-});
 
-describe('EffectSystem — revealTileEffect', () => {
-    function seededGame() {
-        return makeGame({
-            tileEffects: {
-                '0,0': { type: 'powerup', effect: { id: 'gift' }, revealed: false },
-            },
-        });
-    }
+    it('announceTurnMessage updates indicator text and resets after timeout', () => {
+        vi.useFakeTimers();
+        const el = document.createElement('div');
+        el.id = 'turnIndicator';
+        el.textContent = 'Player 1 Turn';
+        document.body.appendChild(el);
 
-    it('does nothing when the square has no effect', () => {
         const game = makeGame();
         const sys = new EffectSystem(game);
-        sys.revealTileEffect('9,9');
-        expect(sys.pendingEffect).toBeNull();
-        expect(game.soundManager.playEffectRevealSound).not.toHaveBeenCalled();
-    });
+        sys.announceTurnMessage('Bonus Turn!', '#FF0000', 1000);
 
-    it('does nothing when the effect was already revealed', () => {
-        const game = seededGame();
-        game.revealedEffects.add('0,0');
-        const sys = new EffectSystem(game);
-        sys.revealTileEffect('0,0');
-        expect(sys.pendingEffect).toBeNull();
-    });
+        expect(el.textContent).toBe('Bonus Turn!');
+        vi.advanceTimersByTime(1000);
+        expect(el.textContent).toBe('Player 1 Turn');
 
-    it('reveals a fresh effect: marks revealed, sets pending, plays sound, spawns particles, draws', () => {
-        const game = seededGame();
-        const sys = new EffectSystem(game);
-        sys.revealTileEffect('0,0');
-        expect(game.revealedEffects.has('0,0')).toBe(true);
-        expect(game.tileEffects['0,0'].revealed).toBe(true);
-        expect(sys.pendingEffect).toMatchObject({ squareKey: '0,0', player: 1 });
-        expect(game.soundManager.playEffectRevealSound).toHaveBeenCalledWith('powerup');
-        expect(game.particleSystem.createEffectParticles).toHaveBeenCalledOnce();
-        expect(game.draw).toHaveBeenCalledOnce();
+        document.body.removeChild(el);
+        vi.useRealTimers();
     });
 });

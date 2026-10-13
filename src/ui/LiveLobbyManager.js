@@ -26,7 +26,6 @@ export class LiveLobbyManager {
         this.players = []; // [{sessionId, name, color, isReady, isConnected, playerIndex}]
         this.isHost = false;
         this.gridSize = 5;
-        this.partyMode = false;
         this.status = 'idle'; // 'idle' | 'lobby' | 'playing' | 'finished'
         this._unsubscribe = null;
     }
@@ -42,7 +41,6 @@ export class LiveLobbyManager {
             this.passcode = room.passcode ?? this.passcode;
             this.hostSessionId = room.hostPlayerId || this.hostSessionId;
             this.gridSize = room.gridSize ?? this.gridSize;
-            this.partyMode = room.partyMode ?? this.partyMode;
             this.status = room.status || this.status;
         }
         if (Array.isArray(players)) {

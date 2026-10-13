@@ -205,7 +205,6 @@ test.describe('local gameplay canvas input', () => {
         expect(diagnostics.isTouchDevice).toBe(true);
         expect(diagnostics.selectionRadiusMultiplier).toBeGreaterThan(0.5);
         expect(diagnostics.staticDotRadiusPx).toBeGreaterThanOrEqual(4);
-        expect(diagnostics.partyModeEnabled).toBe(false);
 
         const canvas = page.locator('#gameCanvas');
         await canvas.tap({
@@ -219,7 +218,6 @@ test.describe('local gameplay canvas input', () => {
             .poll(() => getInteractionDiagnostics(page))
             .toMatchObject({
                 selectedDot: { row: 0, col: 0 },
-                partyModeEnabled: false,
             });
     });
 

@@ -61,11 +61,6 @@ function handleCellInteraction(handler, clickedCell) {
         }
     }
 
-    if (handler.game.tileEffects[clickedCell] && !handler.game.revealedEffects.has(clickedCell)) {
-        handler.game.revealTileEffect(clickedCell);
-        return true;
-    }
-
     if (!handler.game.revealedMultipliers.has(clickedCell)) {
         handler.game.revealMultiplier(clickedCell);
         return true;

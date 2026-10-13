@@ -7,13 +7,11 @@
  */
 
 import {
-    drawHiddenEffectShimmers,
     drawInvalidLineFlash,
     drawLineAnimations,
     drawLines,
     drawSquares,
     drawSquaresWithAnimations,
-    drawTileEffectIndicator,
 } from './renderer/board.js';
 import {
     drawAmbientParticles,
@@ -170,20 +168,6 @@ export class Renderer {
      */
     drawSquaresWithAnimations() {
         drawSquaresWithAnimations(this.game);
-    }
-
-    /**
-     * Draw tile effect indicator
-     */
-    drawTileEffectIndicator(squareKey, x, y, player) {
-        drawTileEffectIndicator(this.game, squareKey, x, y, player);
-    }
-
-    /**
-     * Draw hidden effect shimmers
-     */
-    drawHiddenEffectShimmers() {
-        drawHiddenEffectShimmers(this.game);
     }
 
     /**

@@ -78,12 +78,6 @@ export function handleRoomStateUpdate(roomState, deps) {
         playerNumber: player.playerNumber || index + 1,
     }));
 
-    const lobbyPartyModeToggle = document.getElementById('lobbyPartyModeToggle');
-    if (lobbyPartyModeToggle) {
-        lobbyPartyModeToggle.checked = false;
-        lobbyPartyModeToggle.disabled = true;
-    }
-
     document.querySelectorAll('.lobby-grid-btn').forEach((btn) => {
         btn.classList.toggle('selected', parseInt(btn.dataset.size) === roomState.gridSize);
     });

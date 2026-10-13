@@ -30,7 +30,6 @@ function createMockGame() {
         gameState: { initializeGameState: vi.fn() },
         effectSystem: {
             initializeMultipliers: vi.fn(),
-            initializeTileEffects: vi.fn(),
         },
         initialLocalSnapshot: null,
         captureMoveSnapshot: vi.fn(() => ({ snapshot: true })),

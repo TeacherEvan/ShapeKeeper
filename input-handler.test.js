@@ -83,7 +83,6 @@ describe('Root InputHandler canvas lifecycle', () => {
             offsetX: 20,
             offsetY: 20,
             playerEffects: { 1: {}, 2: {} },
-            revealedEffects: new Set(),
             revealedMultipliers: new Set(),
             selectedDot: null,
             selectionRibbon: null,
@@ -92,7 +91,6 @@ describe('Root InputHandler canvas lifecycle', () => {
             },
             squareMultipliers: {},
             squares: {},
-            tileEffects: {},
             touchStartDot: null,
         };
     });

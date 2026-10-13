@@ -17,7 +17,6 @@ import { showToast } from '../Toast.js';
 
 function buildLocalGameFromConfig(config) {
     return new DotsAndBoxesGame(config.gridSize, config.player1Color, config.player2Color, {
-        partyModeEnabled: false,
         localMode: config.localMode,
         aiDifficulty: config.aiDifficulty,
         tutorialEnabled: config.tutorialEnabled,

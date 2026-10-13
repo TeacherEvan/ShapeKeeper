@@ -296,7 +296,6 @@ function initializeMultiplayerGame(roomState) {
 
     // Initialize game with room settings and multiplayer mode.
     const multiplayerGame = new DotsAndBoxesGame(roomState.gridSize, player1Color, player2Color, {
-        partyModeEnabled: false,
         deferInitialReady: true,
     });
     multiplayerGame.isMultiplayer = true;

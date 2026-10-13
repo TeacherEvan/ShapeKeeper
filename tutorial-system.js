@@ -277,7 +277,6 @@ export class TutorialSystem {
     resetBoardForNormalMatch() {
         this.game.gameState.initializeGameState();
         this.game.effectSystem.initializeMultipliers();
-        this.game.effectSystem.initializeTileEffects();
         this.game.initialLocalSnapshot = this.game.captureMoveSnapshot();
         this.game.moveHistory = [];
         this.game.redoHistory = [];

@@ -79,7 +79,6 @@ export class DotsAndBoxesGame {
         this.accessibleGrid = new AccessibleGridTree(this);
         this.disposables.addDisposable(this.accessibleGrid);
         this.effectSystem.initializeMultipliers();
-        this.effectSystem.initializeTileEffects();
         this.particleSystem.initializeAmbientParticles();
 
         // Setup event listeners
@@ -158,10 +157,6 @@ export class DotsAndBoxesGame {
             this.particleSystem.spawnParticles.bind(this.particleSystem),
             this.particleSystem.spawnSparkleEmojis?.bind(this.particleSystem)
         );
-    }
-
-    revealTileEffect(squareKey) {
-        this.effectSystem.revealTileEffect(squareKey);
     }
 
     async revealMultiplier(squareKey) {
@@ -1000,7 +995,6 @@ export class DotsAndBoxesGame {
             aiThinking: this.aiThinking,
             isTouchDevice: this.isTouchDevice,
             localMode: this.localMode,
-            partyModeEnabled: this.partyModeEnabled,
             tutorial: this.tutorialSystem?.getSnapshot?.() || { active: false },
             selectionRadiusMultiplier: this.selectionRadiusMultiplier,
             selectionRadiusPx: this.cellSize * this.selectionRadiusMultiplier,

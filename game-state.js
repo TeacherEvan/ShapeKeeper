@@ -66,11 +66,6 @@ export class GameState {
         // game-state subscription. See docs/feature-opponent-tap.md.
         this.game.squareTaps = {};
 
-        this.game.tileEffects = {};
-        this.game.revealedEffects = new Set();
-        this.game.activatedEffects = new Set();
-        this.game.pendingEffect = null;
-
         this.game.playerEffects = {
             1: {
                 frozenTurns: 0,
