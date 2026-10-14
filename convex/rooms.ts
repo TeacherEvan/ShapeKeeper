@@ -35,5 +35,8 @@ export { getRoomByCode } from './queries/roomQueries';
 // the response includes isHost / isYou flags.
 export { getRoom } from './queries/roomQueries';
 
+// List open lobbies (for the JOIN LOBBY browser screen).
+export { listOpenLobbies } from './queries/roomQueries';
+
 // Start the game (host only)
 export { startGame } from './mutations/startGame';
