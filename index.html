@@ -190,6 +190,29 @@
                     </div>
 
                     <div class="setup-section">
+                        <h2>Allowed Time</h2>
+                        <label class="field-label" for="localTurnDuration"
+                            >Seconds per turn (0 = no limit)</label
+                        >
+                        <input
+                            type="number"
+                            id="localTurnDuration"
+                            class="name-input turn-duration-input"
+                            data-testid="local-turn-duration"
+                            min="0"
+                            max="600"
+                            step="1"
+                            value="0"
+                            placeholder="0 (0 = no limit)"
+                            aria-describedby="localTurnDurationHint"
+                        />
+                        <span id="localTurnDurationHint" class="setting-hint">
+                            Lava-timer countdown per turn. Runs out &rarr; the turn is
+                            skipped. 0 = no limit.
+                        </span>
+                    </div>
+
+                    <div class="setup-section">
                         <h2>AI Difficulty</h2>
                         <label class="field-label" for="localAIDifficulty"
                             >Choose AI difficulty</label

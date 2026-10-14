@@ -37,6 +37,18 @@ export class DotsAndBoxesGame {
         this.player2Color = player2Color;
         this.options = options;
 
+        // Allowed Time (local lava timer): seconds per turn, 0 = no limit.
+        // Chosen on the local setup screen. Online matches take their clock
+        // from the server (turnEndTime via ShapeKeeperTurnClock); local
+        // hot-seat games own theirs — armed in animate() by
+        // tickLocalTurnClock, expired turns skipped by handleTurnExpiration.
+        this.turnDurationSeconds =
+            Number.isFinite(options.turnDurationSeconds) && options.turnDurationSeconds >= 0
+                ? Math.min(600, Math.floor(options.turnDurationSeconds))
+                : 0;
+        this.turnRemainingMs = null;
+        this._localTurnClock = null;
+
         // Initialize canvas and context
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
@@ -909,6 +921,14 @@ export class DotsAndBoxesGame {
         this.player2Color = payload.config.player2Color;
         this.localMode = payload.config.localMode;
         this.aiDifficulty = payload.config.aiDifficulty;
+        this.turnDurationSeconds =
+            Number.isFinite(payload.config.turnDurationSeconds) &&
+            payload.config.turnDurationSeconds >= 0
+                ? Math.min(600, Math.floor(payload.config.turnDurationSeconds))
+                : 0;
+        // Force the local turn clock to re-arm for the restored board state.
+        this.turnRemainingMs = null;
+        this._localTurnClock = null;
         this.aiPlayerNumber = this.localMode === 'ai' ? 2 : null;
         this.aiThinking = false;
         this.aiTurnToken += 1;
@@ -977,6 +997,14 @@ export class DotsAndBoxesGame {
             this.handleTurnExpiration();
         }
 
+        // Local hot-seat Allowed Time: maintain a per-turn countdown and
+        // skip expired turns. Online matches get their clock from the
+        // server; local games own theirs.
+        if (this.shouldRunLocalTurnClock()) {
+            this.tickLocalTurnClock(now);
+            this.handleTurnExpiration();
+        }
+
         if (!this.isDestroyed) {
             const rafId = requestAnimationFrame(() => this.animate());
             this.disposables.addRAF(rafId);
@@ -990,13 +1018,49 @@ export class DotsAndBoxesGame {
         this.renderer.draw();
     }
 
+    /**
+     * Local hot-seat turn clock: arm a fresh countdown whenever the active
+     * player changes (or after an expiry re-arm) and keep `turnRemainingMs`
+     * in sync for the lava renderer.
+     * @param {number} now epoch ms (animate() uses Date.now())
+     */
+    tickLocalTurnClock(now) {
+        if (!this._localTurnClock) {
+            this._localTurnClock = { player: null, deadline: 0 };
+        }
+        const clock = this._localTurnClock;
+        if (clock.player !== this.currentPlayer || clock.deadline === 0) {
+            clock.player = this.currentPlayer;
+            clock.deadline = now + this.turnDurationSeconds * 1000;
+        }
+        const remaining = clock.deadline - now;
+        this.turnRemainingMs = remaining > 0 ? remaining : 0;
+    }
+
+    /**
+     * Whether the local hot-seat lava timer should run this frame.
+     * Online matches use the server clock; AI mode has no human turn to
+     * time; the tutorial and finished games never skip turns.
+     */
+    shouldRunLocalTurnClock() {
+        return (
+            !this.isOnline &&
+            this.localMode === 'human' &&
+            this.turnDurationSeconds > 0 &&
+            !this.gameState.isGameOver() &&
+            !this.tutorialSystem?.isActive()
+        );
+    }
+
     handleTurnExpiration() {
         if (!FEATURE_FLAGS.FEATURE_LAVA_TIMER) return;
-        if (!this.isOnline) return;
-        const ctrl = window.ShapeKeeperTurnClock;
-        if (!ctrl) return;
-        const remaining = ctrl.getRemainingTime?.();
-        if (remaining !== undefined && remaining <= 0) {
+
+        if (this.isOnline) {
+            const ctrl = window.ShapeKeeperTurnClock;
+            if (!ctrl) return;
+            const remaining = ctrl.getRemainingTime?.();
+            if (remaining === undefined || remaining === null || remaining > 0) return;
+
             // The current player's turn has expired.
             // For local lava timer house rule, skip to the next player.
             const currentPlayerIndex = this.gameState?.room?.currentPlayerIndex ?? 0;
@@ -1004,7 +1068,25 @@ export class DotsAndBoxesGame {
                 (currentPlayerIndex + 1) % (this.gameState?.room?.players?.length ?? 2);
             this.gameState.room.currentPlayerIndex = nextIndex;
             this.renderer.draw();
+            return;
         }
+
+        // Local hot-seat: the countdown is owned by tickLocalTurnClock().
+        const remaining = this.turnRemainingMs;
+        if (remaining === null || remaining === undefined || remaining > 0) return;
+
+        // Skip the expired turn using the same house rules as a normal turn
+        // switch (bonus turns stay with the player, frozen turns consumed).
+        this.gameState.switchToNextPlayer();
+
+        // Re-arm: deadline === 0 forces the next tick to start a fresh
+        // countdown — even when the player did not change (bonus turn), so
+        // the incoming turn always gets its full Allowed Time.
+        if (this._localTurnClock) {
+            this._localTurnClock.deadline = 0;
+        }
+        this.turnRemainingMs = null;
+        this.renderer.draw();
     }
 
     getInteractionDiagnostics() {

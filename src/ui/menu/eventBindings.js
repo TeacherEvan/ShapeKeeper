@@ -21,7 +21,23 @@ function buildLocalGameFromConfig(config) {
         localMode: config.localMode,
         aiDifficulty: config.aiDifficulty,
         tutorialEnabled: config.tutorialEnabled,
+        turnDurationSeconds: config.turnDurationSeconds ?? 0,
     });
+}
+
+/**
+ * Allowed Time for local games: whole seconds, 0 = no limit.
+ * Sanitises the free-form input (empty or invalid falls back to 0 = no
+ * limit); the browser constrains range via min/max, this is the safety net.
+ */
+function parseLocalTurnDuration() {
+    const input = document.getElementById('localTurnDuration');
+    if (!input) return 0;
+    const raw = input.value.trim();
+    if (raw === '') return 0;
+    const seconds = parseInt(raw, 10);
+    if (!Number.isInteger(seconds) || seconds < 0) return 0;
+    return Math.min(600, seconds);
 }
 
 export function bindMenuEventHandlers(deps) {
@@ -140,6 +156,7 @@ export function bindMenuEventHandlers(deps) {
         const localMode = localOpponentType?.value === 'ai' ? 'ai' : 'human';
         const aiDifficulty = localAIDifficulty?.value || 'medium';
         const tutorialEnabled = Boolean(localTutorialMode?.checked);
+        const turnDurationSeconds = parseLocalTurnDuration();
 
         if (welcomeAnimation) {
             welcomeAnimation.moveToGameScreen();
@@ -156,6 +173,7 @@ export function bindMenuEventHandlers(deps) {
                 localMode,
                 aiDifficulty,
                 tutorialEnabled,
+                turnDurationSeconds,
             })
         );
     });

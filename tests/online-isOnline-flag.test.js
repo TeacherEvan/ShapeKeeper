@@ -57,13 +57,26 @@ beforeEach(() => {
 });
 
 describe('online match must set isOnline=true (regression guard)', () => {
-    it('lava timer layer is a no-op while isOnline=false', () => {
+    it('lava timer layer renders in local (non-online) games when a countdown is armed', () => {
         const game = makeOnlineGame();
         game.isOnline = false;
+        game.turnRemainingMs = 7200;
         const renderer = new Renderer(game);
         renderer.drawLavaTimerLayer();
-        // drawLavaTimer should never have been invoked -> no fillText for countdown
+        // The isOnline render gate was removed: the layer draws in ALL game
+        // modes — local hot-seat included — as soon as a countdown exists.
         expect(game._log.calls.some((c) => c.prop === 'fillText')).toBe(true);
+    });
+
+    it('lava timer layer draws no countdown when none is armed (0 = no limit)', () => {
+        const game = makeOnlineGame();
+        game.isOnline = false;
+        game.turnRemainingMs = null;
+        const renderer = new Renderer(game);
+        renderer.drawLavaTimerLayer();
+        // A null turnRemainingMs means "no timer": the layer stays hidden.
+        // (It no longer falls through to a permanent "0.0s".)
+        expect(game._log.calls.some((c) => c.prop === 'fillText')).toBe(false);
     });
 
     it('lava timer layer renders once isOnline=true', () => {
