@@ -15,7 +15,7 @@ import {
     validateLocalSavePayload,
 } from './local-save-replay.js';
 import { showToast } from './src/ui/Toast.js';
-import { announceAlert } from './src/ui/AccessibilityAnnouncer.js';
+import { announceAlert, announceStatus } from './src/ui/AccessibilityAnnouncer.js';
 import { notifyAchievementUnlock, renderAchievementPanel } from './src/ui/AchievementPanel.js';
 import { getDotRenderRadius, prefersReducedMotion } from './utils.js';
 import { TutorialSystem } from './tutorial-system.js';
@@ -41,6 +41,7 @@ export class DotsAndBoxesGame {
         this.turnDurationMs = options.turnDurationMs ?? 0;
         this.localTurnTimer = null;
         this.localTurnCounter = 0;
+        this._aiThinking = false;
 
         // Allowed Time (local lava timer): seconds per turn, 0 = no limit.
         // Chosen on the local setup screen. Online matches take their clock
@@ -481,6 +482,25 @@ export class DotsAndBoxesGame {
             if (!this.isMultiplayer && this.localMode === 'ai' && !this.gameState.isGameOver()) {
                 this.scheduleAITurn();
             }
+        }
+    }
+
+    get aiThinking() {
+        return Boolean(this._aiThinking);
+    }
+
+    set aiThinking(val) {
+        const next = Boolean(val);
+        const prev = Boolean(this._aiThinking);
+        this._aiThinking = next;
+        if (typeof document !== 'undefined') {
+            const el = document.getElementById('aiThinking');
+            if (el) {
+                el.hidden = !next;
+            }
+        }
+        if (next && !prev) {
+            announceStatus('AI is thinking');
         }
     }
 

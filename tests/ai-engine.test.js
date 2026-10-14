@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { DotsAndBoxesGame } from '../dots-and-boxes-game.js';
+import * as AccessibilityAnnouncer from '../src/ui/AccessibilityAnnouncer.js';
 
 // Deterministic PRNG so Math.random()-driven move selection is reproducible.
 function installPRNG(seed = 1) {
@@ -203,5 +204,34 @@ describe('AI engine — easy difficulty randomness', () => {
             expect(game.gameLogic.getAllPossibleLines()).toContain(move);
             vi.restoreAllMocks();
         }
+    });
+});
+
+describe('AI engine — thinking indicator and announcement', () => {
+    it('toggles #aiThinking visibility and announces status when aiThinking changes', () => {
+        const announceSpy = vi.spyOn(AccessibilityAnnouncer, 'announceStatus');
+        const game = makeAI('medium');
+        const indicator = document.createElement('span');
+        indicator.id = 'aiThinking';
+        indicator.hidden = true;
+        document.body.appendChild(indicator);
+
+        expect(game.aiThinking).toBe(false);
+        expect(indicator.hidden).toBe(true);
+
+        game.aiThinking = true;
+        expect(indicator.hidden).toBe(false);
+        expect(announceSpy).toHaveBeenCalledWith('AI is thinking');
+
+        // Setting true again doesn't re-announce
+        announceSpy.mockClear();
+        game.aiThinking = true;
+        expect(announceSpy).not.toHaveBeenCalled();
+
+        game.aiThinking = false;
+        expect(indicator.hidden).toBe(true);
+
+        announceSpy.mockRestore();
+        indicator.remove();
     });
 });

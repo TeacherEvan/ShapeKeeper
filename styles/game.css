@@ -349,6 +349,15 @@
     100% { left: 100%; }
 }
 
+#aiThinking {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-style: italic;
+    padding: 0 8px;
+    align-self: center;
+}
+
 .game-header.multi-player {
     flex-wrap: wrap;
     gap: 10px;
