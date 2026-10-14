@@ -17,7 +17,7 @@ test.describe('Allowed Time lobby control', () => {
             startupTimeoutMs: 1500,
         });
 
-        const { hostPage, guestPage, generatedPasscode } = session;
+        const { hostPage, guestPage } = session;
 
         try {
             await hostPage.getByTestId('create-game-button').click();
@@ -30,11 +30,9 @@ test.describe('Allowed Time lobby control', () => {
             await expect(hostTurnDuration).toHaveValue('10');
 
             await guestPage.getByTestId('join-game-button').click();
-            await expect(guestPage.getByTestId('join-screen')).toHaveClass(/active/);
-            await guestPage.getByTestId('join-room-code-input').fill('TMG456');
-            await guestPage.getByTestId('join-room-passcode-input').fill(generatedPasscode);
-            await guestPage.getByTestId('join-player-name-input').fill('Guest');
-            await guestPage.getByTestId('join-room-button').click();
+            await expect(guestPage.getByTestId('lobby-browser-screen')).toHaveClass(/active/);
+            await guestPage.getByTestId('browser-player-name-input').fill('Guest');
+            await guestPage.getByTestId('open-lobby-entry').first().click();
             await expect(guestPage.getByTestId('lobby-screen')).toHaveClass(/active/);
 
             // Host sets 45 seconds. The debounced handler (300ms) fires on change.

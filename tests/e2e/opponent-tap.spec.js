@@ -31,7 +31,7 @@ test.describe('opponent tap mechanic (multiplayer)', () => {
             startupTimeoutMs: 1500,
         });
 
-        const { hostPage, guestPage, generatedPasscode } = session;
+        const { hostPage, guestPage } = session;
 
         try {
             // Navigate both players to the game screen via the existing
@@ -40,11 +40,9 @@ test.describe('opponent tap mechanic (multiplayer)', () => {
             await expect(hostPage.getByTestId('lobby-screen')).toHaveClass(/active/);
 
             await guestPage.getByTestId('join-game-button').click();
-            await expect(guestPage.getByTestId('join-screen')).toHaveClass(/active/);
-            await guestPage.getByTestId('join-room-code-input').fill('TAP123');
-            await guestPage.getByTestId('join-room-passcode-input').fill(generatedPasscode);
-            await guestPage.getByTestId('join-player-name-input').fill('Guest');
-            await guestPage.getByTestId('join-room-button').click();
+            await expect(guestPage.getByTestId('lobby-browser-screen')).toHaveClass(/active/);
+            await guestPage.getByTestId('browser-player-name-input').fill('Guest');
+            await guestPage.getByTestId('open-lobby-entry').first().click();
             await expect(guestPage.getByTestId('lobby-screen')).toHaveClass(/active/);
 
             await hostPage.getByTestId('ready-button').click();
@@ -163,15 +161,14 @@ test.describe('opponent tap mechanic (multiplayer)', () => {
             startupTimeoutMs: 1500,
         });
 
-        const { hostPage, guestPage, generatedPasscode } = session;
+        const { hostPage, guestPage } = session;
 
         try {
             await hostPage.getByTestId('create-game-button').click();
             await guestPage.getByTestId('join-game-button').click();
-            await guestPage.getByTestId('join-room-code-input').fill('OWN901');
-            await guestPage.getByTestId('join-room-passcode-input').fill(generatedPasscode);
-            await guestPage.getByTestId('join-player-name-input').fill('Guest');
-            await guestPage.getByTestId('join-room-button').click();
+            await expect(guestPage.getByTestId('lobby-browser-screen')).toHaveClass(/active/);
+            await guestPage.getByTestId('browser-player-name-input').fill('Guest');
+            await guestPage.getByTestId('open-lobby-entry').first().click();
             await hostPage.getByTestId('ready-button').click();
             await guestPage.getByTestId('ready-button').click();
             await hostPage.getByTestId('start-multiplayer-game').click();

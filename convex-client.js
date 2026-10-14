@@ -52,6 +52,7 @@
         populateLines: gameOperations.populateLines,
         subscribeToRoom: subscriptions.subscribeToRoom,
         subscribeToGameState: subscriptions.subscribeToGameState,
+        subscribeToOpenLobbies: subscriptions.subscribeToOpenLobbies,
         getRoomState: roomOperations.getRoomState,
         getRoomByCode: roomOperations.getRoomByCode,
         getGameState: gameOperations.getGameState,

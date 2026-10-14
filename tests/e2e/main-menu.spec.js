@@ -116,13 +116,14 @@ test.describe('main menu CTA contract', () => {
         await expect(page.locator('#lobbyScreen')).toHaveClass(/active/);
     });
 
-    test('routes JOIN LOBBY to the join screen', async ({ page }) => {
+    test('routes JOIN LOBBY to the lobby browser', async ({ page }) => {
         await gotoApp(page);
 
         await page.getByRole('button', { name: 'JOIN LOBBY', exact: true }).click();
 
-        await expect(page.getByTestId('join-screen')).toHaveClass(/active/);
-        await expect(page.getByTestId('join-room-code-input')).toBeVisible();
+        await expect(page.getByTestId('lobby-browser-screen')).toHaveClass(/active/);
+        await expect(page.getByTestId('browser-player-name-input')).toBeVisible();
+        await expect(page.getByTestId('open-lobbies-list')).toBeVisible();
     });
 
     test('lands focus on START GAME when returning from a game', async ({ page }) => {

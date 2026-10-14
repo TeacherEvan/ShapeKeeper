@@ -3,8 +3,6 @@
  */
 
 export function updateLobbyUI(lobbyManager) {
-    document.getElementById('roomCode').textContent = lobbyManager.roomCode || '------';
-
     document.getElementById('playerCount').textContent = lobbyManager.getPlayerCount();
 
     const playersList = document.getElementById('playersList');

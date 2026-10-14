@@ -10,7 +10,6 @@ test.describe('multiplayer startup recovery', () => {
         await page.getByTestId('create-game-button').click();
 
         await expect(page.getByTestId('lobby-screen')).toHaveClass(/active/);
-        await expect(page.getByTestId('room-code')).toHaveText('ABC123');
         await expect(page.getByTestId('start-multiplayer-game')).toBeEnabled();
 
         await page.getByTestId('start-multiplayer-game').click();

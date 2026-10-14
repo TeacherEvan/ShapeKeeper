@@ -51,12 +51,11 @@ test.describe('browser compatibility matrix', () => {
 
         await page.getByTestId('join-game-button').click();
 
-        await expect(page.getByTestId('join-screen')).toHaveClass(/active/);
-        await expect(page.getByTestId('join-room-code-input')).toBeVisible();
-        await expect(page.getByTestId('join-player-name-input')).toBeVisible();
-        await expect(page.getByTestId('join-room-button')).toBeVisible();
+        await expect(page.getByTestId('lobby-browser-screen')).toHaveClass(/active/);
+        await expect(page.getByTestId('browser-player-name-input')).toBeVisible();
+        await expect(page.getByTestId('open-lobbies-list')).toBeVisible();
 
-        await page.locator('#backToMenuFromJoin').click();
+        await page.locator('#backToMenuFromBrowser').click();
 
         await expect(page.getByTestId('main-menu-screen')).toHaveClass(/active/);
     });

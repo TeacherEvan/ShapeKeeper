@@ -37,20 +37,17 @@ export async function bootstrapLobby(browser, options = {}) {
         ...options,
     });
 
-    const { hostPage, guestPage, generatedPasscode } = session;
+    const { hostPage, guestPage } = session;
     const hostErrors = trackPageErrors(hostPage);
     const guestErrors = trackPageErrors(guestPage);
 
     await hostPage.getByTestId('create-game-button').click();
     await expect(hostPage.getByTestId('lobby-screen')).toHaveClass(/active/);
-    await expect(hostPage.getByTestId('room-code')).toHaveText(roomCode);
 
     await guestPage.getByTestId('join-game-button').click();
-    await expect(guestPage.getByTestId('join-screen')).toHaveClass(/active/);
-    await guestPage.getByTestId('join-room-code-input').fill(roomCode);
-    await guestPage.getByTestId('join-room-passcode-input').fill(generatedPasscode);
-    await guestPage.getByTestId('join-player-name-input').fill('Guest');
-    await guestPage.getByTestId('join-room-button').click();
+    await expect(guestPage.getByTestId('lobby-browser-screen')).toHaveClass(/active/);
+    await guestPage.getByTestId('browser-player-name-input').fill('Guest');
+    await guestPage.getByTestId('open-lobby-entry').first().click();
 
     await expect(guestPage.getByTestId('lobby-screen')).toHaveClass(/active/);
     await expect(guestPage.getByTestId('players-list')).toContainText('Host');

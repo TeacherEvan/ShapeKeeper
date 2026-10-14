@@ -177,10 +177,8 @@
             shared.state.activeSubscriptions.delete(shared.state.openLobbiesSubscription);
         }
 
-        const subscription = client.onUpdate(
-            shared.api.rooms.listOpenLobbies,
-            {},
-            (lobbies) => callback(lobbies || [])
+        const subscription = client.onUpdate(shared.api.rooms.listOpenLobbies, {}, (lobbies) =>
+            callback(lobbies || [])
         );
 
         shared.state.openLobbiesSubscription = subscription;
