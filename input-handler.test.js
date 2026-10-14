@@ -157,7 +157,7 @@ describe('Root InputHandler canvas lifecycle', () => {
         handler.destroy();
     });
 
-    it.skip('accepts native-speed touch taps when selecting adjacent dots', () => {
+    it('accepts native-speed touch taps when selecting adjacent dots', () => {
         const canvas = createCanvas();
         const handler = new InputHandler(canvas, game);
 
