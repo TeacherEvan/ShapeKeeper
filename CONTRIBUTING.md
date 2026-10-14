@@ -189,6 +189,13 @@ Contributors will be:
 - Credited in release notes
 - Acknowledged in the project documentation
 
+## 🚀 After Deploying
+
+After deploying changes to production:
+
+1. Run `scripts/check-deploy.sh` (or `scripts/check-deploy.sh https://<your-domain>`) to verify the deployment is serving ShapeKeeper. A failure indicates an issue with the Vercel domain mapping.
+2. After running `npx convex deploy`, create a room and start a game in online mode to confirm turn timing and backend sync.
+
 ## ❓ Questions?
 
 If you have questions about contributing, please:
