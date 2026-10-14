@@ -284,6 +284,7 @@ export function handlePointerUp(handler, event) {
         releasePointerCapture(handler, event.pointerId);
         handler.selectionRibbon = null;
         handler.syncPreviewState();
+        handler.suppressNextClickUntil = now + 500;
         handler.game.draw();
         return;
     }
@@ -307,6 +308,7 @@ export function handlePointerUp(handler, event) {
     releasePointerCapture(handler, event.pointerId);
     handler.selectionRibbon = null;
     handler.syncPreviewState();
+    handler.suppressNextClickUntil = now + 500;
 
     if (handler.activePointers.size === 0) {
         handler.lastInteractionTime = now;
