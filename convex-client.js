@@ -68,6 +68,23 @@
 
     windowObject.addEventListener('beforeunload', () => {
         console.log('[Convex] Page unloading, cleaning up connection');
+
+        // Best-effort lobby leave: closing a tab otherwise strands the
+        // room as a zombie 'lobby' row that haunts everyone's JOIN LOBBY
+        // browser. Fire-and-forget — the mutation may not land before the
+        // page dies, which is what the sweepStaleLobbies cron backstops.
+        // Gated to lobby status so a mid-match reload never hands the host
+        // role to the other player (in-match leaves transfer the host).
+        try {
+            const roomId = windowObject.ShapeKeeperConvex?.getCurrentRoomId?.();
+            const roomStatus = shared.state.lastRoomState?.status;
+            if (roomId && roomStatus !== 'playing') {
+                void windowObject.ShapeKeeperConvex?.leaveRoom?.();
+            }
+        } catch {
+            // Best effort only.
+        }
+
         shared.closeConnection();
     });
 

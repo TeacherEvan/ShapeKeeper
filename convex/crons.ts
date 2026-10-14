@@ -27,4 +27,19 @@ crons.interval(
   {}
 );
 
+// Abandoned-lobby reaper: rooms stuck at status 'lobby' with no activity
+// for 2 hours are deleted with their players. Closes the zombie-lobby gap
+// — a host who closed their tab (beforeunload leave dropped or never
+// fired) otherwise leaves a dead lobby listed in everyone's JOIN LOBBY
+// browser forever. 15-minute granularity against a 2-hour TTL.
+const sweepStaleLobbiesRef =
+  'mutations/sweepStaleLobbies:sweepStaleLobbies' as any;
+
+crons.interval(
+  'sweep-stale-lobbies',
+  { minutes: 15 },
+  sweepStaleLobbiesRef,
+  {}
+);
+
 export default crons;
