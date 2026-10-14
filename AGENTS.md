@@ -9,7 +9,6 @@
 
 A vanilla-JS browser implementation of **Dots and Boxes** ("ShapeKeeper") with
 local hot-seat and online (Convex realtime) multiplayer. Hosted on Vercel.
-Adult-friendly party mode with tile effects.
 
 ## Stack
 
@@ -23,7 +22,7 @@ Adult-friendly party mode with tile effects.
 
 ### Repo boundaries
 
-- **The canonical ShapeKeeper repo is `/home/ewaldt/Documents/VS/GAMES/ShapeKeeper`.**
+- **The canonical ShapeKeeper repo is `/home/leandi-duplessis/github/workspaces/ShapeKeeper`.**
   Do NOT create a sibling/duplicate elsewhere. Do NOT scaffold a new project.
 - Edit in place. No `create-next-app`, `npx sv create`, `git clone` into a new dir.
 
@@ -80,15 +79,23 @@ unaffected. If a ShapeKeeper sidecar is running, kill it first.
 
 ### Lava Timer (FR-1 / FR-2 / FR-3)
 
-- The lava timer renders for **all game modes** (local and online), not
-  just online matches. The `isOnline` gate was removed from `renderer.js`.
-- Feature flag `FEATURE_LAVA_TIMER` (default OFF) controls rendering.
-  Enable at runtime via `window.FEATURE_LAVA_TIMER`.
-- `handleTurnExpiration()` in `dots-and-boxes-game.js` handles the
-  local lava timer house rule: when a player's turn expires, the turn
-  advances to the next player.
+- Timer is configurable **Off/10/15/30/60 s, default 15 s**, one setting in local setup and the online lobby.
+- Local engine `src/timing/local-turn-timer.js` ticks from `animate()`.
+- Online enforcement is server-side (`convex/games/turnTimer.ts`, scheduled `expireTurn`).
+- Clock resets after every move; expiry passes the turn.
+- Local clock pauses when tab hidden and during AI turns.
+- `FEATURE_LAVA_TIMER` default `false` in `constants.js`, enabled at runtime by `config.js`.
+- `handleTurnExpiration()` is now online-tick only.
 - Timing constants live in `constants.js` (`TIMING_CONSTANTS`).
 - The turn clock controller is at `src/timing/turn-clock-controller.js`.
+
+### Convex naming rule
+
+- Files under `convex/` must match `[A-Za-z0-9_.]` (no hyphens); use camelCase. Enforced by `tests/convex-module-hygiene.test.js`.
+
+### Live API rule
+
+- `convex/games.ts` must register every handler it imports; enforced by `convex/wiring.test.ts`.
 
 ### Code style
 

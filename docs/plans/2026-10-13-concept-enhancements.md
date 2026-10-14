@@ -1,3 +1,5 @@
+> SUPERSEDED by the v4 plan (implementation_plan.md in the agent artifacts). Kept for history.
+
 # ShapeKeeper Concept-Preserving Enhancements Implementation Plan (Enhanced)
 
 > **Agent:** Anti-Gravity (solo) — optional subagents for Tasks 5–7

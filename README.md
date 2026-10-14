@@ -2,7 +2,7 @@
 
 <img src="assets/branding/shape-keeper-hero.jpg" alt="The Shape Keeper holding a glowing polyhedron in a constellation of neon shapes" width="384" />
 
-![Game Version](https://img.shields.io/badge/version-4.3.0-blue)
+![Game Version](https://img.shields.io/badge/version-4.5.0-blue)
 
 A modern, browser-based implementation of the classic Dots and Boxes game (reimagined as ShapeKeeper) with adaptive landscape layouts, smooth animations, and touch support.
 
@@ -19,15 +19,15 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 ### Core Gameplay
 
 - **Classic Dots and Boxes mechanics** - Connect dots to create boxes and score points
-- **Diagonal Lines** - Connect dots diagonally for alternative paths
 - **Two-player turn-based gameplay** - Players alternate turns, with bonus turns for completing shapes
 - **Turn-Based Online Multiplayer** - Chess-like communication with Convex backend
 - **Open Lobby Browser** - JOIN LOBBY lists every open lobby in realtime (host, players, grid, Allowed Time); one click joins — no room codes, no passcodes
-- **Allowed Time** - Per-turn lava countdown in both local hot-seat and online play; the turn auto-skips when time runs out (0 = no limit)
+- **Allowed Time Turn Timer** - Configurable per-turn timer (Off, 10s, 15s, 30s, 60s) in both local hot-seat and online play with lava countdown visualization
+- **Rematch System** - Instant rematch in local hot-seat and consent-based online rematch, preserving grid settings and timer configuration
 - **Opponent Tap Mechanic** (multiplayer) - Tap an opponent's completed box to drop its multiplier from 2x → 0.5x before they reveal. Real-time hand-eye coordination layer on top of turn-based play.
 - **Smart turn logic** - Complete a square, keep your turn!
 - **Real-time score tracking** - Live updates for both players
-- **Party Mode 🎉** - ALL squares have tile effects (dares, hypotheticals, powerups, traps)
+- **Accessibility & Comfort** - Full support for `prefers-reduced-motion` and one-click WCAG-compliant colour-blind-safe palette (Okabe-Ito)
 
 ### Visual Enhancements
 <img width="494" height="519" alt="Screenshot from 2026-08-18 20-00-38" src="https://github.com/user-attachments/assets/2a7bf6f3-d02a-4a54-b48a-44ea802534e4" /> <img width="1360" height="768" alt="Screenshot from 2026-08-18 17-04-04" src="https://github.com/user-attachments/assets/ea767352-2003-4a19-ba67-f839a4e0f0ef" /> 
@@ -252,7 +252,6 @@ animate(); // Animation frame management
 ```javascript
 '1,2-1,3'; // Horizontal line from (1,2) to (1,3)
 '1,2-2,2'; // Vertical line from (1,2) to (2,2)
-'1,1-2,2'; // Diagonal line from (1,1) to (2,2)
 ```
 
 Always sorted to prevent duplicates.
@@ -334,13 +333,14 @@ Default colors can be changed in `index.html`:
 - [x] Sound effects (procedural Web Audio API) ✅
 - [x] Dark/light theme toggle ✅
 - [x] Visual effects overhaul (CounterPlan complete) ✅
-- [x] Diagonal lines support ✅
-- [ ] AI opponent with difficulty levels
-- [ ] Game replay and save/load functionality
-- [ ] Achievement system
-- [ ] Custom grid size input
-- [ ] Undo/redo moves
-- [ ] Tutorial mode for new players
+- [x] AI opponent with difficulty levels (easy, medium, hard) ✅
+- [x] Game replay and save/load functionality ✅
+- [x] Achievement system ✅
+- [x] Undo/redo moves ✅
+- [x] Tutorial mode for new players ✅
+- [x] Allowed Time turn timer (local hot-seat & online) ✅
+- [x] Instant local rematch & consent-based online rematch ✅
+- [x] Accessibility: reduced motion & colour-blind safe palette ✅
 
 ## 📄 License
 
