@@ -237,6 +237,16 @@ export function bindMenuEventHandlers(deps) {
         return input?.value.trim() || 'Player';
     }
 
+    // Persist the chosen name so ?join= deep links can join with it
+    // (the deep-link path has no browser screen to read).
+    document.getElementById('browserPlayerName')?.addEventListener('input', (event) => {
+        try {
+            localStorage.setItem('shapekeeper.playerName', event.target.value.trim());
+        } catch {
+            // Private-browsing storage failures are not fatal.
+        }
+    });
+
     function renderOpenLobbies(lobbies) {
         const list = document.getElementById('openLobbiesList');
         const emptyState = document.getElementById('openLobbiesEmpty');

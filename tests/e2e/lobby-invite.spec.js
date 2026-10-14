@@ -17,6 +17,12 @@ test.describe('lobby browser', () => {
         await expect(page.getByTestId('browser-player-name-input')).toBeVisible();
         await expect(page.getByTestId('open-lobbies-list')).toBeVisible();
         await expect(page.getByTestId('open-lobbies-empty')).toBeVisible();
+
+        // The name is persisted so ?join= deep links can join with it.
+        await page.getByTestId('browser-player-name-input').fill('Zoe');
+        expect(await page.evaluate(() => localStorage.getItem('shapekeeper.playerName'))).toBe(
+            'Zoe'
+        );
     });
 
     test('back from the browser returns to the main menu', async ({ page }) => {
