@@ -26,6 +26,7 @@ import type * as mutations_joinRoom from "../mutations/joinRoom.js";
 import type * as mutations_leaveRoom from "../mutations/leaveRoom.js";
 import type * as mutations_startGame from "../mutations/startGame.js";
 import type * as mutations_sweepAllTurnDeadlines from "../mutations/sweepAllTurnDeadlines.js";
+import type * as mutations_sweepStaleLobbies from "../mutations/sweepStaleLobbies.js";
 import type * as mutations_sweepTurnDeadline from "../mutations/sweepTurnDeadline.js";
 import type * as mutations_toggleReady from "../mutations/toggleReady.js";
 import type * as mutations_updateGridSize from "../mutations/updateGridSize.js";
@@ -76,6 +77,7 @@ declare const fullApi: ApiFromModules<{
   "mutations/leaveRoom": typeof mutations_leaveRoom;
   "mutations/startGame": typeof mutations_startGame;
   "mutations/sweepAllTurnDeadlines": typeof mutations_sweepAllTurnDeadlines;
+  "mutations/sweepStaleLobbies": typeof mutations_sweepStaleLobbies;
   "mutations/sweepTurnDeadline": typeof mutations_sweepTurnDeadline;
   "mutations/toggleReady": typeof mutations_toggleReady;
   "mutations/updateGridSize": typeof mutations_updateGridSize;
