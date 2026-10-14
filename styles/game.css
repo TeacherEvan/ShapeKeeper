@@ -313,7 +313,7 @@
 }
 
 .game-controls-panel .footer-buttons {
-    justify-content: center;
+    justify-content: safe center;
     width: 100%;
 }
 

@@ -385,6 +385,7 @@ input[type='color']:focus {
         text-overflow: ellipsis;
     }
 
+    .game-controls-panel .footer-buttons,
     .footer-buttons {
         flex-wrap: nowrap;
         overflow-x: auto;
