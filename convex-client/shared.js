@@ -98,6 +98,12 @@
             state.currentSubscription = null;
         }
 
+        if (state.openLobbiesSubscription) {
+            state.openLobbiesSubscription();
+            state.activeSubscriptions.delete(state.openLobbiesSubscription);
+            state.openLobbiesSubscription = null;
+        }
+
         if (state.gameStateSubscription) {
             state.gameStateSubscription();
             state.activeSubscriptions.delete(state.gameStateSubscription);

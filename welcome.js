@@ -52,45 +52,14 @@ function initializeApp() {
     // Initialize menu navigation
     initializeMenuNavigation();
 
-    // Pre-fill the join screen from an invite link, if present.
-    // `?join=ABC123` on the URL jumps the user to the join screen with the
-    // code input filled in and the button enabled.
+    // Invite-link deep link (?join=CODE): open lobbies are joined straight
+    // from the browser, but an old-style invite link still jumps directly
+    // into that lobby. The menu event bindings pick up this event and run
+    // the join (they own the Convex wiring).
     const joinParams = getJoinParamsFromUrl();
     if (joinParams) {
-        prefillJoinScreen(joinParams);
+        window.dispatchEvent(new CustomEvent('shapekeeper:joinFromUrl', { detail: joinParams }));
     }
-}
-
-/**
- * Move the user to the join screen and populate the code/name
- * inputs. Called when the page loads with `?join=…` URL params.
- * @param {{roomCode: string}} params
- */
-function prefillJoinScreen(params) {
-    const joinScreen = document.getElementById('joinScreen');
-    const codeInput = document.getElementById('joinRoomCode');
-    const passcodeInput = document.getElementById('joinRoomPasscode');
-    const nameInput = document.getElementById('joinPlayerName');
-    if (!joinScreen || !codeInput) return;
-
-    // Hide every other screen, show join.
-    document.querySelectorAll('.screen').forEach((s) => {
-        s.hidden = true;
-        s.setAttribute('aria-hidden', 'true');
-    });
-    joinScreen.hidden = false;
-    joinScreen.setAttribute('aria-hidden', 'false');
-
-    codeInput.value = params.roomCode;
-    if (passcodeInput && params.passcode) {
-        passcodeInput.value = params.passcode;
-    }
-    if (nameInput) nameInput.focus();
-
-    // Re-run the validation handler so the Join button enables.
-    codeInput.dispatchEvent(new Event('input', { bubbles: true }));
-    if (passcodeInput) passcodeInput.dispatchEvent(new Event('input', { bubbles: true }));
-    if (nameInput) nameInput.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 // Export for global access (needed for Convex integration)

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -15,7 +15,7 @@
             content="game, ShapeKeeper, dots and boxes, multiplayer, browser game"
         />
         <meta name="author" content="Teacher Evan" />
-        <meta name="theme-color" content="#4CAF50" />
+        <meta name="theme-color" content="#030611" />
 
         <!-- Open Graph / Social -->
         <meta property="og:title" content="ShapeKeeper" />
@@ -24,12 +24,20 @@
             content="A modern territory capture game with multiplayer support"
         />
         <meta property="og:type" content="website" />
-
-        <!-- Favicon -->
-        <link
-            rel="icon"
-            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>"
+        <meta property="og:url" content="https://shape-keeper.vercel.app/" />
+        <meta property="og:image" content="https://shape-keeper.vercel.app/assets/branding/shape-keeper-hero.jpg" />
+        <meta property="og:image:width" content="384" />
+        <meta property="og:image:height" content="305" />
+        <meta
+            property="og:image:alt"
+            content="The Shape Keeper holding a glowing polyhedron in a constellation of neon shapes"
         />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://shape-keeper.vercel.app/assets/branding/shape-keeper-hero.jpg" />
+
+        <!-- Favicon: hexagonal ShapeKeeper mark (matches assets/branding/shape-keeper-mark.svg) -->
+        <link rel="icon" type="image/svg+xml" href="assets/branding/shape-keeper-mark.svg" />
+        <link rel="apple-touch-icon" href="assets/branding/shape-keeper-mark.svg" />
 
         <!-- Preload critical CSS -->
         <link rel="stylesheet" href="styles.css" />
@@ -68,7 +76,21 @@
             >
                 <canvas id="welcomeCanvas" aria-hidden="true"></canvas>
                 <div class="welcome-container">
-                    <h1 id="mainMenuTitle">ShapeKeeper</h1>
+                    <figure class="brand-plate-frame">
+                        <img
+                            class="brand-plate"
+                            src="assets/branding/shape-keeper-plate.jpg"
+                            alt="The Shape Keeper: a hooded figure holding a glowing polyhedron among neon geometric shapes"
+                            width="384"
+                            height="216"
+                            decoding="async"
+                        />
+                    </figure>
+                    <h1 id="mainMenuTitle">
+                        <span class="wordmark-shape">Shape</span><span class="wordmark-keeper"
+                            >Keeper</span
+                        >
+                    </h1>
                     <p class="credit">Created by Teacher Evan</p>
 
                     <div class="menu-options">
@@ -184,6 +206,29 @@
                     </div>
 
                     <div class="setup-section">
+                        <h2>Allowed Time</h2>
+                        <label class="field-label" for="localTurnDuration"
+                            >Seconds per turn (0 = no limit)</label
+                        >
+                        <input
+                            type="number"
+                            id="localTurnDuration"
+                            class="name-input turn-duration-input"
+                            data-testid="local-turn-duration"
+                            min="0"
+                            max="600"
+                            step="1"
+                            value="0"
+                            placeholder="0 (0 = no limit)"
+                            aria-describedby="localTurnDurationHint"
+                        />
+                        <span id="localTurnDurationHint" class="setting-hint">
+                            Lava-timer countdown per turn. Runs out &rarr; the turn is
+                            skipped. 0 = no limit.
+                        </span>
+                    </div>
+
+                    <div class="setup-section">
                         <h2>AI Difficulty</h2>
                         <label class="field-label" for="localAIDifficulty"
                             >Choose AI difficulty</label
@@ -223,33 +268,6 @@
                 <div class="lobby-container">
                     <div class="lobby-header">
                         <h1 id="lobbyTitle">Game Lobby</h1>
-                        <div class="room-code-section">
-                            <span class="room-label">Room Code:</span>
-                            <span class="room-code" id="roomCode" data-testid="room-code"
-                                >------</span
-                            >
-                            <button
-                                id="copyCodeBtn"
-                                class="copy-btn"
-                                title="Copy room code"
-                                aria-label="Copy room code"
-                                type="button"
-                            >
-                                📋
-                            </button>
-                        </div>
-<div class="invite-link-section">
-                            <button
-                                id="copyInviteLinkBtn"
-                                class="copy-btn invite-link-btn"
-                                title="Copy invite link (room code)"
-                                aria-label="Copy invite link"
-                                data-testid="copy-invite-link"
-                                type="button"
-                            >
-                                🔗 Copy Invite Link
-                            </button>
-                        </div>
                     </div>
 
                     <div class="lobby-settings">
@@ -272,14 +290,22 @@
                             </div>
                         </div>
                         <div class="setting-row">
-                            <label class="field-label" for="lobbyTurnTimer">Time per turn</label>
-                            <select id="lobbyTurnTimer" class="name-input" data-testid="lobby-turn-timer">
-                                <option value="0">Off</option>
-                                <option value="10000">10 seconds</option>
-                                <option value="15000" selected>15 seconds</option>
-                                <option value="30000">30 seconds</option>
-                                <option value="60000">60 seconds</option>
-                            </select>
+                            <label for="lobbyTurnDuration">Allowed Time (seconds):</label>
+                            <input
+                                type="number"
+                                id="lobbyTurnDuration"
+                                class="turn-duration-input"
+                                data-testid="lobby-turn-duration"
+                                min="0"
+                                max="600"
+                                step="1"
+                                value="10"
+                                placeholder="e.g. 10 (0 = no limit)"
+                                aria-describedby="turnDurationHint"
+                            />
+                            <span id="turnDurationHint" class="setting-hint">
+                                Lava-timer countdown per turn. Runs out &rarr; turn is skipped. 0 = no limit.
+                            </span>
                         </div>
                     </div>
 
@@ -331,79 +357,58 @@
                 </div>
             </section>
 
-            <!-- Join Game Screen -->
+            <!-- Lobby Browser Screen (JOIN LOBBY: open lobbies, no codes) -->
             <section
-                id="joinScreen"
+                id="lobbyBrowserScreen"
                 class="screen"
-                data-testid="join-screen"
+                data-testid="lobby-browser-screen"
                 hidden
                 aria-hidden="true"
-                aria-labelledby="joinScreenTitle"
+                aria-labelledby="lobbyBrowserTitle"
             >
-                <canvas id="joinCanvas"></canvas>
                 <div class="welcome-container">
-                    <h1 id="joinScreenTitle">Join Game</h1>
-                    <p class="credit">Enter the room code to join</p>
-
-                    <div class="setup-section">
-                        <h2>Room Code</h2>
-                        <label class="field-label" for="joinRoomCode"
-                            >Enter the 6-character room code</label
-                        >
-                        <input
-                            type="text"
-                            id="joinRoomCode"
-                            class="name-input"
-                            data-testid="join-room-code-input"
-                            placeholder="ABC123"
-                            maxlength="6"
-                            aria-label="Room code"
-                            autocomplete="off"
-                        />
-                    </div>
-
-                    <div class="setup-section">
-                        <h2>Passcode (if required)</h2>
-                        <label class="field-label" for="joinRoomPasscode"
-                            >Enter the lobby passcode</label
-                        >
-                        <input
-                            type="text"
-                            id="joinRoomPasscode"
-                            class="name-input"
-                            data-testid="join-room-passcode-input"
-                            placeholder="SillyRabbit"
-                            maxlength="20"
-                            aria-label="Lobby passcode"
-                            autocomplete="off"
-                        />
-                    </div>
+                    <h1 id="lobbyBrowserTitle">Open Lobbies</h1>
+                    <p class="credit">Pick a lobby to join — no code needed</p>
 
                     <div class="setup-section">
                         <h2>Your Name</h2>
-                        <label class="field-label" for="joinPlayerName"
+                        <label class="field-label" for="browserPlayerName"
                             >Enter your display name</label
                         >
                         <input
                             type="text"
-                            id="joinPlayerName"
+                            id="browserPlayerName"
                             class="name-input"
-                            data-testid="join-player-name-input"
+                            data-testid="browser-player-name-input"
                             placeholder="Your name"
                             maxlength="15"
                             aria-label="Your name"
+                            autocomplete="off"
                         />
                     </div>
 
-                    <div class="button-row">
-                        <button id="backToMenuFromJoin" class="back-btn">← Back</button>
-                        <button
-                            id="joinRoomBtn"
-                            class="start-btn"
-                            data-testid="join-room-button"
-                            disabled
+                    <div class="setup-section">
+                        <h2>Lobbies</h2>
+                        <div
+                            class="players-list"
+                            id="openLobbiesList"
+                            data-testid="open-lobbies-list"
                         >
-                            Join Room
+                            <!-- Lobby entries are added dynamically -->
+                        </div>
+                        <p
+                            id="openLobbiesEmpty"
+                            class="setting-hint"
+                            data-testid="open-lobbies-empty"
+                        >
+                            No open lobbies right now — create one from the main menu!
+                        </p>
+                    </div>
+
+                    <div class="button-row">
+                        <button id="backToMenuFromBrowser" class="back-btn">← Back</button>
+                        <button id="refreshLobbiesBtn" class="back-btn" type="button">
+                            ↻ Refresh
                         </button>
                     </div>
                 </div>

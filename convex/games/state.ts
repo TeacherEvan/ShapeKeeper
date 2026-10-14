@@ -2,7 +2,7 @@ import { isAuthorisedHostAsync } from '../auth/token';
 import { POPULATE_PLAYER_INDEX } from './shared';
 import { validateLineKey } from './lineValidation';
 import { log, errorLog, warn } from '../log';
-import { checkRateLimit } from '../rateLimit';
+import { checkRateLimit } from '../rate_limit';
 
 export function computeEffectiveMultiplier(multiplier: any, taps: number): any {
     if (multiplier === null) return null;

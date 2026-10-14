@@ -1,15 +1,19 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
 import { getHostTokenHash } from '../utils/roomUtils';
+import { validateTurnDurationSeconds } from '../games/turn_duration';
 import { ALLOWED_TURN_DURATIONS_MS } from '../games/turnTimer';
-import { checkRateLimit } from '../rateLimit';
+import { checkRateLimit } from '../rate_limit';
 
+// Update the per-turn "Allowed Time" countdown (host only, lobby state only).
+// seconds = 0 means "no limit"; otherwise a whole number of seconds.
 export const updateTurnDuration = mutation({
     args: {
         roomId: v.id('rooms'),
         sessionId: v.string(),
         hostToken: v.optional(v.string()),
-        turnDurationMs: v.number(),
+        turnDurationSeconds: v.optional(v.number()),
+        turnDurationMs: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
         const rl = await checkRateLimit(ctx, 'updateTurnDuration', args.sessionId);
@@ -18,7 +22,7 @@ export const updateTurnDuration = mutation({
         const room = await ctx.db.get(args.roomId);
         if (!room) return { error: 'Room not found' };
 
-        // Verify host authorization
+        // Verify host authorization (same pattern as updateGridSize)
         if (room.hostTokenHash) {
             if (!args.hostToken) return { error: 'Host token required' };
             const providedHash = await getHostTokenHash(args.hostToken);
@@ -30,11 +34,36 @@ export const updateTurnDuration = mutation({
 
         if (room.status !== 'lobby') return { error: 'Cannot change turn duration after game started' };
 
-        if (!(ALLOWED_TURN_DURATIONS_MS as readonly number[]).includes(args.turnDurationMs)) {
-            return { error: 'Invalid turn duration' };
+        let seconds = args.turnDurationSeconds;
+        let ms = args.turnDurationMs;
+
+        const patchData: Record<string, any> = {
+            updatedAt: Date.now(),
+        };
+
+        if (seconds !== undefined) {
+            const validation = validateTurnDurationSeconds(seconds);
+            if (!validation.ok) return { error: validation.error };
+            seconds = validation.seconds;
+            patchData.turnDurationSeconds = seconds;
+            if (ms === undefined) {
+                ms = (seconds ?? 0) * 1000;
+                patchData.turnDurationMs = ms;
+            }
         }
 
-        await ctx.db.patch(args.roomId, { turnDurationMs: args.turnDurationMs, updatedAt: Date.now() });
+        if (ms !== undefined) {
+            if (seconds === undefined && !(ALLOWED_TURN_DURATIONS_MS as readonly number[]).includes(ms)) {
+                return { error: 'Invalid turn duration' };
+            }
+            patchData.turnDurationMs = ms;
+        }
+
+        if (seconds === undefined && ms === undefined) {
+            return { error: 'Must provide turnDurationSeconds or turnDurationMs' };
+        }
+
+        await ctx.db.patch(args.roomId, patchData);
         return { success: true };
     },
 });

@@ -59,11 +59,17 @@ export function initLavaSystem(game) {
 export function drawLavaTimer(game, remainingMs) {
     const ctx = game.ctx;
     if (!ctx) return;
+
+    // No active countdown (timer off, or no turn running yet) → draw nothing.
+    // Previously an unset turnRemainingMs fell through to 0 and painted a
+    // permanent "0.0s" on every board; a null/undefined value means "no
+    // timer" and the lava layer stays hidden.
+    const remaining = remainingMs != null ? remainingMs : game.turnRemainingMs;
+    if (remaining == null) return;
+
     const lava = ensureLavaSystem(game);
     if (remainingMs == null && game.turnRemainingMs == null) return;
     if (!lava.initialized) initLavaSystem(game);
-
-    const remaining = remainingMs != null ? remainingMs : game.turnRemainingMs;
 
     // Advance physics (behind dots, 40% opacity max).
     if (!prefersReducedMotion()) {

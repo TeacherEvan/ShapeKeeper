@@ -7,9 +7,11 @@
 
 /* ───────────────────────── TOKENS (repaint) ───────────────────────── */
 :root {
-    --bg-primary: #e9eee5;
-    --bg-secondary: #dde4da;
-    --bg-tertiary: #ccd6c8;
+    /* NEON RAINBOW arcade palette — bright page backdrops.
+       Cards/buttons/text keep their own solid colours, so these can go loud. */
+    --bg-primary: #ff9ede; /* hot pink — page backdrop */
+    --bg-secondary: #9ee8ff; /* electric cyan — section surfaces */
+    --bg-tertiary: #c8ff9e; /* neon lime — cards / panels */
     --text-primary: #1b2a33;
     --text-secondary: #465c66;
     --border-color: #9fb2ac;
@@ -23,7 +25,7 @@
     --accent-danger-strong: #8f2e2e;
     --accent-neutral: #5b6b66;
     --accent-neutral-strong: #44524e;
-    --canvas-bg: rgba(233, 238, 229, 0.94);
+    --canvas-bg: rgba(255, 158, 222, 0.94);
     --shadow-color: rgba(27, 42, 51, 0.16);
 
     /* rgba helper channels for legacy hardcoded-color repaints */
@@ -41,9 +43,10 @@
 }
 
 [data-theme='dark'] {
-    --bg-primary: #0e1a2b;
-    --bg-secondary: #15263b;
-    --bg-tertiary: #1e3450;
+    /* NEON RAINBOW — deep saturated arcade night backdrops */
+    --bg-primary: #0d0524; /* deep indigo-violet — page backdrop */
+    --bg-secondary: #1a0b3d; /* royal violet — section surfaces */
+    --bg-tertiary: #2a1250; /* electric purple — cards / panels */
     --text-primary: #dce7f0;
     --text-secondary: #9db2c4;
     --border-color: #2e4a6b;
@@ -57,7 +60,7 @@
     --accent-danger-strong: #c75c5c;
     --accent-neutral: #8499ac;
     --accent-neutral-strong: #6e8294;
-    --canvas-bg: rgba(14, 26, 43, 0.94);
+    --canvas-bg: rgba(13, 5, 36, 0.94);
     --shadow-color: rgba(0, 0, 0, 0.4);
 
     --accent-primary-rgb: 79, 141, 224;
@@ -83,22 +86,15 @@
     --status-info-surface: rgba(79, 141, 224, 0.24);
 }
 
-/* ───────────────────────── BLUEPRINT SUBSTRATE ───────────────────────── */
+/* ───────────────────────── RAINBOW SUBSTRATE ───────────────────────── */
+/* Grid pattern REMOVED (user: "Remove colour gridlines!!!") — solid colour only */
 .screen {
     background-color: var(--bg-primary);
-    background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 28px 28px;
-    background-position: center;
 }
 
 #gameScreen {
     background-color: var(--bg-primary);
-    background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 28px 28px;
 }
-
 /* ───────────────────────── TYPOGRAPHY ───────────────────────── */
 .welcome-container h1,
 .lobby-header h1,
@@ -141,11 +137,18 @@ body {
     width: 76px;
     height: 10px;
     margin: 16px auto 0;
-    background-image: linear-gradient(var(--accent-secondary), var(--accent-secondary)),
+    background-image:
+        linear-gradient(var(--accent-secondary), var(--accent-secondary)),
         linear-gradient(var(--accent-secondary), var(--accent-secondary)),
         linear-gradient(var(--accent-secondary), var(--accent-secondary));
-    background-size: 76px 2px, 2px 10px, 2px 10px;
-    background-position: center, left center, right center;
+    background-size:
+        76px 2px,
+        2px 10px,
+        2px 10px;
+    background-position:
+        center,
+        left center,
+        right center;
     background-repeat: no-repeat;
 }
 
@@ -177,7 +180,8 @@ body {
     position: absolute;
     inset: 10px;
     pointer-events: none;
-    background-image: linear-gradient(var(--ink-mark), var(--ink-mark)),
+    background-image:
+        linear-gradient(var(--ink-mark), var(--ink-mark)),
         linear-gradient(var(--ink-mark), var(--ink-mark)),
         linear-gradient(var(--ink-mark), var(--ink-mark)),
         linear-gradient(var(--ink-mark), var(--ink-mark)),
@@ -185,10 +189,24 @@ body {
         linear-gradient(var(--ink-mark), var(--ink-mark)),
         linear-gradient(var(--ink-mark), var(--ink-mark)),
         linear-gradient(var(--ink-mark), var(--ink-mark));
-    background-size: 18px 2px, 2px 18px, 18px 2px, 2px 18px, 18px 2px, 2px 18px, 18px 2px,
+    background-size:
+        18px 2px,
+        2px 18px,
+        18px 2px,
+        2px 18px,
+        18px 2px,
+        2px 18px,
+        18px 2px,
         2px 18px;
-    background-position: left top, left top, right top, right top, left bottom, left bottom,
-        right bottom, right bottom;
+    background-position:
+        left top,
+        left top,
+        right top,
+        right top,
+        left bottom,
+        left bottom,
+        right bottom,
+        right bottom;
     background-repeat: no-repeat;
     opacity: 0.55;
 }
@@ -283,7 +301,9 @@ body {
 
 .player-info.active {
     background: rgba(var(--accent-primary-rgb), 0.16);
-    box-shadow: 0 0 0 2px rgba(var(--accent-primary-rgb), 0.4), var(--shadow-soft);
+    box-shadow:
+        0 0 0 2px rgba(var(--accent-primary-rgb), 0.4),
+        var(--shadow-soft);
 }
 
 input[type='color']:hover {
@@ -305,7 +325,11 @@ input[type='color']:focus {
 }
 
 .winner-container .start-btn {
-    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-strong) 100%);
+    background: linear-gradient(
+        135deg,
+        var(--accent-primary) 0%,
+        var(--accent-primary-strong) 100%
+    );
     box-shadow: 0 4px 15px rgba(var(--accent-primary-rgb), 0.4);
 }
 

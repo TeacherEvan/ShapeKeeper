@@ -60,8 +60,11 @@ export const GAME_CONSTANTS = {
 };
 
 // Feature flags (FR-6). Default OFF; enabled via window.FEATURE_* at runtime.
+// FEATURE_LAVA_TIMER ships ON (2026-10): the Allowed Time countdown is a
+// shipped lobby feature; the flag remains honoured at runtime so it can be
+// disabled without a deploy if a hotfix ever demands it.
 export const FEATURE_FLAGS = {
-    FEATURE_LAVA_TIMER: false,
+    FEATURE_LAVA_TIMER: true,
     FEATURE_SYNC_RESILIENCE: false,
 };
 

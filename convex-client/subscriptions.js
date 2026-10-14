@@ -160,8 +160,36 @@
         return shared.state.gameStateSubscription;
     }
 
+    /**
+     * Subscribe to the list of open lobbies (JOIN LOBBY browser screen).
+     * Delivers the full list on every change; lobbies appear/disappear in
+     * realtime as hosts create rooms and players join/leave.
+     */
+    function subscribeToOpenLobbies(callback) {
+        const client = shared.initConvex();
+        if (!client) {
+            console.error('[Convex] Cannot subscribe: client not initialized');
+            return () => {};
+        }
+
+        if (shared.state.openLobbiesSubscription) {
+            shared.state.openLobbiesSubscription();
+            shared.state.activeSubscriptions.delete(shared.state.openLobbiesSubscription);
+        }
+
+        const subscription = client.onUpdate(shared.api.rooms.listOpenLobbies, {}, (lobbies) =>
+            callback(lobbies || [])
+        );
+
+        shared.state.openLobbiesSubscription = subscription;
+        shared.state.activeSubscriptions.add(subscription);
+        console.log('[Convex] Subscribed to open lobbies');
+        return subscription;
+    }
+
     windowObject.ShapeKeeperConvexSubscriptions = {
         subscribeToGameState,
+        subscribeToOpenLobbies,
         subscribeToRoom,
     };
 })(window);

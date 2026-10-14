@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ShapeKeeper">
+    <defs>
+        <linearGradient id="sk-ring" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#00f0ff" />
+            <stop offset="1" stop-color="#e000ff" />
+        </linearGradient>
+        <linearGradient id="sk-solid" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" stop-color="#0088ff" />
+            <stop offset="1" stop-color="#8a00ff" />
+        </linearGradient>
+    </defs>
+    <rect width="64" height="64" rx="13" fill="#030611" />
+    <polygon
+        points="32,5 55,18.5 55,45.5 32,59 9,45.5 9,18.5"
+        fill="none"
+        stroke="url(#sk-ring)"
+        stroke-width="3.2"
+        stroke-linejoin="round"
+    />
+    <polygon points="32,17 44,32 32,47 20,32" fill="url(#sk-solid)" />
+    <polygon points="32,17 44,32 32,32" fill="#00f0ff" fill-opacity="0.9" />
+    <polygon points="32,32 32,47 20,32" fill="#5c00c8" fill-opacity="0.9" />
+</svg>

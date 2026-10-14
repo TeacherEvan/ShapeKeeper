@@ -26,7 +26,9 @@ export class LiveLobbyManager {
         this.players = []; // [{sessionId, name, color, isReady, isConnected, playerIndex}]
         this.isHost = false;
         this.gridSize = 5;
-        this.turnDurationMs = 15000;
+        this.turnDurationSeconds = 10; // Allowed Time: lava-timer countdown per turn (0 = no limit)
+        this.turnDurationMs = 10000;
+        this.partyMode = false;
         this.status = 'idle'; // 'idle' | 'lobby' | 'playing' | 'finished'
         this._unsubscribe = null;
     }
@@ -42,7 +44,13 @@ export class LiveLobbyManager {
             this.passcode = room.passcode ?? this.passcode;
             this.hostSessionId = room.hostPlayerId || this.hostSessionId;
             this.gridSize = room.gridSize ?? this.gridSize;
-            this.turnDurationMs = room.turnDurationMs ?? this.turnDurationMs;
+            this.turnDurationSeconds =
+                room.turnDurationSeconds ??
+                (room.turnDurationMs
+                    ? Math.round(room.turnDurationMs / 1000)
+                    : this.turnDurationSeconds);
+            this.turnDurationMs = room.turnDurationMs ?? this.turnDurationSeconds * 1000;
+            this.partyMode = room.partyMode ?? this.partyMode;
             this.status = room.status || this.status;
         }
         if (Array.isArray(players)) {

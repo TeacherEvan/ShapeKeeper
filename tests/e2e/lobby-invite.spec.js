@@ -1,25 +1,54 @@
 /**
- * Lobby invite-link smoke tests.
+ * Lobby browser smoke tests.
  *
- * These are deliberately minimal — they exercise the new lobby surface
- * (URL pre-fill, invite-link button) without requiring a
- * full Convex deployment. The deeper host-creates/guest-joins E2E lives in
- * multiplayer-startup.spec.js.
+ * The code-entry join screen is gone: JOIN LOBBY shows a live list of
+ * open lobbies (no room codes, no passcodes) and one click joins. Old
+ * ?join= invite links still deep-link straight into that lobby.
  */
 import { expect, test } from '@playwright/test';
+import { gotoApp } from './helpers/bootstrap.js';
 
-test.describe('lobby invite link', () => {
-    test('pre-fills the join screen from ?join= URL params', async ({ page }) => {
-        await page.goto('/?join=ABC123');
+test.describe('lobby browser', () => {
+    test('JOIN LOBBY shows the open-lobby browser with an empty state', async ({ page }) => {
+        await gotoApp(page);
 
-        const codeInput = page.getByTestId('join-room-code-input');
+        await page.getByTestId('join-game-button').click();
+        await expect(page.getByTestId('lobby-browser-screen')).toHaveClass(/active/);
+        await expect(page.getByTestId('browser-player-name-input')).toBeVisible();
+        await expect(page.getByTestId('open-lobbies-list')).toBeVisible();
+        await expect(page.getByTestId('open-lobbies-empty')).toBeVisible();
 
-        await expect(codeInput).toHaveValue('ABC123');
+        // The name is persisted so ?join= deep links can join with it.
+        await page.getByTestId('browser-player-name-input').fill('Zoe');
+        expect(await page.evaluate(() => localStorage.getItem('shapekeeper.playerName'))).toBe(
+            'Zoe'
+        );
     });
 
-    test('ignores the URL when no ?join param is present (no error)', async ({ page }) => {
-        await page.goto('/');
-        // Should land on the main menu; the join screen should not be visible.
-        await expect(page.getByTestId('join-screen')).toBeHidden();
+    test('back from the browser returns to the main menu', async ({ page }) => {
+        await gotoApp(page);
+
+        await page.getByTestId('join-game-button').click();
+        await expect(page.getByTestId('lobby-browser-screen')).toHaveClass(/active/);
+
+        await page.locator('#backToMenuFromBrowser').click();
+        await expect(page.getByTestId('main-menu-screen')).toHaveClass(/active/);
+        await expect(page.getByTestId('lobby-browser-screen')).toBeHidden();
+    });
+
+    test('?join= deep link attempts a direct join without breaking the app', async ({ page }) => {
+        const pageErrors = [];
+        page.on('pageerror', (error) => pageErrors.push(error.message));
+
+        // gotoApp registers the convex-bundle route stub; the navigation
+        // below keeps those routes active.
+        await gotoApp(page);
+        await page.goto('/?join=ABC123');
+
+        // The deep-link join runs against the stub backend and fails
+        // gracefully (no roomId) — the app must stay on a valid screen
+        // with no uncaught errors.
+        await expect(page.getByTestId('main-menu-screen')).toBeVisible();
+        expect(pageErrors).toEqual([]);
     });
 });

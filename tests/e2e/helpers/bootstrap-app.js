@@ -15,6 +15,7 @@ window.convex = {
             getRoomByCode: 'rooms.getRoomByCode',
             joinRoom: 'rooms.joinRoom',
             leaveRoom: 'rooms.leaveRoom',
+            listOpenLobbies: 'rooms.listOpenLobbies',
             startGame: 'rooms.startGame',
             toggleReady: 'rooms.toggleReady',
             updateGridSize: 'rooms.updateGridSize',

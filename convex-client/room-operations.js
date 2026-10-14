@@ -156,10 +156,14 @@
         );
     }
 
-    async function updateTurnDuration(turnDurationMs) {
+    async function updateTurnDuration(duration) {
         if (!shared.state.currentRoomId) {
             return { error: 'Not in a room' };
         }
+
+        const isMs = typeof duration === 'number' && duration > 600;
+        const turnDurationSeconds = isMs ? Math.round(duration / 1000) : duration;
+        const turnDurationMs = isMs ? duration : duration * 1000;
 
         return shared.runMutation(
             shared.api.rooms.updateTurnDuration,
@@ -167,6 +171,7 @@
                 roomId: shared.state.currentRoomId,
                 sessionId: shared.getSessionId(),
                 hostToken: getHostToken(shared.state.currentRoomId),
+                turnDurationSeconds,
                 turnDurationMs,
             },
             'updating turn duration'

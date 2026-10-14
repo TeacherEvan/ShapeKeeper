@@ -147,6 +147,11 @@ export async function installSharedMockMultiplayer(
         resetSharedState = false,
     }
 ) {
+    // generateSillyPasscode lives in module scope — resolve it here so the
+    // page.evaluate below never references it (it is NOT in the page's
+    // scope, and doing so throws inside the mock's createRoom).
+    const resolvedPasscode = passcode || generateSillyPasscode();
+
     await page.evaluate(
         ({
             sessionId: initialSessionId,
@@ -162,6 +167,7 @@ export async function installSharedMockMultiplayer(
             const clone = (value) => (value == null ? value : JSON.parse(JSON.stringify(value)));
             const roomSubscribers = new Set();
             const gameSubscribers = new Set();
+            const lobbyListSubscribers = new Set();
             const connectionStateListeners = new Set();
             let currentRoomId = null;
             let connectionState = 'connected';
@@ -354,6 +360,26 @@ export async function installSharedMockMultiplayer(
                 }
                 return completedSquares;
             };
+            const buildOpenLobbiesList = () => {
+                const sharedState = ensureSharedState();
+                return Object.values(sharedState.rooms)
+                    .filter((room) => room.status === 'lobby')
+                    .sort(
+                        (a, b) =>
+                            (b.createdAt ?? b.updatedAt ?? 0) - (a.createdAt ?? a.updatedAt ?? 0)
+                    )
+                    .map((room) => ({
+                        roomId: room.roomId,
+                        roomCode: room.roomCode,
+                        hostName: room.players?.[0]?.name || 'Host',
+                        playerCount: room.players?.length || 0,
+                        maxPlayers: 6,
+                        gridSize: room.gridSize,
+                        turnDurationSeconds: room.turnDurationSeconds ?? null,
+                        partyMode: room.partyMode ?? false,
+                        createdAt: room.createdAt ?? room.updatedAt,
+                    }));
+            };
             const notifySubscribers = (source = 'notify') => {
                 if (connectionState !== 'connected') return;
                 const room = getActiveRoom();
@@ -362,6 +388,7 @@ export async function installSharedMockMultiplayer(
                 deliveryGeneration += 1;
                 void dispatch('room', roomPayload, { source });
                 if (gamePayload) void dispatch('game', gamePayload, { source });
+                lobbyListSubscribers.forEach((callback) => callback(clone(buildOpenLobbiesList())));
             };
             const setConnectionState = (nextState) => {
                 if (connectionState === nextState) return;
@@ -451,7 +478,7 @@ export async function installSharedMockMultiplayer(
                     const sharedState = ensureSharedState();
                     const normalizedCode = initialRoomCode.toUpperCase();
                     const roomId = `room_${normalizedCode}`;
-                    const generatedPasscode = initialPasscode || generateSillyPasscode();
+                    const generatedPasscode = initialPasscode;
                     sharedState.rooms[roomId] = {
                         roomId,
                         roomCode: normalizedCode,
@@ -491,26 +518,15 @@ export async function installSharedMockMultiplayer(
                 getSessionId() {
                     return initialSessionId;
                 },
-                async joinRoom(joinCode, playerName, suppliedPasscode) {
+                async joinRoom(joinCode, playerName, _suppliedPasscode) {
                     const sharedState = ensureSharedState();
                     const room = getRoomByCode(sharedState, joinCode);
                     if (!room) return { error: 'Room not found' };
 
-                    // Validate passcode: rooms created after the lobby-passcode feature
-                    // require the silly passcode. Legacy rooms (room.passcode undefined/empty)
-                    // still allow code-only joining for backwards compatibility.
-                    if (room.passcode) {
-                        const provided =
-                            typeof suppliedPasscode === 'string' ? suppliedPasscode : '';
-                        if (provided.length === 0) {
-                            return {
-                                error: 'This lobby requires a passcode. Ask the host to share it.',
-                            };
-                        }
-                        if (provided !== room.passcode) {
-                            return { error: 'Incorrect passcode. Check the link or ask the host.' };
-                        }
-                    }
+                    // Open-lobby model: joining never requires a passcode. The
+                    // room may still carry a legacy passcode field, but it is
+                    // not enforced (matches the real server, which no longer
+                    // issues passcodes on new rooms).
 
                     const existingPlayer = room.players.find(
                         (player) => player.sessionId === initialSessionId
@@ -738,6 +754,14 @@ export async function installSharedMockMultiplayer(
                         effectiveMultiplier: square.effectiveMultiplier ?? square.multiplier,
                     };
                 },
+                listOpenLobbies() {
+                    return clone(buildOpenLobbiesList());
+                },
+                subscribeToOpenLobbies(callback) {
+                    lobbyListSubscribers.add(callback);
+                    callback(clone(buildOpenLobbiesList()));
+                    return () => lobbyListSubscribers.delete(callback);
+                },
                 subscribeToGameState(callback) {
                     gameSubscribers.add(callback);
                     const gameState = clone(getActiveRoom()?.gameState || null);
@@ -775,6 +799,25 @@ export async function installSharedMockMultiplayer(
                     notifySubscribers('update-grid-size');
                     return { success: true };
                 },
+                async updateTurnDuration(turnDurationSeconds) {
+                    const sharedState = ensureSharedState();
+                    const room = getActiveRoom(sharedState);
+                    if (!room) return { error: 'Not in a room' };
+                    const seconds = Number(turnDurationSeconds);
+                    if (
+                        !Number.isFinite(seconds) ||
+                        !Number.isInteger(seconds) ||
+                        seconds < 0 ||
+                        seconds > 600
+                    ) {
+                        return { error: 'Invalid turn duration' };
+                    }
+                    room.turnDurationSeconds = seconds;
+                    room.updatedAt = Date.now();
+                    writeSharedState(sharedState);
+                    notifySubscribers('update-turn-duration');
+                    return { success: true, turnDurationSeconds: seconds };
+                },
                 async updatePartyMode(nextPartyMode) {
                     const sharedState = ensureSharedState();
                     const room = getActiveRoom(sharedState);
@@ -806,7 +849,7 @@ export async function installSharedMockMultiplayer(
             sessionId,
             defaultPlayerName,
             roomCode,
-            passcode,
+            passcode: resolvedPasscode,
             gridSize,
             partyMode,
             resetSharedState,

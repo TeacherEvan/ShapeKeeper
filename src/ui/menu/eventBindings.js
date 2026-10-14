@@ -22,8 +22,28 @@ function buildLocalGameFromConfig(config) {
         localMode: config.localMode,
         aiDifficulty: config.aiDifficulty,
         tutorialEnabled: config.tutorialEnabled,
-        turnDurationMs: config.turnDurationMs ?? 0,
+        turnDurationSeconds:
+            config.turnDurationSeconds ??
+            (config.turnDurationMs ? Math.round(config.turnDurationMs / 1000) : 0),
+        turnDurationMs:
+            config.turnDurationMs ??
+            (config.turnDurationSeconds ? config.turnDurationSeconds * 1000 : 0),
     });
+}
+
+/**
+ * Allowed Time for local games: whole seconds, 0 = no limit.
+ * Sanitises the free-form input (empty or invalid falls back to 0 = no
+ * limit); the browser constrains range via min/max, this is the safety net.
+ */
+function parseLocalTurnDuration() {
+    const input = document.getElementById('localTurnDuration');
+    if (!input) return 0;
+    const raw = input.value.trim();
+    if (raw === '') return 0;
+    const seconds = parseInt(raw, 10);
+    if (!Number.isInteger(seconds) || seconds < 0) return 0;
+    return Math.min(600, seconds);
 }
 
 export function bindMenuEventHandlers(deps) {
@@ -62,7 +82,7 @@ export function bindMenuEventHandlers(deps) {
 
             lobbyManager.roomCode = result.roomCode;
             lobbyManager.isHost = true;
-            showToast(`Room ${result.roomCode} created`, 'success', 4000);
+            showToast('Lobby created', 'success', 4000);
         } else {
             lobbyManager.createRoom(playerName);
         }
@@ -72,7 +92,16 @@ export function bindMenuEventHandlers(deps) {
     });
 
     document.getElementById('joinGameBtn').addEventListener('click', () => {
-        showScreen('joinScreen');
+        showScreen('lobbyBrowserScreen');
+
+        // Live list of open lobbies — no room codes, no passcodes.
+        stopOpenLobbiesSubscription();
+        if (window.ShapeKeeperConvex?.subscribeToOpenLobbies) {
+            openLobbiesCleanup =
+                window.ShapeKeeperConvex.subscribeToOpenLobbies(renderOpenLobbies) || null;
+        } else {
+            renderOpenLobbies([]);
+        }
     });
 
     const localOpponentType = document.getElementById('localOpponentType');
@@ -161,7 +190,11 @@ export function bindMenuEventHandlers(deps) {
         const localMode = localOpponentType?.value === 'ai' ? 'ai' : 'human';
         const aiDifficulty = localAIDifficulty?.value || 'medium';
         const tutorialEnabled = Boolean(localTutorialMode?.checked);
-        const turnDurationMs = Number(document.getElementById('localTurnTimer')?.value ?? 0);
+        const turnDurationSeconds = parseLocalTurnDuration();
+        const turnDurationSelect = document.getElementById('localTurnTimer');
+        const turnDurationMs = turnDurationSelect
+            ? Number(turnDurationSelect.value)
+            : turnDurationSeconds * 1000;
 
         if (welcomeAnimation) {
             welcomeAnimation.moveToGameScreen();
@@ -177,6 +210,7 @@ export function bindMenuEventHandlers(deps) {
             localMode,
             aiDifficulty,
             tutorialEnabled,
+            turnDurationSeconds,
             turnDurationMs,
         };
         lastLocalConfig = config;
@@ -218,58 +252,134 @@ export function bindMenuEventHandlers(deps) {
         showToast('Loaded saved local game.', 'success', 2200);
     });
 
-    const joinRoomCodeInput = document.getElementById('joinRoomCode');
-    const joinRoomPasscodeInput = document.getElementById('joinRoomPasscode');
-    const joinPlayerNameInput = document.getElementById('joinPlayerName');
-    const joinRoomBtn = document.getElementById('joinRoomBtn');
+    // --- Open lobby browser (JOIN LOBBY) ------------------------------------
+    // The join screen is gone: players see a live list of open lobbies and
+    // click one to join. The room code stays an internal handle (the invite
+    // deep link still uses it) but is never typed or displayed.
 
-    function validateJoinInputs() {
-        const codeValid = joinRoomCodeInput.value.length === 6;
-        const nameValid = joinPlayerNameInput.value.trim().length > 0;
-        joinRoomBtn.disabled = !(codeValid && nameValid);
+    let openLobbiesCleanup = null;
+
+    function stopOpenLobbiesSubscription() {
+        openLobbiesCleanup?.();
+        openLobbiesCleanup = null;
     }
 
-    joinRoomCodeInput.addEventListener('input', (event) => {
-        event.target.value = event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        validateJoinInputs();
+    function getBrowserPlayerName() {
+        const input = document.getElementById('browserPlayerName');
+        return input?.value.trim() || 'Player';
+    }
+
+    // Persist the chosen name so ?join= deep links can join with it
+    // (the deep-link path has no browser screen to read).
+    document.getElementById('browserPlayerName')?.addEventListener('input', (event) => {
+        try {
+            localStorage.setItem('shapekeeper.playerName', event.target.value.trim());
+        } catch {
+            // Private-browsing storage failures are not fatal.
+        }
     });
 
-    joinRoomPasscodeInput?.addEventListener('input', validateJoinInputs);
+    function renderOpenLobbies(lobbies) {
+        const list = document.getElementById('openLobbiesList');
+        const emptyState = document.getElementById('openLobbiesEmpty');
+        if (!list) return;
 
-    joinPlayerNameInput.addEventListener('input', validateJoinInputs);
+        list.replaceChildren();
 
-    document.getElementById('backToMenuFromJoin').addEventListener('click', () => {
+        if (!lobbies || lobbies.length === 0) {
+            if (emptyState) emptyState.hidden = false;
+            return;
+        }
+        if (emptyState) emptyState.hidden = true;
+
+        lobbies.forEach((lobby) => {
+            const entry = document.createElement('button');
+            entry.type = 'button';
+            entry.className = 'lobby-entry';
+            entry.dataset.testid = 'open-lobby-entry';
+            entry.dataset.roomCode = lobby.roomCode;
+
+            const host = document.createElement('span');
+            host.className = 'lobby-entry-host';
+            host.textContent = `${lobby.hostName}'s lobby`;
+
+            const meta = document.createElement('span');
+            meta.className = 'lobby-entry-meta';
+            const timerLabel =
+                lobby.turnDurationSeconds > 0 ? ` · ${lobby.turnDurationSeconds}s/turn` : '';
+            meta.textContent = `${lobby.playerCount}/${lobby.maxPlayers} players · ${lobby.gridSize}x${lobby.gridSize}${timerLabel}`;
+
+            entry.append(host, meta);
+            entry.addEventListener('click', () => {
+                joinLobbyByCode(lobby.roomCode, getBrowserPlayerName());
+            });
+            list.appendChild(entry);
+        });
+    }
+
+    /**
+     * Join a specific lobby by its (internal) room code. Used by the lobby
+     * browser entries and the ?join= deep link.
+     */
+    async function joinLobbyByCode(roomCode, playerName, passcode = '') {
+        const { lobbyManager } = getState();
+
+        if (!window.ShapeKeeperConvex) {
+            showToast('Multiplayer mode requires backend integration.', 'info', 5000);
+            return;
+        }
+
+        setStartupState(STARTUP_STATES.CREATING_OR_JOINING_ROOM, { visible: false });
+        showToast('Joining lobby...', 'info', 2000);
+        const result = await window.ShapeKeeperConvex.joinRoom(roomCode, playerName, passcode);
+
+        if (result.error) {
+            showToast('Error: ' + result.error, 'error');
+            return;
+        }
+        if (!result.roomId) {
+            showToast('Could not join that lobby.', 'error');
+            return;
+        }
+
+        stopOpenLobbiesSubscription();
+        subscribeToRoomUpdates();
+        setStartupState(STARTUP_STATES.ROOM_SUBSCRIBED, { visible: false });
+
+        lobbyManager.roomCode = roomCode.toUpperCase();
+        if (passcode) lobbyManager.setIdentity({ passcode });
+        lobbyManager.isHost = false;
+        showToast('Joined lobby', 'success', 3000);
+        updateLobbyUI();
+        showScreen('lobbyScreen');
+    }
+
+    document.getElementById('backToMenuFromBrowser')?.addEventListener('click', () => {
+        stopOpenLobbiesSubscription();
         showScreen('mainMenuScreen');
     });
 
-    joinRoomBtn.addEventListener('click', async () => {
-        const { lobbyManager } = getState();
-        const roomCode = joinRoomCodeInput.value;
-        const passcode = joinRoomPasscodeInput?.value || '';
-        const playerName = joinPlayerNameInput.value.trim();
-
-        if (window.ShapeKeeperConvex) {
-            setStartupState(STARTUP_STATES.CREATING_OR_JOINING_ROOM, { visible: false });
-            showToast('Joining room...', 'info', 2000);
-            const result = await window.ShapeKeeperConvex.joinRoom(roomCode, playerName, passcode);
-
-            if (result.error) {
-                showToast('Error: ' + result.error, 'error');
-                return;
-            }
-
-            subscribeToRoomUpdates();
-            setStartupState(STARTUP_STATES.ROOM_SUBSCRIBED, { visible: false });
-
-            lobbyManager.roomCode = roomCode.toUpperCase();
-            if (passcode) lobbyManager.setIdentity({ passcode });
-            lobbyManager.isHost = false;
-            showToast('Joined room: ' + roomCode.toUpperCase(), 'success', 3000);
-            updateLobbyUI();
-            showScreen('lobbyScreen');
+    document.getElementById('refreshLobbiesBtn')?.addEventListener('click', () => {
+        // Re-subscribe for an immediate redelivery of the current list.
+        stopOpenLobbiesSubscription();
+        if (window.ShapeKeeperConvex?.subscribeToOpenLobbies) {
+            openLobbiesCleanup =
+                window.ShapeKeeperConvex.subscribeToOpenLobbies(renderOpenLobbies) || null;
         } else {
-            showToast('Multiplayer mode requires backend integration.', 'info', 5000);
+            renderOpenLobbies([]);
         }
+    });
+
+    // Invite-link deep link (?join=CODE): welcome.js dispatches this once the
+    // app is initialized; join that lobby directly, bypassing the browser.
+    window.addEventListener('shapekeeper:joinFromUrl', (event) => {
+        const { roomCode, passcode } = event.detail || {};
+        if (!roomCode) return;
+        const storedName =
+            (typeof localStorage !== 'undefined' &&
+                localStorage.getItem('shapekeeper.playerName')) ||
+            'Player';
+        joinLobbyByCode(roomCode, storedName, passcode || '');
     });
 
     document.querySelectorAll('.lobby-grid-btn').forEach((btn) => {
@@ -315,79 +425,81 @@ export function bindMenuEventHandlers(deps) {
         });
     }
 
-    document.getElementById('copyCodeBtn').addEventListener('click', () => {
-        const code = document.getElementById('roomCode').textContent;
-        navigator.clipboard.writeText(code).then(() => {
-            const copyButton = document.getElementById('copyCodeBtn');
-            copyButton.textContent = '✓';
-            copyButton.classList.add('copied');
-            showToast('Room code copied to clipboard!', 'success', 2000);
-            setTimeout(() => {
-                copyButton.textContent = '📋';
-                copyButton.classList.remove('copied');
-            }, 2000);
+    const copyCodeBtn = document.getElementById('copyCodeBtn');
+    if (copyCodeBtn) {
+        copyCodeBtn.addEventListener('click', () => {
+            const code = document.getElementById('roomCode')?.textContent;
+            if (code) {
+                navigator.clipboard.writeText(code).then(() => {
+                    copyCodeBtn.textContent = '✓';
+                    copyCodeBtn.classList.add('copied');
+                    showToast('Room code copied to clipboard!', 'success', 2000);
+                    setTimeout(() => {
+                        copyCodeBtn.textContent = '📋';
+                        copyCodeBtn.classList.remove('copied');
+                    }, 2000);
+                });
+            }
         });
-    });
+    }
 
-    /**
-     * Copy Invite Link button. The URL is built by LiveLobbyManager
-     * and contains only the room code. Falls back to a
-     * manual-select input if `navigator.clipboard` is unavailable (e.g.
-     * insecure context) so the user can always copy.
-     */
     const copyInviteLinkBtn = document.getElementById('copyInviteLinkBtn');
     if (copyInviteLinkBtn) {
         copyInviteLinkBtn.addEventListener('click', () => {
             const { lobbyManager } = getState();
-            // Prefer the LiveLobbyManager if it's been wired; otherwise build
-            // a minimal URL from the existing legacy fields.
-            let url = null;
-            if (lobbyManager && typeof lobbyManager.buildInviteUrl === 'function') {
-                url = lobbyManager.buildInviteUrl();
-            } else if (lobbyManager && lobbyManager.roomCode) {
-                const params = new URLSearchParams({ join: lobbyManager.roomCode });
-                url = `${window.location.origin}/?${params.toString()}`;
+            const inviteUrl = lobbyManager.buildInviteUrl
+                ? lobbyManager.buildInviteUrl()
+                : `${window.location.origin}/?join=${lobbyManager.roomCode}`;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(inviteUrl).then(() => {
+                    copyInviteLinkBtn.textContent = '✓ Link Copied!';
+                    showToast('Invite link copied!', 'success');
+                    setTimeout(() => {
+                        copyInviteLinkBtn.textContent = '🔗 Copy Invite Link';
+                    }, 2000);
+                });
             }
-            if (!url) {
-                showToast('Create or join a room first to get an invite link.', 'error');
+        });
+    }
+
+    // Allowed Time (free-form seconds input, host only). Debounced change
+    // handler pushes to the server; the server validates (0-600, whole
+    // numbers) and the next room snapshot re-renders the input.
+    const turnDurationInput = document.getElementById('lobbyTurnDuration');
+    if (turnDurationInput) {
+        let debounceTimer = null;
+        turnDurationInput.addEventListener('change', async () => {
+            const { lobbyManager } = getState();
+            if (!lobbyManager.isHost) return;
+
+            const raw = turnDurationInput.value.trim();
+            // Empty or 0 = no limit
+            const seconds = raw === '' || parseInt(raw, 10) === 0 ? 0 : parseInt(raw, 10);
+
+            if (raw !== '' && (!Number.isInteger(seconds) || seconds < 0)) {
+                showToast('Allowed Time must be a whole number of seconds (0 = no limit)', 'error');
+                turnDurationInput.value =
+                    lobbyManager.turnDurationSeconds > 0
+                        ? String(lobbyManager.turnDurationSeconds)
+                        : '0';
                 return;
             }
 
-            const fallbackCopy = () => {
-                // Insecure-context fallback: show a readonly input the user can
-                // select and copy manually.
-                const input = document.createElement('input');
-                input.value = url;
-                input.readOnly = true;
-                input.style.position = 'fixed';
-                input.style.opacity = '0';
-                document.body.appendChild(input);
-                input.select();
-                try {
-                    document.execCommand('copy');
-                    showToast('Invite link copied (fallback).', 'success', 2000);
-                } catch (_err) {
-                    showToast('Copy failed. Select the link manually.', 'error');
+            if (debounceTimer) clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(async () => {
+                if (window.ShapeKeeperConvex) {
+                    const result = await window.ShapeKeeperConvex.updateTurnDuration(seconds);
+                    if (result?.error) {
+                        showToast('Error: ' + result.error, 'error');
+                        return;
+                    }
+                    lobbyManager.turnDurationSeconds = seconds;
+                    showToast(
+                        seconds === 0 ? 'Turn timer disabled' : `Allowed Time set to ${seconds}s`,
+                        'success'
+                    );
                 }
-                document.body.removeChild(input);
-            };
-
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(url).then(
-                    () => {
-                        copyInviteLinkBtn.textContent = '✓ Copied';
-                        copyInviteLinkBtn.classList.add('copied');
-                        showToast('Invite link copied to clipboard!', 'success', 2000);
-                        setTimeout(() => {
-                            copyInviteLinkBtn.innerHTML = '🔗 Copy Invite Link';
-                            copyInviteLinkBtn.classList.remove('copied');
-                        }, 2000);
-                    },
-                    () => fallbackCopy()
-                );
-            } else {
-                fallbackCopy();
-            }
+            }, 300);
         });
     }
 

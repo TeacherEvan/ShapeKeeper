@@ -339,12 +339,14 @@ export function showWinner(game) {
     const winnerText = document.getElementById('winnerText');
     const finalScores = document.getElementById('finalScores');
 
-    if (winner === 0) {
-        winnerText.textContent = `🤝 It's a Tie! 🤝`;
-        winnerText.style.color = '#FFD700';
-    } else {
-        winnerText.textContent = `🏆 Player ${winner} Wins! 🏆`;
-        winnerText.style.color = winnerColor;
+    if (winnerText) {
+        if (winner === 0) {
+            winnerText.textContent = `🤝 It's a Tie! 🤝`;
+            winnerText.style.color = '#FFD700';
+        } else {
+            winnerText.textContent = `🏆 Player ${winner} Wins! 🏆`;
+            winnerText.style.color = winnerColor;
+        }
     }
 
     const players = [
@@ -352,11 +354,13 @@ export function showWinner(game) {
         { num: 2, score: game.scores[2], color: game.player2Color },
     ].sort((left, right) => right.score - left.score);
 
-    finalScores.replaceChildren(
-        ...players.map((player, index) => buildWinnerScoreEntry(player, index, winner))
-    );
+    if (finalScores) {
+        finalScores.replaceChildren(
+            ...players.map((player, index) => buildWinnerScoreEntry(player, index, winner))
+        );
+    }
 
-    document.getElementById('gameScreen').classList.remove('active');
+    document.getElementById('gameScreen')?.classList.remove('active');
     showScreen('winnerScreen');
 
     launchConfetti(winnerColor);

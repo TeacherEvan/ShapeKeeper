@@ -1,4 +1,7 @@
 # ShapeKeeper
+
+<img src="assets/branding/shape-keeper-hero.jpg" alt="The Shape Keeper holding a glowing polyhedron in a constellation of neon shapes" width="384" />
+
 ![Game Version](https://img.shields.io/badge/version-4.3.0-blue)
 
 A modern, browser-based implementation of the classic Dots and Boxes game (reimagined as ShapeKeeper) with adaptive landscape layouts, smooth animations, and touch support.
@@ -19,8 +22,8 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 - **Diagonal Lines** - Connect dots diagonally for alternative paths
 - **Two-player turn-based gameplay** - Players alternate turns, with bonus turns for completing shapes
 - **Turn-Based Online Multiplayer** - Chess-like communication with Convex backend
-- **Live Lobby + Invite Link** - Real-time waiting room with a shareable `?join=…&passcode=…` URL and a one-tap copy button
-- **Silly [Adjective][Animal] passcodes** - Lobby auth codes like `EasterPig` and `SillyRabbit`, dynamically generated per room (no env, no random letters, no numbers)
+- **Open Lobby Browser** - JOIN LOBBY lists every open lobby in realtime (host, players, grid, Allowed Time); one click joins — no room codes, no passcodes
+- **Allowed Time** - Per-turn lava countdown in both local hot-seat and online play; the turn auto-skips when time runs out (0 = no limit)
 - **Opponent Tap Mechanic** (multiplayer) - Tap an opponent's completed box to drop its multiplier from 2x → 0.5x before they reveal. Real-time hand-eye coordination layer on top of turn-based play.
 - **Smart turn logic** - Complete a square, keep your turn!
 - **Real-time score tracking** - Live updates for both players
@@ -327,7 +330,7 @@ Default colors can be changed in `index.html`:
 
 - [x] Multiplayer mode planning (see MULTIPLAYER_PLANNING.md)
 - [x] Online multiplayer with Convex + Vercel ✅
-- [x] Lobby system with room codes ✅
+- [x] Open lobby browser — anyone joins by selecting JOIN LOBBY ✅
 - [x] Sound effects (procedural Web Audio API) ✅
 - [x] Dark/light theme toggle ✅
 - [x] Visual effects overhaul (CounterPlan complete) ✅
@@ -373,6 +376,13 @@ Contributions welcome! Feel free to:
 - **Server validation** - `tapSquare` rejects self-taps, taps on `truthOrDare` squares, taps during the lobby, and taps on already-revealed squares.
 - **Visual feedback** - Red ✋ overlay on tapped squares (both players see it; disappears on reveal).
 - **Local hot-seat support** - The tap is applied locally so the mechanic is testable without a backend.
+
+### v4.5.0 (Open Lobby Browser + Local Allowed Time)
+
+- **Open lobby browser** - The code-entry join screen is gone. JOIN LOBBY shows a live list of open lobbies (host name, player count, grid size, Allowed Time); one click joins. CREATE LOBBY opens a lobby that appears in everyone's browser in realtime. New `listOpenLobbies` query (`convex/queries/roomQueries.ts`) + `subscribeToOpenLobbies` subscription (`convex-client/subscriptions.js`).
+- **No codes anywhere** - Room codes are now an internal handle only — never typed or displayed. The passcode/invite-link machinery is legacy (rooms created before this version keep working; new rooms are passcode-free).
+- **Local Allowed Time** - The local setup screen has a per-turn countdown selector (seconds, 0 = no limit). `tickLocalTurnClock()` arms the countdown per turn in `dots-and-boxes-game.js`; expired turns skip via `gameState.switchToNextPlayer()` (bonus/frozen house rules preserved). The value round-trips through local saves.
+- **Lava layer fix** - The lava timer no longer paints a permanent "0.0s" when no countdown is armed (a null `turnRemainingMs` draws nothing).
 
 ### v4.4.0 (Live Lobby + Silly Passcode)
 

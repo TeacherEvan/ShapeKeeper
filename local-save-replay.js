@@ -160,15 +160,25 @@ function normalizeConfig(config) {
         return null;
     }
 
+    // Allowed Time is optional (older saves predate it); invalid values
+    // sanitise to 0 = no limit rather than failing the whole payload.
+    const turnDurationSeconds =
+        Number.isInteger(config.turnDurationSeconds) &&
+        config.turnDurationSeconds >= 0 &&
+        config.turnDurationSeconds <= 600
+            ? config.turnDurationSeconds
+            : 0;
+
     return {
         gridSize: normalizedGridSize,
         player1Color: config.player1Color,
         player2Color: config.player2Color,
         localMode: config.localMode,
         aiDifficulty: config.aiDifficulty,
+        turnDurationSeconds,
         turnDurationMs: TURN_TIMER_OPTIONS_MS.includes(config.turnDurationMs)
             ? config.turnDurationMs
-            : 0,
+            : turnDurationSeconds * 1000,
     };
 }
 
@@ -183,6 +193,7 @@ export function createLocalSavePayload(game) {
             localMode: game.localMode,
             player1Color: game.player1Color,
             player2Color: game.player2Color,
+            turnDurationSeconds: game.turnDurationSeconds ?? 0,
             turnDurationMs: game.turnDurationMs ?? 0,
         },
         replayIndex: game.replayIndex,
