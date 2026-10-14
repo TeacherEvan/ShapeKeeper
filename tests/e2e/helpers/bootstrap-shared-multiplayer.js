@@ -147,6 +147,11 @@ export async function installSharedMockMultiplayer(
         resetSharedState = false,
     }
 ) {
+    // generateSillyPasscode lives in module scope — resolve it here so the
+    // page.evaluate below never references it (it is NOT in the page's
+    // scope, and doing so throws inside the mock's createRoom).
+    const resolvedPasscode = passcode || generateSillyPasscode();
+
     await page.evaluate(
         ({
             sessionId: initialSessionId,
@@ -473,7 +478,7 @@ export async function installSharedMockMultiplayer(
                     const sharedState = ensureSharedState();
                     const normalizedCode = initialRoomCode.toUpperCase();
                     const roomId = `room_${normalizedCode}`;
-                    const generatedPasscode = initialPasscode || generateSillyPasscode();
+                    const generatedPasscode = initialPasscode;
                     sharedState.rooms[roomId] = {
                         roomId,
                         roomCode: normalizedCode,
@@ -844,7 +849,7 @@ export async function installSharedMockMultiplayer(
             sessionId,
             defaultPlayerName,
             roomCode,
-            passcode,
+            passcode: resolvedPasscode,
             gridSize,
             partyMode,
             resetSharedState,
