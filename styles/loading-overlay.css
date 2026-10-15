@@ -44,6 +44,10 @@
     justify-content: center;
 }
 
+.canvas-loading-actions[hidden] {
+    display: none;
+}
+
 .loading-action-btn {
     border: none;
     border-radius: 999px;

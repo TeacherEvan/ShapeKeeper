@@ -99,6 +99,11 @@ export class LiveLobbyManager {
         }
     }
 
+    leaveRoom() {
+        this.detachSubscription();
+        this.reset();
+    }
+
     /**
      * Build the invite URL for the current lobby. Safe to call before the room
      * is fully set up — returns null when roomCode is missing.

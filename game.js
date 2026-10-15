@@ -15,8 +15,12 @@ import { FEATURE_FLAGS } from './constants.js';
 // FEATURE_FLAGS object. Without this, the lava timer + sync resilience stay
 // permanently gated-off in the running app (defaults are false in constants.js).
 if (typeof window !== 'undefined') {
-    if (window.FEATURE_LAVA_TIMER === true) FEATURE_FLAGS.FEATURE_LAVA_TIMER = true;
-    if (window.FEATURE_SYNC_RESILIENCE === true) FEATURE_FLAGS.FEATURE_SYNC_RESILIENCE = true;
+    if (typeof window.FEATURE_LAVA_TIMER === 'boolean') {
+        FEATURE_FLAGS.FEATURE_LAVA_TIMER = window.FEATURE_LAVA_TIMER;
+    }
+    if (typeof window.FEATURE_SYNC_RESILIENCE === 'boolean') {
+        FEATURE_FLAGS.FEATURE_SYNC_RESILIENCE = window.FEATURE_SYNC_RESILIENCE;
+    }
     // Expose a live read-only mirror so runtime flag state is inspectable
     // (e.g. end-to-end tests assert the bridge actually flipped the guard).
     Object.defineProperty(window, 'FEATURE_FLAGS', {

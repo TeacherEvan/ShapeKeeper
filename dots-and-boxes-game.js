@@ -38,7 +38,6 @@ export class DotsAndBoxesGame {
         this.player1Color = player1Color;
         this.player2Color = player2Color;
         this.options = options;
-        this.turnDurationMs = options.turnDurationMs ?? 0;
         this.localTurnTimer = null;
         this.localTurnCounter = 0;
         this._aiThinking = false;
@@ -48,14 +47,16 @@ export class DotsAndBoxesGame {
         // from the server (turnEndTime via ShapeKeeperTurnClock); local
         // hot-seat games own theirs — armed in animate() by
         // tickLocalTurnClock, expired turns skipped by handleTurnExpiration.
-        this.turnDurationSeconds =
-            Number.isFinite(options.turnDurationSeconds) && options.turnDurationSeconds >= 0
-                ? Math.min(600, Math.floor(options.turnDurationSeconds))
-                : Number.isFinite(options.turnDurationMs) && options.turnDurationMs >= 0
-                  ? Math.min(600, Math.floor(options.turnDurationMs / 1000))
-                  : 0;
-        this.turnDurationMs = options.turnDurationMs ?? this.turnDurationSeconds * 1000;
-        this.localTurnCounter = 0;
+        if (Number.isFinite(options.turnDurationSeconds) && options.turnDurationSeconds >= 0) {
+            this.turnDurationSeconds = Math.min(600, Math.floor(options.turnDurationSeconds));
+            this.turnDurationMs = this.turnDurationSeconds * 1000;
+        } else if (Number.isFinite(options.turnDurationMs) && options.turnDurationMs >= 0) {
+            this.turnDurationMs = Math.min(600000, Math.floor(options.turnDurationMs));
+            this.turnDurationSeconds = Math.round(this.turnDurationMs / 1000);
+        } else {
+            this.turnDurationSeconds = 0;
+            this.turnDurationMs = 0;
+        }
         this.turnRemainingMs = null;
         this._localTurnClock = null;
 
@@ -1118,6 +1119,24 @@ export class DotsAndBoxesGame {
         }
         const remaining = clock.deadline - now;
         this.turnRemainingMs = remaining > 0 ? remaining : 0;
+    }
+
+    get turnDurationSeconds() {
+        return this._turnDurationSeconds ?? 0;
+    }
+
+    set turnDurationSeconds(seconds) {
+        const val =
+            Number.isFinite(seconds) && seconds >= 0 ? Math.min(600, Math.floor(seconds)) : 0;
+        this._turnDurationSeconds = val;
+        this.turnDurationMs = val * 1000;
+        if (val === 0) {
+            this.localTurnTimer?.stop?.();
+            this.turnRemainingMs = null;
+            if (this._localTurnClock) {
+                this._localTurnClock.deadline = 0;
+            }
+        }
     }
 
     /**

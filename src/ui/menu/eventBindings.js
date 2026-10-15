@@ -22,12 +22,8 @@ function buildLocalGameFromConfig(config) {
         localMode: config.localMode,
         aiDifficulty: config.aiDifficulty,
         tutorialEnabled: config.tutorialEnabled,
-        turnDurationSeconds:
-            config.turnDurationSeconds ??
-            (config.turnDurationMs ? Math.round(config.turnDurationMs / 1000) : 0),
-        turnDurationMs:
-            config.turnDurationMs ??
-            (config.turnDurationSeconds ? config.turnDurationSeconds * 1000 : 0),
+        turnDurationSeconds: config.turnDurationSeconds,
+        turnDurationMs: config.turnDurationMs,
     });
 }
 
@@ -132,7 +128,37 @@ export function bindMenuEventHandlers(deps) {
         bindGameControlsPanel(controlsPanel, controlsToggleBtn, controlsPanelEl);
     }
 
+    let activeTimerSource = null;
+    const localTurnDurationInput = document.getElementById('localTurnDuration');
+    const localTurnTimerSelect = document.getElementById('localTurnTimer');
+
+    if (localTurnDurationInput && localTurnTimerSelect) {
+        localTurnTimerSelect.addEventListener('change', () => {
+            activeTimerSource = 'select';
+            const ms = Number(localTurnTimerSelect.value) || 0;
+            localTurnDurationInput.value = String(Math.round(ms / 1000));
+        });
+
+        const onDurationInput = () => {
+            activeTimerSource = 'input';
+            const seconds = parseLocalTurnDuration();
+            const ms = seconds * 1000;
+            const matchingOption = Array.from(localTurnTimerSelect.options).find(
+                (opt) => Number(opt.value) === ms
+            );
+            if (matchingOption) {
+                localTurnTimerSelect.value = String(ms);
+            } else if (seconds === 0) {
+                localTurnTimerSelect.value = '0';
+            }
+        };
+
+        localTurnDurationInput.addEventListener('input', onDurationInput);
+        localTurnDurationInput.addEventListener('change', onDurationInput);
+    }
+
     document.getElementById('localPlayBtn').addEventListener('click', () => {
+        activeTimerSource = null;
         if (localTutorialMode) {
             localTutorialMode.checked = false;
             localTutorialMode.disabled = false;
@@ -190,11 +216,24 @@ export function bindMenuEventHandlers(deps) {
         const localMode = localOpponentType?.value === 'ai' ? 'ai' : 'human';
         const aiDifficulty = localAIDifficulty?.value || 'medium';
         const tutorialEnabled = Boolean(localTutorialMode?.checked);
-        const turnDurationSeconds = parseLocalTurnDuration();
+
         const turnDurationSelect = document.getElementById('localTurnTimer');
-        const turnDurationMs = turnDurationSelect
-            ? Number(turnDurationSelect.value)
-            : turnDurationSeconds * 1000;
+        let turnDurationSeconds = 0;
+        let turnDurationMs = 0;
+
+        if (activeTimerSource === 'select') {
+            turnDurationMs = Number(turnDurationSelect?.value) || 0;
+            turnDurationSeconds = Math.round(turnDurationMs / 1000);
+        } else if (activeTimerSource === 'input') {
+            turnDurationSeconds = parseLocalTurnDuration();
+            turnDurationMs = turnDurationSeconds * 1000;
+        } else if (localTurnDurationInput) {
+            turnDurationSeconds = parseLocalTurnDuration();
+            turnDurationMs = turnDurationSeconds * 1000;
+        } else if (turnDurationSelect) {
+            turnDurationMs = Number(turnDurationSelect.value) || 0;
+            turnDurationSeconds = Math.round(turnDurationMs / 1000);
+        }
 
         if (welcomeAnimation) {
             welcomeAnimation.moveToGameScreen();
