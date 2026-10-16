@@ -10,7 +10,7 @@
 // compatibilitySpecPatterns in playwright.config.js.
 
 import { expect, test } from '@playwright/test';
-import { gotoApp } from './helpers/bootstrap.js';
+import { gotoApp, installMockMultiplayer } from './helpers/bootstrap.js';
 
 // Interactive elements that must never overlap one another. #gameCanvas is
 // included specifically so the board is checked against the header/footer.
@@ -49,6 +49,18 @@ const SCREENS = [
         locator: '#lobbyBrowserScreen',
         reach: async (page) => {
             await page.getByTestId('join-game-button').click();
+        },
+    },
+    {
+        name: 'lobby',
+        locator: '#lobbyScreen',
+        reach: async (page) => {
+            // Creating an online lobby goes through the Convex backend, so
+            // install the shared mock multiplayer bridge first — this is the
+            // same path loading-state.spec.js / open-lobby-lifecycle.spec.js
+            // use to reach the lobby in the static e2e environment.
+            await installMockMultiplayer(page);
+            await page.getByTestId('create-game-button').click();
         },
     },
 ];
@@ -92,6 +104,7 @@ async function getInteractiveRects(page) {
                     testId: el.getAttribute('data-testid') || '',
                     id: el.id || '',
                     tag: el.tagName,
+                    role: el.getAttribute('role') || '',
                     inputType: el.tagName === 'INPUT' ? el.getAttribute('type') || 'text' : '',
                     x: Math.round(rect.x * 100) / 100,
                     y: Math.round(rect.y * 100) / 100,
@@ -135,23 +148,21 @@ async function expectNoOverlaps(page, { label, minOverlapArea = 4 } = {}) {
             }
         }
     }
-    expect(overlaps).toEqual([]);
-    if (overlaps.length > 0) {
-        const detail = overlaps
-            .map(
-                (o) =>
-                    `  - ${o.a.tag}#${o.a.id}[${
-                        o.a.testId
-                    }] at (${o.a.x},${o.a.y}) ${o.a.width}x${o.a.height} overlaps ` +
-                    `${o.b.tag}#${o.b.id}[${o.b.testId}] at (${o.b.x},${o.b.y}) ` +
-                    `${o.b.width}x${o.b.height} (overlap ~${o.area.toFixed(1)}px²)`
-            )
-            .join('\n');
-        throw new Error(
-            `Overlapping interactive elements detected${label ? ` on "${label}"` : ''}:\n${detail}`
-        );
-    }
+    const detail = overlaps
+        .map(
+            (o) =>
+                `  - ${o.a.tag}#${o.a.id}[${o.a.testId}] at (${o.a.x},${o.a.y}) ` +
+                `${o.a.width}x${o.a.height} overlaps ` +
+                `${o.b.tag}#${o.b.id}[${o.b.testId}] at (${o.b.x},${o.b.y}) ` +
+                `${o.b.width}x${o.b.height} (overlap ~${o.area.toFixed(1)}px²)`
+        )
+        .join('\n');
+    expect(
+        overlaps,
+        `Overlapping interactive elements detected${label ? ` on "${label}"` : ''}:\n${detail}`
+    ).toEqual([]);
 }
+
 // Assert mobile-friendly layout fundamentals for the current viewport.
 async function expectMobileFriendly(page) {
     // No horizontal overflow: content must fit within the viewport width.
@@ -168,12 +179,24 @@ async function expectMobileFriendly(page) {
     expect(overflow.viewportMeta.some((content) => content.includes('device-width'))).toBe(true);
 
     // Touch targets: every visible interactive element >= 44x44 on small viewports.
-    // Elements entirely outside the viewport (e.g. off-screen skip links) and
-    // structural text containers are not touch targets. User-agent-sized native
-    // form controls (checkbox / radio / color) are exempt from author-enforced
-    // sizing per WCAG target-size guidance.
+    // Only genuinely interactive elements are touch targets — static text or
+    // containers that merely carry a data-testid are not. Elements that sit
+    // entirely outside the viewport (e.g. the unfocused skip link) are not
+    // on-screen targets either. Native checkbox/radio inputs are sized by the
+    // user agent rather than the author and are exempt per WCAG 2.5.8.
     if (overflow.innerWidth <= 768) {
         const rects = await getInteractiveRects(page);
+        const interactiveTags = new Set(['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'A', 'CANVAS']);
+        const interactiveRoles = new Set([
+            'button',
+            'link',
+            'checkbox',
+            'radio',
+            'switch',
+            'tab',
+            'menuitem',
+            'option',
+        ]);
         const small = rects.filter((r) => {
             if (
                 r.x < 0 ||
@@ -183,26 +206,23 @@ async function expectMobileFriendly(page) {
             ) {
                 return false;
             }
-            if (r.tag === 'P' || r.tag === 'DIV' || r.tag === 'SPAN') return false;
-            if (
-                r.tag === 'INPUT' &&
-                (r.inputType === 'checkbox' || r.inputType === 'radio' || r.inputType === 'color')
-            ) {
+            if (!interactiveTags.has(r.tag) && !interactiveRoles.has(r.role)) {
+                return false;
+            }
+            if (r.tag === 'INPUT' && (r.inputType === 'checkbox' || r.inputType === 'radio')) {
                 return false;
             }
             return r.width < 44 || r.height < 44;
         });
-        expect(small).toEqual([]);
-        if (small.length > 0) {
-            throw new Error(
-                `Touch targets below 44px on ${overflow.innerWidth}px viewport:\n${small
-                    .map(
-                        (r) =>
-                            `  - ${r.tag}#${r.id}[${r.testId}] ${r.width}x${r.height} at (${r.x},${r.y})`
-                    )
-                    .join('\n')}`
-            );
-        }
+        const detail = small
+            .map(
+                (r) => `  - ${r.tag}#${r.id}[${r.testId}] ${r.width}x${r.height} at (${r.x},${r.y})`
+            )
+            .join('\n');
+        expect(
+            small,
+            `Touch targets below 44px on ${overflow.innerWidth}px viewport:\n${detail}`
+        ).toEqual([]);
     }
 }
 
