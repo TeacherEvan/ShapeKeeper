@@ -266,12 +266,12 @@
     padding: 12px 24px;
     font-size: 0.875rem;
     font-weight: 500;
-    font-family: var(--font-sans),
-    background: transparent,
-    color: var(--text-tertiary),
-    border: 1px solid var(--border-color),
-    border-radius: var(--radius-md),
-    cursor: pointer,
+    font-family: var(--font-sans);
+    background: transparent;
+    color: var(--text-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
     transition:
         color var(--transition-fast) var(--easing-smooth),
         border-color var(--transition-fast) var(--easing-smooth),
