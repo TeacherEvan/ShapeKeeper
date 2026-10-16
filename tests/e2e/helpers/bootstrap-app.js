@@ -34,17 +34,27 @@ window.convex = {
 };
 `;
 
-export async function gotoApp(page, { startupTimeoutMs = 250 } = {}) {
-    await page.route(/https:\/\/unpkg\.com\/convex@.*\/dist\/browser\.bundle\.js/, (route) =>
-        route.fulfill({
-            status: 200,
-            contentType: 'application/javascript',
-            body: CONVEX_BROWSER_BUNDLE_STUB,
-        })
-    );
+const CONVEX_BUNDLE_URL = /^https:\/\/unpkg\.com\/convex@.*\/dist\/browser\.bundle\.js$/;
 
+export async function gotoApp(page, { startupTimeoutMs = 250 } = {}) {
+    // One catch-all route, deliberately: Playwright dispatches each request to
+    // the most recently registered matching handler, and a handler that calls
+    // route.continue() does NOT fall through to earlier ones. Splitting the
+    // bundle stub into its own route silently handed the script to the real
+    // CDN, so the app booted against a live Convex deployment and every
+    // backend-backed action (CREATE LOBBY / JOIN LOBBY) hung forever.
     await page.route('**/*', async (route) => {
         const request = route.request();
+
+        if (CONVEX_BUNDLE_URL.test(request.url())) {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/javascript',
+                body: CONVEX_BROWSER_BUNDLE_STUB,
+            });
+            return;
+        }
+
         if (request.resourceType() === 'document') {
             const response = await route.fetch();
             let html = await response.text();
