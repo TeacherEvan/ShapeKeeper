@@ -65,12 +65,34 @@ const SCREENS = [
     },
 ];
 
+// Wait until finite CSS animations/transitions finish before measuring boxes.
+// Screen enters run screenFadeIn (0.4s, starting at scale(0.99)) and the loading
+// skeleton fades out over --transition-medium, so measuring too early reads a
+// scaled 43.56px control instead of 44px, or a half-faded skeleton that still
+// counts as visible. Engines schedule those animations differently — WebKit
+// finishes them noticeably later than Chromium — so a fixed sleep races.
+// Decorative loops (spinner, shimmer, glow) never settle and are ignored.
+async function waitForLayoutToSettle(page) {
+    await page
+        .waitForFunction(
+            () =>
+                document.getAnimations().every((animation) => {
+                    const iterations = animation.effect?.getComputedTiming?.().iterations;
+                    return iterations === Infinity || animation.playState !== 'running';
+                }),
+            undefined,
+            { timeout: 5000 }
+        )
+        .catch(() => {});
+}
+
 // Wait for a screen to become active and let the CSS transition settle so
 // getBoundingClientRect reflects the final layout (not a mid-transition box).
 async function showScreen(page, screen) {
     await screen.reach(page);
     await expect(page.locator(screen.locator)).toHaveClass(/active/);
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(50); // let the enter animation start before polling
+    await waitForLayoutToSettle(page);
 }
 
 // Every visible interactive element with its layout bounding box.
@@ -134,6 +156,7 @@ function intersectionArea(a, b) {
 // Assert no pair of visible interactive elements overlaps by more than a
 // sub-pixel noise threshold. Fails with a detailed list of the offending pairs.
 async function expectNoOverlaps(page, { label, minOverlapArea = 4 } = {}) {
+    await waitForLayoutToSettle(page);
     const rects = await getInteractiveRects(page);
     const overlaps = [];
     for (let i = 0; i < rects.length; i++) {
@@ -165,6 +188,8 @@ async function expectNoOverlaps(page, { label, minOverlapArea = 4 } = {}) {
 
 // Assert mobile-friendly layout fundamentals for the current viewport.
 async function expectMobileFriendly(page) {
+    await waitForLayoutToSettle(page);
+
     // No horizontal overflow: content must fit within the viewport width.
     const overflow = await page.evaluate(() => {
         return {

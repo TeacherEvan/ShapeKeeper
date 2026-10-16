@@ -18,6 +18,12 @@ export default defineConfig({
     fullyParallel: false,
     forbidOnly: Boolean(process.env.CI),
     retries: process.env.CI ? 1 : 0,
+    // Heavy by nature: multi-page live matches, CDP-throttled reconnect cycles
+    // and canvas/touch input on emulated devices. The 30s default killed
+    // otherwise-passing flows whenever a run overlapped with other work on the
+    // machine, so the budget is set explicitly. Individual assertions keep
+    // their own (much shorter) timeouts, so real regressions still fail fast.
+    timeout: 60_000,
     reporter: [['html', { open: 'never' }], ['list']],
     use: {
         baseURL: defaultBaseUrl,
@@ -49,6 +55,10 @@ export default defineConfig({
         {
             name: 'webkit-compat',
             testMatch: compatibilitySpecPatterns,
+            // WebKit renders these canvas/touch flows with software rendering and
+            // is consistently the slowest project (2-4x Chromium on the same
+            // machines), so it gets a wider budget than the global default.
+            timeout: 90_000,
             use: { ...devices['Desktop Safari'] },
         },
         {
@@ -59,11 +69,13 @@ export default defineConfig({
         {
             name: 'mobile-safari-compat',
             testMatch: compatibilitySpecPatterns,
+            timeout: 90_000,
             use: { ...devices['iPhone 13'] },
         },
         {
             name: 'tablet-safari-compat',
             testMatch: compatibilitySpecPatterns,
+            timeout: 90_000,
             use: { ...devices['iPad Pro 11'] },
         },
     ],
