@@ -10,6 +10,7 @@ const compatibilitySpecPatterns = [
     '**/achievement-panel.spec.js',
     '**/local-setup.spec.js',
     '**/winner-screen.spec.js',
+    '**/layout-overlap-mobile.spec.js',
 ];
 
 export default defineConfig({
