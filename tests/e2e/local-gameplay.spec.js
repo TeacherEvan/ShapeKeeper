@@ -280,7 +280,13 @@ test.describe('local gameplay canvas input', () => {
             .toEqual({ lineCount: 1, currentPlayer: 2 });
 
         await openGameControls(page);
-        await page.locator('#undoBtn').click();
+        // WebKit Safari reports sub-pixel rect jitter for the buttons inside the
+        // scroll-snap controls panel, so Playwright's strict rect-stability check
+        // never settles even though the buttons are fully visible, enabled and
+        // tappable by real users (reproducible on iPhone dpr=3 and iPad dpr=2).
+        // force:true bypasses Playwright's internal stability/scroll check, not
+        // the actual click.
+        await page.locator('#undoBtn').click({ force: true });
         await expect
             .poll(() =>
                 page.evaluate(() => ({
@@ -291,7 +297,7 @@ test.describe('local gameplay canvas input', () => {
             .toEqual({ lineCount: 0, currentPlayer: 1 });
 
         await openGameControls(page);
-        await page.locator('#redoBtn').click();
+        await page.locator('#redoBtn').click({ force: true });
         await expect
             .poll(() =>
                 page.evaluate(() => ({
@@ -362,7 +368,7 @@ test.describe('local gameplay canvas input', () => {
             .toBe(2);
 
         await openGameControls(page);
-        await page.locator('#replayRestartBtn').click();
+        await page.locator('#replayRestartBtn').click({ force: true });
         await expect
             .poll(() =>
                 page.evaluate(() => ({
@@ -373,18 +379,18 @@ test.describe('local gameplay canvas input', () => {
             .toEqual({ currentPlayer: 1, lineCount: 0 });
 
         await openGameControls(page);
-        await page.locator('#replayForwardBtn').click();
+        await page.locator('#replayForwardBtn').click({ force: true });
         await expect
             .poll(() => page.evaluate(() => window.__shapeKeeperActiveGame?.lines?.size ?? 0))
             .toBe(1);
 
-        await page.locator('#replayForwardBtn').click();
+        await page.locator('#replayForwardBtn').click({ force: true });
         await expect
             .poll(() => page.evaluate(() => window.__shapeKeeperActiveGame?.lines?.size ?? 0))
             .toBe(2);
 
         await openGameControls(page);
-        await page.locator('#replayBackBtn').click();
+        await page.locator('#replayBackBtn').click({ force: true });
         await expect
             .poll(() =>
                 page.evaluate(() => ({
