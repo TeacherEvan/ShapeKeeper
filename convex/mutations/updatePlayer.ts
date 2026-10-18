@@ -26,6 +26,7 @@ export const updatePlayer = mutation({
 
         if (Object.keys(updates).length > 0) {
             await ctx.db.patch(player._id, updates);
+            await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
         }
 
         return { success: true };

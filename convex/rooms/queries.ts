@@ -16,6 +16,8 @@ export async function getRoomByCodeHandler(ctx: any, args: any) {
         .withIndex('by_room', (q: any) => q.eq('roomId', room._id))
         .collect();
 
+    const hostPlayer = room.hostPlayerId ? await ctx.db.get(room.hostPlayerId) : null;
+
     // Public projection: strips hostTokenHash, hostPlayerId, and every
     // player's sessionId. Adds server-computed isHost and isYou when the
     // caller supplies their sessionId, so the browser can identify its own
@@ -25,7 +27,8 @@ export async function getRoomByCodeHandler(ctx: any, args: any) {
         ...projectRoomForClient(room, args.sessionId),
         players: projectPlayersForClient(
             players.sort((a: any, b: any) => a.playerIndex - b.playerIndex),
-            args.sessionId
+            args.sessionId,
+            hostPlayer?.sessionId
         ),
     };
 }
@@ -41,11 +44,14 @@ export async function getRoomHandler(ctx: any, args: any) {
         .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
         .collect();
 
+    const hostPlayer = room.hostPlayerId ? await ctx.db.get(room.hostPlayerId) : null;
+
     return {
         ...projectRoomForClient(room, args.sessionId),
         players: projectPlayersForClient(
             players.sort((a: any, b: any) => a.playerIndex - b.playerIndex),
-            args.sessionId
+            args.sessionId,
+            hostPlayer?.sessionId
         ),
     };
 }

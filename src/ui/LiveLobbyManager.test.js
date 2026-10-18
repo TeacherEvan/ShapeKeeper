@@ -157,17 +157,33 @@ describe('LiveLobbyManager — canStartGame', () => {
         expect(m.canStartGame()).toBe(true);
     });
 
-    it('host with 2+ players but one not ready cannot start', () => {
+    it('host with 2+ players can start when guest is ready even if host is not', () => {
         const m = new LiveLobbyManager();
         m.isHost = true;
-        m.players = [{ isReady: true }, { isReady: false }];
+        m.players = [
+            { isHost: true, isReady: false },
+            { isHost: false, isReady: true },
+        ];
+        expect(m.canStartGame()).toBe(true);
+    });
+
+    it('host with 2+ players cannot start if guest is not ready', () => {
+        const m = new LiveLobbyManager();
+        m.isHost = true;
+        m.players = [
+            { isHost: true, isReady: true },
+            { isHost: false, isReady: false },
+        ];
         expect(m.canStartGame()).toBe(false);
     });
 
     it('non-host can never start', () => {
         const m = new LiveLobbyManager();
         m.isHost = false;
-        m.players = [{ isReady: true }, { isReady: true }];
+        m.players = [
+            { isHost: true, isReady: true },
+            { isHost: false, isReady: true },
+        ];
         expect(m.canStartGame()).toBe(false);
     });
 });

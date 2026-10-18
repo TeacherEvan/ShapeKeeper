@@ -19,18 +19,63 @@ function stopOpenLobbiesSubscription() {
     openLobbiesCleanup = null;
 }
 
+const STORAGE_KEY_NAME = 'shapekeeper.playerName';
+
+function getStoredPlayerName() {
+    try {
+        return (
+            (typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEY_NAME)) || ''
+        );
+    } catch {
+        return '';
+    }
+}
+
+function setStoredPlayerName(name) {
+    try {
+        if (typeof localStorage !== 'undefined' && name) {
+            localStorage.setItem(STORAGE_KEY_NAME, name);
+        }
+    } catch {
+        // Ignore localStorage quota or access errors
+    }
+}
+
 function getBrowserPlayerName() {
     const input = document.getElementById('browserPlayerName');
-    return input?.value.trim() || 'Player';
+    return input?.value.trim() || getStoredPlayerName() || 'Player';
 }
 
 export function bindLobbyEvents(deps) {
     const { getState, setStartupState, STARTUP_STATES, subscribeToRoomUpdates, updateLobbyUI } =
         deps;
 
+    // Initialize player name inputs if stored
+    const initialName = getStoredPlayerName();
+    const lobbyPlayerNameInput = document.getElementById('playerName');
+    const browserPlayerNameInput = document.getElementById('browserPlayerName');
+    if (initialName) {
+        if (lobbyPlayerNameInput && !lobbyPlayerNameInput.value) {
+            lobbyPlayerNameInput.value = initialName;
+        }
+        if (browserPlayerNameInput && !browserPlayerNameInput.value) {
+            browserPlayerNameInput.value = initialName;
+        }
+    }
+
+    browserPlayerNameInput?.addEventListener('input', (event) => {
+        const val = event.target.value.trim();
+        if (val) {
+            setStoredPlayerName(val);
+        }
+    });
+
     document.getElementById('createGameBtn').addEventListener('click', async () => {
         const { lobbyManager } = getState();
-        const playerName = document.getElementById('playerName')?.value || 'Host';
+        const playerNameInput = document.getElementById('playerName');
+        const playerName = playerNameInput?.value.trim() || getStoredPlayerName() || 'Host';
+        setStoredPlayerName(playerName);
+        if (playerNameInput) playerNameInput.value = playerName;
         const gridSize = lobbyManager.gridSize || 5;
 
         if (window.ShapeKeeperConvex) {
@@ -58,6 +103,10 @@ export function bindLobbyEvents(deps) {
     });
 
     document.getElementById('joinGameBtn').addEventListener('click', () => {
+        const browserInput = document.getElementById('browserPlayerName');
+        if (browserInput && !browserInput.value) {
+            browserInput.value = getStoredPlayerName() || '';
+        }
         showScreen('lobbyBrowserScreen');
 
         // Live list of open lobbies — no room codes, no passcodes.
@@ -108,6 +157,8 @@ export function bindLobbyEvents(deps) {
         });
     }
 
+    let playerUpdateDebounceTimer = null;
+
     /**
      * Join a specific lobby by its (internal) room code. Used by the lobby
      * browser entries and the ?join= deep link.
@@ -120,9 +171,14 @@ export function bindLobbyEvents(deps) {
             return;
         }
 
+        const effectiveName = playerName?.trim() || getStoredPlayerName() || 'Player';
+        setStoredPlayerName(effectiveName);
+        const lobbyPlayerNameInput = document.getElementById('playerName');
+        if (lobbyPlayerNameInput) lobbyPlayerNameInput.value = effectiveName;
+
         setStartupState(STARTUP_STATES.CREATING_OR_JOINING_ROOM, { visible: false });
         showToast('Joining lobby...', 'info', 2000);
-        const result = await window.ShapeKeeperConvex.joinRoom(roomCode, playerName, passcode);
+        const result = await window.ShapeKeeperConvex.joinRoom(roomCode, effectiveName, passcode);
 
         if (result.error) {
             showToast('Error: ' + result.error, 'error');
@@ -166,10 +222,7 @@ export function bindLobbyEvents(deps) {
     window.addEventListener('shapekeeper:joinFromUrl', (event) => {
         const { roomCode, passcode } = event.detail || {};
         if (!roomCode) return;
-        const storedName =
-            (typeof localStorage !== 'undefined' &&
-                localStorage.getItem('shapekeeper.playerName')) ||
-            'Player';
+        const storedName = getStoredPlayerName() || 'Player';
         joinLobbyByCode(roomCode, storedName, passcode || '');
     });
 
@@ -293,26 +346,33 @@ export function bindLobbyEvents(deps) {
         });
     }
 
-    document.getElementById('playerName').addEventListener('input', async (event) => {
+    document.getElementById('playerName').addEventListener('input', (event) => {
         const { lobbyManager } = getState();
         const newName = event.target.value.trim() || 'Player';
+        setStoredPlayerName(newName);
         lobbyManager.updateMyName(newName);
+        updateLobbyUI();
 
         if (window.ShapeKeeperConvex) {
-            await window.ShapeKeeperConvex.updatePlayer({ name: newName });
+            if (playerUpdateDebounceTimer) clearTimeout(playerUpdateDebounceTimer);
+            playerUpdateDebounceTimer = setTimeout(async () => {
+                await window.ShapeKeeperConvex.updatePlayer({ name: newName });
+            }, 250);
         }
-        updateLobbyUI();
     });
 
-    document.getElementById('playerColor').addEventListener('input', async (event) => {
+    document.getElementById('playerColor').addEventListener('input', (event) => {
         const { lobbyManager } = getState();
         const newColor = event.target.value;
         lobbyManager.updateMyColor(newColor);
+        updateLobbyUI();
 
         if (window.ShapeKeeperConvex) {
-            await window.ShapeKeeperConvex.updatePlayer({ color: newColor });
+            if (playerUpdateDebounceTimer) clearTimeout(playerUpdateDebounceTimer);
+            playerUpdateDebounceTimer = setTimeout(async () => {
+                await window.ShapeKeeperConvex.updatePlayer({ color: newColor });
+            }, 250);
         }
-        updateLobbyUI();
     });
 
     document.getElementById('readyBtn').addEventListener('click', async () => {

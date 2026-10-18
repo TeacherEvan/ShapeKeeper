@@ -79,7 +79,11 @@
             const roomId = windowObject.ShapeKeeperConvex?.getCurrentRoomId?.();
             const roomStatus = shared.state.lastRoomState?.status;
             if (roomId && roomStatus !== 'playing') {
-                void windowObject.ShapeKeeperConvex?.leaveRoom?.();
+                const leavePromise = windowObject.ShapeKeeperConvex?.leaveRoom?.();
+                if (leavePromise && typeof leavePromise.finally === 'function') {
+                    leavePromise.finally(() => shared.closeConnection());
+                    return;
+                }
             }
         } catch {
             // Best effort only.

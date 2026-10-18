@@ -44,6 +44,7 @@ export const createRoom = mutation({
       hostPlayerId: args.sessionId,
       hostTokenHash,
       gridSize: args.gridSize,
+      turnDurationSeconds: Math.round(DEFAULT_TURN_DURATION_MS / 1000),
       turnDurationMs: DEFAULT_TURN_DURATION_MS,
       status: 'lobby',
       currentPlayerIndex: 0,

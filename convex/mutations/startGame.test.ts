@@ -68,4 +68,30 @@ describe('mutations/startGame', () => {
         );
         expect(scheduler.runAt).toHaveBeenCalled();
     });
+
+    it('requires valid hostToken when hostTokenHash is set', async () => {
+        const room = {
+            _id: 'r1',
+            hostPlayerId: 'host',
+            hostTokenHash: 'mock-hash-xyz',
+            status: 'lobby',
+            turnDurationMs: 15000,
+        };
+        const players = [{ isReady: true, sessionId: 'p1' }, { isReady: true, sessionId: 'p2' }];
+        const db = makeDb({ room, players });
+        const ctx: any = { db };
+
+        const noToken = await (startGame as any)._handler(ctx, {
+            roomId: 'r1',
+            sessionId: 'host',
+        });
+        expect(noToken).toEqual({ error: 'Host token required' });
+
+        const badToken = await (startGame as any)._handler(ctx, {
+            roomId: 'r1',
+            sessionId: 'host',
+            hostToken: 'wrong-token',
+        });
+        expect(badToken).toEqual({ error: 'Invalid host token' });
+    });
 });

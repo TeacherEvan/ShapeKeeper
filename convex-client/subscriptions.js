@@ -65,19 +65,20 @@
                 return;
             }
 
-            const newPlayersLength = newState.players?.length || 0;
-            const lastPlayersLength = shared.state.lastRoomState?.players?.length || 0;
+            const newPlayersSig = JSON.stringify(
+                (newState.players || []).map((p) => [p._id, p.name, p.color, p.isReady, p.isHost])
+            );
             const hasChanged =
                 !shared.state.lastRoomState ||
                 newState.status !== shared.state.lastRoomState.status ||
                 newState.updatedAt !== shared.state.lastRoomState.updatedAt ||
-                newPlayersLength !== lastPlayersLength;
+                newPlayersSig !== shared.state.lastRoomState.playersSig;
 
             if (hasChanged) {
                 shared.state.lastRoomState = {
                     status: newState.status,
                     updatedAt: newState.updatedAt,
-                    players: { length: newPlayersLength },
+                    playersSig: newPlayersSig,
                 };
                 callback(newState);
             }
@@ -85,7 +86,7 @@
 
         shared.state.currentSubscription = client.onUpdate(
             shared.api.rooms.getRoom,
-            { roomId: shared.state.currentRoomId },
+            { roomId: shared.state.currentRoomId, sessionId: shared.getSessionId() },
             debouncedCallback
         );
 

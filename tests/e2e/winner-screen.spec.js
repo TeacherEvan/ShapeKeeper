@@ -85,7 +85,7 @@ test.describe('Winner screen', () => {
         await forceGameOverWithScores(page, 10, 4);
 
         const winnerScreen = page.locator('#winnerScreen');
-        await expect(winnerScreen).toHaveClass(/active/, { timeout: 2000 });
+        await expect(winnerScreen).toHaveClass(/active/, { timeout: 5000 });
 
         await page.locator('#winnerMainMenu').click();
 

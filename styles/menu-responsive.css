@@ -35,7 +35,10 @@
 
     input[type='color'] {
         width: 80px;
+        min-width: 44px;
         height: 44px;
+        min-height: 44px;
+        box-sizing: border-box;
     }
 
     .start-btn,
@@ -160,7 +163,10 @@
 
     input[type='color'] {
         width: 60px;
+        min-width: 44px;
         height: 44px;
+        min-height: 44px;
+        box-sizing: border-box;
     }
 
     .start-btn {

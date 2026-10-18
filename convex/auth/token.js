@@ -160,9 +160,10 @@ export function projectRoomForClient(room, requestingSessionId) {
  *
  * @param {Array<object>|null|undefined} players
  * @param {string} [requestingSessionId]
+ * @param {string} [hostSessionId]
  * @returns {Array<object>}
  */
-export function projectPlayersForClient(players, requestingSessionId) {
+export function projectPlayersForClient(players, requestingSessionId, hostSessionId = undefined) {
     if (!Array.isArray(players)) return [];
     return players.map((player) => {
         const projection = { ...player };
@@ -170,8 +171,13 @@ export function projectPlayersForClient(players, requestingSessionId) {
             typeof requestingSessionId === 'string' &&
             requestingSessionId.length > 0 &&
             player.sessionId === requestingSessionId;
+        const isHost =
+            typeof hostSessionId === 'string' &&
+            hostSessionId.length > 0 &&
+            player.sessionId === hostSessionId;
         delete projection.sessionId;
         projection.isYou = isYou;
+        projection.isHost = isHost;
         return projection;
     });
 }

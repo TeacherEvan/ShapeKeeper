@@ -125,10 +125,10 @@ export class LiveLobbyManager {
     }
 
     canStartGame() {
-        // The host can start when there are >= 2 players and at least the host is ready.
+        // The host can start when there are >= 2 players and all non-host players are ready.
         if (!this.isHost) return false;
         if (this.players.length < 2) return false;
-        return this.players.every((p) => p.isReady);
+        return this.players.every((p) => p.isReady || p.isHost);
     }
 
     // --- Fallback (no-backend) shims ---------------------------------------

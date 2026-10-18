@@ -175,11 +175,11 @@ describe('Subscription Lifecycle Integration', () => {
 
         expect(typeof unsub).toBe('function');
         expect(window.ShapeKeeperConvexShared.state.activeSubscriptions.size).toBe(1);
-        // The underlying Convex client was asked to subscribe with the room id.
+        // The underlying Convex client was asked to subscribe with the room id and session id.
         const client = window.ShapeKeeperConvexShared.state.convexClient;
         expect(client.onUpdate).toHaveBeenCalledWith(
             'rooms:getRoom',
-            { roomId: 'room_xyz' },
+            { roomId: 'room_xyz', sessionId: expect.any(String) },
             expect.any(Function)
         );
     });

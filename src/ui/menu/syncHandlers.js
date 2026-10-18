@@ -49,16 +49,25 @@ export function handleRoomStateUpdate(roomState, deps) {
     // into the lobby manager so the control reflects it for everyone.
     if (typeof roomState.turnDurationSeconds === 'number') {
         lobbyManager.turnDurationSeconds = roomState.turnDurationSeconds;
+    } else if (typeof roomState.turnDurationMs === 'number') {
+        lobbyManager.turnDurationSeconds = Math.round(roomState.turnDurationMs / 1000);
     }
 
-    // The server computes isHost/isYou against the requesting sessionId;
-    // the public getRoomByCode response strips every player's sessionId,
-    // so the client cannot (and must not) re-derive these locally.
-    const nextIsHost = roomState.isHost;
+    const mySessionId = window.ShapeKeeperConvex?.getSessionId?.();
+    const myPlayer =
+        roomState.players.find((player) => player.isYou) ||
+        (mySessionId ? roomState.players.find((player) => player.sessionId === mySessionId) : null);
+
+    const nextIsHost =
+        typeof roomState.isHost === 'boolean'
+            ? roomState.isHost
+            : Boolean(
+                  myPlayer?.isHost ||
+                  (mySessionId && roomState.hostPlayerId && roomState.hostPlayerId === mySessionId)
+              );
     const previousGameIsHost = game?.isMultiplayer ? game.isHost : null;
     lobbyManager.isHost = nextIsHost;
 
-    const myPlayer = roomState.players.find((player) => player.isYou);
     lobbyManager.myPlayerId = myPlayer?._id || null;
     lobbyManager.isReady = myPlayer?.isReady || false;
 
@@ -79,11 +88,17 @@ export function handleRoomStateUpdate(roomState, deps) {
 
     lobbyManager.players = roomState.players.map((player, index) => ({
         id: player._id,
+        sessionId: player.sessionId,
         name: player.name,
         color: player.color,
         isReady: player.isReady,
-        isHost: roomState.isHost,
-        playerNumber: player.playerNumber || index + 1,
+        isYou: Boolean(player.isYou || (mySessionId && player.sessionId === mySessionId)),
+        isHost:
+            typeof player.isHost === 'boolean'
+                ? player.isHost
+                : Boolean(roomState.hostPlayerId && player.sessionId === roomState.hostPlayerId),
+        playerIndex: player.playerIndex ?? index,
+        playerNumber: player.playerNumber || (player.playerIndex ?? index) + 1,
     }));
 
     document.querySelectorAll('.lobby-grid-btn').forEach((btn) => {

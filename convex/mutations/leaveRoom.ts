@@ -33,7 +33,13 @@ export const leaveRoom = mutation({
 
     if (room.hostPlayerId === args.sessionId) {
       const newHost = remainingPlayers[0];
-      await ctx.db.patch(args.roomId, { hostPlayerId: newHost.sessionId, updatedAt: Date.now() });
+      await ctx.db.patch(args.roomId, {
+        hostPlayerId: newHost.sessionId,
+        hostTokenHash: undefined,
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.patch(args.roomId, { updatedAt: Date.now() });
     }
 
     for (let i = 0; i < remainingPlayers.length; i++) {

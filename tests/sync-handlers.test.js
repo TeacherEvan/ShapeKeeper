@@ -203,7 +203,7 @@ describe('handleRoomStateUpdate — isHost/isYou from server', () => {
         expect(lobbyManager.myPlayerId).toBe('p2');
     });
 
-    it('marks every player with roomState.isHost (per-player isHost in lobby list)', async () => {
+    it('preserves per-player isHost status in lobby list', async () => {
         const { handleRoomStateUpdate } = await import('../src/ui/menu/syncHandlers.js');
         const lobbyManager = makeLobbyManager();
         const room = makeRoomState({ isHost: true });
@@ -212,7 +212,7 @@ describe('handleRoomStateUpdate — isHost/isYou from server', () => {
 
         expect(lobbyManager.players).toHaveLength(2);
         expect(lobbyManager.players[0].isHost).toBe(true);
-        expect(lobbyManager.players[1].isHost).toBe(true);
+        expect(lobbyManager.players[1].isHost).toBe(false);
     });
 
     it('regression: works when per-player sessionId is missing from response', async () => {

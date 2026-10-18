@@ -28,7 +28,23 @@ function makeDb(options: MakeDbOptions = {}) {
         query: (tableName: string) => {
             if (tableName === 'rooms')
                 return {
-                    withIndex: () => ({ first: async () => room }),
+                    withIndex: (_idx: string, buildFilter?: any) => {
+                        let statusVal: string | undefined;
+                        if (buildFilter) {
+                            buildFilter({
+                                eq: (_field: string, val: any) => {
+                                    statusVal = val;
+                                },
+                            });
+                        }
+                        const filtered = statusVal
+                            ? rooms.filter((r) => r.status === statusVal)
+                            : rooms;
+                        return {
+                            first: async () => room,
+                            collect: async () => filtered,
+                        };
+                    },
                     collect: async () => rooms,
                 } as any;
             if (tableName === 'players')
@@ -48,17 +64,24 @@ describe('queries/roomQueries', () => {
         expect(res).toBeNull();
     });
 
-    it('getRoomByCode returns room with players sorted', async () => {
-        const room = { _id: 'r1', roomCode: 'ABC123', status: 'lobby' };
+    it('getRoomByCode returns room with players sorted and projected', async () => {
+        const room = { _id: 'r1', roomCode: 'ABC123', status: 'lobby', hostPlayerId: 's_host' };
         const players = [
-            { playerIndex: 1, name: 'B' },
-            { playerIndex: 0, name: 'A' },
+            { playerIndex: 1, name: 'B', sessionId: 's_guest' },
+            { playerIndex: 0, name: 'A', sessionId: 's_host' },
         ];
         const ctx: any = { db: makeDb({ room, players }) };
 
-        const res = await (getRoomByCode as any)._handler(ctx, { roomCode: 'ABC123' });
+        const res = await (getRoomByCode as any)._handler(ctx, { roomCode: 'ABC123', sessionId: 's_host' });
         expect(res.roomCode).toBe('ABC123');
+        expect(res.isHost).toBe(true);
         expect(res.players[0].name).toBe('A');
+        expect(res.players[0].isHost).toBe(true);
+        expect(res.players[0].isYou).toBe(true);
+        expect(res.players[1].name).toBe('B');
+        expect(res.players[1].isHost).toBe(false);
+        expect(res.players[1].isYou).toBe(false);
+        expect((res.players[0] as any).sessionId).toBeUndefined();
     });
 
     it('getRoom returns null when room missing', async () => {
@@ -67,19 +90,26 @@ describe('queries/roomQueries', () => {
         expect(res).toBeNull();
     });
 
-    it('getRoom returns room with players sorted', async () => {
-        const room = { _id: 'r1', roomCode: 'XYZ', status: 'lobby' };
+    it('getRoom returns room with players sorted and projected for guest', async () => {
+        const room = { _id: 'r1', roomCode: 'XYZ', status: 'lobby', hostPlayerId: 's_host' };
         const players = [
-            { playerIndex: 2, name: 'C' },
-            { playerIndex: 0, name: 'A' },
-            { playerIndex: 1, name: 'B' },
+            { playerIndex: 2, name: 'C', sessionId: 's_other' },
+            { playerIndex: 0, name: 'A', sessionId: 's_host' },
+            { playerIndex: 1, name: 'B', sessionId: 's_guest' },
         ];
         const ctx: any = { db: makeDb({ room, players }) };
 
-        const res = await (getRoom as any)._handler(ctx, { roomId: 'r1' });
+        const res = await (getRoom as any)._handler(ctx, { roomId: 'r1', sessionId: 's_guest' });
         expect(res._id).toBe('r1');
+        expect(res.isHost).toBe(false);
         expect(res.players.map((p: any) => p.name)).toEqual(['A', 'B', 'C']);
+        expect(res.players[0].isHost).toBe(true);
+        expect(res.players[0].isYou).toBe(false);
+        expect(res.players[1].isHost).toBe(false);
+        expect(res.players[1].isYou).toBe(true);
+        expect((res.players[1] as any).sessionId).toBeUndefined();
     });
+
     it('projects turn timing and duration metadata to client', async () => {
         const room = {
             _id: 'r1',

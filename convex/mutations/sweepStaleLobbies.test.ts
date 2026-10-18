@@ -9,7 +9,23 @@ function makeDb(rooms: any[], playersByRoom: Record<string, any[]> = {}) {
         db: {
             query: (tableName: string) => {
                 if (tableName === 'rooms') {
-                    return { collect: async () => rooms } as any;
+                    return {
+                        collect: async () => rooms,
+                        withIndex: (_idx: string, buildFilter?: any) => {
+                            let statusVal: string | undefined;
+                            if (buildFilter) {
+                                buildFilter({
+                                    eq: (_field: string, val: any) => {
+                                        statusVal = val;
+                                    },
+                                });
+                            }
+                            const filtered = statusVal
+                                ? rooms.filter((r) => r.status === statusVal)
+                                : rooms;
+                            return { collect: async () => filtered };
+                        },
+                    } as any;
                 }
                 if (tableName === 'players') {
                     return {

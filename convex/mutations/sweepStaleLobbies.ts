@@ -23,7 +23,10 @@ export const sweepStaleLobbies = mutation({
   handler: async (ctx) => {
     const cutoff = Date.now() - STALE_LOBBY_TTL_MS;
 
-    const rooms = await ctx.db.query('rooms').collect();
+    const rooms = await ctx.db
+      .query('rooms')
+      .withIndex('by_status', (q: any) => q.eq('status', 'lobby'))
+      .collect();
     let swept = 0;
 
     for (const room of rooms as any[]) {
