@@ -119,7 +119,7 @@ export class GameState {
         this.game.lava = null; // LavaTimer particle system (FR-1)
         this.game.turnRemainingMs = null; // current online turn countdown (FR-2)
         this.game.localMode = this.game.options?.localMode === 'ai' ? 'ai' : 'human';
-        this.game.aiDifficulty = this.game.options?.aiDifficulty || 'medium';
+        this.game.aiDifficulty = this.game.options?.aiDifficulty || 'hard';
         this.game.aiPlayerNumber = this.game.localMode === 'ai' ? 2 : null;
         this.game.aiThinking = false;
         this.game.aiMoveDelayMs = 180;

@@ -1,6 +1,7 @@
 #welcomeScreen,
 #mainMenuScreen,
 #localSetupScreen,
+#levelsScreen,
 #joinScreen {
     position: relative;
     overflow-y: auto;
@@ -9,6 +10,7 @@
 
 #welcomeCanvas,
 #localSetupCanvas,
+#levelsCanvas,
 #joinCanvas {
     position: absolute;
     top: 0;
@@ -612,4 +614,92 @@ input[type='color']:focus {
 
 .exit-btn:active {
     transform: translateY(0) scale(0.98);
+}
+
+/* Levels Screen */
+.levels-container {
+    max-width: 50rem;
+    padding-bottom: 3rem;
+}
+
+.levels-status-banner {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin: 1rem 0 1.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--surface-secondary, rgba(255, 255, 255, 0.05));
+    border-radius: var(--radius-md, 8px);
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+    font-family: var(--font-mono, monospace);
+    font-size: 0.95rem;
+}
+
+.levels-sprite-counter strong,
+.levels-progress-counter strong {
+    color: var(--accent-primary, #00f0ff);
+}
+
+.levels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+.level-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 0.5rem;
+    border-radius: var(--radius-md, 8px);
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
+    background: var(--surface-secondary, rgba(255, 255, 255, 0.05));
+    color: var(--text-primary, #ffffff);
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.level-btn.unlocked:hover {
+    border-color: var(--accent-primary, #00f0ff);
+    background: rgba(0, 240, 255, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 240, 255, 0.2);
+}
+
+.level-btn.completed {
+    border-color: #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.level-btn.completed:hover {
+    background: rgba(255, 215, 0, 0.18);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.25);
+}
+
+.level-btn.locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.level-btn .level-num {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.level-btn .level-grid-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary, #a0a0a0);
+    font-family: var(--font-mono, monospace);
+}
+
+.level-btn .level-status-icon {
+    font-size: 0.9rem;
+    margin-top: 4px;
 }

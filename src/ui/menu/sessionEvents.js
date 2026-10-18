@@ -13,6 +13,8 @@ import { buildLocalGameFromConfig, getLastLocalConfig } from './localSetupEvents
 import { showScreen } from '../ScreenTransition.js';
 import { showToast } from '../Toast.js';
 
+import { startLevelMatch } from '../LevelsScreen.js';
+
 export function bindSessionEvents(deps) {
     const {
         getState,
@@ -129,6 +131,11 @@ export function bindSessionEvents(deps) {
         const { game } = getState();
         if (game?.isMultiplayer && window.ShapeKeeperConvex?.getCurrentRoomId?.()) {
             await requestOnlineRematch();
+            return;
+        }
+        if (game?.isLevelsMode) {
+            const nextLvl = game._nextLevelToPlay ?? game.currentLevel;
+            startLevelMatch(nextLvl, deps);
             return;
         }
         if (getLastLocalConfig()) {

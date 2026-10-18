@@ -80,6 +80,11 @@ describe('AI engine — chooseAIMove', () => {
         vi.restoreAllMocks();
     });
 
+    it('defaults AI difficulty to hard when not specified', () => {
+        const game = makeAI();
+        expect(game.aiDifficulty).toBe('hard');
+    });
+
     it('returns null when no lines remain (grid saturated)', () => {
         const game = makeAI('hard');
         // Fill every possible line on a 3x3 grid.

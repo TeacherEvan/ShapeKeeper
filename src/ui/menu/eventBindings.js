@@ -13,6 +13,9 @@
 
 import { toggleTheme } from '../ThemeManager.js';
 
+import { renderLevelsGrid } from '../LevelsScreen.js';
+import { showScreen } from '../ScreenTransition.js';
+
 import { bindLocalSetupEvents } from './localSetupEvents.js';
 import { bindLobbyEvents } from './lobbyEvents.js';
 import { bindSessionEvents } from './sessionEvents.js';
@@ -20,6 +23,15 @@ import { bindSessionEvents } from './sessionEvents.js';
 export function bindMenuEventHandlers(deps) {
     // Generic main-menu wiring (not owned by any single domain module).
     document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+
+    document.getElementById('levelsMenuBtn')?.addEventListener('click', () => {
+        renderLevelsGrid(deps);
+        showScreen('levelsScreen');
+    });
+
+    document.getElementById('backToMenuFromLevels')?.addEventListener('click', () => {
+        showScreen('mainMenuScreen');
+    });
 
     // Domain controllers.
     bindLocalSetupEvents(deps);

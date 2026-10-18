@@ -29,15 +29,15 @@ describe('EffectSystem — delegation', () => {
         expect(sys.game).toBe(game);
     });
 
-    it('initializeMultipliers delegates to the game multiplier store', () => {
+    it('initializeMultipliers delegates to the game multiplier store with 20% 0.2x multipliers', () => {
         const game = makeGame();
         const sys = new EffectSystem(game);
         sys.initializeMultipliers();
-        // 5x5 grid of squares => 25 squares, every square gets a multiplier
+        // 5x5 grid of squares => 25 squares; 20% of 25 => 5 squares get 0.2x multiplier
         const keys = Object.keys(game.squareMultipliers);
-        expect(keys.length).toBe(25);
+        expect(keys.length).toBe(5);
         for (const k of keys) {
-            expect(game.squareMultipliers[k]).toMatchObject({ type: 'multiplier' });
+            expect(game.squareMultipliers[k]).toEqual({ type: 'multiplier', value: 0.2 });
         }
     });
 

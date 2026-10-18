@@ -3,6 +3,7 @@
  */
 
 import { announceStatus } from '../src/ui/AccessibilityAnnouncer.js';
+import { LevelsProgress } from '../src/ui/LevelsProgress.js';
 import { showScreen } from '../src/ui/ScreenTransition.js';
 import { prefersReducedMotion } from '../utils.js';
 
@@ -339,13 +340,44 @@ export function showWinner(game) {
     const winnerText = document.getElementById('winnerText');
     const finalScores = document.getElementById('finalScores');
 
+    const playAgainBtn = document.getElementById('playAgain');
     if (winnerText) {
-        if (winner === 0) {
-            winnerText.textContent = `🤝 It's a Tie! 🤝`;
-            winnerText.style.color = '#FFD700';
+        if (game.isLevelsMode) {
+            if (winner === 1) {
+                const state = LevelsProgress.recordLevelWin(game.currentLevel);
+                if (window.welcomeAnimation) {
+                    window.welcomeAnimation.syncWithLevelsProgress();
+                }
+                winnerText.innerHTML = `🏆 Level ${game.currentLevel} Complete! 🏆<br><span style="font-size: 0.6em; color: #00f0ff;">✨ +1 Colorful Sprite Collected! Total: ${state.spritesObtained} ✨</span>`;
+                winnerText.style.color = winnerColor;
+                if (playAgainBtn) {
+                    if (game.currentLevel < 25) {
+                        playAgainBtn.textContent = `Next Level (${game.currentLevel + 1}) →`;
+                        game._nextLevelToPlay = game.currentLevel + 1;
+                    } else {
+                        playAgainBtn.textContent = `Replay Level 25 ★`;
+                        game._nextLevelToPlay = 25;
+                    }
+                }
+            } else {
+                winnerText.innerHTML = `Level ${game.currentLevel} Failed<br><span style="font-size: 0.6em; color: #FFB088;">Try again to unlock the next level!</span>`;
+                winnerText.style.color = '#FFB088';
+                if (playAgainBtn) {
+                    playAgainBtn.textContent = `Retry Level ${game.currentLevel} ↺`;
+                    game._nextLevelToPlay = game.currentLevel;
+                }
+            }
         } else {
-            winnerText.textContent = `🏆 Player ${winner} Wins! 🏆`;
-            winnerText.style.color = winnerColor;
+            if (playAgainBtn) {
+                playAgainBtn.textContent = 'Play Again';
+            }
+            if (winner === 0) {
+                winnerText.textContent = `🤝 It's a Tie! 🤝`;
+                winnerText.style.color = '#FFD700';
+            } else {
+                winnerText.textContent = `🏆 Player ${winner} Wins! 🏆`;
+                winnerText.style.color = winnerColor;
+            }
         }
     }
 

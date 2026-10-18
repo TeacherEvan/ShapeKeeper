@@ -161,7 +161,7 @@ export function bindLocalSetupEvents(deps) {
         const player1Color = document.getElementById('player1Color').value;
         const player2Color = document.getElementById('player2Color').value;
         const localMode = localOpponentType?.value === 'ai' ? 'ai' : 'human';
-        const aiDifficulty = localAIDifficulty?.value || 'medium';
+        const aiDifficulty = localAIDifficulty?.value || 'hard';
         const tutorialEnabled = Boolean(localTutorialMode?.checked);
 
         const turnDurationSelect = document.getElementById('localTurnTimer');

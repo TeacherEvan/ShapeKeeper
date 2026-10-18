@@ -57,6 +57,14 @@ export class DotsAndBoxesGame {
             this.turnDurationSeconds = 0;
             this.turnDurationMs = 0;
         }
+
+        this.isLevelsMode = Boolean(options.isLevelsMode);
+        this.currentLevel = options.currentLevel ? Number(options.currentLevel) : 1;
+        if (this.isLevelsMode && (!this.turnDurationSeconds || this.turnDurationSeconds === 0)) {
+            this.turnDurationSeconds = 7;
+            this.turnDurationMs = 7000;
+        }
+
         this.turnRemainingMs = null;
         this._localTurnClock = null;
 
@@ -425,6 +433,26 @@ export class DotsAndBoxesGame {
                         this.particleSystem.spawnParticles.bind(this.particleSystem),
                         this.particleSystem.spawnSparkleEmojis.bind(this.particleSystem)
                     );
+
+                    const multiplierData = this.squareMultipliers?.[squareKey];
+                    if (
+                        multiplierData &&
+                        multiplierData.type === 'multiplier' &&
+                        multiplierData.value === 0.2
+                    ) {
+                        this.revealedMultipliers.add(squareKey);
+                        this.scores[this.currentPlayer] =
+                            Math.round(this.scores[this.currentPlayer] * 0.2 * 100) / 100;
+                        this.animationSystem.triggerMultiplierAnimation(
+                            squareKey,
+                            0.2,
+                            this.gameLogic.parseSquareKey,
+                            this.offsetX,
+                            this.offsetY,
+                            this.cellSize,
+                            this.particleSystem.createMultiplierParticles.bind(this.particleSystem)
+                        );
+                    }
                 });
                 this.soundManager.playSquareSound(this.comboCount);
 
@@ -575,6 +603,7 @@ export class DotsAndBoxesGame {
             (lineKey) => !this.gameLogic.wouldCompleteSquare(lineKey)
         );
 
+        // Easy mode kept for backward compatibility if explicitly requested.
         if (this.aiDifficulty === 'easy') {
             if (scoringLines.length > 0 && Math.random() > 0.35) {
                 return this.pickRandomLine(scoringLines);
@@ -585,7 +614,7 @@ export class DotsAndBoxesGame {
             return this.pickRandomLine(availableLines);
         }
 
-        // Medium & Hard always take the strongest immediate scoring line.
+        // Strong default AI: always take immediate scoring lines.
         if (scoringLines.length > 0) {
             return this.pickBestScoringLine(scoringLines);
         }
@@ -593,22 +622,20 @@ export class DotsAndBoxesGame {
         // No immediate capture available: choose a safe line.
         const candidateSafe = safeLines.length > 0 ? safeLines : availableLines;
 
-        if (this.aiDifficulty === 'hard') {
-            const bestMinimaxMove = findOptimalMinimaxMove(
-                this.gameLogic,
-                this.lines,
-                this.gridRows,
-                this.gridCols,
-                2
-            );
-            if (bestMinimaxMove) {
-                return bestMinimaxMove;
-            }
-            return this.pickHardSafeLine(candidateSafe);
+        // Enhanced adaptive depth: depth 4 on small boards/late game, depth 3 mid-game, depth 2 early on large boards.
+        const searchDepth = availableLines.length <= 14 ? 4 : availableLines.length <= 22 ? 3 : 2;
+        const bestMinimaxMove = findOptimalMinimaxMove(
+            this.gameLogic,
+            this.lines,
+            this.gridRows,
+            this.gridCols,
+            searchDepth
+        );
+        if (bestMinimaxMove) {
+            return bestMinimaxMove;
         }
 
-        // Medium: greedy safe-line heuristic (avoids creating 3-edge squares).
-        return this.pickBestSafeLine(candidateSafe);
+        return this.pickHardSafeLine(candidateSafe);
     }
 
     pickHardSafeLine(lines) {
@@ -1112,6 +1139,10 @@ export class DotsAndBoxesGame {
         if (!this._localTurnClock) {
             this._localTurnClock = { player: null, deadline: 0 };
         }
+        if (this.isLevelsMode && this.currentPlayer !== 1) {
+            this.turnRemainingMs = null;
+            return;
+        }
         const clock = this._localTurnClock;
         if (clock.player !== this.currentPlayer || clock.deadline === 0) {
             clock.player = this.currentPlayer;
@@ -1140,14 +1171,14 @@ export class DotsAndBoxesGame {
     }
 
     /**
-     * Whether the local hot-seat lava timer should run this frame.
+     * Whether the local turn lava timer should run this frame.
      * Online matches use the server clock; AI mode has no human turn to
-     * time; the tutorial and finished games never skip turns.
+     * time (unless in Levels mode for player 1); the tutorial and finished games never skip turns.
      */
     shouldRunLocalTurnClock() {
         return (
             !this.isOnline &&
-            this.localMode === 'human' &&
+            (this.localMode === 'human' || (this.isLevelsMode && this.currentPlayer === 1)) &&
             this.turnDurationSeconds > 0 &&
             !this.gameState.isGameOver() &&
             !this.tutorialSystem?.isActive()
@@ -1155,7 +1186,7 @@ export class DotsAndBoxesGame {
     }
 
     handleTurnExpiration() {
-        if (!FEATURE_FLAGS.FEATURE_LAVA_TIMER) return;
+        if (!FEATURE_FLAGS.FEATURE_LAVA_TIMER && !this.isLevelsMode) return;
 
         if (this.isOnline) {
             const ctrl = window.ShapeKeeperTurnClock;
@@ -1178,7 +1209,7 @@ export class DotsAndBoxesGame {
             return;
         }
 
-        // Local hot-seat: the countdown is owned by tickLocalTurnClock().
+        // Local turn clock: the countdown is owned by tickLocalTurnClock().
         const remaining = this.turnRemainingMs;
         if (remaining === null || remaining === undefined || remaining > 0) return;
 
@@ -1194,6 +1225,9 @@ export class DotsAndBoxesGame {
         }
         this.turnRemainingMs = null;
         this.renderer.draw();
+        if (this.isLevelsMode && this.currentPlayer === 2) {
+            this.maybeRunAITurn();
+        }
     }
 
     getInteractionDiagnostics() {

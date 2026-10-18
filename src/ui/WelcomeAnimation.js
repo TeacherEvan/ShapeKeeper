@@ -6,12 +6,19 @@
  * @module ui/WelcomeAnimation
  */
 
+import { LevelsProgress } from './LevelsProgress.js';
+
 export class WelcomeAnimation {
     constructor() {
         this.canvas = document.getElementById('welcomeCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.floatingParticles = [];
-        this.particleCount = 120;
+        const levelsState = LevelsProgress.getState();
+        // Default 120 sprites on launch until first Levels game is played;
+        // once Levels is triggered, only displayed obtained sprites (starting at 1).
+        this.particleCount = levelsState.levelsTriggered
+            ? Math.max(1, levelsState.spritesObtained)
+            : 120;
         this.animationFrameId = null;
         this.isDimmed = false;
         this.spatialPartitionGrid = null;
@@ -144,36 +151,53 @@ export class WelcomeAnimation {
         this.transitionToMainMenu();
     }
 
-    createParticles() {
+    createSingleParticle() {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const palette = this.colorPalette[isDark ? 'dark' : 'light'];
+        const colorSet = palette[Math.floor(Math.random() * palette.length)];
+        const colorVariant = Math.random();
+        let color;
+        if (colorVariant < 0.4) color = colorSet.primary;
+        else if (colorVariant < 0.7) color = colorSet.secondary;
+        else color = colorSet.accent;
 
+        return {
+            x: Math.random() * this.logicalWidth,
+            y: Math.random() * this.logicalHeight,
+            vx: (Math.random() - 0.5) * 1.5,
+            vy: (Math.random() - 0.5) * 1.5,
+            color,
+            baseColor: color,
+            size: 2 + Math.random() * 3,
+            baseSize: 2 + Math.random() * 3,
+            type: this.particleTypes[Math.floor(Math.random() * this.particleTypes.length)],
+            neighborhoodRadius: 120,
+            maxSpeed: 1.8,
+            maxForce: 0.04,
+            trail: [],
+            maxTrailLength: 8,
+            pulsePhase: Math.random() * Math.PI * 2,
+            pulseSpeed: 0.02 + Math.random() * 0.03,
+        };
+    }
+
+    createParticles() {
         for (let i = 0; i < this.particleCount; i++) {
-            const colorSet = palette[Math.floor(Math.random() * palette.length)];
-            const colorVariant = Math.random();
-            let color;
-            if (colorVariant < 0.4) color = colorSet.primary;
-            else if (colorVariant < 0.7) color = colorSet.secondary;
-            else color = colorSet.accent;
+            this.floatingParticles.push(this.createSingleParticle());
+        }
+    }
 
-            this.floatingParticles.push({
-                x: Math.random() * this.logicalWidth,
-                y: Math.random() * this.logicalHeight,
-                vx: (Math.random() - 0.5) * 1.5,
-                vy: (Math.random() - 0.5) * 1.5,
-                color,
-                baseColor: color,
-                size: 2 + Math.random() * 3,
-                baseSize: 2 + Math.random() * 3,
-                type: this.particleTypes[Math.floor(Math.random() * this.particleTypes.length)],
-                neighborhoodRadius: 120,
-                maxSpeed: 1.8,
-                maxForce: 0.04,
-                trail: [],
-                maxTrailLength: 8,
-                pulsePhase: Math.random() * Math.PI * 2,
-                pulseSpeed: 0.02 + Math.random() * 0.03,
-            });
+    syncWithLevelsProgress() {
+        const state = LevelsProgress.getState();
+        if (state.levelsTriggered) {
+            const targetCount = Math.max(1, state.spritesObtained);
+            this.particleCount = targetCount;
+            while (this.floatingParticles.length > targetCount) {
+                this.floatingParticles.pop();
+            }
+            while (this.floatingParticles.length < targetCount) {
+                this.floatingParticles.push(this.createSingleParticle());
+            }
         }
     }
 

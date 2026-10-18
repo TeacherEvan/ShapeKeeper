@@ -119,7 +119,7 @@ function validateMoveHistoryEntry(entry) {
 }
 
 function normalizeGridSize(gridSize) {
-    if (Number.isInteger(gridSize) && gridSize >= 4 && gridSize <= 60) {
+    if (Number.isInteger(gridSize) && gridSize >= 3 && gridSize <= 60) {
         return gridSize;
     }
 
@@ -127,9 +127,9 @@ function normalizeGridSize(gridSize) {
         isPlainObject(gridSize) &&
         Number.isInteger(gridSize.rows) &&
         Number.isInteger(gridSize.cols) &&
-        gridSize.rows >= 4 &&
+        gridSize.rows >= 3 &&
         gridSize.rows <= 60 &&
-        gridSize.cols >= 4 &&
+        gridSize.cols >= 3 &&
         gridSize.cols <= 60
     ) {
         return {

@@ -104,7 +104,7 @@ export class Renderer {
      * rendered BEHIND lines/squares/dots at 40% opacity.
      */
     drawLavaTimerLayer() {
-        if (!FEATURE_FLAGS.FEATURE_LAVA_TIMER) return;
+        if (!FEATURE_FLAGS.FEATURE_LAVA_TIMER && !this.game.isLevelsMode) return;
         drawLavaTimer(this.game);
     }
 

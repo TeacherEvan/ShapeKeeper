@@ -98,6 +98,13 @@
                             START GAME
                         </button>
                         <button
+                            id="levelsMenuBtn"
+                            class="menu-btn secondary"
+                            data-testid="levels-menu-button"
+                        >
+                            LEVELS
+                        </button>
+                        <button
                             id="createGameBtn"
                             class="menu-btn secondary"
                             data-testid="create-game-button"
@@ -228,7 +235,7 @@
                         </span>
                     </div>
 
-                    <div class="setup-section">
+                    <div class="setup-section" id="localAIDifficultySection" hidden>
                         <h2>AI Difficulty</h2>
                         <label class="field-label" for="localAIDifficulty"
                             >Choose AI difficulty</label
@@ -240,8 +247,8 @@
                             disabled
                         >
                             <option value="easy">Easy</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="hard">Hard</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard" selected>Hard</option>
                         </select>
                     </div>
 
@@ -251,6 +258,32 @@
                             Load Saved Game
                         </button>
                         <button id="startLocalGame" class="start-btn" disabled>Start Game</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Levels Screen -->
+            <section
+                id="levelsScreen"
+                class="screen"
+                data-testid="levels-screen"
+                hidden
+                aria-hidden="true"
+                aria-labelledby="levelsTitle"
+            >
+                <canvas id="levelsCanvas"></canvas>
+                <div class="welcome-container levels-container">
+                    <h1 id="levelsTitle">Levels</h1>
+                    <p class="credit" id="levelsSubtitle">Complete levels to collect colorful sprites</p>
+                    <div class="levels-status-banner">
+                        <span class="levels-sprite-counter">Sprites Collected: <strong id="levelsSpriteCountBadge">0</strong> ✨</span>
+                        <span class="levels-progress-counter">Progress: <strong id="levelsUnlockedCountBadge">1/25</strong></span>
+                    </div>
+                    <div id="levelsGridContainer" class="levels-grid" data-testid="levels-grid">
+                        <!-- 25 level buttons generated dynamically by LevelsScreen.js -->
+                    </div>
+                    <div class="button-row">
+                        <button id="backToMenuFromLevels" class="back-btn">← Back</button>
                     </div>
                 </div>
             </section>

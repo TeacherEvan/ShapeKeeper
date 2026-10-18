@@ -41,6 +41,7 @@ function initializeApp() {
 
     // Initialize welcome animation
     welcomeAnimation = new WelcomeAnimation();
+    window.welcomeAnimation = welcomeAnimation;
 
     // Update menu navigation dependencies with the animation instance
     setMenuNavigationDependencies({

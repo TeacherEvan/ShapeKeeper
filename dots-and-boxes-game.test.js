@@ -87,6 +87,7 @@ describe('DotsAndBoxesGame rules engine and scoring', () => {
     });
 
     it('handles completed squares: awards points, retains turn', async () => {
+        game.squareMultipliers = {};
         // Setup 3 lines of cell (0,0):
         // Top: (0,0)-(0,1), Left: (0,0)-(1,0), Bottom: (1,0)-(1,1)
         await game.drawLine({ row: 0, col: 0 }, { row: 0, col: 1 }); // Player 1
@@ -108,6 +109,7 @@ describe('DotsAndBoxesGame rules engine and scoring', () => {
     });
 
     it('awards double points on square completion when double points effect is active', async () => {
+        game.squareMultipliers = {};
         // Setup 3 lines
         await game.drawLine({ row: 0, col: 0 }, { row: 0, col: 1 }); // Player 1
         await game.drawLine({ row: 0, col: 0 }, { row: 1, col: 0 }); // Player 2
@@ -127,6 +129,18 @@ describe('DotsAndBoxesGame rules engine and scoring', () => {
         expect(game.currentPlayer).toBe(2); // Turn retained
     });
 
+    it('automatically triggers 0.2x secret multiplier on square completion when present', async () => {
+        game.squareMultipliers['0,0'] = { type: 'multiplier', value: 0.2 };
+        await game.drawLine({ row: 0, col: 0 }, { row: 0, col: 1 });
+        await game.drawLine({ row: 0, col: 0 }, { row: 1, col: 0 });
+        await game.drawLine({ row: 1, col: 0 }, { row: 1, col: 1 });
+        await game.drawLine({ row: 0, col: 1 }, { row: 1, col: 1 });
+
+        expect(game.squares['0,0']).toBe(2);
+        expect(game.revealedMultipliers.has('0,0')).toBe(true);
+        expect(game.scores[2]).toBe(0.2); // (0 + 1) * 0.2 = 0.2
+    });
+
     it('does not switch turn on non-completing line when double line effect is active', async () => {
         expect(game.currentPlayer).toBe(1);
 
@@ -142,6 +156,7 @@ describe('DotsAndBoxesGame rules engine and scoring', () => {
     });
 
     it('applies score multiplier bonus (multiplier - 1) on reveal', async () => {
+        game.squareMultipliers = {};
         // Setup a completed square
         await game.drawLine({ row: 0, col: 0 }, { row: 0, col: 1 }); // Player 1
         await game.drawLine({ row: 0, col: 0 }, { row: 1, col: 0 }); // Player 2

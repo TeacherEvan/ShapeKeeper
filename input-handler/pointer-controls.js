@@ -47,25 +47,8 @@ export function getSquareAtPosition(handler, x, y) {
     return null;
 }
 
-function handleCellInteraction(handler, clickedCell) {
-    const clickedHasSquare = clickedCell && !!handler.game.squares[clickedCell];
-
-    if (!clickedCell || !clickedHasSquare) {
-        return false;
-    }
-
-    if (handler.game.isMultiplayer) {
-        const isSquareOwner = handler.game.squares[clickedCell] === handler.game.myPlayerNumber;
-        if (!isSquareOwner) {
-            return true;
-        }
-    }
-
-    if (!handler.game.revealedMultipliers.has(clickedCell)) {
-        handler.game.revealMultiplier(clickedCell);
-        return true;
-    }
-
+function handleCellInteraction(_handler, _clickedCell) {
+    // Tapping on completed squares no longer triggers double-up powerups or manual multiplier reveals.
     return false;
 }
 
