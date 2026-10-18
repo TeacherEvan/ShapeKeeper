@@ -31,6 +31,7 @@ export default defineSchema({
         rematchVotes: v.optional(v.array(v.string())), // sessionIds that asked for a rematch
         lastTurnClientSentAt: v.optional(v.number()), // client send timestamp of last move
         lastTurnServerReceivedAt: v.optional(v.number()), // server receipt timestamp of last move
+        securityVersion: v.optional(v.number()), // legacy field on pre-existing production room documents
     })
         .index('by_code', ['roomCode'])
         .index('by_passcode', ['passcode'])
@@ -70,6 +71,13 @@ export default defineSchema({
         playerId: v.id('players'), // Who completed this square
         playerIndex: v.number(), // For quick color lookup
         multiplier: v.optional(
+            v.object({
+                type: v.union(v.literal('multiplier'), v.literal('truthOrDare')),
+                value: v.optional(v.number()),
+            })
+        ),
+        taps: v.optional(v.number()),
+        effectiveMultiplier: v.optional(
             v.object({
                 type: v.union(v.literal('multiplier'), v.literal('truthOrDare')),
                 value: v.optional(v.number()),

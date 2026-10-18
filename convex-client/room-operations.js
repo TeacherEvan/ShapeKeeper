@@ -149,7 +149,7 @@
             {
                 roomId: shared.state.currentRoomId,
                 sessionId: shared.getSessionId(),
-                hostToken: getHostToken(shared.state.currentRoomId),
+                hostToken: getHostToken(shared.state.currentRoomId) || undefined,
                 gridSize,
             },
             'updating grid size'
@@ -170,7 +170,7 @@
             {
                 roomId: shared.state.currentRoomId,
                 sessionId: shared.getSessionId(),
-                hostToken: getHostToken(shared.state.currentRoomId),
+                hostToken: getHostToken(shared.state.currentRoomId) || undefined,
                 turnDurationSeconds,
                 turnDurationMs,
             },
@@ -188,7 +188,7 @@
             {
                 roomId: shared.state.currentRoomId,
                 sessionId: shared.getSessionId(),
-                hostToken: getHostToken(shared.state.currentRoomId),
+                hostToken: getHostToken(shared.state.currentRoomId) || undefined,
             },
             'starting game'
         );

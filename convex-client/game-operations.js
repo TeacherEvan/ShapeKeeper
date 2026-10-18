@@ -8,8 +8,8 @@
     }
 
     function getHostTokenForCurrentRoom() {
-        if (!shared.getHostToken) return null;
-        return shared.getHostToken(shared.state.currentRoomId);
+        if (!shared.getHostToken) return undefined;
+        return shared.getHostToken(shared.state.currentRoomId) || undefined;
     }
 
     async function drawLine(lineKey, opts = {}) {
