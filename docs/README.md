@@ -22,8 +22,10 @@
 | [JOBCARD.md](planning/JOBCARD.md)                                    | Current session work tracking          |
 | [CounterPlan.md](planning/CounterPlan.md)                            | Visual evolution roadmap (✅ Complete) |
 | [MULTIPLAYER_PLANNING.md](planning/MULTIPLAYER_PLANNING.md)          | Online multiplayer architecture        |
-| [COMPETITION_ROADMAP.md](planning/COMPETITION_PRODUCTION_ROADMAP.md) | Competition production roadmap         |
+| [COMPETITION_PRODUCTION_ROADMAP.md](planning/COMPETITION_PRODUCTION_ROADMAP.md) | Competition production roadmap         |
 | [REFACTORING_PLAN.md](planning/REFACTORING_PLAN.md)                  | ES6 module refactoring plan            |
+| [feature-multiplayer-lobby.md](../feature-multiplayer-lobby.md)      | Open lobby browser + passcode rules    |
+| [feature-opponent-tap.md](../feature-opponent-tap.md)                | Opponent Tap mechanic (multiplayer)    |
 
 ### Technical (`/docs/technical/`)
 
@@ -56,7 +58,7 @@
 
 ---
 
-## 📋 Key Features (v4.3.0)
+## 📋 Key Features (v4.5.0)
 
 ### Performance Optimizations 🚀
 
@@ -86,4 +88,4 @@
 
 ---
 
-_Last updated: July 26, 2026_
+_Last updated: October 17, 2026_

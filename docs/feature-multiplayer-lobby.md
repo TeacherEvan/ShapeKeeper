@@ -3,7 +3,7 @@
 > Rewritten in v4.5.0 (2026-10-14). Replaces the v4.4.0 code + silly-passcode
 > join flow with an open lobby browser: anyone joins by selecting **JOIN
 > LOBBY** — no room codes, no passcodes. Legacy rooms (created before v4.5.0)
-> keep working via the old `?join=` deep link.
+> keep working via the old `?join=` deep link and may still carry a passcode.
 
 ## Flow
 
@@ -37,7 +37,22 @@
 
 `?join=ROOMCODE` still works: `welcome.js` dispatches
 `shapekeeper:joinFromUrl`, the menu bindings join that lobby directly
-(bypassing the browser). Passcodes are never required for new rooms.
+(bypassing the browser). Passcodes are never required for new rooms. New
+rooms carry no `passcode` field (`v.optional(v.string())` in the schema, set
+to nothing on create), so the invite URL for a new room is just
+`${origin}/?join=${roomCode}`. Legacy rooms that were created with a passcode
+still require it on join — `joinRoom` validates it when present.
+
+The `generateSillyPasscode()` machinery in `convex/rooms/shared.ts` (50
+adjectives × 50 animals, TitleCase `[Adjective][Animal]`, no numbers, no
+human names) is retained and unit-tested (`convex/rooms/shared.test.js`), but
+the active `createRoom` path no longer calls it for new rooms. It remains
+available for legacy-room compatibility and for any future re-enablement.
+
+The room code itself is an internal handle — a joiner never types it — but it
+does appear in the invite URL built by `LiveLobbyManager.buildInviteUrl()` and
+in `?join=` deep links. The passcode, when present, is appended to that same
+invite URL and is only ever shown to the host at room-creation time.
 
 ## listOpenLobbies
 
@@ -101,6 +116,8 @@ open "http://127.0.0.1:8000/?join=ABC123"
 
 Rooms created before v4.5.0 may carry a `passcode`. `joinRoom` still
 validates it when present (`convex/mutations/joinRoom.ts`), so old invite
-links keep working. New rooms never get a passcode — the
-`generateSillyPasscode()` machinery in `convex/rooms/shared.ts` is legacy
-and retained only for those old rooms.
+links keep working. New rooms never get a passcode — `createRoom` inserts no
+`passcode` field. The `generateSillyPasscode()` machinery in
+`convex/rooms/shared.ts` is retained and unit-tested, but the active create
+path does not call it for new rooms. It remains available for legacy-room
+compatibility.
