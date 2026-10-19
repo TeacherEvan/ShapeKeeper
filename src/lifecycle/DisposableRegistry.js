@@ -42,6 +42,14 @@ export class DisposableRegistry {
     }
 
     /**
+     * Remove a completed requestAnimationFrame ID.
+     * @param {number} rafId
+     */
+    removeRAF(rafId) {
+        this.rafs.delete(rafId);
+    }
+
+    /**
      * Add and track an event listener on a target.
      * @param {EventTarget} target
      * @param {string} type

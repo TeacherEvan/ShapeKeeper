@@ -151,9 +151,12 @@ function normalizeConfig(config) {
         return null;
     }
 
+    const HEX_COLOR_REGEX = /^#[0-9a-fA-F]{6}$/;
     if (
         typeof config.player1Color !== 'string' ||
+        !HEX_COLOR_REGEX.test(config.player1Color) ||
         typeof config.player2Color !== 'string' ||
+        !HEX_COLOR_REGEX.test(config.player2Color) ||
         !LOCAL_MODES.has(config.localMode) ||
         !AI_DIFFICULTIES.has(config.aiDifficulty)
     ) {

@@ -818,6 +818,7 @@ export class DotsAndBoxesGame {
             lines: [...this.lines],
             playerEffects: JSON.parse(JSON.stringify(this.playerEffects)),
             protectedSquares: [...this.protectedSquares],
+            revealedMultipliers: Array.from(this.revealedMultipliers || []),
             scores: { ...this.scores },
             squares: { ...this.squares },
         };
@@ -833,6 +834,7 @@ export class DotsAndBoxesGame {
         this.claimedCells = new Set(snapshot.claimedCells);
         this.playerEffects = JSON.parse(JSON.stringify(snapshot.playerEffects));
         this.protectedSquares = new Set(snapshot.protectedSquares);
+        this.revealedMultipliers = new Set(snapshot.revealedMultipliers || []);
         this.comboCount = snapshot.comboCount;
         this.lastComboPlayer = snapshot.lastComboPlayer;
 
@@ -1087,8 +1089,11 @@ export class DotsAndBoxesGame {
         }
 
         if (!this.isDestroyed) {
-            const rafId = requestAnimationFrame(() => this.animate());
-            this.disposables.addRAF(rafId);
+            if (this._activeRafId !== null && this._activeRafId !== undefined) {
+                this.disposables.removeRAF(this._activeRafId);
+            }
+            this._activeRafId = requestAnimationFrame(() => this.animate());
+            this.disposables.addRAF(this._activeRafId);
         }
     }
 
@@ -1244,6 +1249,12 @@ export class DotsAndBoxesGame {
             }
             if (remaining === undefined || remaining === null || remaining > 0) return;
 
+            const turnKey =
+                ctrl.getTurnKey?.() ??
+                `${this.gameState?.room?.turnStartTime}_${this.gameState?.room?.turnEndTime}`;
+            if (this._lastExpiredTurnKey === turnKey) return;
+            this._lastExpiredTurnKey = turnKey;
+
             // The current player's turn has expired.
             // For local lava timer house rule, skip to the next player.
             const currentPlayerIndex = this.gameState?.room?.currentPlayerIndex ?? 0;
@@ -1333,6 +1344,10 @@ export class DotsAndBoxesGame {
 
         if (this.disposables) {
             this.disposables.dispose();
+        }
+
+        if (this.soundManager && typeof this.soundManager.destroy === 'function') {
+            this.soundManager.destroy();
         }
     }
 }

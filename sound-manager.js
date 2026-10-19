@@ -35,15 +35,23 @@ export class SoundManager {
      * Ensure audio context is initialized (call from user gesture)
      */
     ensureAudioContext() {
-        if (!this.ctx || this.initialized) return;
-
-        try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AudioContext();
-            this.initialized = true;
-        } catch {
-            console.log('[Sound] Could not initialize audio context');
+        if (!this.ctx || this.ctx.state === 'closed') {
+            this.initializeAudioContext();
         }
+        if (this.ctx && this.ctx.state === 'suspended' && typeof this.ctx.resume === 'function') {
+            this.ctx.resume().catch(() => {});
+        }
+    }
+
+    /**
+     * Clean up AudioContext hardware resources
+     */
+    destroy() {
+        if (this.ctx && this.ctx.state !== 'closed' && typeof this.ctx.close === 'function') {
+            this.ctx.close().catch(() => {});
+        }
+        this.ctx = null;
+        this.initialized = false;
     }
 
     /**

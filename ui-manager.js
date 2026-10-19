@@ -128,7 +128,10 @@ export class UIManager {
             turnText = `Player ${this.game.currentPlayer}'s Turn`;
         }
 
-        if (this.lastRenderedState.turnText !== turnText) {
+        if (
+            this.lastRenderedState.turnText !== turnText ||
+            turnIndicator.textContent !== turnText
+        ) {
             turnIndicator.textContent = turnText;
             this.lastRenderedState.turnText = turnText;
             announceStatus(turnText);
@@ -136,7 +139,10 @@ export class UIManager {
 
         const turnColor =
             this.game.currentPlayer === 1 ? this.game.player1Color : this.game.player2Color;
-        if (this.lastRenderedState.turnColor !== turnColor) {
+        if (
+            this.lastRenderedState.turnColor !== turnColor ||
+            turnIndicator.style.color !== turnColor
+        ) {
             turnIndicator.style.color = turnColor;
             this.lastRenderedState.turnColor = turnColor;
         }

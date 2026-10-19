@@ -357,16 +357,35 @@ export function showGameOverSplash(game) {
     }
 
     if (scoresEl) {
-        scoresEl.innerHTML = `
-            <div class="final-score-entry">
-                <span class="final-score-name">Player 1</span>
-                <span class="final-score-points" style="color: ${game.player1Color}">${game.scores[1]}</span>
-            </div>
-            <div class="final-score-entry">
-                <span class="final-score-name">AI</span>
-                <span class="final-score-points" style="color: ${game.player2Color}">${game.scores[2]}</span>
-            </div>
-        `;
+        scoresEl.replaceChildren();
+
+        const p1Row = document.createElement('div');
+        p1Row.className = 'final-score-entry';
+        const p1Name = document.createElement('span');
+        p1Name.className = 'final-score-name';
+        p1Name.textContent = 'Player 1';
+        const p1Pts = document.createElement('span');
+        p1Pts.className = 'final-score-points';
+        p1Pts.style.color = /^#[0-9a-fA-F]{6}$/.test(game.player1Color)
+            ? game.player1Color
+            : '#2563eb';
+        p1Pts.textContent = String(game.scores[1] ?? 0);
+        p1Row.append(p1Name, p1Pts);
+
+        const aiRow = document.createElement('div');
+        aiRow.className = 'final-score-entry';
+        const aiName = document.createElement('span');
+        aiName.className = 'final-score-name';
+        aiName.textContent = 'AI';
+        const aiPts = document.createElement('span');
+        aiPts.className = 'final-score-points';
+        aiPts.style.color = /^#[0-9a-fA-F]{6}$/.test(game.player2Color)
+            ? game.player2Color
+            : '#dc2626';
+        aiPts.textContent = String(game.scores[2] ?? 0);
+        aiRow.append(aiName, aiPts);
+
+        scoresEl.append(p1Row, aiRow);
     }
 
     if (retryBtn) {
