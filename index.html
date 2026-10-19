@@ -277,6 +277,7 @@
                     <p class="credit" id="levelsSubtitle">Complete levels to collect colorful sprites</p>
                     <div class="levels-status-banner">
                         <span class="levels-sprite-counter">Sprites Collected: <strong id="levelsSpriteCountBadge">0</strong> ✨</span>
+                        <span class="levels-timer-counter">Turn Timer: <strong id="levelsTimerBadge">7s</strong> ⏱️</span>
                         <span class="levels-progress-counter">Progress: <strong id="levelsUnlockedCountBadge">1/25</strong></span>
                     </div>
                     <div id="levelsGridContainer" class="levels-grid" data-testid="levels-grid">
@@ -565,6 +566,53 @@
                             </button>
                         </div>
                     </div>
+                    <div
+                        id="gameOverSplashOverlay"
+                        class="game-over-splash-overlay"
+                        data-testid="game-over-splash-overlay"
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="gameOverSplashTitle"
+                        aria-describedby="gameOverSplashSubtitle"
+                        hidden
+                    >
+                        <div class="game-over-splash-card">
+                            <div class="game-over-splash-badge" id="gameOverSplashBadge">⏰ TIME'S UP!</div>
+                            <h2 class="game-over-splash-title" id="gameOverSplashTitle">GAME OVER</h2>
+                            <p class="game-over-splash-subtitle" id="gameOverSplashSubtitle">
+                                Level 1 Failed — You ran out of time!
+                            </p>
+                            <div class="game-over-splash-scores" id="gameOverSplashScores"></div>
+                            <div class="game-over-splash-actions">
+                                <button
+                                    id="splashRetryLevelBtn"
+                                    class="start-btn"
+                                    data-testid="splash-retry-level-button"
+                                    type="button"
+                                >
+                                    Retry Level 1 ↺
+                                </button>
+                                <div class="game-over-splash-secondary-row">
+                                    <button
+                                        id="splashLevelsGridBtn"
+                                        class="start-btn secondary"
+                                        data-testid="splash-levels-grid-button"
+                                        type="button"
+                                    >
+                                        Levels Grid
+                                    </button>
+                                    <button
+                                        id="splashMainMenuBtn"
+                                        class="start-btn secondary"
+                                        data-testid="splash-main-menu-button"
+                                        type="button"
+                                    >
+                                        Main Menu
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <footer class="game-footer">
@@ -675,6 +723,7 @@
                         <!-- Final scores will be dynamically generated -->
                     </div>
                     <button id="playAgain" class="start-btn">Play Again</button>
+                    <button id="winnerLevelsBtn" class="start-btn secondary" hidden>Levels Grid</button>
                     <button id="winnerMainMenu" class="start-btn secondary">Main Menu</button>
                 </div>
             </section>

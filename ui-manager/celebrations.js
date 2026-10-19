@@ -2,8 +2,8 @@
  * Celebration and temporary turn indicator helpers.
  */
 
-import { announceStatus } from '../src/ui/AccessibilityAnnouncer.js';
-import { LevelsProgress } from '../src/ui/LevelsProgress.js';
+import { announceAlert, announceStatus } from '../src/ui/AccessibilityAnnouncer.js';
+import { LevelsProgress, getTurnDurationForLevel } from '../src/ui/LevelsProgress.js';
 import { showScreen } from '../src/ui/ScreenTransition.js';
 import { prefersReducedMotion } from '../utils.js';
 
@@ -330,17 +330,77 @@ export function launchFireworks(accentColor) {
     animate();
 }
 
+export function hideGameOverSplash() {
+    const overlay = document.getElementById('gameOverSplashOverlay');
+    if (overlay) {
+        overlay.hidden = true;
+    }
+}
+
+export function showGameOverSplash(game) {
+    const overlay = document.getElementById('gameOverSplashOverlay');
+    if (!overlay) return;
+
+    game.soundManager?.playInvalidSound?.();
+    announceAlert(`Time's up! Game Over. Level ${game.currentLevel} failed.`);
+
+    const subtitleEl = document.getElementById('gameOverSplashSubtitle');
+    const scoresEl = document.getElementById('gameOverSplashScores');
+    const retryBtn = document.getElementById('splashRetryLevelBtn');
+
+    if (subtitleEl) {
+        subtitleEl.textContent = `Level ${game.currentLevel} Failed — Your ${game.turnDurationSeconds}s turn timer ran out!`;
+    }
+
+    if (scoresEl) {
+        scoresEl.innerHTML = `
+            <div class="final-score-entry">
+                <span class="final-score-name">Player 1</span>
+                <span class="final-score-points" style="color: ${game.player1Color}">${game.scores[1]}</span>
+            </div>
+            <div class="final-score-entry">
+                <span class="final-score-name">AI</span>
+                <span class="final-score-points" style="color: ${game.player2Color}">${game.scores[2]}</span>
+            </div>
+        `;
+    }
+
+    if (retryBtn) {
+        retryBtn.textContent = `Retry Level ${game.currentLevel} ↺`;
+        game._nextLevelToPlay = game.currentLevel;
+        retryBtn.focus?.({ preventScroll: true });
+    }
+
+    overlay.hidden = false;
+}
+
 export function showWinner(game) {
+    if (game.isLevelsMode && game.timedOut) {
+        showGameOverSplash(game);
+        return;
+    }
+
     const winner = game.scores[1] > game.scores[2] ? 1 : game.scores[2] > game.scores[1] ? 2 : 0;
     const winnerColor =
         winner === 1 ? game.player1Color : winner === 2 ? game.player2Color : '#FFD700';
 
-    game.soundManager.playVictorySound();
+    const isLevelsDefeat = Boolean(game.isLevelsMode && winner !== 1);
+
+    if (isLevelsDefeat) {
+        game.soundManager?.playInvalidSound?.();
+    } else {
+        game.soundManager?.playVictorySound?.();
+    }
 
     const winnerText = document.getElementById('winnerText');
     const finalScores = document.getElementById('finalScores');
-
     const playAgainBtn = document.getElementById('playAgain');
+    const winnerLevelsBtn = document.getElementById('winnerLevelsBtn');
+
+    if (winnerLevelsBtn) {
+        winnerLevelsBtn.hidden = !game.isLevelsMode;
+    }
+
     if (winnerText) {
         if (game.isLevelsMode) {
             if (winner === 1) {
@@ -348,7 +408,8 @@ export function showWinner(game) {
                 if (window.welcomeAnimation) {
                     window.welcomeAnimation.syncWithLevelsProgress();
                 }
-                winnerText.innerHTML = `🏆 Level ${game.currentLevel} Complete! 🏆<br><span style="font-size: 0.6em; color: #00f0ff;">✨ +1 Colorful Sprite Collected! Total: ${state.spritesObtained} ✨</span>`;
+                const updatedTurnDuration = getTurnDurationForLevel(state.completedLevels.length);
+                winnerText.innerHTML = `🏆 Level ${game.currentLevel} Complete! 🏆<br><span style="font-size: 0.6em; color: #00f0ff;">✨ +1 Sprite (Total: ${state.spritesObtained}) · ⏱️ Turn Timer: ${updatedTurnDuration}s (+2s/lvl) ✨</span>`;
                 winnerText.style.color = winnerColor;
                 if (playAgainBtn) {
                     if (game.currentLevel < 25) {
@@ -395,6 +456,8 @@ export function showWinner(game) {
     document.getElementById('gameScreen')?.classList.remove('active');
     showScreen('winnerScreen');
 
-    launchConfetti(winnerColor);
-    launchFireworks(winnerColor);
+    if (!isLevelsDefeat) {
+        launchConfetti(winnerColor);
+        launchFireworks(winnerColor);
+    }
 }

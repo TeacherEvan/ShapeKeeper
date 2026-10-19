@@ -8,6 +8,8 @@
 
 import { announceStatus } from './src/ui/AccessibilityAnnouncer.js';
 import {
+    hideGameOverSplash,
+    showGameOverSplash,
     showWinner as renderWinnerScreen,
     triggerBonusTurnVisual as showBonusTurnVisual,
     triggerDoubleLineReminder as showDoubleLineReminder,
@@ -253,5 +255,19 @@ export class UIManager {
      */
     showWinner() {
         renderWinnerScreen(this.game);
+    }
+
+    /**
+     * Show game over splash pop-up (Levels timeout)
+     */
+    showGameOverSplash() {
+        showGameOverSplash(this.game);
+    }
+
+    /**
+     * Hide game over splash pop-up
+     */
+    hideGameOverSplash() {
+        hideGameOverSplash();
     }
 }

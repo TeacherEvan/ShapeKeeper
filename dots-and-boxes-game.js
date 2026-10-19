@@ -24,6 +24,7 @@ import { DisposableRegistry } from './src/lifecycle/DisposableRegistry.js';
 import { AccessibleGridTree } from './src/a11y/AccessibleGridTree.js';
 import { createLocalTurnTimer } from './src/timing/local-turn-timer.js';
 import { maybeAnnounceTimeLow } from './src/timing/time-warning.js';
+import { getTurnDurationForLevel } from './src/ui/LevelsProgress.js';
 
 export class DotsAndBoxesGame {
     static POPULATE_PLAYER_ID = GAME_CONSTANTS.POPULATE_PLAYER_ID;
@@ -61,10 +62,13 @@ export class DotsAndBoxesGame {
         this.isLevelsMode = Boolean(options.isLevelsMode);
         this.currentLevel = options.currentLevel ? Number(options.currentLevel) : 1;
         if (this.isLevelsMode && (!this.turnDurationSeconds || this.turnDurationSeconds === 0)) {
-            this.turnDurationSeconds = 7;
-            this.turnDurationMs = 7000;
+            const levelDuration = getTurnDurationForLevel();
+            this.turnDurationSeconds = levelDuration;
+            this.turnDurationMs = levelDuration * 1000;
         }
 
+        this.timedOut = false;
+        this.gameOverHandled = false;
         this.turnRemainingMs = null;
         this._localTurnClock = null;
 
@@ -128,8 +132,22 @@ export class DotsAndBoxesGame {
         this.disposables.addEventListener(document, 'visibilitychange', () => {
             if (document.hidden) {
                 this.localTurnTimer?.pause();
+                if (this._localTurnClock && this._localTurnClock.deadline > 0) {
+                    this._localTurnClock.pausedRemainingMs = Math.max(
+                        0,
+                        this._localTurnClock.deadline - Date.now()
+                    );
+                }
             } else {
                 this.localTurnTimer?.resume();
+                if (
+                    this._localTurnClock &&
+                    Number.isFinite(this._localTurnClock.pausedRemainingMs)
+                ) {
+                    this._localTurnClock.deadline =
+                        Date.now() + this._localTurnClock.pausedRemainingMs;
+                    this._localTurnClock.pausedRemainingMs = null;
+                }
             }
         });
 
@@ -1090,6 +1108,10 @@ export class DotsAndBoxesGame {
     }
 
     restartLocalTurnTimer() {
+        if (this._localTurnClock) {
+            this._localTurnClock.deadline = 0;
+            this._localTurnClock.pausedRemainingMs = null;
+        }
         const timer = this.localTurnTimer;
         if (!timer?.enabled) return;
         this.localTurnCounter += 1;
@@ -1137,7 +1159,7 @@ export class DotsAndBoxesGame {
      */
     tickLocalTurnClock(now) {
         if (!this._localTurnClock) {
-            this._localTurnClock = { player: null, deadline: 0 };
+            this._localTurnClock = { player: null, deadline: 0, pausedRemainingMs: null };
         }
         if (this.isLevelsMode && this.currentPlayer !== 1) {
             this.turnRemainingMs = null;
@@ -1147,6 +1169,7 @@ export class DotsAndBoxesGame {
         if (clock.player !== this.currentPlayer || clock.deadline === 0) {
             clock.player = this.currentPlayer;
             clock.deadline = now + this.turnDurationSeconds * 1000;
+            clock.pausedRemainingMs = null;
         }
         const remaining = clock.deadline - now;
         this.turnRemainingMs = remaining > 0 ? remaining : 0;
@@ -1166,6 +1189,7 @@ export class DotsAndBoxesGame {
             this.turnRemainingMs = null;
             if (this._localTurnClock) {
                 this._localTurnClock.deadline = 0;
+                this._localTurnClock.pausedRemainingMs = null;
             }
         }
     }
@@ -1213,21 +1237,49 @@ export class DotsAndBoxesGame {
         const remaining = this.turnRemainingMs;
         if (remaining === null || remaining === undefined || remaining > 0) return;
 
-        // Skip the expired turn using the same house rules as a normal turn
+        if (this.isLevelsMode) {
+            this.handleLevelTimeout();
+            return;
+        }
+
+        // Local hot-seat: skip the expired turn using the same house rules as a normal turn
         // switch (bonus turns stay with the player, frozen turns consumed).
+        this.selectedDot = null;
+        this.selectionLocked = false;
+        this.selectionRibbon = null;
+        this.comboCount = 0;
         this.gameState.switchToNextPlayer();
 
-        // Re-arm: deadline === 0 forces the next tick to start a fresh
-        // countdown — even when the player did not change (bonus turn), so
-        // the incoming turn always gets its full Allowed Time.
         if (this._localTurnClock) {
             this._localTurnClock.deadline = 0;
+            this._localTurnClock.pausedRemainingMs = null;
         }
         this.turnRemainingMs = null;
         this.renderer.draw();
-        if (this.isLevelsMode && this.currentPlayer === 2) {
-            this.maybeRunAITurn();
+    }
+
+    handleLevelTimeout() {
+        if (this.timedOut || this.gameOverHandled) return;
+        this.timedOut = true;
+        this.gameOverHandled = true;
+        this.turnRemainingMs = 0;
+
+        if (this._localTurnClock) {
+            this._localTurnClock.deadline = 0;
+            this._localTurnClock.pausedRemainingMs = null;
         }
+        this.localTurnTimer?.stop?.();
+
+        // Clear active pointer selection and cancel pending AI turns
+        this.selectedDot = null;
+        this.selectionLocked = false;
+        this.selectionRibbon = null;
+        this.comboCount = 0;
+        this.aiThinking = false;
+        this.aiTurnToken += 1;
+
+        this.renderer.draw();
+        this.uiManager.showGameOverSplash();
     }
 
     getInteractionDiagnostics() {

@@ -86,4 +86,38 @@ describe('LevelsProgress & Grid Progression', () => {
         expect(parsed.unlockedLevel).toBe(2);
         expect(parsed.spritesObtained).toBe(2);
     });
+
+    it('calculates turn duration starting at 7s and adding 2s per completed level', async () => {
+        const {
+            BASE_LEVEL_TURN_DURATION_SECONDS,
+            SECONDS_PER_COMPLETED_LEVEL,
+            getTurnDurationForLevel,
+        } = await import('../src/ui/LevelsProgress.js');
+
+        expect(BASE_LEVEL_TURN_DURATION_SECONDS).toBe(7);
+        expect(SECONDS_PER_COMPLETED_LEVEL).toBe(2);
+
+        // 0 completed levels -> 7s
+        expect(getTurnDurationForLevel()).toBe(7);
+        expect(getTurnDurationForLevel(0)).toBe(7);
+
+        // 1 completed level -> 9s
+        LevelsProgress.recordLevelWin(1);
+        expect(getTurnDurationForLevel()).toBe(9);
+        expect(getTurnDurationForLevel(1)).toBe(9);
+
+        // 2 completed levels -> 11s
+        LevelsProgress.recordLevelWin(2);
+        expect(getTurnDurationForLevel()).toBe(11);
+        expect(getTurnDurationForLevel(2)).toBe(11);
+
+        // 5 completed levels -> 17s
+        expect(getTurnDurationForLevel(5)).toBe(17);
+
+        // 24 completed levels -> 55s
+        expect(getTurnDurationForLevel(24)).toBe(55);
+
+        // 25 completed levels -> 57s
+        expect(getTurnDurationForLevel(25)).toBe(57);
+    });
 });

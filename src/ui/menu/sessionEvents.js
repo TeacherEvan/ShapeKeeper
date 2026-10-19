@@ -13,7 +13,8 @@ import { buildLocalGameFromConfig, getLastLocalConfig } from './localSetupEvents
 import { showScreen } from '../ScreenTransition.js';
 import { showToast } from '../Toast.js';
 
-import { startLevelMatch } from '../LevelsScreen.js';
+import { renderLevelsGrid, startLevelMatch } from '../LevelsScreen.js';
+import { hideGameOverSplash } from '../../../ui-manager/celebrations.js';
 
 export function bindSessionEvents(deps) {
     const {
@@ -143,6 +144,36 @@ export function bindSessionEvents(deps) {
             setActiveGame(buildLocalGameFromConfig(getLastLocalConfig()));
             return;
         }
+        document.getElementById('winnerMainMenu')?.click();
+    });
+
+    document.getElementById('splashRetryLevelBtn')?.addEventListener('click', () => {
+        const { game } = getState();
+        hideGameOverSplash();
+        const levelToPlay = game?._nextLevelToPlay ?? game?.currentLevel ?? 1;
+        startLevelMatch(levelToPlay, deps);
+    });
+
+    document.getElementById('splashLevelsGridBtn')?.addEventListener('click', () => {
+        hideGameOverSplash();
+        exitFullscreen();
+        setActiveGame(null);
+        resetStartupState();
+        renderLevelsGrid(deps);
+        showScreen('levelsScreen');
+    });
+
+    document.getElementById('winnerLevelsBtn')?.addEventListener('click', () => {
+        hideGameOverSplash();
+        exitFullscreen();
+        setActiveGame(null);
+        resetStartupState();
+        renderLevelsGrid(deps);
+        showScreen('levelsScreen');
+    });
+
+    document.getElementById('splashMainMenuBtn')?.addEventListener('click', () => {
+        hideGameOverSplash();
         document.getElementById('winnerMainMenu')?.click();
     });
 }

@@ -7,12 +7,23 @@
 
 import { DotsAndBoxesGame } from '../../dots-and-boxes-game.js';
 import { requestFullscreen } from './Fullscreen.js';
-import { LevelsProgress, MAX_LEVEL, getGridSizeForLevel } from './LevelsProgress.js';
+import {
+    LevelsProgress,
+    MAX_LEVEL,
+    getGridSizeForLevel,
+    getTurnDurationForLevel,
+} from './LevelsProgress.js';
 import { showScreen } from './ScreenTransition.js';
 
 export function startLevelMatch(levelNumber, deps) {
     const { getState, setActiveGame } = deps;
     const { welcomeAnimation } = getState();
+
+    // Hide any open game over splash overlay
+    const splashOverlay = document.getElementById('gameOverSplashOverlay');
+    if (splashOverlay) {
+        splashOverlay.hidden = true;
+    }
 
     // Trigger Levels mode: flips levelsTriggered to true and clears default 120 sprites to 1
     LevelsProgress.triggerLevelsMode();
@@ -26,13 +37,15 @@ export function startLevelMatch(levelNumber, deps) {
     const p1Color = document.getElementById('player1Color')?.value || '#FF0000';
     const p2Color = document.getElementById('player2Color')?.value || '#0000FF';
 
+    const turnDurationSeconds = getTurnDurationForLevel();
+
     const game = new DotsAndBoxesGame(gridSize, p1Color, p2Color, {
         isLevelsMode: true,
         currentLevel: levelNumber,
         localMode: 'ai',
         aiDifficulty: 'hard',
-        turnDurationSeconds: 7,
-        turnDurationMs: 7000,
+        turnDurationSeconds,
+        turnDurationMs: turnDurationSeconds * 1000,
     });
 
     showScreen('gameScreen');
@@ -44,16 +57,21 @@ export function renderLevelsGrid(deps) {
     const container = document.getElementById('levelsGridContainer');
     const spriteBadge = document.getElementById('levelsSpriteCountBadge');
     const unlockedBadge = document.getElementById('levelsUnlockedCountBadge');
+    const timerBadge = document.getElementById('levelsTimerBadge');
 
     if (!container) return;
 
     const state = LevelsProgress.getState();
+    const currentTurnDuration = getTurnDurationForLevel();
 
     if (spriteBadge) {
         spriteBadge.textContent = String(state.spritesObtained);
     }
     if (unlockedBadge) {
         unlockedBadge.textContent = `${state.unlockedLevel}/${MAX_LEVEL}`;
+    }
+    if (timerBadge) {
+        timerBadge.textContent = `${currentTurnDuration}s`;
     }
 
     container.innerHTML = '';

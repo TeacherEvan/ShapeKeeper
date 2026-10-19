@@ -117,6 +117,9 @@ function setStartupState(nextState, overrides = {}) {
 }
 
 function setActiveGame(nextGame) {
+    if (game && game !== nextGame && typeof game.destroy === 'function') {
+        game.destroy();
+    }
     game = nextGame;
     window.__shapeKeeperActiveGame = nextGame;
     window.__shapeKeeperTutorial = nextGame?.tutorialSystem || null;

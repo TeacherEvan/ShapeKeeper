@@ -308,6 +308,9 @@ export class GameState {
      * Check if game is over (boolean)
      */
     isGameOver() {
+        if (this.game.timedOut) {
+            return true;
+        }
         const totalSquares = (this.game.gridRows - 1) * (this.game.gridCols - 1);
         const completedSquares = Object.keys(this.game.squares).length;
         return completedSquares === totalSquares;

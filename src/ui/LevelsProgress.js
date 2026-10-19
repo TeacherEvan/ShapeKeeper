@@ -13,6 +13,15 @@
 
 export const MAX_LEVEL = 25;
 export const STORAGE_KEY = 'shapekeeper_levels_progress.v1';
+export const BASE_LEVEL_TURN_DURATION_SECONDS = 7;
+export const SECONDS_PER_COMPLETED_LEVEL = 2;
+
+export function getTurnDurationForLevel(completedCountOverride) {
+    const completedCount = Number.isFinite(completedCountOverride)
+        ? Math.max(0, Math.floor(completedCountOverride))
+        : LevelsProgress.getState().completedLevels.length;
+    return BASE_LEVEL_TURN_DURATION_SECONDS + completedCount * SECONDS_PER_COMPLETED_LEVEL;
+}
 
 export function getGridSizeForLevel(level) {
     const lvl = Math.max(1, Math.min(MAX_LEVEL, Number(level) || 1));
