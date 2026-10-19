@@ -243,6 +243,66 @@ export class SoundManager {
     }
 
     /**
+     * Play heartbeat countdown tick for urgency (final 3 seconds)
+     * @param {number} urgency 1 (mild) to 3 (highest pitch/urgency)
+     */
+    playTickSound(urgency = 1) {
+        if (!this.enabled || !this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            const pitch = 440 + urgency * 140; // 580Hz -> 720Hz -> 860Hz
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(pitch, now);
+            osc.frequency.exponentialRampToValueAtTime(pitch * 0.7, now + 0.08);
+
+            const volume = 0.04 + urgency * 0.03;
+            gain.gain.setValueAtTime(volume, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+            osc.connect(gain).connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.08);
+        } catch {
+            // Audio context error or not ready
+        }
+    }
+
+    /**
+     * Play game over defeat stinger (descending minor chord sequence)
+     */
+    playGameOverSound() {
+        if (!this.enabled || !this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            // Minor chord descent: Eb4 (311Hz), C4 (261Hz), G3 (196Hz), C3 (130Hz)
+            const chords = [311.13, 261.63, 196.0, 130.81];
+
+            chords.forEach((freq, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const startTime = now + idx * 0.14;
+
+                osc.type = idx === 3 ? 'sawtooth' : 'triangle';
+                osc.frequency.setValueAtTime(freq, startTime);
+                osc.frequency.exponentialRampToValueAtTime(freq * 0.95, startTime + 0.35);
+
+                const vol = idx === 3 ? 0.12 : 0.09;
+                gain.gain.setValueAtTime(vol, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+
+                osc.connect(gain).connect(this.ctx.destination);
+                osc.start(startTime);
+                osc.stop(startTime + 0.45);
+            });
+        } catch {
+            // Audio context error
+        }
+    }
+
+    /**
      * Toggle sound on/off
      */
     toggleSound() {

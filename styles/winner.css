@@ -196,41 +196,45 @@
     max-width: 440px;
     width: calc(100% - 32px);
     margin: auto;
-    padding: 32px 24px;
+    padding: 34px 26px;
     text-align: center;
-    background: var(--bg-elevated, #16213e);
+    background: radial-gradient(circle at 50% 0%, #25162a 0%, var(--bg-elevated, #16213e) 75%);
     border-radius: var(--radius-xl, 20px);
-    border: 1px solid rgba(255, 100, 100, 0.3);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 60, 60, 0.2);
-    animation: winnerAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid rgba(255, 75, 75, 0.45);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 50px rgba(255, 50, 50, 0.28);
+    animation: splashDropIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .game-over-splash-badge {
     display: inline-block;
-    padding: 6px 14px;
+    padding: 6px 16px;
     border-radius: 9999px;
-    background: rgba(255, 68, 68, 0.2);
-    border: 1px solid rgba(255, 68, 68, 0.5);
+    background: rgba(255, 68, 68, 0.22);
+    border: 1px solid rgba(255, 68, 68, 0.6);
     color: #ff6b6b;
-    font-weight: 700;
-    font-size: 0.9rem;
+    font-weight: 800;
+    font-size: 0.95rem;
     margin-bottom: 12px;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+    animation: pulseBadge 1.2s infinite ease-in-out;
 }
 
 .game-over-splash-title {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: var(--text-primary, #ffffff);
+    font-size: 2.4rem;
+    font-weight: 900;
+    color: #ffffff;
     margin-bottom: 8px;
     letter-spacing: -0.02em;
+    text-shadow: 0 0 20px rgba(255, 80, 80, 0.5), 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
 .game-over-splash-subtitle {
-    font-size: 1rem;
-    color: var(--text-secondary, #a0aec0);
-    margin-bottom: 20px;
-    line-height: 1.4;
+    font-size: 1.05rem;
+    color: var(--text-secondary, #cbd5e0);
+    margin-bottom: 22px;
+    line-height: 1.45;
 }
 
 .game-over-splash-scores {
@@ -238,6 +242,26 @@
     justify-content: center;
     gap: 16px;
     margin-bottom: 24px;
+}
+
+.game-over-splash-shortcuts {
+    margin-top: 14px;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.45);
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.game-over-splash-shortcuts kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.75rem;
+    color: #ffffff;
 }
 
 .game-over-splash-actions {
@@ -260,6 +284,28 @@
 
 .game-over-splash-secondary-row .start-btn {
     flex: 1;
+}
+
+@keyframes splashDropIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.7) translateY(-30px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes pulseBadge {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+    }
 }
 
 @keyframes fadeInOverlay {

@@ -222,4 +222,42 @@ describe('Levels mode timer scaling & timeout splash pop-up', () => {
         expect(game.turnRemainingMs).toBe(5000);
         expect(game.timedOut).toBe(false);
     });
+
+    it('triggers urgency ticking sound during final 3 seconds and defeat sound on timeout', () => {
+        game = new DotsAndBoxesGame(3, '#FF0000', '#0000FF', {
+            isLevelsMode: true,
+            currentLevel: 1,
+            localMode: 'ai',
+            turnDurationSeconds: 7,
+        });
+
+        const tickSpy = vi.fn();
+        const gameOverSpy = vi.fn();
+        game.soundManager = {
+            playTickSound: tickSpy,
+            playGameOverSound: gameOverSpy,
+            playInvalidSound: vi.fn(),
+        };
+
+        game._localTurnClock = null;
+        game.tickLocalTurnClock(1000); // 7000ms remaining
+        expect(tickSpy).not.toHaveBeenCalled();
+
+        // Advance to 3000ms remaining (t = 5000ms)
+        game.tickLocalTurnClock(5000);
+        expect(tickSpy).toHaveBeenCalledWith(1); // 4 - 3 = 1
+
+        // Advance to 2000ms remaining (t = 6000ms)
+        game.tickLocalTurnClock(6000);
+        expect(tickSpy).toHaveBeenCalledWith(2); // 4 - 2 = 2
+
+        // Advance to 1000ms remaining (t = 7000ms)
+        game.tickLocalTurnClock(7000);
+        expect(tickSpy).toHaveBeenCalledWith(3); // 4 - 1 = 3
+
+        // Timeout triggers game over splash and sound
+        game.tickLocalTurnClock(8000);
+        game.handleTurnExpiration();
+        expect(gameOverSpy).toHaveBeenCalled();
+    });
 });

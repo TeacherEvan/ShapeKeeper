@@ -1159,7 +1159,12 @@ export class DotsAndBoxesGame {
      */
     tickLocalTurnClock(now) {
         if (!this._localTurnClock) {
-            this._localTurnClock = { player: null, deadline: 0, pausedRemainingMs: null };
+            this._localTurnClock = {
+                player: null,
+                deadline: 0,
+                pausedRemainingMs: null,
+                lastTickedSecond: null,
+            };
         }
         if (this.isLevelsMode && this.currentPlayer !== 1) {
             this.turnRemainingMs = null;
@@ -1170,9 +1175,20 @@ export class DotsAndBoxesGame {
             clock.player = this.currentPlayer;
             clock.deadline = now + this.turnDurationSeconds * 1000;
             clock.pausedRemainingMs = null;
+            clock.lastTickedSecond = null;
         }
         const remaining = clock.deadline - now;
         this.turnRemainingMs = remaining > 0 ? remaining : 0;
+
+        // Audio-visual urgency: sound ticking during last 3 seconds
+        if (this.isLevelsMode && this.turnRemainingMs > 0 && this.turnRemainingMs <= 3000) {
+            const sec = Math.ceil(this.turnRemainingMs / 1000);
+            if (clock.lastTickedSecond !== sec) {
+                clock.lastTickedSecond = sec;
+                const urgency = 4 - sec; // 1 at 3s, 2 at 2s, 3 at 1s
+                this.soundManager?.playTickSound?.(urgency);
+            }
+        }
     }
 
     get turnDurationSeconds() {

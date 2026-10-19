@@ -176,4 +176,17 @@ export function bindSessionEvents(deps) {
         hideGameOverSplash();
         document.getElementById('winnerMainMenu')?.click();
     });
+
+    window.addEventListener('keydown', (e) => {
+        const overlay = document.getElementById('gameOverSplashOverlay');
+        if (!overlay || overlay.hidden) return;
+
+        if (e.key === ' ' || e.key === 'r' || e.key === 'R' || e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('splashRetryLevelBtn')?.click();
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            document.getElementById('splashLevelsGridBtn')?.click();
+        }
+    });
 }

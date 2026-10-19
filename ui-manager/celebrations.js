@@ -341,7 +341,11 @@ export function showGameOverSplash(game) {
     const overlay = document.getElementById('gameOverSplashOverlay');
     if (!overlay) return;
 
-    game.soundManager?.playInvalidSound?.();
+    if (game.soundManager?.playGameOverSound) {
+        game.soundManager.playGameOverSound();
+    } else {
+        game.soundManager?.playInvalidSound?.();
+    }
     announceAlert(`Time's up! Game Over. Level ${game.currentLevel} failed.`);
 
     const subtitleEl = document.getElementById('gameOverSplashSubtitle');
