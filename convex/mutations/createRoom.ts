@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
 import { DEFAULT_COLORS, generateRoomCode, getHostTokenHash } from '../utils/roomUtils';
+import { generateSillyPasscode } from '../rooms/shared';
 import { DEFAULT_TURN_DURATION_MS } from '../games/turnTimer';
 import { checkRateLimit } from '../rateLimit';
 
@@ -33,6 +34,9 @@ export const createRoom = mutation({
         .first();
     }
 
+    // Generate silly passcode [Adjective][Animal]
+    const passcode = generateSillyPasscode();
+
     // Generate host token for this room
     const hostToken = crypto.randomUUID();
     const hostTokenHash = await getHostTokenHash(hostToken);
@@ -41,6 +45,7 @@ export const createRoom = mutation({
 
     const roomId = await ctx.db.insert('rooms', {
       roomCode,
+      passcode,
       hostPlayerId: args.sessionId,
       hostTokenHash,
       gridSize: args.gridSize,
@@ -64,6 +69,6 @@ export const createRoom = mutation({
       joinedAt: now,
     });
 
-    return { roomId, roomCode, hostToken };
+    return { roomId, roomCode, hostToken, passcode };
   },
 });

@@ -204,12 +204,14 @@ export async function leaveRoomHandler(ctx: any, args: any) {
             updatedAt: number;
             currentPlayerIndex?: number;
             hostPlayerId?: string;
+            hostTokenHash?: string | undefined;
         } = {
             updatedAt: Date.now(),
         };
 
         if (room.hostPlayerId === args.sessionId && remainingConnectedPlayers.length > 0) {
             roomUpdates.hostPlayerId = remainingConnectedPlayers[0].sessionId;
+            roomUpdates.hostTokenHash = undefined;
         }
 
         if (room.currentPlayerIndex === player.playerIndex && nextTurnPlayer) {
@@ -254,6 +256,7 @@ export async function leaveRoomHandler(ctx: any, args: any) {
         const newHost = remainingPlayers[0];
         await ctx.db.patch(args.roomId, {
             hostPlayerId: newHost.sessionId,
+            hostTokenHash: undefined,
             updatedAt: Date.now(),
         });
         log('[leaveRoom] Host transferred', {

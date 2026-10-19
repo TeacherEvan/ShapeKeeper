@@ -68,8 +68,14 @@ describe('convex/games handlers (unit)', () => {
 
         const playerDoc = { _id: 'playerA', sessionId: 'sess-A', score: 2 };
 
+        const roomDoc = { _id: 'room1', status: 'playing' };
+
         const mockDb = createMockDb({
-            get: (id: any) => (id === 'playerA' ? playerDoc : null),
+            get: (id: any) => {
+                if (id === 'playerA') return playerDoc;
+                if (id === 'room1') return roomDoc;
+                return null;
+            },
             query: {
                 squares: () => ({
                     withIndex: () => ({ first: vi.fn(async () => squareDoc) }),
@@ -98,7 +104,7 @@ describe('convex/games handlers (unit)', () => {
     });
 
     it('populateLines: inserts non-existent lines and returns count', async () => {
-        const roomDoc = { _id: 'room1', status: 'playing', hostPlayerId: 'host-sess' };
+        const roomDoc = { _id: 'room1', status: 'playing', hostPlayerId: 'host-sess', gridSize: 3 };
         const hostPlayer = { _id: 'host-player-id', sessionId: 'host-sess', playerIndex: 2 };
 
         // Simulate no existing lines so all requested lines get inserted
@@ -127,8 +133,9 @@ describe('convex/games handlers (unit)', () => {
         });
 
         expect(res).toEqual({ success: true, linesPopulated: 2 });
-        // Two inserts expected
-        expect(mockDb.__calls.inserts.length).toBe(2);
+        // Two line inserts expected
+        const lineInserts = mockDb.__calls.inserts.filter((i) => i.table === 'lines');
+        expect(lineInserts.length).toBe(2);
         expect(mockDb.patch).toHaveBeenCalledWith('room1', { updatedAt: expect.any(Number) });
     });
 

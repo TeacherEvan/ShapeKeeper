@@ -30,6 +30,15 @@
         const lastPlayers = lastState.players || [];
         if (newPlayers.length !== lastPlayers.length) return true;
 
+        for (let index = 0; index < newSquares.length; index++) {
+            if (
+                newSquares[index]?.taps !== lastSquares[index]?.taps ||
+                newSquares[index]?.multiplierRevealed !== lastSquares[index]?.multiplierRevealed
+            ) {
+                return true;
+            }
+        }
+
         for (let index = 0; index < newPlayers.length; index++) {
             if (newPlayers[index]?.score !== lastPlayers[index]?.score) {
                 return true;

@@ -1,4 +1,4 @@
-import { isAuthorisedHostAsync } from '../auth/token';
+import { isAuthorisedHostAsync, projectPlayersForClient, projectRoomForClient } from '../auth/token';
 import { POPULATE_PLAYER_INDEX } from './shared';
 import { validateLineKey } from './lineValidation';
 import { log, errorLog, warn } from '../log';
@@ -37,9 +37,16 @@ export async function getGameStateHandler(ctx: any, args: any) {
         .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
         .collect();
 
+    const { rematchVotes, ...roomRest } = room;
+    const projectedRoom = projectRoomForClient(roomRest, args.sessionId);
+    const sortedPlayers = players.sort((a: any, b: any) => a.playerIndex - b.playerIndex);
+
     return {
-        room,
-        players: players.sort((a: any, b: any) => a.playerIndex - b.playerIndex),
+        room: {
+            ...projectedRoom,
+            rematchVoteCount: (rematchVotes ?? []).length,
+        },
+        players: projectPlayersForClient(sortedPlayers, args.sessionId, room.hostPlayerId),
         lines,
         squares,
     };
@@ -59,6 +66,19 @@ export async function revealMultiplierHandler(ctx: any, args: any) {
         sessionId: args.sessionId,
         squareKey: args.squareKey,
     });
+
+    const room = await ctx.db.get(args.roomId);
+    if (!room) {
+        log('[revealMultiplier] Error: Room not found', { roomId: args.roomId });
+        return { error: 'Room not found' };
+    }
+    if (room.status !== 'playing') {
+        log('[revealMultiplier] Error: Game not in progress', {
+            roomId: args.roomId,
+            status: room.status,
+        });
+        return { error: 'Game not in progress' };
+    }
 
     const square = await ctx.db
         .query('squares')
@@ -184,6 +204,10 @@ export async function tapSquareHandler(ctx: any, args: any) {
         return { error: 'You cannot tap your own square' };
     }
 
+    if (square.multiplierRevealed) {
+        return { error: 'Multiplier already revealed' };
+    }
+
     if (square.multiplier && square.multiplier.type === 'truthOrDare') {
         return { error: 'Truth-or-dare squares cannot be tapped' };
     }
@@ -194,6 +218,9 @@ export async function tapSquareHandler(ctx: any, args: any) {
     await ctx.db.patch(square._id, {
         taps: nextTaps,
         effectiveMultiplier: nextEffective,
+    });
+    await ctx.db.patch(room._id, {
+        updatedAt: Date.now(),
     });
 
     console.log('[tapSquare] Tap recorded', {

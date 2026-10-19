@@ -57,11 +57,8 @@ export async function drawLineHandler(ctx: any, args: any) {
             const skippedIndex = room.currentPlayerIndex;
             const nextIndex = (skippedIndex + 1) % sortedSkipPlayers.length;
             const skippedAt = Date.now();
-            const rearmedEnd = computeTurnEndTime(room, skippedAt);
-            await ctx.db.patch(args.roomId, {
+            await armTurnTimer(ctx, args.roomId, room, skippedAt, {
                 currentPlayerIndex: nextIndex,
-                turnStartTime: skippedAt,
-                turnEndTime: rearmedEnd,
                 lastTurnClientSentAt: null,
                 lastTurnServerReceivedAt: null,
                 updatedAt: skippedAt,
@@ -122,13 +119,13 @@ export async function drawLineHandler(ctx: any, args: any) {
     const existingLine = await ctx.db
         .query('lines')
         .withIndex('by_room_and_key', (q: any) =>
-            q.eq('roomId', args.roomId).eq('lineKey', args.lineKey)
+            q.eq('roomId', args.roomId).eq('lineKey', validatedLineKey)
         )
         .first();
 
     if (existingLine) {
         log('[drawLine] Error: Line already drawn', {
-            lineKey: args.lineKey,
+            lineKey: validatedLineKey,
             existingLineId: existingLine._id,
         });
         return { error: 'Line already drawn' };
@@ -136,14 +133,14 @@ export async function drawLineHandler(ctx: any, args: any) {
 
     await ctx.db.insert('lines', {
         roomId: args.roomId,
-        lineKey: args.lineKey,
+        lineKey: validatedLineKey,
         playerId: currentPlayer._id,
         playerIndex: currentPlayer.playerIndex,
         createdAt: Date.now(),
     });
 
     log('[drawLine] Line drawn successfully', {
-        lineKey: args.lineKey,
+        lineKey: validatedLineKey,
         playerId: currentPlayer._id,
         playerIndex: currentPlayer.playerIndex,
     });
@@ -151,14 +148,14 @@ export async function drawLineHandler(ctx: any, args: any) {
     const completedSquares = await checkForCompletedSquares(
         ctx,
         args.roomId,
-        args.lineKey,
+        validatedLineKey,
         currentPlayer._id,
         currentPlayer.playerIndex,
         room.gridSize
     );
 
     log('[drawLine] Square check complete', {
-        lineKey: args.lineKey,
+        lineKey: validatedLineKey,
         completedSquares: completedSquares.length,
         squareKeys: completedSquares,
     });

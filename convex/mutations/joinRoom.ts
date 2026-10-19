@@ -9,15 +9,28 @@ export const joinRoom = mutation({
     sessionId: v.string(),
     playerName: v.string(),
     passcode: v.optional(v.string()),
+    lobbyName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const rl = await checkRateLimit(ctx, 'joinRoom', args.sessionId);
     if (!rl.allowed) return { error: 'Rate limit exceeded', resetMs: rl.resetMs };
 
-    const room = await ctx.db
-      .query('rooms')
-      .withIndex('by_code', (q: any) => q.eq('roomCode', args.roomCode.toUpperCase()))
-      .first();
+    const normalizedCode = args.roomCode.toUpperCase();
+    let room: any = null;
+
+    if (normalizedCode === 'LOBBY') {
+      const openRooms = await ctx.db
+        .query('rooms')
+        .withIndex('by_status', (q: any) => q.eq('status', 'lobby'))
+        .collect();
+      openRooms.sort((a: any, b: any) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+      room = openRooms[0] || null;
+    } else {
+      room = await ctx.db
+        .query('rooms')
+        .withIndex('by_code', (q: any) => q.eq('roomCode', normalizedCode))
+        .first();
+    }
 
     if (!room) return { error: 'Room not found' };
     if (room.status !== 'lobby') return { error: 'Game already in progress' };
