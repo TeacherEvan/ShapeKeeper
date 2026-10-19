@@ -42,28 +42,45 @@ export function handleRoomStateUpdate(roomState, deps) {
         return;
     }
 
-    multiplayerStartup.setLastRoomState(roomState);
-    lobbyManager.roomCode = roomState.roomCode;
-    lobbyManager.gridSize = roomState.gridSize;
+    // Support both { room: {...}, players: [...] } and flat { roomCode, players, ... } shapes
+    const normalizedRoom = roomState.room
+        ? {
+              ...roomState.room,
+              players: roomState.players ?? roomState.room.players ?? [],
+              rematchVoteCount: roomState.rematchVoteCount ?? roomState.room.rematchVoteCount,
+          }
+        : roomState;
+    const effectiveRoomState = {
+        ...normalizedRoom,
+        players: normalizedRoom.players ?? [],
+    };
+
+    multiplayerStartup.setLastRoomState(effectiveRoomState);
+    lobbyManager.roomCode = effectiveRoomState.roomCode;
+    lobbyManager.gridSize = effectiveRoomState.gridSize;
     // Allowed Time: mirror the room's configured turn countdown (seconds)
     // into the lobby manager so the control reflects it for everyone.
-    if (typeof roomState.turnDurationSeconds === 'number') {
-        lobbyManager.turnDurationSeconds = roomState.turnDurationSeconds;
-    } else if (typeof roomState.turnDurationMs === 'number') {
-        lobbyManager.turnDurationSeconds = Math.round(roomState.turnDurationMs / 1000);
+    if (typeof effectiveRoomState.turnDurationSeconds === 'number') {
+        lobbyManager.turnDurationSeconds = effectiveRoomState.turnDurationSeconds;
+    } else if (typeof effectiveRoomState.turnDurationMs === 'number') {
+        lobbyManager.turnDurationSeconds = Math.round(effectiveRoomState.turnDurationMs / 1000);
     }
 
     const mySessionId = window.ShapeKeeperConvex?.getSessionId?.();
     const myPlayer =
-        roomState.players.find((player) => player.isYou) ||
-        (mySessionId ? roomState.players.find((player) => player.sessionId === mySessionId) : null);
+        effectiveRoomState.players.find((player) => player.isYou) ||
+        (mySessionId
+            ? effectiveRoomState.players.find((player) => player.sessionId === mySessionId)
+            : null);
 
     const nextIsHost =
-        typeof roomState.isHost === 'boolean'
-            ? roomState.isHost
+        typeof effectiveRoomState.isHost === 'boolean'
+            ? effectiveRoomState.isHost
             : Boolean(
                   myPlayer?.isHost ||
-                  (mySessionId && roomState.hostPlayerId && roomState.hostPlayerId === mySessionId)
+                  (mySessionId &&
+                      effectiveRoomState.hostPlayerId &&
+                      effectiveRoomState.hostPlayerId === mySessionId)
               );
     const previousGameIsHost = game?.isMultiplayer ? game.isHost : null;
     lobbyManager.isHost = nextIsHost;
@@ -77,7 +94,7 @@ export function handleRoomStateUpdate(roomState, deps) {
         game.uiManager?.updatePopulateButtonVisibility();
 
         if (
-            roomState.status === 'playing' &&
+            effectiveRoomState.status === 'playing' &&
             previousGameIsHost !== null &&
             previousGameIsHost !== nextIsHost &&
             nextIsHost
@@ -86,7 +103,7 @@ export function handleRoomStateUpdate(roomState, deps) {
         }
     }
 
-    lobbyManager.players = roomState.players.map((player, index) => ({
+    lobbyManager.players = effectiveRoomState.players.map((player, index) => ({
         id: player._id,
         sessionId: player.sessionId,
         name: player.name,
@@ -96,19 +113,25 @@ export function handleRoomStateUpdate(roomState, deps) {
         isHost:
             typeof player.isHost === 'boolean'
                 ? player.isHost
-                : Boolean(roomState.hostPlayerId && player.sessionId === roomState.hostPlayerId),
+                : Boolean(
+                      effectiveRoomState.hostPlayerId &&
+                      player.sessionId === effectiveRoomState.hostPlayerId
+                  ),
         playerIndex: player.playerIndex ?? index,
         playerNumber: player.playerNumber || (player.playerIndex ?? index) + 1,
     }));
 
     document.querySelectorAll('.lobby-grid-btn').forEach((btn) => {
-        btn.classList.toggle('selected', parseInt(btn.dataset.size) === roomState.gridSize);
+        btn.classList.toggle(
+            'selected',
+            parseInt(btn.dataset.size) === effectiveRoomState.gridSize
+        );
     });
 
     const lobbyTurnTimer = document.getElementById('lobbyTurnTimer');
     if (lobbyTurnTimer) {
-        lobbyTurnTimer.value = String(roomState.turnDurationMs ?? 0);
-        lobbyTurnTimer.disabled = !roomState.isHost;
+        lobbyTurnTimer.value = String(effectiveRoomState.turnDurationMs ?? 0);
+        lobbyTurnTimer.disabled = !effectiveRoomState.isHost;
     }
 
     const readyBtn = document.getElementById('readyBtn');
@@ -117,17 +140,17 @@ export function handleRoomStateUpdate(roomState, deps) {
         readyBtn.classList.toggle('is-ready', lobbyManager.isReady);
     }
 
-    if (roomState.status === 'playing') {
+    if (effectiveRoomState.status === 'playing') {
         if (
             multiplayerStartup.getSnapshot().phase !== STARTUP_STATES.IN_MATCH &&
             !multiplayerStartup.getSnapshot().startupBeganAt
         ) {
-            initializeMultiplayerGame(roomState);
+            initializeMultiplayerGame(effectiveRoomState);
         }
         return;
     }
 
-    if (roomState.status === 'lobby') {
+    if (effectiveRoomState.status === 'lobby') {
         if (lobbyManager.canStartGame()) {
             setStartupState(STARTUP_STATES.ROOM_READY_TO_START, { visible: false });
         } else if (multiplayerStartup.getSnapshot().phase !== STARTUP_STATES.IDLE) {
@@ -178,6 +201,27 @@ export function handleAuthoritativeGameState(gameState, deps) {
         game.currentPlayer === game.myPlayerNumber
     );
 
+    if (gameState.room?.status === 'playing' && game.gameOverHandled) {
+        game.gameOverHandled = false;
+        game.lines?.clear?.();
+        game.lineOwners?.clear?.();
+        game.lineDrawings = [];
+        game.pulsatingLines = [];
+        game.squares = {};
+        game.squareMultipliers = {};
+        if (game.squareTaps) game.squareTaps = {};
+        game.revealedMultipliers?.clear?.();
+        game.claimedCells?.clear?.();
+        game.scores[1] = 0;
+        game.scores[2] = 0;
+        const btn = document.getElementById('playAgain');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Play Again';
+        }
+        showScreen('gameScreen');
+    }
+
     gameState.lines.forEach((line) => {
         if (!game.lines.has(line.lineKey)) {
             game.lines.add(line.lineKey);
@@ -188,20 +232,43 @@ export function handleAuthoritativeGameState(gameState, deps) {
             game.lineOwners.set(line.lineKey, displayPlayerIndex);
 
             const [startDot, endDot] = game.parseLineKey(line.lineKey);
-            game.lineDrawings.push({
-                lineKey: line.lineKey,
-                startDot,
-                endDot,
-                player: displayPlayerIndex,
-                startTime: Date.now(),
-                duration: DotsAndBoxesGame.ANIMATION_LINE_DRAW_DURATION,
-            });
+            if (game.animationSystem?.addLineDrawing) {
+                game.animationSystem.addLineDrawing(
+                    line.lineKey,
+                    startDot,
+                    endDot,
+                    displayPlayerIndex,
+                    false,
+                    game.offsetX,
+                    game.offsetY,
+                    game.cellSize
+                );
+            } else {
+                game.lineDrawings.push({
+                    lineKey: line.lineKey,
+                    startDot: {
+                        x: game.offsetX + startDot.col * game.cellSize,
+                        y: game.offsetY + startDot.row * game.cellSize,
+                    },
+                    endDot: {
+                        x: game.offsetX + endDot.col * game.cellSize,
+                        y: game.offsetY + endDot.row * game.cellSize,
+                    },
+                    player: displayPlayerIndex,
+                    startTime: Date.now(),
+                    duration: DotsAndBoxesGame.ANIMATION_LINE_DRAW_DURATION,
+                });
+            }
 
-            game.pulsatingLines.push({
-                line: line.lineKey,
-                player: displayPlayerIndex,
-                time: Date.now(),
-            });
+            if (game.animationSystem?.addPulsatingLine) {
+                game.animationSystem.addPulsatingLine(line.lineKey, displayPlayerIndex, false);
+            } else {
+                game.pulsatingLines.push({
+                    line: line.lineKey,
+                    player: displayPlayerIndex,
+                    time: Date.now(),
+                });
+            }
 
             game.playLineSound();
         }
@@ -266,26 +333,6 @@ export function handleAuthoritativeGameState(gameState, deps) {
         }
     } else {
         announcedRematchVote = false;
-    }
-
-    if (gameState.room?.status === 'playing' && game.gameOverHandled) {
-        game.gameOverHandled = false;
-        game.lines?.clear?.();
-        game.lineOwners?.clear?.();
-        game.lineDrawings = [];
-        game.pulsatingLines = [];
-        game.squares = {};
-        game.squareMultipliers = {};
-        if (game.squareTaps) game.squareTaps = {};
-        game.claimedCells?.clear?.();
-        game.scores[1] = 0;
-        game.scores[2] = 0;
-        const btn = document.getElementById('playAgain');
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = 'Play Again';
-        }
-        showScreen('gameScreen');
     }
 
     game.draw();

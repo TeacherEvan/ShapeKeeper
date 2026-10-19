@@ -97,7 +97,10 @@ function minimax(
     aiPlayerNumber
 ) {
     if (depth === 0) {
-        return { score: evaluatePosition(gameLogic, lines, gridRows, gridCols), move: null };
+        return {
+            score: evaluatePosition(gameLogic, lines, gridRows, gridCols),
+            move: null,
+        };
     }
 
     const availableLines = gameLogic.getAllPossibleLines().filter((l) => !lines.has(l));

@@ -39,6 +39,9 @@ export function startLevelMatch(levelNumber, deps) {
 
     const turnDurationSeconds = getTurnDurationForLevel();
 
+    showScreen('gameScreen');
+    requestFullscreen();
+
     const game = new DotsAndBoxesGame(gridSize, p1Color, p2Color, {
         isLevelsMode: true,
         currentLevel: levelNumber,
@@ -48,8 +51,6 @@ export function startLevelMatch(levelNumber, deps) {
         turnDurationMs: turnDurationSeconds * 1000,
     });
 
-    showScreen('gameScreen');
-    requestFullscreen();
     setActiveGame(game);
 }
 

@@ -218,6 +218,13 @@ export function bindLocalSetupEvents(deps) {
             return;
         }
 
+        if (welcomeAnimation) {
+            welcomeAnimation.moveToGameScreen();
+        }
+
+        showScreen('gameScreen');
+        requestFullscreen();
+
         const localGame = buildLocalGameFromConfig(savedPayloadResult.payload.config);
         const loaded = localGame.applyValidatedLocalPayload(savedPayloadResult);
 
@@ -227,13 +234,6 @@ export function bindLocalSetupEvents(deps) {
         }
 
         lastLocalConfig = savedPayloadResult.payload.config;
-
-        if (welcomeAnimation) {
-            welcomeAnimation.moveToGameScreen();
-        }
-
-        showScreen('gameScreen');
-        requestFullscreen();
         setActiveGame(localGame);
         showToast('Loaded saved local game.', 'success', 2200);
     });

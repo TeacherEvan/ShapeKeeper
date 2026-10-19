@@ -167,7 +167,12 @@ export function updateSelectionRibbon(handler, x, y) {
         const lineKey = handler.game.getLineKey(handler.game.selectedDot, dot);
         handler.hoveredDot = handler.game.lines.has(lineKey) ? null : dot;
         handler.selectionRibbon = handler.hoveredDot
-            ? { from: handler.game.selectedDot, to: handler.hoveredDot }
+            ? {
+                  from: handler.game.selectedDot,
+                  to: handler.hoveredDot,
+                  targetX: handler.game.offsetX + handler.hoveredDot.col * handler.game.cellSize,
+                  targetY: handler.game.offsetY + handler.hoveredDot.row * handler.game.cellSize,
+              }
             : null;
     } else {
         handler.hoveredDot = null;

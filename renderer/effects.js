@@ -152,31 +152,39 @@ export function drawAmbientParticles(game) {
     }
 
     game.ambientParticles.forEach((particle) => {
-        const xOffset = Math.sin(now * particle.speed + particle.phase) * particle.amplitude;
-        const yOffset =
-            Math.cos(now * particle.speed * 0.7 + particle.phase) * particle.amplitude * 0.6;
+        if (particle.baseX === undefined) {
+            particle.baseX = particle.x ?? Math.random() * (game.logicalWidth || 800);
+        }
+        if (particle.baseY === undefined) {
+            particle.baseY = particle.y ?? Math.random() * (game.logicalHeight || 600);
+        }
+        const speed = particle.speed ?? 0.35;
+        const amplitude = particle.amplitude ?? 25;
+        const phase = particle.phase ?? 0;
 
-        const x = particle.baseX + xOffset;
-        const y = particle.baseY + yOffset;
+        const xOffset = Math.sin(now * speed + phase) * amplitude;
+        const yOffset = Math.cos(now * speed * 0.7 + phase) * amplitude * 0.6;
 
-        if (x < -10) particle.baseX = game.logicalWidth + 10;
-        if (x > game.logicalWidth + 10) particle.baseX = -10;
-        if (y < -10) particle.baseY = game.logicalHeight + 10;
-        if (y > game.logicalHeight + 10) particle.baseY = -10;
+        let x = particle.baseX + xOffset;
+        let y = particle.baseY + yOffset;
 
-        game.ctx.globalAlpha = particle.opacity * (0.5 + 0.5 * Math.sin(now * 2 + particle.phase));
+        const logicalWidth = game.logicalWidth || 800;
+        const logicalHeight = game.logicalHeight || 600;
+
+        if (x < -10) particle.baseX = logicalWidth + 10;
+        if (x > logicalWidth + 10) particle.baseX = -10;
+        if (y < -10) particle.baseY = logicalHeight + 10;
+        if (y > logicalHeight + 10) particle.baseY = -10;
+
+        game.ctx.globalAlpha = (particle.opacity ?? 0.2) * (0.5 + 0.5 * Math.sin(now * 2 + phase));
         game.ctx.fillStyle = isDarkMode() ? '#64748b' : '#94a3b8';
 
+        const size = particle.size ?? 2;
         if (particle.type === 'square') {
-            game.ctx.fillRect(
-                x - particle.size,
-                y - particle.size,
-                particle.size * 2,
-                particle.size * 2
-            );
+            game.ctx.fillRect(x - size, y - size, size * 2, size * 2);
         } else {
             game.ctx.beginPath();
-            game.ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+            game.ctx.arc(x, y, size, 0, Math.PI * 2);
             game.ctx.fill();
         }
     });
@@ -236,7 +244,13 @@ export function drawSelectionRibbon(game) {
     if (!game.selectionRibbon || !game.selectedDot) return;
 
     const now = Date.now();
-    const { targetX, targetY } = game.selectionRibbon;
+    const toDot = game.selectionRibbon.to;
+    const targetX =
+        game.selectionRibbon.targetX ?? (toDot ? game.offsetX + toDot.col * game.cellSize : null);
+    const targetY =
+        game.selectionRibbon.targetY ?? (toDot ? game.offsetY + toDot.row * game.cellSize : null);
+    if (targetX === null || targetY === null || isNaN(targetX) || isNaN(targetY)) return;
+
     const startX = game.offsetX + game.selectedDot.col * game.cellSize;
     const startY = game.offsetY + game.selectedDot.row * game.cellSize;
     const midX = (startX + targetX) / 2;
