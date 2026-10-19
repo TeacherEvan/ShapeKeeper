@@ -1180,8 +1180,15 @@ export class DotsAndBoxesGame {
         const remaining = clock.deadline - now;
         this.turnRemainingMs = remaining > 0 ? remaining : 0;
 
-        // Audio-visual urgency: sound ticking during last 3 seconds
-        if (this.isLevelsMode && this.turnRemainingMs > 0 && this.turnRemainingMs <= 3000) {
+        // Audio-visual urgency: sound ticking & screen vignette during last 3 seconds
+        const isUrgent =
+            this.isLevelsMode && this.turnRemainingMs > 0 && this.turnRemainingMs <= 3000;
+        const gameScreenEl = document.getElementById('gameScreen');
+        if (gameScreenEl) {
+            gameScreenEl.classList.toggle('turn-urgent', Boolean(isUrgent));
+        }
+
+        if (isUrgent) {
             const sec = Math.ceil(this.turnRemainingMs / 1000);
             if (clock.lastTickedSecond !== sec) {
                 clock.lastTickedSecond = sec;
@@ -1295,6 +1302,7 @@ export class DotsAndBoxesGame {
         this.aiTurnToken += 1;
 
         this.renderer.draw();
+        document.getElementById('gameScreen')?.classList.remove('turn-urgent');
         this.uiManager.showGameOverSplash();
     }
 
@@ -1321,6 +1329,7 @@ export class DotsAndBoxesGame {
             return;
         }
         this.isDestroyed = true;
+        document.getElementById('gameScreen')?.classList.remove('turn-urgent');
 
         if (this.disposables) {
             this.disposables.dispose();

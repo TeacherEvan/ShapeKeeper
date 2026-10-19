@@ -561,3 +561,23 @@
         justify-content: center;
     }
 }
+
+/* Visceral Urgency Vignette (final 3s countdown in Levels mode) */
+#gameScreen.turn-urgent::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    box-shadow: inset 0 0 70px rgba(255, 45, 0, 0.45), inset 0 0 120px rgba(255, 0, 0, 0.25);
+    animation: urgentVignettePulse 0.5s infinite alternate ease-in-out;
+}
+
+@keyframes urgentVignettePulse {
+    from {
+        opacity: 0.4;
+    }
+    to {
+        opacity: 1;
+    }
+}
