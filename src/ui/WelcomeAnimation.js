@@ -7,6 +7,10 @@
  */
 
 import { LevelsProgress } from './LevelsProgress.js';
+import {
+    SpriteFireworksManager,
+    advanceSpriteLifecycle,
+} from './SpriteFireworks.js';
 
 export class WelcomeAnimation {
     constructor() {
@@ -21,6 +25,9 @@ export class WelcomeAnimation {
             : 120;
         this.animationFrameId = null;
         this.isDimmed = false;
+        this.fireworksManager = new SpriteFireworksManager();
+        this.lastFrameTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        this.isEasterEggActive = LevelsProgress.isEasterEggUnlocked();
         this.spatialPartitionGrid = null;
         this.partitionCellSize = 120;
         this.mousePosition = { x: -1000, y: -1000 };
@@ -189,6 +196,7 @@ export class WelcomeAnimation {
 
     syncWithLevelsProgress() {
         const state = LevelsProgress.getState();
+        this.isEasterEggActive = LevelsProgress.isEasterEggUnlocked(state);
         if (state.levelsTriggered) {
             const targetCount = Math.max(1, state.spritesObtained);
             this.particleCount = targetCount;
@@ -373,14 +381,22 @@ export class WelcomeAnimation {
 
         // Draw particles
         for (let particle of this.floatingParticles) {
+            const eggScale = particle.fireworksState?.scale ?? 1;
+            const eggAlpha = particle.fireworksState?.alpha ?? 1;
+            if (eggAlpha <= 0.01 || eggScale <= 0.01) continue;
+
             this.drawParticleShape(
                 this.ctx,
                 particle,
                 particle.x,
                 particle.y,
-                particle.size,
-                particleAlpha
+                particle.size * eggScale,
+                particleAlpha * eggAlpha
             );
+        }
+
+        if (this.isEasterEggActive && !this.isDimmed) {
+            this.fireworksManager.render(this.ctx);
         }
     }
 
@@ -391,10 +407,12 @@ export class WelcomeAnimation {
 
         for (let i = 0; i < this.floatingParticles.length; i++) {
             const p1 = this.floatingParticles[i];
+            if (p1.fireworksState && p1.fireworksState.phase !== 'alive') continue;
             const nearby = this.getNeighboringParticles(p1);
 
             for (let p2 of nearby) {
                 if (p1 === p2) continue;
+                if (p2.fireworksState && p2.fireworksState.phase !== 'alive') continue;
 
                 const dx = p2.x - p1.x;
                 const dy = p2.y - p1.y;
@@ -417,6 +435,7 @@ export class WelcomeAnimation {
 
     drawTrails(alpha) {
         for (let particle of this.floatingParticles) {
+            if (particle.fireworksState && particle.fireworksState.phase !== 'alive') continue;
             if (particle.trail.length < 2) continue;
 
             const trailAlpha = alpha * 0.4;
@@ -437,6 +456,25 @@ export class WelcomeAnimation {
     }
 
     startAnimationLoop() {
+        const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const dtMs = Math.min(100, Math.max(1, now - (this.lastFrameTime || now)));
+        this.lastFrameTime = now;
+
+        if (this.isEasterEggActive && !this.isDimmed) {
+            for (let particle of this.floatingParticles) {
+                const result = advanceSpriteLifecycle(
+                    particle,
+                    dtMs,
+                    Math.random,
+                    { width: this.logicalWidth, height: this.logicalHeight }
+                );
+                if (result.triggerBurst) {
+                    this.fireworksManager.spawnBurst(particle.x, particle.y, particle.color);
+                }
+            }
+            this.fireworksManager.update(dtMs);
+        }
+
         this.updateParticlePositions();
         this.renderParticles();
         this.animationFrameId = requestAnimationFrame(() => this.startAnimationLoop());
