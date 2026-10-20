@@ -114,34 +114,51 @@ describe('convex/games/turnTimer', () => {
             expect(patch).not.toHaveBeenCalled();
         });
 
-        it('advances to next player and re-arms when valid', async () => {
+        it('draws a random line on behalf of current player and re-arms when valid', async () => {
             const room = {
+                _id: 'r1',
                 status: 'playing',
                 turnEndTime: 15000,
                 turnDurationMs: 15000,
                 currentPlayerIndex: 0,
+                gridSize: 3,
             };
             const players = [
-                { playerIndex: 1, name: 'B' },
-                { playerIndex: 0, name: 'A' },
+                { _id: 'p2', playerIndex: 1, name: 'B', score: 0 },
+                { _id: 'p1', playerIndex: 0, name: 'A', score: 0 },
             ];
             const patch = vi.fn();
+            const insert = vi.fn();
             const runAt = vi.fn();
             const ctx: any = {
                 db: {
                     get: vi.fn(async () => room),
-                    query: () => ({
+                    query: (table: string) => ({
                         withIndex: () => ({
-                            collect: vi.fn(async () => players),
+                            collect: vi.fn(async () => {
+                                if (table === 'players') return players;
+                                if (table === 'lines') return [];
+                                if (table === 'squares') return [];
+                                return [];
+                            }),
+                            first: vi.fn(async () => null),
                         }),
                     }),
                     patch,
+                    insert,
                 },
                 scheduler: { runAt },
             };
 
             await expireTurnHandler(ctx, { roomId: 'r1', expectedTurnEndTime: 15000 });
 
+            expect(insert).toHaveBeenCalledWith(
+                'lines',
+                expect.objectContaining({
+                    roomId: 'r1',
+                    playerIndex: 0,
+                })
+            );
             expect(patch).toHaveBeenCalledWith(
                 'r1',
                 expect.objectContaining({
@@ -154,26 +171,36 @@ describe('convex/games/turnTimer', () => {
 
         it('wraps around from the last player to player 0', async () => {
             const room = {
+                _id: 'r1',
                 status: 'playing',
                 turnEndTime: 15000,
                 turnDurationMs: 15000,
                 currentPlayerIndex: 1,
+                gridSize: 3,
             };
             const players = [
-                { playerIndex: 0, name: 'A' },
-                { playerIndex: 1, name: 'B' },
+                { _id: 'p1', playerIndex: 0, name: 'A', score: 0 },
+                { _id: 'p2', playerIndex: 1, name: 'B', score: 0 },
             ];
             const patch = vi.fn();
+            const insert = vi.fn();
             const runAt = vi.fn();
             const ctx: any = {
                 db: {
                     get: vi.fn(async () => room),
-                    query: () => ({
+                    query: (table: string) => ({
                         withIndex: () => ({
-                            collect: vi.fn(async () => players),
+                            collect: vi.fn(async () => {
+                                if (table === 'players') return players;
+                                if (table === 'lines') return [];
+                                if (table === 'squares') return [];
+                                return [];
+                            }),
+                            first: vi.fn(async () => null),
                         }),
                     }),
                     patch,
+                    insert,
                 },
                 scheduler: { runAt },
             };

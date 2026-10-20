@@ -1,4 +1,6 @@
 import { internal } from '../_generated/api';
+import { applyLineForPlayer } from './draw';
+import { getAllLineKeys, pickRandomFreeLine } from './shared';
 
 export const ALLOWED_TURN_DURATIONS_MS = [0, 10000, 15000, 30000, 60000] as const;
 export const DEFAULT_TURN_DURATION_MS = 15000;
@@ -36,12 +38,32 @@ export async function expireTurnHandler(ctx: any, args: any): Promise<void> {
     const room = await ctx.db.get(args.roomId);
     if (!room || room.status !== 'playing' || room.turnEndTime !== args.expectedTurnEndTime) return;
     const players = (
-        await ctx.db.query('players').withIndex('by_room', (q: any) => q.eq('roomId', args.roomId)).collect()
+        await ctx.db
+            .query('players')
+            .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
+            .collect()
     ).sort((a: any, b: any) => a.playerIndex - b.playerIndex);
     if (players.length < 2) return;
-    const now = Date.now();
-    await armTurnTimer(ctx, args.roomId, room, now, {
-        currentPlayerIndex: (room.currentPlayerIndex + 1) % players.length,
-        updatedAt: now,
-    });
+
+    const currentPlayer = players[room.currentPlayerIndex];
+    if (!currentPlayer) return;
+
+    const drawnLines = await ctx.db
+        .query('lines')
+        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
+        .collect();
+    const drawnKeys = new Set<string>(drawnLines.map((l: any) => String(l.lineKey)));
+
+    const allKeys = getAllLineKeys(room.gridSize);
+    const chosenLine = pickRandomFreeLine(allKeys, drawnKeys);
+
+    if (chosenLine) {
+        await applyLineForPlayer(ctx, room, currentPlayer, players, chosenLine);
+    } else {
+        const now = Date.now();
+        await armTurnTimer(ctx, args.roomId, room, now, {
+            currentPlayerIndex: (room.currentPlayerIndex + 1) % players.length,
+            updatedAt: now,
+        });
+    }
 }

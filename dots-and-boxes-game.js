@@ -27,6 +27,11 @@ import { maybeAnnounceTimeLow } from './src/timing/time-warning.js';
 import { getTurnDurationForLevel } from './src/ui/LevelsProgress.js';
 import { TurnNoticeBubble } from './src/ui/TurnNoticeBubble.js';
 
+export function pickAutoMoveLine(freeLines, rng = Math.random) {
+    if (!Array.isArray(freeLines) || freeLines.length === 0) return null;
+    return freeLines[Math.floor(rng() * freeLines.length)] || null;
+}
+
 export class DotsAndBoxesGame {
     static POPULATE_PLAYER_ID = GAME_CONSTANTS.POPULATE_PLAYER_ID;
 
@@ -324,7 +329,7 @@ export class DotsAndBoxesGame {
 
         const lineKey = this.gameLogic.getLineKey(dot1, dot2);
 
-        this.soundManager.ensureAudioContext();
+        this.soundManager?.ensureAudioContext?.();
 
         if (
             source === 'human' &&
@@ -344,12 +349,15 @@ export class DotsAndBoxesGame {
                 });
                 if (result.error) {
                     if (result.turnExpired) {
-                        // Allowed Time ran out mid-flight: the server skipped
-                        // this player and re-armed the turn for the next one.
-                        // Surface it (toast + accessible announcement) instead
-                        // of a silent console log.
-                        showToast('⏱ Time ran out — your turn was skipped', 'warning', 3000);
-                        announceAlert('Time ran out. Your turn was skipped.');
+                        // Allowed Time ran out mid-flight: the server auto-drew
+                        // a random line on player's behalf and re-armed the turn.
+                        showToast(
+                            '⏱ Time ran out — a random line was chosen for you',
+                            'warning',
+                            3000
+                        );
+                        announceAlert('Time ran out. A random line was chosen for you.');
+                        this.turnNoticeBubble?.show('timeout');
                     } else {
                         console.error('[Game] Error drawing line:', result.error);
                     }
@@ -391,7 +399,7 @@ export class DotsAndBoxesGame {
                 this.cellSize
             );
 
-            this.soundManager.playLineSound();
+            this.soundManager?.playLineSound?.();
 
             const completedSquares = this.gameLogic.checkForSquares(lineKey);
 
@@ -1165,15 +1173,47 @@ export class DotsAndBoxesGame {
     }
 
     expireLocalTurn() {
+        void this.performTimeoutAutoMove();
+    }
+
+    async performTimeoutAutoMove() {
+        if (this._autoMoveInProgress || this.gameState.isGameOver()) return;
+        if (this.isOnline || (this.localMode === 'ai' && this.currentPlayer !== 1)) return;
+
+        const turnKey = `${this.localTurnCounter}:${this.currentPlayer}:${this.lines.size}`;
+        if (this._autoMoveTurnKey === turnKey) return;
+        this._autoMoveTurnKey = turnKey;
+        this._autoMoveInProgress = true;
+
         this.selectedDot = null;
         this.selectionLocked = false;
         this.selectionRibbon = null;
-        this.comboCount = 0;
-        this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
-        this.uiManager.updateUI();
-        this.restartLocalTurnTimer();
-        if (this.localMode === 'ai') this.scheduleAITurn();
-        this.renderer.draw();
+
+        const free = this.gameLogic
+            .getAllPossibleLines()
+            .filter((k) => !this.lines.has(k));
+        const lineKey = pickAutoMoveLine(free);
+
+        if (!lineKey) {
+            this._autoMoveInProgress = false;
+            return;
+        }
+
+        // Reset turn deadline for local clock so it doesn't repeatedly trigger while processing move
+        if (this._localTurnClock) {
+            this._localTurnClock.deadline = 0;
+            this._localTurnClock.pausedRemainingMs = null;
+        }
+        this.turnRemainingMs = null;
+
+        const [a, b] = this.parseLineKey(lineKey);
+        this.turnNoticeBubble?.show('timeout');
+
+        try {
+            await this.drawLine(a, b, { source: 'timeout' });
+        } finally {
+            this._autoMoveInProgress = false;
+        }
     }
 
     /**
@@ -1274,15 +1314,6 @@ export class DotsAndBoxesGame {
                 `${this.gameState?.room?.turnStartTime}_${this.gameState?.room?.turnEndTime}`;
             if (this._lastExpiredTurnKey === turnKey) return;
             this._lastExpiredTurnKey = turnKey;
-
-            // The current player's turn has expired.
-            // For local lava timer house rule, skip to the next player.
-            const currentPlayerIndex = this.gameState?.room?.currentPlayerIndex ?? 0;
-            const nextIndex =
-                (currentPlayerIndex + 1) % (this.gameState?.room?.players?.length ?? 2);
-            if (this.gameState?.room) {
-                this.gameState.room.currentPlayerIndex = nextIndex;
-            }
             this.renderer.draw();
             return;
         }
@@ -1291,25 +1322,7 @@ export class DotsAndBoxesGame {
         const remaining = this.turnRemainingMs;
         if (remaining === null || remaining === undefined || remaining > 0) return;
 
-        if (this.isLevelsMode) {
-            this.handleLevelTimeout();
-            return;
-        }
-
-        // Local hot-seat: skip the expired turn using the same house rules as a normal turn
-        // switch (bonus turns stay with the player, frozen turns consumed).
-        this.selectedDot = null;
-        this.selectionLocked = false;
-        this.selectionRibbon = null;
-        this.comboCount = 0;
-        this.gameState.switchToNextPlayer();
-
-        if (this._localTurnClock) {
-            this._localTurnClock.deadline = 0;
-            this._localTurnClock.pausedRemainingMs = null;
-        }
-        this.turnRemainingMs = null;
-        this.renderer.draw();
+        return this.performTimeoutAutoMove();
     }
 
     handleLevelTimeout() {

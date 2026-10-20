@@ -3,8 +3,130 @@ import { validateLineKey } from './line_validation';
 import { isTurnExpired } from './turn_deadline';
 import { computeTurnEndTime, resolveTurnDurationMs } from './turn_duration';
 import { armTurnTimer } from './turnTimer';
+import { getAllLineKeys, pickRandomFreeLine } from './shared';
 import { log, errorLog, warn } from '../log';
 import { checkRateLimit } from '../rateLimit';
+
+export async function applyLineForPlayer(
+    ctx: any,
+    room: any,
+    currentPlayer: any,
+    sortedPlayers: any[],
+    lineKey: string,
+    clientSentAt?: number
+) {
+    await ctx.db.insert('lines', {
+        roomId: room._id,
+        lineKey,
+        playerId: currentPlayer._id,
+        playerIndex: currentPlayer.playerIndex,
+        createdAt: Date.now(),
+    });
+
+    log('[applyLineForPlayer] Line drawn successfully', {
+        roomId: room._id,
+        lineKey,
+        playerId: currentPlayer._id,
+        playerIndex: currentPlayer.playerIndex,
+    });
+
+    const completedSquares = await checkForCompletedSquares(
+        ctx,
+        room._id,
+        lineKey,
+        currentPlayer._id,
+        currentPlayer.playerIndex,
+        room.gridSize
+    );
+
+    log('[applyLineForPlayer] Square check complete', {
+        lineKey,
+        completedSquares: completedSquares.length,
+        squareKeys: completedSquares,
+    });
+
+    if (completedSquares.length > 0) {
+        const newScore = currentPlayer.score + completedSquares.length;
+        await ctx.db.patch(currentPlayer._id, { score: newScore });
+        currentPlayer.score = newScore;
+        log('[applyLineForPlayer] Score updated', {
+            playerId: currentPlayer._id,
+            oldScore: currentPlayer.score - completedSquares.length,
+            newScore,
+        });
+    }
+
+    const totalSquares = (room.gridSize - 1) * (room.gridSize - 1);
+    const allSquares = await ctx.db
+        .query('squares')
+        .withIndex('by_room', (q: any) => q.eq('roomId', room._id))
+        .collect();
+
+    const isGameOver = allSquares.length >= totalSquares;
+
+    log('[applyLineForPlayer] Game progress', {
+        completedSquares: allSquares.length,
+        totalSquares,
+        isGameOver,
+    });
+
+    if (isGameOver) {
+        await ctx.db.patch(room._id, {
+            status: 'finished',
+            updatedAt: Date.now(),
+        });
+        log('[applyLineForPlayer] Game over', {
+            roomId: room._id,
+            finalScores: sortedPlayers.map((player: any) => ({
+                name: player.name,
+                score: player.score,
+            })),
+        });
+        return {
+            success: true,
+            completedSquares: completedSquares.length,
+            gameOver: true,
+            lineKey,
+        };
+    }
+
+    const serverReceivedAt = Date.now();
+    const timingPatch: any = {
+        lastTurnClientSentAt: clientSentAt ?? null,
+        lastTurnServerReceivedAt: serverReceivedAt,
+        updatedAt: serverReceivedAt,
+    };
+
+    const nextIndex =
+        completedSquares.length === 0
+            ? (room.currentPlayerIndex + 1) % sortedPlayers.length
+            : room.currentPlayerIndex;
+
+    await armTurnTimer(ctx, room._id, room, serverReceivedAt, {
+        ...timingPatch,
+        currentPlayerIndex: nextIndex,
+    });
+
+    if (completedSquares.length === 0) {
+        log('[applyLineForPlayer] Turn advanced', {
+            fromPlayerIndex: room.currentPlayerIndex,
+            toPlayerIndex: nextIndex,
+            nextPlayerName: sortedPlayers[nextIndex]?.name,
+        });
+    } else {
+        log('[applyLineForPlayer] Turn retained (shape completed)', {
+            playerIndex: currentPlayer.playerIndex,
+            playerName: currentPlayer.name,
+        });
+    }
+
+    return {
+        success: true,
+        completedSquares: completedSquares.length,
+        keepTurn: completedSquares.length > 0,
+        lineKey,
+    };
+}
 
 export async function drawLineHandler(ctx: any, args: any) {
     // N9 per-session rate limit. Keyed by sessionId so a hostile client
@@ -54,27 +176,37 @@ export async function drawLineHandler(ctx: any, args: any) {
             const sortedSkipPlayers = skipPlayers.sort(
                 (a: any, b: any) => a.playerIndex - b.playerIndex
             );
-            const skippedIndex = room.currentPlayerIndex;
-            const nextIndex = (skippedIndex + 1) % sortedSkipPlayers.length;
-            const skippedAt = Date.now();
-            await armTurnTimer(ctx, args.roomId, room, skippedAt, {
-                currentPlayerIndex: nextIndex,
-                lastTurnClientSentAt: null,
-                lastTurnServerReceivedAt: null,
-                updatedAt: skippedAt,
-            });
-            warn('[drawLine] Turn expired — player skipped', {
-                roomId: args.roomId,
-                skippedPlayerIndex: skippedIndex,
-                skippedPlayerName: sortedSkipPlayers[skippedIndex]?.name,
-                nextPlayerIndex: nextIndex,
-            });
-            return {
-                error: 'Turn deadline expired',
-                turnExpired: true,
-                skippedPlayerIndex: skippedIndex,
-                nextPlayerIndex: nextIndex,
-            };
+            const timedOutPlayer = sortedSkipPlayers[room.currentPlayerIndex];
+            if (timedOutPlayer) {
+                const drawnLines = await ctx.db
+                    .query('lines')
+                    .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
+                    .collect();
+                const drawnKeys = new Set<string>(
+                    drawnLines.map((l: any) => String(l.lineKey))
+                );
+                const allKeys = getAllLineKeys(room.gridSize);
+                const autoLine = pickRandomFreeLine(allKeys, drawnKeys);
+                if (autoLine) {
+                    await applyLineForPlayer(
+                        ctx,
+                        room,
+                        timedOutPlayer,
+                        sortedSkipPlayers,
+                        autoLine
+                    );
+                    warn('[drawLine] Turn expired — random auto-line drawn', {
+                        roomId: args.roomId,
+                        playerIndex: room.currentPlayerIndex,
+                        autoLine,
+                    });
+                    return {
+                        error: 'Turn deadline expired',
+                        turnExpired: true,
+                        autoMoveLineKey: autoLine,
+                    };
+                }
+            }
         }
         log('[drawLine] Error: Turn deadline expired', {
             roomId: args.roomId,
@@ -131,112 +263,12 @@ export async function drawLineHandler(ctx: any, args: any) {
         return { error: 'Line already drawn' };
     }
 
-    await ctx.db.insert('lines', {
-        roomId: args.roomId,
-        lineKey: validatedLineKey,
-        playerId: currentPlayer._id,
-        playerIndex: currentPlayer.playerIndex,
-        createdAt: Date.now(),
-    });
-
-    log('[drawLine] Line drawn successfully', {
-        lineKey: validatedLineKey,
-        playerId: currentPlayer._id,
-        playerIndex: currentPlayer.playerIndex,
-    });
-
-    const completedSquares = await checkForCompletedSquares(
+    return await applyLineForPlayer(
         ctx,
-        args.roomId,
+        room,
+        currentPlayer,
+        sortedPlayers,
         validatedLineKey,
-        currentPlayer._id,
-        currentPlayer.playerIndex,
-        room.gridSize
+        args.clientSentAt
     );
-
-    log('[drawLine] Square check complete', {
-        lineKey: validatedLineKey,
-        completedSquares: completedSquares.length,
-        squareKeys: completedSquares,
-    });
-
-    if (completedSquares.length > 0) {
-        const newScore = currentPlayer.score + completedSquares.length;
-        await ctx.db.patch(currentPlayer._id, { score: newScore });
-        log('[drawLine] Score updated', {
-            playerId: currentPlayer._id,
-            oldScore: currentPlayer.score,
-            newScore,
-        });
-    }
-
-    const totalSquares = (room.gridSize - 1) * (room.gridSize - 1);
-    const allSquares = await ctx.db
-        .query('squares')
-        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
-        .collect();
-
-    const isGameOver = allSquares.length >= totalSquares;
-
-    log('[drawLine] Game progress', {
-        completedSquares: allSquares.length,
-        totalSquares,
-        isGameOver,
-    });
-
-    if (isGameOver) {
-        await ctx.db.patch(args.roomId, {
-            status: 'finished',
-            updatedAt: Date.now(),
-        });
-        log('[drawLine] Game over', {
-            roomId: args.roomId,
-            finalScores: sortedPlayers.map((player: any) => ({
-                name: player.name,
-                score: player.score,
-            })),
-        });
-        return {
-            success: true,
-            completedSquares: completedSquares.length,
-            gameOver: true,
-        };
-    }
-
-    const serverReceivedAt = Date.now();
-    // Record the client/server timestamps used for RTT + clock-offset smoothing
-    // on the client (FR-2 / FR-3).
-    const timingPatch: any = {
-        lastTurnClientSentAt: args.clientSentAt ?? null,
-        lastTurnServerReceivedAt: serverReceivedAt,
-        updatedAt: serverReceivedAt,
-    };
-
-    const nextIndex =
-        completedSquares.length === 0
-            ? (room.currentPlayerIndex + 1) % sortedPlayers.length
-            : room.currentPlayerIndex;
-    await armTurnTimer(ctx, args.roomId, room, serverReceivedAt, {
-        ...timingPatch,
-        currentPlayerIndex: nextIndex,
-    });
-
-    if (completedSquares.length === 0) {
-        log('[drawLine] Turn advanced', {
-            fromPlayerIndex: room.currentPlayerIndex,
-            toPlayerIndex: nextIndex,
-            nextPlayerName: sortedPlayers[nextIndex]?.name,
-        });
-    } else {
-        log('[drawLine] Turn retained (shape completed)', {
-            playerIndex: currentPlayer.playerIndex,
-            playerName: currentPlayer.name,
-        });
-    }
-
-    return {
-        success: true,
-        completedSquares: completedSquares.length,
-        keepTurn: completedSquares.length > 0,
-    };
 }

@@ -82,12 +82,23 @@ unaffected. If a ShapeKeeper sidecar is running, kill it first.
 - Timer is configurable **Off/10/15/30/60 s, default 15 s**, one setting in local setup and the online lobby.
 - Local engine `src/timing/local-turn-timer.js` ticks from `animate()`.
 - Online enforcement is server-side (`convex/games/turnTimer.ts`, scheduled `expireTurn`).
-- Clock resets after every move; expiry passes the turn.
+- Clock resets after every move; expiry draws a random line on behalf of the current player.
 - Local clock pauses when tab hidden and during AI turns.
 - `FEATURE_LAVA_TIMER` default `false` in `constants.js`, enabled at runtime by `config.js`.
-- `handleTurnExpiration()` is now online-tick only.
+- `handleTurnExpiration()` handles auto-move on expiration.
 - Timing constants live in `constants.js` (`TIMING_CONSTANTS`).
 - The turn clock controller is at `src/timing/turn-clock-controller.js`.
+
+### Levels invariants
+
+- Max level = 100.
+- Level 1 starts with 3x3 grid and 1 colorful sprite in the background.
+- Grid tiers: Levels 1..25 (scales 3x3 up to 7x5), Levels 26..50 (6x8), Levels 51..89 (8x8), Levels 90..99 (10x10), Level 100 (10x15).
+- Turn timer: 7s base + 2s per completed level, capped at 30s.
+- Win a level: +1 sprite, unlocks next level up to 100.
+- Lose a level (defeat or tie): -1 sprite (floored at 1).
+- Beating level 100 unlocks the fireworks sparkle easter egg permanently.
+- Missed turn on timer expiry: a random free line is drawn on the player's behalf across local hot-seat, Levels mode, and online multiplayer.
 
 ### Convex naming rule
 

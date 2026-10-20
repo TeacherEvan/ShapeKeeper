@@ -112,7 +112,7 @@ describe('Levels mode timer scaling & timeout splash pop-up', () => {
         expect(game.turnDurationMs).toBe(11000);
     });
 
-    it('handles turn expiration cleanly without freezing or crashing into maybeRunAITurn', () => {
+    it('handles turn expiration cleanly without freezing or crashing into maybeRunAITurn', async () => {
         game = new DotsAndBoxesGame(3, '#FF0000', '#0000FF', {
             isLevelsMode: true,
             currentLevel: 1,
@@ -131,18 +131,10 @@ describe('Levels mode timer scaling & timeout splash pop-up', () => {
         game.tickLocalTurnClock(8500); // 7.5s elapsed > 7s deadline
         expect(game.turnRemainingMs).toBe(0);
 
-        // Expiration must not throw TypeError and must mark game as timed out
-        expect(() => game.handleTurnExpiration()).not.toThrow();
-        expect(game.timedOut).toBe(true);
-        expect(game.gameState.isGameOver()).toBe(true);
-
-        // Game over splash pop-up should be visible with retry button
-        const overlay = document.getElementById('gameOverSplashOverlay');
-        expect(overlay.hidden).toBe(false);
-        expect(document.getElementById('gameOverSplashTitle').textContent).toBe('GAME OVER');
-        expect(document.getElementById('splashRetryLevelBtn').textContent).toContain(
-            'Retry Level 1'
-        );
+        // Expiration draws a random line on player's behalf without crashing or ending game prematurely
+        await game.handleTurnExpiration();
+        expect(game.timedOut).toBe(false);
+        expect(game.lines.size).toBe(1);
     });
 
     it('resets local turn clock deadline when player draws a line completing a square', async () => {
@@ -223,7 +215,7 @@ describe('Levels mode timer scaling & timeout splash pop-up', () => {
         expect(game.timedOut).toBe(false);
     });
 
-    it('triggers urgency ticking sound during final 3 seconds and defeat sound on timeout', () => {
+    it('triggers urgency ticking sound during final 3 seconds and defeat sound on timeout', async () => {
         game = new DotsAndBoxesGame(3, '#FF0000', '#0000FF', {
             isLevelsMode: true,
             currentLevel: 1,
@@ -255,9 +247,9 @@ describe('Levels mode timer scaling & timeout splash pop-up', () => {
         game.tickLocalTurnClock(7000);
         expect(tickSpy).toHaveBeenCalledWith(3); // 4 - 1 = 3
 
-        // Timeout triggers game over splash and sound
+        // Timeout triggers random auto-move for the player
         game.tickLocalTurnClock(8000);
-        game.handleTurnExpiration();
-        expect(gameOverSpy).toHaveBeenCalled();
+        await game.handleTurnExpiration();
+        expect(game.lines.size).toBe(1);
     });
 });
