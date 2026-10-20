@@ -125,6 +125,40 @@ export class SoundManager {
     }
 
     /**
+     * Play penalty 0.2x box sound (falling cartoon "wah-wah" tone)
+     */
+    playPenaltySound() {
+        if (!this.enabled || !this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        const freqs = [330, 290, 220, 160];
+        const stepDuration = 0.18;
+
+        freqs.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            const filter = this.ctx.createBiquadFilter();
+
+            osc.type = 'sawtooth';
+            const startTime = now + idx * stepDuration;
+            const stopTime = startTime + stepDuration;
+
+            osc.frequency.setValueAtTime(freq, startTime);
+            osc.frequency.exponentialRampToValueAtTime(freq * 0.9, stopTime);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, startTime);
+
+            gain.gain.setValueAtTime(0.09, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, stopTime);
+
+            osc.connect(filter).connect(gain).connect(this.ctx.destination);
+            osc.start(startTime);
+            osc.stop(stopTime);
+        });
+    }
+
+    /**
      * Play combo sound (escalating arpeggio)
      */
     playComboSound(comboLevel) {

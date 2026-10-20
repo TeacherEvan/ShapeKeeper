@@ -1,4 +1,5 @@
 import { GAME_CONSTANTS } from '../constants.js';
+import { prefersReducedMotion } from '../utils.js';
 
 export function drawDynamicBackground(game) {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -399,6 +400,79 @@ export function drawMultiplierAnimations(game) {
         game.ctx.textBaseline = 'middle';
         game.ctx.fillText(`x${animation.value}`, animation.centerX, animation.centerY + yOffset);
         game.ctx.shadowBlur = 0;
+        game.ctx.restore();
+    });
+}
+
+export function drawPenaltyBoxAnimations(game) {
+    if (!game.penaltyBoxAnimations || game.penaltyBoxAnimations.length === 0) return;
+
+    const now = Date.now();
+    const reducedMotion = prefersReducedMotion();
+
+    game.penaltyBoxAnimations.forEach((anim) => {
+        const age = now - anim.startTime;
+        const progress = Math.min(1, Math.max(0, age / anim.duration));
+        if (progress >= 1) return;
+
+        const { centerX, centerY, cellSize, playerColor } = anim;
+        const halfSize = cellSize / 2;
+
+        game.ctx.save();
+        game.ctx.translate(centerX, centerY);
+
+        let scale = 1;
+        let wobble = 0;
+        let alpha = 1;
+
+        if (reducedMotion) {
+            scale = 1;
+            alpha = 1 - progress * 0.5;
+        } else if (progress < 0.2) {
+            // 0 - 280ms: shrink down to 0.2x with quick snap
+            const p = progress / 0.2;
+            scale = 1 - 0.8 * Math.sin(p * Math.PI * 0.5);
+        } else if (progress < 0.6) {
+            // 280ms - 840ms: wobble around 0.2x - 0.4x
+            const p = (progress - 0.2) / 0.4;
+            scale = 0.2 + 0.15 * Math.sin(p * Math.PI * 4);
+            wobble = 0.1 * Math.sin(p * Math.PI * 6);
+            game.ctx.rotate(wobble);
+        } else {
+            // 840ms - 1400ms: spring back to full size
+            const p = (progress - 0.6) / 0.4;
+            scale = 0.35 + 0.65 * (1 - Math.cos(p * Math.PI * 0.5));
+            alpha = 1 - p * 0.4;
+        }
+
+        game.ctx.scale(scale, scale);
+
+        // Draw deflating penalty box outline & fill
+        game.ctx.fillStyle =
+            progress < 0.5
+                ? 'rgba(255, 30, 80, 0.4)'
+                : playerColor || 'rgba(0, 240, 255, 0.3)';
+        game.ctx.strokeStyle = '#ff0055';
+        game.ctx.lineWidth = 4 / Math.max(0.1, scale);
+        game.ctx.shadowColor = '#ff0055';
+        game.ctx.shadowBlur = 16;
+
+        game.ctx.fillRect(-halfSize, -halfSize, cellSize, cellSize);
+        game.ctx.strokeRect(-halfSize, -halfSize, cellSize, cellSize);
+
+        // Stamp "0.2x" in center of penalty box
+        if (progress > 0.15) {
+            const stampAlpha = progress < 0.8 ? 1 : (1 - progress) / 0.2;
+            game.ctx.globalAlpha = stampAlpha * alpha;
+            game.ctx.fillStyle = '#ffffff';
+            game.ctx.font = `bold ${Math.max(12, cellSize * 0.45)}px sans-serif`;
+            game.ctx.textAlign = 'center';
+            game.ctx.textBaseline = 'middle';
+            game.ctx.shadowColor = '#000000';
+            game.ctx.shadowBlur = 8;
+            game.ctx.fillText('0.2x', 0, 0);
+        }
+
         game.ctx.restore();
     });
 }

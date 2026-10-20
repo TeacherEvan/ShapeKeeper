@@ -25,6 +25,7 @@ import { AccessibleGridTree } from './src/a11y/AccessibleGridTree.js';
 import { createLocalTurnTimer } from './src/timing/local-turn-timer.js';
 import { maybeAnnounceTimeLow } from './src/timing/time-warning.js';
 import { getTurnDurationForLevel } from './src/ui/LevelsProgress.js';
+import { TurnNoticeBubble } from './src/ui/TurnNoticeBubble.js';
 
 export class DotsAndBoxesGame {
     static POPULATE_PLAYER_ID = GAME_CONSTANTS.POPULATE_PLAYER_ID;
@@ -98,6 +99,7 @@ export class DotsAndBoxesGame {
             'invalidLineFlash',
             'lineDrawings',
             'multiplierAnimations',
+            'penaltyBoxAnimations',
             'pulsatingLines',
             'sparkleEmojis',
             'squareAnimations',
@@ -107,6 +109,8 @@ export class DotsAndBoxesGame {
 
         this.isDestroyed = false;
         this.disposables = new DisposableRegistry();
+        this.turnNoticeBubble = new TurnNoticeBubble();
+        this.disposables.addDisposable(this.turnNoticeBubble);
 
         // Setup canvas and initialize game
         this.gameState.setupCanvas();
@@ -470,6 +474,21 @@ export class DotsAndBoxesGame {
                             this.cellSize,
                             this.particleSystem.createMultiplierParticles.bind(this.particleSystem)
                         );
+                        this.animationSystem.triggerPenaltyBoxAnimation(
+                            squareKey,
+                            this.gameLogic.parseSquareKey,
+                            this.offsetX,
+                            this.offsetY,
+                            this.cellSize,
+                            this.currentPlayer === 1 ? this.player1Color : this.player2Color
+                        );
+                        this.soundManager.playPenaltySound?.();
+                        if (
+                            this.localMode === 'ai' &&
+                            this.currentPlayer === (this.aiPlayerNumber || 2)
+                        ) {
+                            this.turnNoticeBubble?.show('ai-penalty');
+                        }
                     }
                 });
                 this.soundManager.playSquareSound(this.comboCount);
@@ -1064,6 +1083,7 @@ export class DotsAndBoxesGame {
             this.animationSystem.sparkleEmojis.length > 0 ||
             this.animationSystem.pulsatingLines.length > 0 ||
             this.animationSystem.multiplierAnimations?.length > 0 ||
+            this.animationSystem.penaltyBoxAnimations?.length > 0 ||
             this.animationSystem.lineDrawings.length > 0 ||
             this.invalidLineFlash ||
             this.shakeIntensity > 0 ||

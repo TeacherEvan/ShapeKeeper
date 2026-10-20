@@ -14,6 +14,7 @@ export class AnimationSystem {
         this.squareAnimations = [];
         this.sparkleEmojis = [];
         this.multiplierAnimations = [];
+        this.penaltyBoxAnimations = [];
         this.effectAnimations = [];
         this.lineDrawings = [];
         this.touchVisuals = [];
@@ -55,6 +56,14 @@ export class AnimationSystem {
         if (this.multiplierAnimations?.length > 0) {
             compactAnimationArray(
                 this.multiplierAnimations,
+                now,
+                (item) => now - item.startTime < item.duration
+            );
+        }
+
+        if (this.penaltyBoxAnimations?.length > 0) {
+            compactAnimationArray(
+                this.penaltyBoxAnimations,
                 now,
                 (item) => now - item.startTime < item.duration
             );
@@ -158,6 +167,33 @@ export class AnimationSystem {
     }
 
     /**
+     * Trigger 0.2x penalty box animation (deflating shrink & wobble)
+     */
+    triggerPenaltyBoxAnimation(
+        squareKey,
+        parseSquareKey,
+        offsetX,
+        offsetY,
+        cellSize,
+        playerColor
+    ) {
+        const { row, col } = parseSquareKey(squareKey);
+        const centerX = offsetX + (col + 0.5) * cellSize;
+        const centerY = offsetY + (row + 0.5) * cellSize;
+
+        this.penaltyBoxAnimations = this.penaltyBoxAnimations || [];
+        this.penaltyBoxAnimations.push({
+            squareKey,
+            startTime: Date.now(),
+            duration: 1400,
+            centerX,
+            centerY,
+            cellSize,
+            playerColor,
+        });
+    }
+
+    /**
      * Trigger invalid line flash
      */
     triggerInvalidLineFlash(dot1, dot2, _offsetX, _offsetY, _cellSize) {
@@ -235,6 +271,7 @@ export class AnimationSystem {
             squareAnimations: this.squareAnimations,
             sparkleEmojis: this.sparkleEmojis,
             multiplierAnimations: this.multiplierAnimations,
+            penaltyBoxAnimations: this.penaltyBoxAnimations,
             effectAnimations: this.effectAnimations,
             lineDrawings: this.lineDrawings,
             touchVisuals: this.touchVisuals,

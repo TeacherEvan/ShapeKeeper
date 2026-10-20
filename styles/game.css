@@ -581,3 +581,109 @@
         opacity: 1;
     }
 }
+
+/* Turn Notice Comic Bubble (AI Penalty & Timeout) */
+.turn-notice-bubble {
+    position: absolute;
+    z-index: 100;
+    max-width: 280px;
+    padding: 10px 14px;
+    background: #111424;
+    border: 2px solid var(--accent-primary, #00f0ff);
+    border-radius: 14px;
+    color: #ffffff;
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.3;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(0, 240, 255, 0.35);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(0.6) translateY(20px);
+    transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.turn-notice-bubble.active {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    animation: comic-bubble-pop 2s forwards;
+}
+
+.turn-notice-bubble.ai-penalty {
+    bottom: 24px;
+    right: 24px;
+    border-color: #ff0055;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 0, 85, 0.45);
+}
+
+.turn-notice-bubble.ai-penalty::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    right: 24px;
+    border-width: 10px 10px 0 0;
+    border-style: solid;
+    border-color: #ff0055 transparent transparent transparent;
+}
+
+.turn-notice-bubble.timeout {
+    bottom: 24px;
+    left: 24px;
+    border-color: #ffbb00;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 187, 0, 0.45);
+}
+
+.turn-notice-bubble.timeout::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 24px;
+    border-width: 10px 0 0 10px;
+    border-style: solid;
+    border-color: #ffbb00 transparent transparent transparent;
+}
+
+.turn-notice-bubble .bubble-avatar {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+}
+
+.turn-notice-bubble .bubble-text {
+    flex: 1;
+}
+
+@keyframes comic-bubble-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(20px);
+    }
+    12% {
+        opacity: 1;
+        transform: scale(1.08) translateY(-4px);
+    }
+    20% {
+        transform: scale(0.96) translateY(2px);
+    }
+    28% {
+        transform: scale(1) translateY(0);
+    }
+    85% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.7) translateY(10px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .turn-notice-bubble.active {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+}

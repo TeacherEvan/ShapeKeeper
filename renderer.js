@@ -20,6 +20,7 @@ import {
     drawHoverPreview,
     drawMultiplierAnimations,
     drawParticles,
+    drawPenaltyBoxAnimations,
     drawSelectionRibbon,
     drawSparkleEmojis,
     drawTouchVisuals,
@@ -75,6 +76,7 @@ export class Renderer {
 
         this.drawParticles();
         this.drawSparkleEmojis();
+        this.drawPenaltyBoxAnimations();
         this.drawMultiplierAnimations();
 
         this.drawDots();
@@ -183,6 +185,13 @@ export class Renderer {
      */
     drawSparkleEmojis() {
         drawSparkleEmojis(this.game);
+    }
+
+    /**
+     * Draw penalty box animations
+     */
+    drawPenaltyBoxAnimations() {
+        drawPenaltyBoxAnimations(this.game);
     }
 
     /**
