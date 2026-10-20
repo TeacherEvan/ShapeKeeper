@@ -3,7 +3,11 @@
  */
 
 import { announceAlert, announceStatus } from '../src/ui/AccessibilityAnnouncer.js';
-import { LevelsProgress, getTurnDurationForLevel } from '../src/ui/LevelsProgress.js';
+import {
+    LevelsProgress,
+    MAX_LEVEL,
+    getTurnDurationForLevel,
+} from '../src/ui/LevelsProgress.js';
 import { showScreen } from '../src/ui/ScreenTransition.js';
 import { prefersReducedMotion } from '../utils.js';
 
@@ -427,24 +431,46 @@ export function showWinner(game) {
     if (winnerText) {
         if (game.isLevelsMode) {
             if (winner === 1) {
-                const state = LevelsProgress.recordLevelWin(game.currentLevel);
+                const state = !game._levelResultRecorded
+                    ? LevelsProgress.recordLevelWin(game.currentLevel)
+                    : LevelsProgress.getState();
+                game._levelResultRecorded = true;
                 if (window.welcomeAnimation) {
                     window.welcomeAnimation.syncWithLevelsProgress();
                 }
                 const updatedTurnDuration = getTurnDurationForLevel(state.completedLevels.length);
-                winnerText.innerHTML = `🏆 Level ${game.currentLevel} Complete! 🏆<br><span style="font-size: 0.6em; color: #00f0ff;">✨ +1 Sprite (Total: ${state.spritesObtained}) · ⏱️ Turn Timer: ${updatedTurnDuration}s (+2s/lvl) ✨</span>`;
+                const durationSuffix = updatedTurnDuration >= 30 ? ' (max 30s)' : ' (+2s/lvl)';
+                let winHtml = `🏆 Level ${game.currentLevel} Complete! 🏆<br><span style="font-size: 0.6em; color: #00f0ff;">✨ +1 Sprite (Total: ${state.spritesObtained}) · ⏱️ Turn Timer: ${updatedTurnDuration}s${durationSuffix} ✨</span>`;
+                if (state.easterEggJustUnlocked) {
+                    winHtml += `<br><span style="font-size: 0.55em; color: #ffd700;">🎆 You beat level 100! Secret unlocked — check the home screen! 🎆</span>`;
+                }
+                winnerText.innerHTML = winHtml;
                 winnerText.style.color = winnerColor;
                 if (playAgainBtn) {
-                    if (game.currentLevel < 25) {
+                    if (game.currentLevel < MAX_LEVEL) {
                         playAgainBtn.textContent = `Next Level (${game.currentLevel + 1}) →`;
                         game._nextLevelToPlay = game.currentLevel + 1;
                     } else {
-                        playAgainBtn.textContent = `Replay Level 25 ★`;
-                        game._nextLevelToPlay = 25;
+                        playAgainBtn.textContent = `Replay Level ${MAX_LEVEL} ★`;
+                        game._nextLevelToPlay = MAX_LEVEL;
                     }
                 }
             } else {
-                winnerText.innerHTML = `Level ${game.currentLevel} Failed<br><span style="font-size: 0.6em; color: #FFB088;">Try again to unlock the next level!</span>`;
+                let lossResult;
+                if (!game._levelResultRecorded) {
+                    lossResult = LevelsProgress.recordLevelLoss(game.currentLevel);
+                    game._levelResultRecorded = true;
+                } else {
+                    const s = LevelsProgress.getState();
+                    lossResult = { state: s, spriteLost: false, level: game.currentLevel };
+                }
+                if (window.welcomeAnimation) {
+                    window.welcomeAnimation.syncWithLevelsProgress();
+                }
+                const spriteMsg = lossResult.spriteLost
+                    ? `💔 −1 Sprite (Total: ${lossResult.state.spritesObtained})`
+                    : `🛡️ Your last sprite is safe (Total: 1)`;
+                winnerText.innerHTML = `Level ${game.currentLevel} Failed<br><span style="font-size: 0.6em; color: #FFB088;">${spriteMsg} · Try again to unlock the next level!</span>`;
                 winnerText.style.color = '#FFB088';
                 if (playAgainBtn) {
                     playAgainBtn.textContent = `Retry Level ${game.currentLevel} ↺`;

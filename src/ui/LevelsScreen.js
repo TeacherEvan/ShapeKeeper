@@ -54,6 +54,14 @@ export function startLevelMatch(levelNumber, deps) {
     setActiveGame(game);
 }
 
+const TIERS = [
+    { start: 1, end: 25, label: 'Levels 1–25 · Warm-up' },
+    { start: 26, end: 50, label: 'Levels 26–50 · 6×8 Grids' },
+    { start: 51, end: 89, label: 'Levels 51–89 · 8×8 Grids' },
+    { start: 90, end: 99, label: 'Levels 90–99 · 10×10 Grids' },
+    { start: 100, end: 100, label: 'Level 100 · ★ 10×15 Grand Finale' },
+];
+
 export function renderLevelsGrid(deps) {
     const container = document.getElementById('levelsGridContainer');
     const spriteBadge = document.getElementById('levelsSpriteCountBadge');
@@ -77,30 +85,47 @@ export function renderLevelsGrid(deps) {
 
     container.innerHTML = '';
 
-    for (let lvl = 1; lvl <= MAX_LEVEL; lvl++) {
-        const { cols, rows } = getGridSizeForLevel(lvl);
-        const isUnlocked = lvl <= state.unlockedLevel;
-        const isCompleted = state.completedLevels.includes(lvl);
+    for (const tier of TIERS) {
+        const tierHeader = document.createElement('div');
+        tierHeader.className = 'level-tier-header';
+        tierHeader.textContent = tier.label;
+        container.appendChild(tierHeader);
 
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `level-btn ${isCompleted ? 'completed' : isUnlocked ? 'unlocked' : 'locked'}`;
-        btn.dataset.level = String(lvl);
-        btn.dataset.testid = `level-button-${lvl}`;
-        btn.disabled = !isUnlocked;
+        for (let lvl = tier.start; lvl <= tier.end; lvl++) {
+            const { cols, rows } = getGridSizeForLevel(lvl);
+            const isUnlocked = lvl <= state.unlockedLevel;
+            const isCompleted = state.completedLevels.includes(lvl);
 
-        btn.innerHTML = `
-            <span class="level-num">Level ${lvl}</span>
-            <span class="level-grid-label">${cols}×${rows}</span>
-            <span class="level-status-icon">${isCompleted ? '★' : isUnlocked ? '▶' : '🔒'}</span>
-        `;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `level-btn ${isCompleted ? 'completed' : isUnlocked ? 'unlocked' : 'locked'}`;
+            if (lvl === 100) {
+                btn.classList.add('level-100');
+            }
+            btn.dataset.level = String(lvl);
+            btn.dataset.testid = `level-button-${lvl}`;
+            btn.disabled = !isUnlocked;
 
-        if (isUnlocked) {
-            btn.addEventListener('click', () => {
-                startLevelMatch(lvl, deps);
-            });
+            btn.innerHTML = `
+                <span class="level-num">Level ${lvl}</span>
+                <span class="level-grid-label">${cols}×${rows}</span>
+                <span class="level-status-icon">${isCompleted ? '★' : isUnlocked ? '▶' : '🔒'}</span>
+            `;
+
+            if (isUnlocked) {
+                btn.addEventListener('click', () => {
+                    startLevelMatch(lvl, deps);
+                });
+            }
+
+            container.appendChild(btn);
         }
+    }
 
-        container.appendChild(btn);
+    const targetBtn = container.querySelector(`[data-level="${state.unlockedLevel}"]`);
+    if (targetBtn && typeof targetBtn.scrollIntoView === 'function') {
+        setTimeout(() => {
+            targetBtn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }, 50);
     }
 }
