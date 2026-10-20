@@ -216,6 +216,24 @@ export class WelcomeAnimation {
         }
     }
 
+    setSideScreenActive(active) {
+        this.isSideScreenActive = active;
+        const state = LevelsProgress.getState();
+        const targetCount = active
+            ? 120
+            : state.levelsTriggered
+              ? Math.max(1, state.spritesObtained)
+              : 120;
+
+        this.particleCount = targetCount;
+        while (this.floatingParticles.length < targetCount) {
+            this.floatingParticles.push(this.createSingleParticle());
+        }
+        while (this.floatingParticles.length > targetCount) {
+            this.floatingParticles.pop();
+        }
+    }
+
     applyFlockingBehavior(particle) {
         let separation = { x: 0, y: 0 };
         let alignment = { x: 0, y: 0 };
@@ -561,6 +579,19 @@ export class WelcomeAnimation {
             const eggAlpha = particle.fireworksState?.alpha ?? 1;
             if (eggAlpha <= 0.01 || eggScale <= 0.01) continue;
 
+            if (particle.isGrabbed) {
+                this.ctx.save();
+                this.ctx.globalAlpha = 0.6 * particleAlpha;
+                this.ctx.strokeStyle = particle.color;
+                this.ctx.lineWidth = 3;
+                this.ctx.shadowColor = particle.color;
+                this.ctx.shadowBlur = 20;
+                this.ctx.beginPath();
+                this.ctx.arc(particle.x, particle.y, particle.size * 2.8, 0, Math.PI * 2);
+                this.ctx.stroke();
+                this.ctx.restore();
+            }
+
             this.drawParticleShape(
                 this.ctx,
                 particle,
@@ -644,6 +675,12 @@ export class WelcomeAnimation {
                 });
                 if (result.triggerBurst) {
                     this.fireworksManager.spawnBurst(particle.x, particle.y, particle.color);
+                    this.notifyInteraction({
+                        type: 'firework',
+                        x: particle.x,
+                        y: particle.y,
+                        speed: 2,
+                    });
                 }
             }
             this.fireworksManager.update(dtMs);

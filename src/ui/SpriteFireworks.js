@@ -92,31 +92,43 @@ export function advanceSpriteLifecycle(sprite, dtMs, rng = Math.random, bounds =
 export class SpriteFireworksManager {
     constructor() {
         this.particles = [];
+        this.shockwaves = [];
     }
 
     spawnBurst(x, y, color, rng = Math.random) {
         if (this.particles.length >= FIREWORKS_CONSTANTS.MAX_FIREWORK_PARTICLES) return;
 
+        this.shockwaves.push({
+            x,
+            y,
+            radius: 4,
+            maxRadius: 38,
+            color,
+            alpha: 0.85,
+        });
+
         const count = FIREWORKS_CONSTANTS.PARTICLES_PER_BURST;
+        const sparkPalette = [color, '#ffd700', '#ffffff', '#00f0ff', '#ff00ea'];
+
         for (let i = 0; i < count; i++) {
             const angle = (i / count) * Math.PI * 2 + (rng() - 0.5) * 0.4;
-            const speed = 1.5 + rng() * 3.5;
-            const isSparkle = rng() > 0.4;
+            const speed = 1.5 + rng() * 3.8;
+            const pColor = sparkPalette[Math.floor(rng() * sparkPalette.length)];
 
             this.particles.push({
                 x,
                 y,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
-                color: isSparkle ? '#ffd700' : color,
+                color: pColor,
                 secondaryColor: '#ffffff',
-                size: 2 + rng() * 2.5,
+                size: 2 + rng() * 2.6,
                 alpha: 1,
                 life: 0,
                 maxLife:
                     FIREWORKS_CONSTANTS.BURST_DURATION_MS + FIREWORKS_CONSTANTS.SPARKLE_DURATION_MS,
                 twinklePhase: rng() * Math.PI * 2,
-                twinkleSpeed: 0.15 + rng() * 0.2,
+                twinkleSpeed: 0.15 + rng() * 0.22,
                 drag: 0.965,
                 gravity: 0.035,
             });
@@ -124,6 +136,15 @@ export class SpriteFireworksManager {
     }
 
     update(dtMs) {
+        for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+            const s = this.shockwaves[i];
+            s.radius += 1.6;
+            s.alpha -= 0.035;
+            if (s.alpha <= 0 || s.radius >= s.maxRadius) {
+                this.shockwaves.splice(i, 1);
+            }
+        }
+
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.life += dtMs;
@@ -149,9 +170,23 @@ export class SpriteFireworksManager {
     }
 
     render(ctx) {
-        if (this.particles.length === 0) return;
+        if (this.particles.length === 0 && this.shockwaves.length === 0) return;
 
         ctx.save();
+
+        for (const s of this.shockwaves) {
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, s.alpha);
+            ctx.strokeStyle = s.color;
+            ctx.lineWidth = 2;
+            ctx.shadowColor = s.color;
+            ctx.shadowBlur = 10;
+            if (typeof ctx.beginPath === 'function') ctx.beginPath();
+            if (typeof ctx.arc === 'function') ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+            if (typeof ctx.stroke === 'function') ctx.stroke();
+            ctx.restore();
+        }
+
         for (const p of this.particles) {
             if (p.alpha <= 0.02) continue;
 
@@ -160,16 +195,21 @@ export class SpriteFireworksManager {
             ctx.shadowColor = p.color;
             ctx.shadowBlur = 8;
 
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
+            if (typeof ctx.beginPath === 'function') ctx.beginPath();
+            if (typeof ctx.arc === 'function') ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            if (typeof ctx.fill === 'function') ctx.fill();
 
-            // Star glint center
-            if (p.alpha > 0.4) {
+            // Diamond star glint when sparkling brightly
+            if (p.alpha > 0.45 && typeof ctx.moveTo === 'function') {
+                const glint = p.size * 1.8;
                 ctx.fillStyle = p.secondaryColor;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2);
-                ctx.fill();
+                if (typeof ctx.beginPath === 'function') ctx.beginPath();
+                ctx.moveTo(p.x - glint, p.y);
+                ctx.lineTo(p.x, p.y - glint * 0.35);
+                ctx.lineTo(p.x + glint, p.y);
+                ctx.lineTo(p.x, p.y + glint * 0.35);
+                if (typeof ctx.closePath === 'function') ctx.closePath();
+                if (typeof ctx.fill === 'function') ctx.fill();
             }
         }
         ctx.restore();
@@ -177,5 +217,6 @@ export class SpriteFireworksManager {
 
     reset() {
         this.particles.length = 0;
+        this.shockwaves.length = 0;
     }
 }

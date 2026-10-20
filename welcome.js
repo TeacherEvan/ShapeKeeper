@@ -61,19 +61,54 @@ function initializeApp() {
     // Initialize home pager for sideways sliding
     const homeMenuLayer = document.getElementById('homeMenuLayer');
     const mainMenuScreen = document.getElementById('mainMenuScreen');
+    const returnBtn = document.getElementById('sideScreenReturnBtn');
+    const pagerDotsContainer = document.getElementById('homePagerDots');
+
+    const updatePagerUI = (pos) => {
+        if (returnBtn) {
+            returnBtn.hidden = pos === 0;
+        }
+        if (pagerDotsContainer) {
+            pagerDotsContainer.querySelectorAll('.pager-dot').forEach((dot) => {
+                const dotPage = Number(dot.dataset.page);
+                dot.classList.toggle('active', dotPage === pos);
+            });
+        }
+        if (welcomeAnimation) {
+            welcomeAnimation.setSideScreenActive(pos !== 0);
+        }
+    };
+
     if (homeMenuLayer && mainMenuScreen) {
         homePager = new HomePager(homeMenuLayer, {
             container: mainMenuScreen,
             isSpriteTouchedFn: (x, y) =>
                 Boolean(welcomeAnimation && welcomeAnimation.hitTestSprite(x, y)),
+            onPageChange: (pos) => updatePagerUI(pos),
         });
         window.homePager = homePager;
+
+        if (returnBtn) {
+            returnBtn.addEventListener('click', () => {
+                if (homePager) homePager.goTo(0);
+            });
+        }
+
+        if (pagerDotsContainer) {
+            pagerDotsContainer.addEventListener('click', (e) => {
+                const dot = e.target.closest('.pager-dot');
+                if (dot && homePager) {
+                    homePager.goTo(Number(dot.dataset.page));
+                }
+            });
+        }
     }
 
     // Reset pager and fade soundscape when switching away from main menu
     window.addEventListener('shapekeeper:screenChanged', (e) => {
         if (e.detail?.screenId !== 'mainMenuScreen') {
             if (homePager) homePager.reset();
+            updatePagerUI(0);
             if (soundscape) soundscape.fadeOut(1);
         }
     });

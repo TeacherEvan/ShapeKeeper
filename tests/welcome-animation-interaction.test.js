@@ -197,4 +197,12 @@ describe('WelcomeAnimation sprite interactions and ripples', () => {
             })
         );
     });
+
+    it('setSideScreenActive expands particle count to 120 demo sprites on side screens', () => {
+        anim.setSideScreenActive(true);
+        expect(anim.floatingParticles.length).toBe(120);
+
+        anim.setSideScreenActive(false);
+        expect(anim.floatingParticles.length).toBeGreaterThanOrEqual(1);
+    });
 });

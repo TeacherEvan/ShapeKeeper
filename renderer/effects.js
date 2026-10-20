@@ -126,7 +126,7 @@ function drawFloatingGeometry(game, isDark, time) {
                 game.ctx.stroke();
                 break;
         }
-        game.ctx.restore();
+        if (typeof game.ctx.restore === 'function') game.ctx.restore();
     }
 }
 
@@ -373,7 +373,7 @@ export function drawSparkleEmojis(game) {
         game.ctx.textAlign = 'center';
         game.ctx.textBaseline = 'middle';
         game.ctx.fillText(sparkle.emoji || '✨', sparkle.x + xOffset, sparkle.y + yOffset);
-        game.ctx.restore();
+        if (typeof game.ctx.restore === 'function') game.ctx.restore();
     });
 }
 
@@ -400,7 +400,7 @@ export function drawMultiplierAnimations(game) {
         game.ctx.textBaseline = 'middle';
         game.ctx.fillText(`x${animation.value}`, animation.centerX, animation.centerY + yOffset);
         game.ctx.shadowBlur = 0;
-        game.ctx.restore();
+        if (typeof game.ctx.restore === 'function') game.ctx.restore();
     });
 }
 
@@ -418,8 +418,8 @@ export function drawPenaltyBoxAnimations(game) {
         const { centerX, centerY, cellSize, playerColor } = anim;
         const halfSize = cellSize / 2;
 
-        game.ctx.save();
-        game.ctx.translate(centerX, centerY);
+        if (typeof game.ctx.save === 'function') game.ctx.save();
+        if (typeof game.ctx.translate === 'function') game.ctx.translate(centerX, centerY);
 
         let scale = 1;
         let wobble = 0;
@@ -437,7 +437,7 @@ export function drawPenaltyBoxAnimations(game) {
             const p = (progress - 0.2) / 0.4;
             scale = 0.2 + 0.15 * Math.sin(p * Math.PI * 4);
             wobble = 0.1 * Math.sin(p * Math.PI * 6);
-            game.ctx.rotate(wobble);
+            if (typeof game.ctx.rotate === 'function') game.ctx.rotate(wobble);
         } else {
             // 840ms - 1400ms: spring back to full size
             const p = (progress - 0.6) / 0.4;
@@ -445,7 +445,7 @@ export function drawPenaltyBoxAnimations(game) {
             alpha = 1 - p * 0.4;
         }
 
-        game.ctx.scale(scale, scale);
+        if (typeof game.ctx.scale === 'function') game.ctx.scale(scale, scale);
 
         // Draw deflating penalty box outline & fill
         game.ctx.fillStyle =
@@ -475,6 +475,29 @@ export function drawPenaltyBoxAnimations(game) {
             game.ctx.fillText('0.2x', 0, 0);
         }
 
-        game.ctx.restore();
+        // Comic corner sparks radiating outward
+        if (
+            !reducedMotion &&
+            progress > 0.05 &&
+            progress < 0.45 &&
+            typeof game.ctx.beginPath === 'function' &&
+            typeof game.ctx.arc === 'function'
+        ) {
+            const sparkP = (progress - 0.05) / 0.4;
+            const dist = cellSize * 0.45 * (1 + sparkP * 0.8);
+            const sparkAlpha = (1 - sparkP) * alpha;
+            game.ctx.fillStyle = '#ff0055';
+            game.ctx.globalAlpha = sparkAlpha;
+            for (let i = 0; i < 4; i++) {
+                const a = (i * Math.PI) / 2 + Math.PI / 4;
+                const sx = Math.cos(a) * dist;
+                const sy = Math.sin(a) * dist;
+                game.ctx.beginPath();
+                game.ctx.arc(sx, sy, 3 * (1 - sparkP), 0, Math.PI * 2);
+                game.ctx.fill();
+            }
+        }
+
+        if (typeof game.ctx.restore === 'function') game.ctx.restore();
     });
 }

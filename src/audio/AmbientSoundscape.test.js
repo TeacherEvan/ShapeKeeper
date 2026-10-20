@@ -90,7 +90,7 @@ describe('AmbientSoundscape', () => {
         expect(soundscape.masterGain).not.toBeNull();
         expect(soundscape.droneGain).not.toBeNull();
         expect(soundscape.filter).not.toBeNull();
-        expect(soundscape.oscillators.length).toBe(3);
+        expect(soundscape.oscillators.length).toBe(4);
         expect(soundscape.lfo).not.toBeNull();
     });
 
@@ -135,7 +135,7 @@ describe('AmbientSoundscape', () => {
 
         soundscape.handleInteraction({ type: 'grab', x: 250, y: 150, speed: 2 });
         expect(soundscape.isActive).toBe(true);
-        expect(playChimeSpy).toHaveBeenCalledWith(250, 150, 2);
+        expect(playChimeSpy).toHaveBeenCalledWith(250, 150, 2, 'grab');
 
         // 6-second idle timer should trigger fadeOut
         const fadeOutSpy = vi.spyOn(soundscape, 'fadeOut');

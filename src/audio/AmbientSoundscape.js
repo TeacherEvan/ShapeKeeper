@@ -91,6 +91,27 @@ export class AmbientSoundscape {
         this.filter.connect(this.droneGain);
         this.droneGain.connect(this.masterGain);
 
+        // Optional stereo delay shimmer bus
+        this.delayNode = null;
+        if (typeof this.ctx.createDelay === 'function') {
+            try {
+                this.delayNode = this.ctx.createDelay();
+                this.delayNode.delayTime.setValueAtTime(0.36, now);
+                const delayFeedback = this.ctx.createGain();
+                delayFeedback.gain.setValueAtTime(0.3, now);
+                const delayFilter = this.ctx.createBiquadFilter();
+                delayFilter.type = 'lowpass';
+                delayFilter.frequency.setValueAtTime(1600, now);
+
+                this.delayNode.connect(delayFilter);
+                delayFilter.connect(delayFeedback);
+                delayFeedback.connect(this.delayNode);
+                delayFilter.connect(this.masterGain);
+            } catch (_e) {
+                // Ignore delay setup if unsupported
+            }
+        }
+
         // Breathing LFO (~0.07Hz)
         this.lfo = this.ctx.createOscillator();
         this.lfo.frequency.setValueAtTime(0.07, now);
@@ -100,9 +121,9 @@ export class AmbientSoundscape {
         lfoGain.connect(this.filter.frequency);
         this.lfo.start();
 
-        // 3 detuned soothing drone oscillators (A2, E3, A3)
-        const droneFreqs = [110.0, 164.81, 220.0];
-        const detunes = [-4, 3, 5];
+        // 4 detuned soothing drone oscillators (A2, E3, A3, B3 -> lush Amaj9 pad)
+        const droneFreqs = [110.0, 164.81, 220.0, 246.94];
+        const detunes = [-4, 3, 5, -2];
 
         this.oscillators = droneFreqs.map((freq, i) => {
             const osc = this.ctx.createOscillator();
@@ -144,12 +165,20 @@ export class AmbientSoundscape {
         );
     }
 
-    playInteractionChime(x, y, speed = 1) {
+    playInteractionChime(x, y, speed = 1, type = 'touch') {
         if (!this.ensureAudioContext() || !this.masterGain) return;
         if (this.activeChimes >= this.maxChimes) return;
 
         const width = typeof window !== 'undefined' ? window.innerWidth : 800;
-        const noteFreq = pickScaleNote(x, width);
+        let noteFreq = pickScaleNote(x, width);
+
+        if (type === 'firework') {
+            // High crystalline chime for fireworks
+            noteFreq *= 2;
+        } else if (type === 'ripple') {
+            // Lower resonant singing bell for ripples
+            noteFreq *= 0.5;
+        }
 
         const now = this.ctx.currentTime;
         const chimeGain = this.ctx.createGain();
@@ -174,11 +203,37 @@ export class AmbientSoundscape {
         overtone.connect(chimeGain);
         chimeGain.connect(this.masterGain);
 
+        if (this.delayNode) {
+            try {
+                const delaySend = this.ctx.createGain();
+                delaySend.gain.setValueAtTime(0.25, now);
+                chimeGain.connect(delaySend);
+                delaySend.connect(this.delayNode);
+            } catch (_e) {
+                // Ignore delay send failure
+            }
+        }
+
         this.activeChimes++;
         osc.start(now);
         overtone.start(now);
         osc.stop(now + duration);
         overtone.stop(now + duration);
+
+        // On fast fling, add an ascending harmonic shimmer note
+        if (type === 'fling' && speed > 2.5 && this.activeChimes < this.maxChimes) {
+            const arpTime = now + 0.08;
+            const arpOsc = this.ctx.createOscillator();
+            const arpGain = this.ctx.createGain();
+            arpOsc.type = 'sine';
+            arpOsc.frequency.setValueAtTime(noteFreq * 1.5, arpTime);
+            arpGain.gain.setValueAtTime(volume * 0.7, arpTime);
+            arpGain.gain.exponentialRampToValueAtTime(0.0001, arpTime + 1.8);
+            arpOsc.connect(arpGain);
+            arpGain.connect(this.masterGain);
+            arpOsc.start(arpTime);
+            arpOsc.stop(arpTime + 1.8);
+        }
 
         setTimeout(() => {
             this.activeChimes = Math.max(0, this.activeChimes - 1);
@@ -220,8 +275,14 @@ export class AmbientSoundscape {
 
         this.modulateWithPointer(x, y, speed);
 
-        if (type === 'grab' || type === 'fling' || type === 'ripple' || type === 'tap') {
-            this.playInteractionChime(x, y, speed);
+        if (
+            type === 'grab' ||
+            type === 'fling' ||
+            type === 'ripple' ||
+            type === 'tap' ||
+            type === 'firework'
+        ) {
+            this.playInteractionChime(x, y, speed, type);
         }
     }
 

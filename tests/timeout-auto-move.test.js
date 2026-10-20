@@ -100,6 +100,7 @@ describe('Timeout Random Auto-Move', () => {
         game.lines.add('0,0-0,1');
         game.lines.add('0,0-1,0');
         game.lines.add('1,0-1,1');
+        game.secretMultipliers?.clear?.();
 
         // Mock pickAutoMoveLine to pick the completing edge 0,1-1,1
         vi.spyOn(Math, 'random').mockReturnValue(0);

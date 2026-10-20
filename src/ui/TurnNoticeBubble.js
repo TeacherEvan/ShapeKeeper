@@ -21,6 +21,10 @@ export const AI_PENALTY_QUIPS = [
     'Congratulations, you played... me.',
     'Did somebody shrink my score?!',
     'Fine. You can have that 0.2 box.',
+    'Beep boop... sadness protocol initiated 🥺',
+    'I demand to speak to the Shape Keeper!',
+    'My points just went through a hot wash cycle!',
+    'That was not points... that was crumbs!',
 ];
 
 export const TIMEOUT_QUIPS = [

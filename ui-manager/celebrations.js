@@ -398,6 +398,7 @@ export function showGameOverSplash(game) {
 }
 
 export function showWinner(game) {
+    if (typeof document === 'undefined') return;
     if (game.isLevelsMode && game.timedOut) {
         showGameOverSplash(game);
         return;
