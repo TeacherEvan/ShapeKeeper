@@ -113,7 +113,8 @@ export class SpriteFireworksManager {
                 size: 2 + rng() * 2.5,
                 alpha: 1,
                 life: 0,
-                maxLife: FIREWORKS_CONSTANTS.BURST_DURATION_MS + FIREWORKS_CONSTANTS.SPARKLE_DURATION_MS,
+                maxLife:
+                    FIREWORKS_CONSTANTS.BURST_DURATION_MS + FIREWORKS_CONSTANTS.SPARKLE_DURATION_MS,
                 twinklePhase: rng() * Math.PI * 2,
                 twinkleSpeed: 0.15 + rng() * 0.2,
                 drag: 0.965,

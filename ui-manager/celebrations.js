@@ -3,11 +3,7 @@
  */
 
 import { announceAlert, announceStatus } from '../src/ui/AccessibilityAnnouncer.js';
-import {
-    LevelsProgress,
-    MAX_LEVEL,
-    getTurnDurationForLevel,
-} from '../src/ui/LevelsProgress.js';
+import { LevelsProgress, MAX_LEVEL, getTurnDurationForLevel } from '../src/ui/LevelsProgress.js';
 import { showScreen } from '../src/ui/ScreenTransition.js';
 import { prefersReducedMotion } from '../utils.js';
 

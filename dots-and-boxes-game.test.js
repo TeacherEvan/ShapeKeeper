@@ -34,6 +34,7 @@ describe('DotsAndBoxesGame rules engine and scoring', () => {
             scale: () => {},
             clearRect: () => {},
             fillRect: () => {},
+            strokeRect: () => {},
             beginPath: () => {},
             arc: () => {},
             fill: () => {},

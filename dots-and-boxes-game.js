@@ -1189,9 +1189,7 @@ export class DotsAndBoxesGame {
         this.selectionLocked = false;
         this.selectionRibbon = null;
 
-        const free = this.gameLogic
-            .getAllPossibleLines()
-            .filter((k) => !this.lines.has(k));
+        const free = this.gameLogic.getAllPossibleLines().filter((k) => !this.lines.has(k));
         const lineKey = pickAutoMoveLine(free);
 
         if (!lineKey) {

@@ -94,6 +94,7 @@ describe('LevelsProgress & Grid Progression', () => {
         expect(LevelsProgress.isEasterEggUnlocked(state)).toBe(false);
 
         // Win level 100 -> stays at max level 100 and unlocks easter egg
+        expect(EASTER_EGG_LEVEL).toBe(100);
         state = LevelsProgress.recordLevelWin(100);
         expect(state.unlockedLevel).toBe(MAX_LEVEL);
         expect(state.unlockedLevel).toBe(100);

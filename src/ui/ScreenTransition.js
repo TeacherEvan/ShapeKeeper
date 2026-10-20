@@ -46,6 +46,12 @@ export function showScreen(screenId) {
             ) || newScreen;
         focusTarget.focus({ preventScroll: true });
     }
+
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+        window.dispatchEvent(
+            new CustomEvent('shapekeeper:screenChanged', { detail: { screenId } })
+        );
+    }
 }
 
 /**

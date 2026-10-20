@@ -449,16 +449,18 @@ export function drawPenaltyBoxAnimations(game) {
 
         // Draw deflating penalty box outline & fill
         game.ctx.fillStyle =
-            progress < 0.5
-                ? 'rgba(255, 30, 80, 0.4)'
-                : playerColor || 'rgba(0, 240, 255, 0.3)';
+            progress < 0.5 ? 'rgba(255, 30, 80, 0.4)' : playerColor || 'rgba(0, 240, 255, 0.3)';
         game.ctx.strokeStyle = '#ff0055';
         game.ctx.lineWidth = 4 / Math.max(0.1, scale);
         game.ctx.shadowColor = '#ff0055';
         game.ctx.shadowBlur = 16;
 
-        game.ctx.fillRect(-halfSize, -halfSize, cellSize, cellSize);
-        game.ctx.strokeRect(-halfSize, -halfSize, cellSize, cellSize);
+        if (typeof game.ctx.fillRect === 'function') {
+            game.ctx.fillRect(-halfSize, -halfSize, cellSize, cellSize);
+        }
+        if (typeof game.ctx.strokeRect === 'function') {
+            game.ctx.strokeRect(-halfSize, -halfSize, cellSize, cellSize);
+        }
 
         // Stamp "0.2x" in center of penalty box
         if (progress > 0.15) {

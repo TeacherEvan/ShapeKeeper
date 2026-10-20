@@ -75,53 +75,55 @@
                 aria-hidden="false"
             >
                 <canvas id="welcomeCanvas" aria-hidden="true"></canvas>
-                <div class="welcome-container">
-                    <figure class="brand-plate-frame">
-                        <img
-                            class="brand-plate"
-                            src="assets/branding/shape-keeper-plate.jpg"
-                            alt="The Shape Keeper: a hooded figure holding a glowing polyhedron among neon geometric shapes"
-                            width="384"
-                            height="216"
-                            decoding="async"
-                        />
-                    </figure>
-                    <h1 id="mainMenuTitle">
-                        <span class="wordmark-shape">Shape</span><span class="wordmark-keeper"
-                            >Keeper</span
-                        >
-                    </h1>
-                    <p class="credit">Created by Teacher Evan</p>
+                <div id="homeMenuLayer" class="home-menu-layer">
+                    <div class="welcome-container">
+                        <figure class="brand-plate-frame">
+                            <img
+                                class="brand-plate"
+                                src="assets/branding/shape-keeper-plate.jpg"
+                                alt="The Shape Keeper: a hooded figure holding a glowing polyhedron among neon geometric shapes"
+                                width="384"
+                                height="216"
+                                decoding="async"
+                            />
+                        </figure>
+                        <h1 id="mainMenuTitle">
+                            <span class="wordmark-shape">Shape</span><span class="wordmark-keeper"
+                                >Keeper</span
+                            >
+                        </h1>
+                        <p class="credit">Created by Teacher Evan</p>
 
-                    <div class="menu-options">
-                        <button id="localPlayBtn" class="menu-btn" data-testid="local-play-button">
-                            START GAME
-                        </button>
-                        <button
-                            id="levelsMenuBtn"
-                            class="menu-btn secondary"
-                            data-testid="levels-menu-button"
-                        >
-                            LEVELS
-                        </button>
-                        <button
-                            id="createGameBtn"
-                            class="menu-btn secondary"
-                            data-testid="create-game-button"
-                        >
-                            CREATE LOBBY
-                        </button>
-                        <button
-                            id="joinGameBtn"
-                            class="menu-btn secondary"
-                            data-testid="join-game-button"
-                        >
-                            JOIN LOBBY
+                        <div class="menu-options">
+                            <button id="localPlayBtn" class="menu-btn" data-testid="local-play-button">
+                                START GAME
+                            </button>
+                            <button
+                                id="levelsMenuBtn"
+                                class="menu-btn secondary"
+                                data-testid="levels-menu-button"
+                            >
+                                LEVELS
+                            </button>
+                            <button
+                                id="createGameBtn"
+                                class="menu-btn secondary"
+                                data-testid="create-game-button"
+                            >
+                                CREATE LOBBY
+                            </button>
+                            <button
+                                id="joinGameBtn"
+                                class="menu-btn secondary"
+                                data-testid="join-game-button"
+                            >
+                                JOIN LOBBY
+                            </button>
+                        </div>
+                        <button id="themeToggle" class="theme-toggle" aria-label="Switch to dark mode">
+                            🌙
                         </button>
                     </div>
-                    <button id="themeToggle" class="theme-toggle" aria-label="Switch to dark mode">
-                        🌙
-                    </button>
                 </div>
             </section>
 

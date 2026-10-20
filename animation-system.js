@@ -169,14 +169,7 @@ export class AnimationSystem {
     /**
      * Trigger 0.2x penalty box animation (deflating shrink & wobble)
      */
-    triggerPenaltyBoxAnimation(
-        squareKey,
-        parseSquareKey,
-        offsetX,
-        offsetY,
-        cellSize,
-        playerColor
-    ) {
+    triggerPenaltyBoxAnimation(squareKey, parseSquareKey, offsetX, offsetY, cellSize, playerColor) {
         const { row, col } = parseSquareKey(squareKey);
         const centerX = offsetX + (col + 0.5) * cellSize;
         const centerY = offsetY + (row + 0.5) * cellSize;

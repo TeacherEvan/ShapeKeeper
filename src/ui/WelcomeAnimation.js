@@ -7,10 +7,7 @@
  */
 
 import { LevelsProgress } from './LevelsProgress.js';
-import {
-    SpriteFireworksManager,
-    advanceSpriteLifecycle,
-} from './SpriteFireworks.js';
+import { SpriteFireworksManager, advanceSpriteLifecycle } from './SpriteFireworks.js';
 
 export class WelcomeAnimation {
     constructor() {
@@ -56,6 +53,11 @@ export class WelcomeAnimation {
         this.canvasTint = { light: '244, 241, 255', dark: '3, 6, 17' };
         this.constellationInk = { light: '10, 109, 149', dark: '0, 240, 255' };
 
+        this.activePointers = new Map();
+        this.grabbedSprites = new Map();
+        this.ripples = [];
+        this.onInteractionCallback = null;
+
         this.initializeCanvas();
         this.createParticles();
         this.startAnimationLoop();
@@ -67,6 +69,11 @@ export class WelcomeAnimation {
             passive: true,
         });
         this.canvas.addEventListener('touchend', () => this.handleMouseLeave());
+
+        this.canvas.addEventListener('pointerdown', (e) => this.handlePointerDown(e));
+        window.addEventListener('pointermove', (e) => this.handlePointerMove(e));
+        window.addEventListener('pointerup', (e) => this.handlePointerUp(e));
+        window.addEventListener('pointercancel', (e) => this.handlePointerUp(e));
     }
 
     initializeCanvas() {
@@ -286,12 +293,39 @@ export class WelcomeAnimation {
         this.updateSpatialPartitionGrid();
 
         for (let particle of this.floatingParticles) {
+            if (particle.isGrabbed) continue;
+
             particle.trail.push({ x: particle.x, y: particle.y });
             if (particle.trail.length > particle.maxTrailLength) {
                 particle.trail.shift();
             }
 
             this.applyFlockingBehavior(particle);
+
+            // Swirl around active pointers
+            for (const ptr of this.activePointers.values()) {
+                const dx = ptr.x - particle.x;
+                const dy = ptr.y - particle.y;
+                const distSq = dx * dx + dy * dy;
+                if (distSq < 250 * 250 && distSq > 400) {
+                    const dist = Math.sqrt(distSq);
+                    const tangentX = -dy / dist;
+                    const tangentY = dx / dist;
+                    particle.vx += tangentX * 0.4 + (dx / dist) * 0.15;
+                    particle.vy += tangentY * 0.4 + (dy / dist) * 0.15;
+                }
+            }
+
+            // Ripple repulsion
+            for (const ripple of this.ripples) {
+                const dx = particle.x - ripple.x;
+                const dy = particle.y - ripple.y;
+                const dist = Math.hypot(dx, dy);
+                if (Math.abs(dist - ripple.radius) < 30 && dist > 0) {
+                    particle.vx += (dx / dist) * 1.8;
+                    particle.vy += (dy / dist) * 1.8;
+                }
+            }
 
             particle.x += particle.vx;
             particle.y += particle.vy;
@@ -303,6 +337,16 @@ export class WelcomeAnimation {
             if (particle.x > this.logicalWidth) particle.x = 0;
             if (particle.y < 0) particle.y = this.logicalHeight;
             if (particle.y > this.logicalHeight) particle.y = 0;
+        }
+
+        // Update ripples
+        for (let i = this.ripples.length - 1; i >= 0; i--) {
+            const r = this.ripples[i];
+            r.radius += 4.5;
+            r.alpha -= 0.02;
+            if (r.alpha <= 0 || r.radius >= r.maxRadius) {
+                this.ripples.splice(i, 1);
+            }
         }
     }
 
@@ -323,6 +367,126 @@ export class WelcomeAnimation {
     handleMouseLeave() {
         this.mousePosition.x = -1000;
         this.mousePosition.y = -1000;
+    }
+
+    onInteraction(callback) {
+        this.onInteractionCallback = callback;
+    }
+
+    notifyInteraction(event) {
+        if (typeof this.onInteractionCallback === 'function') {
+            this.onInteractionCallback(event);
+        }
+    }
+
+    hitTestSprite(clientX, clientY) {
+        if (!this.canvas) return null;
+        const rect = this.canvas.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        const hitRadius = 36;
+        const hitRadiusSq = hitRadius * hitRadius;
+
+        for (let i = this.floatingParticles.length - 1; i >= 0; i--) {
+            const p = this.floatingParticles[i];
+            if (p.fireworksState && p.fireworksState.phase !== 'alive') continue;
+            const dx = p.x - x;
+            const dy = p.y - y;
+            if (dx * dx + dy * dy <= hitRadiusSq) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    handlePointerDown(e) {
+        if (!this.canvas) return;
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const hit = this.hitTestSprite(e.clientX, e.clientY);
+        if (hit) {
+            hit.isGrabbed = true;
+            this.grabbedSprites.set(e.pointerId, {
+                particle: hit,
+                lastX: x,
+                lastY: y,
+                vx: 0,
+                vy: 0,
+                lastTime: typeof performance !== 'undefined' ? performance.now() : Date.now(),
+            });
+            this.notifyInteraction({ type: 'grab', x, y, speed: 2 });
+        } else {
+            this.activePointers.set(e.pointerId, {
+                x,
+                y,
+                startTime: typeof performance !== 'undefined' ? performance.now() : Date.now(),
+            });
+            this.notifyInteraction({ type: 'touch', x, y, speed: 1 });
+        }
+    }
+
+    handlePointerMove(e) {
+        if (!this.canvas) return;
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const grab = this.grabbedSprites.get(e.pointerId);
+        if (grab) {
+            const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+            const dt = Math.max(1, now - grab.lastTime);
+            grab.vx = ((x - grab.lastX) / dt) * 16.67;
+            grab.vy = ((y - grab.lastY) / dt) * 16.67;
+            grab.lastX = x;
+            grab.lastY = y;
+            grab.lastTime = now;
+
+            grab.particle.x = x;
+            grab.particle.y = y;
+
+            const speed = Math.hypot(grab.vx, grab.vy);
+            this.notifyInteraction({ type: 'drag', x, y, speed });
+        } else if (this.activePointers.has(e.pointerId)) {
+            const ptr = this.activePointers.get(e.pointerId);
+            ptr.x = x;
+            ptr.y = y;
+            this.notifyInteraction({ type: 'swirl', x, y, speed: 1.2 });
+        }
+    }
+
+    handlePointerUp(e) {
+        if (!this.canvas) return;
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const grab = this.grabbedSprites.get(e.pointerId);
+        if (grab) {
+            grab.particle.isGrabbed = false;
+            grab.particle.vx = Math.max(-12, Math.min(12, grab.vx || 0));
+            grab.particle.vy = Math.max(-12, Math.min(12, grab.vy || 0));
+            this.grabbedSprites.delete(e.pointerId);
+            const speed = Math.hypot(grab.vx, grab.vy);
+            this.notifyInteraction({ type: 'fling', x, y, speed });
+        } else if (this.activePointers.has(e.pointerId)) {
+            const ptr = this.activePointers.get(e.pointerId);
+            const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+            const heldDuration = now - ptr.startTime;
+            if (heldDuration < 280) {
+                // Quick tap on empty space -> ripple!
+                this.ripples.push({
+                    x: ptr.x,
+                    y: ptr.y,
+                    radius: 2,
+                    maxRadius: 180,
+                    alpha: 0.85,
+                });
+                this.notifyInteraction({ type: 'ripple', x: ptr.x, y: ptr.y, speed: 3 });
+            }
+            this.activePointers.delete(e.pointerId);
+        }
     }
 
     drawParticleShape(ctx, particle, x, y, size, alpha) {
@@ -378,6 +542,18 @@ export class WelcomeAnimation {
 
         // Draw particle trails
         this.drawTrails(particleAlpha);
+
+        if (this.ripples.length > 0) {
+            this.ctx.save();
+            for (const r of this.ripples) {
+                this.ctx.strokeStyle = `rgba(0, 240, 255, ${Math.max(0, r.alpha)})`;
+                this.ctx.lineWidth = 2.5;
+                this.ctx.beginPath();
+                this.ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+                this.ctx.stroke();
+            }
+            this.ctx.restore();
+        }
 
         // Draw particles
         for (let particle of this.floatingParticles) {
@@ -462,12 +638,10 @@ export class WelcomeAnimation {
 
         if (this.isEasterEggActive && !this.isDimmed) {
             for (let particle of this.floatingParticles) {
-                const result = advanceSpriteLifecycle(
-                    particle,
-                    dtMs,
-                    Math.random,
-                    { width: this.logicalWidth, height: this.logicalHeight }
-                );
+                const result = advanceSpriteLifecycle(particle, dtMs, Math.random, {
+                    width: this.logicalWidth,
+                    height: this.logicalHeight,
+                });
                 if (result.triggerBurst) {
                     this.fireworksManager.spawnBurst(particle.x, particle.y, particle.color);
                 }
