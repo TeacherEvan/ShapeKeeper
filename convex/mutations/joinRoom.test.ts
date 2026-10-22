@@ -5,6 +5,7 @@ interface MockRoom {
     _id: string;
     roomCode: string;
     status: string;
+    passcode?: string;
 }
 
 interface MockPlayer {
@@ -134,5 +135,35 @@ describe('mutations/joinRoom', () => {
             error: 'Rate limit exceeded',
             resetMs: expect.any(Number),
         });
+    });
+
+    it('requires passcode when room has one', async () => {
+        const room: MockRoom = { _id: 'room-1', roomCode: 'ABC123', status: 'lobby', passcode: 'EasterPig' };
+        const db = makeDb({ room, players: [] });
+        const ctx: any = { db };
+
+        const missing = await (joinRoom as any)._handler(ctx, {
+            roomCode: 'ABC123',
+            sessionId: 's3',
+            playerName: 'Guest',
+        });
+        expect(missing.error).toBe('This lobby requires a passcode. Ask the host to share it.');
+
+        const wrong = await (joinRoom as any)._handler(ctx, {
+            roomCode: 'ABC123',
+            sessionId: 's3',
+            playerName: 'Guest',
+            passcode: 'WrongPasscode',
+        });
+        expect(wrong.error).toBe('Incorrect passcode. Check the link or ask the host.');
+
+        const correct = await (joinRoom as any)._handler(ctx, {
+            roomCode: 'ABC123',
+            sessionId: 's3',
+            playerName: 'Guest',
+            passcode: 'EasterPig',
+        });
+        expect(correct.roomId).toBe('room-1');
+        expect(correct.playerId).toBeDefined();
     });
 });

@@ -65,7 +65,7 @@ describe('queries/roomQueries', () => {
     });
 
     it('getRoomByCode returns room with players sorted and projected', async () => {
-        const room = { _id: 'r1', roomCode: 'ABC123', status: 'lobby', hostPlayerId: 's_host' };
+        const room = { _id: 'r1', roomCode: 'ABC123', passcode: 'EasterPig', status: 'lobby', hostPlayerId: 's_host' };
         const players = [
             { playerIndex: 1, name: 'B', sessionId: 's_guest' },
             { playerIndex: 0, name: 'A', sessionId: 's_host' },
@@ -74,6 +74,7 @@ describe('queries/roomQueries', () => {
 
         const res = await (getRoomByCode as any)._handler(ctx, { roomCode: 'ABC123', sessionId: 's_host' });
         expect(res.roomCode).toBe('ABC123');
+        expect(res.passcode).toBeUndefined();
         expect(res.isHost).toBe(true);
         expect(res.players[0].name).toBe('A');
         expect(res.players[0].isHost).toBe(true);

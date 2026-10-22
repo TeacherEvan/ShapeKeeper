@@ -93,6 +93,9 @@ export function bindLobbyEvents(deps) {
 
             lobbyManager.roomCode = result.roomCode;
             lobbyManager.isHost = true;
+            if (result.passcode) {
+                lobbyManager.setIdentity({ passcode: result.passcode });
+            }
             showToast('Lobby created', 'success', 4000);
         } else {
             lobbyManager.createRoom(playerName);

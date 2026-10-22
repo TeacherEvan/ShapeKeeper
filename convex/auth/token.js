@@ -148,6 +148,7 @@ export function projectRoomForClient(room, requestingSessionId) {
         room.hostPlayerId === requestingSessionId;
     delete projection.hostTokenHash;
     delete projection.hostPlayerId;
+    delete projection.passcode;
     projection.isHost = isHost;
     return projection;
 }
