@@ -8,6 +8,7 @@
 
 import { LevelsProgress } from './LevelsProgress.js';
 import { SpriteFireworksManager, advanceSpriteLifecycle } from './SpriteFireworks.js';
+import { SpriteTrail, TRAIL_CAPACITY, TRAIL_MAX_SEGMENT } from './sprite-trail.js';
 
 export class WelcomeAnimation {
     constructor() {
@@ -188,8 +189,7 @@ export class WelcomeAnimation {
             neighborhoodRadius: 120,
             maxSpeed: 1.8,
             maxForce: 0.04,
-            trail: [],
-            maxTrailLength: 8,
+            trail: new SpriteTrail(TRAIL_CAPACITY),
             pulsePhase: Math.random() * Math.PI * 2,
             pulseSpeed: 0.02 + Math.random() * 0.03,
         };
@@ -311,12 +311,14 @@ export class WelcomeAnimation {
         this.updateSpatialPartitionGrid();
 
         for (let particle of this.floatingParticles) {
-            if (particle.isGrabbed) continue;
-
-            particle.trail.push({ x: particle.x, y: particle.y });
-            if (particle.trail.length > particle.maxTrailLength) {
-                particle.trail.shift();
+            // A grabbed sprite is teleported by the pointer: its stored history
+            // would smear a diagonal streak across the canvas, so drop it.
+            if (particle.isGrabbed) {
+                particle.trail.clear();
+                continue;
             }
+
+            particle.trail.push(particle.x, particle.y);
 
             this.applyFlockingBehavior(particle);
 
@@ -351,10 +353,11 @@ export class WelcomeAnimation {
             particle.pulsePhase += particle.pulseSpeed;
             particle.size = particle.baseSize * (0.8 + 0.2 * Math.sin(particle.pulsePhase));
 
-            if (particle.x < 0) particle.x = this.logicalWidth;
-            if (particle.x > this.logicalWidth) particle.x = 0;
-            if (particle.y < 0) particle.y = this.logicalHeight;
-            if (particle.y > this.logicalHeight) particle.y = 0;
+            // Edge wrap is a teleport. Restart the trail so the jump is never
+            // stroked as a line across the whole canvas.
+            if (this.wrapParticleIntoViewport(particle)) {
+                particle.trail.clear();
+            }
         }
 
         // Update ripples
@@ -366,6 +369,42 @@ export class WelcomeAnimation {
                 this.ripples.splice(i, 1);
             }
         }
+    }
+
+    /**
+     * Wrap a sprite that has left the viewport, preserving the overshoot
+     * (modulo) instead of snapping it to the opposite edge. Snapping discarded
+     * up to maxSpeed px of travel per wrap.
+     *
+     * @returns {boolean} true when the sprite teleported (trail must be reset).
+     */
+    wrapParticleIntoViewport(particle) {
+        const width = this.logicalWidth;
+        const height = this.logicalHeight;
+        if (!(width > 0) || !(height > 0)) return false;
+
+        let wrapped = false;
+        if (particle.x < 0) {
+            particle.x += width;
+            wrapped = true;
+        } else if (particle.x > width) {
+            particle.x -= width;
+            wrapped = true;
+        }
+        if (particle.y < 0) {
+            particle.y += height;
+            wrapped = true;
+        } else if (particle.y > height) {
+            particle.y -= height;
+            wrapped = true;
+        }
+
+        if (particle.x < 0 || particle.x > width)
+            particle.x = Math.max(0, Math.min(width, particle.x));
+        if (particle.y < 0 || particle.y > height)
+            particle.y = Math.max(0, Math.min(height, particle.y));
+
+        return wrapped;
     }
 
     handleMouseMove(e) {
@@ -426,6 +465,7 @@ export class WelcomeAnimation {
         const hit = this.hitTestSprite(e.clientX, e.clientY);
         if (hit) {
             hit.isGrabbed = true;
+            hit.trail.clear();
             this.grabbedSprites.set(e.pointerId, {
                 particle: hit,
                 lastX: x,
@@ -483,6 +523,8 @@ export class WelcomeAnimation {
         const grab = this.grabbedSprites.get(e.pointerId);
         if (grab) {
             grab.particle.isGrabbed = false;
+            // Start a fresh trail from the drop point — never from the grab point.
+            grab.particle.trail.clear();
             grab.particle.vx = Math.max(-12, Math.min(12, grab.vx || 0));
             grab.particle.vy = Math.max(-12, Math.min(12, grab.vy || 0));
             this.grabbedSprites.delete(e.pointerId);
@@ -551,7 +593,10 @@ export class WelcomeAnimation {
         const fadeAlpha = this.isDimmed ? 0.25 : 0.08;
         const bgColor = `rgba(${baseBg}, ${fadeAlpha})`;
         this.ctx.fillStyle = bgColor;
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        // Logical units: the context is already scaled by devicePixelRatio, so
+        // canvas.width/height (device px) would over-cover and put the motion
+        // blur trail out of phase with the sprites.
+        this.ctx.fillRect(0, 0, this.logicalWidth, this.logicalHeight);
 
         const particleAlpha = this.isDimmed ? 0.25 : 0.85;
 
@@ -609,7 +654,7 @@ export class WelcomeAnimation {
 
     drawConnections(alpha) {
         const linkInk = this.themedInk(this.constellationInk);
-        this.ctx.strokeStyle = `rgba(${linkInk}, ${alpha * 0.15})`;
+        const maxDistSq = this.connectionDistance * this.connectionDistance;
         this.ctx.lineWidth = 0.8;
 
         for (let i = 0; i < this.floatingParticles.length; i++) {
@@ -625,11 +670,8 @@ export class WelcomeAnimation {
                 const dy = p2.y - p1.y;
                 const distSq = dx * dx + dy * dy;
 
-                if (distSq < this.connectionDistance * this.connectionDistance) {
-                    const opacity =
-                        alpha *
-                        0.15 *
-                        (1 - distSq / (this.connectionDistance * this.connectionDistance));
+                if (distSq < maxDistSq) {
+                    const opacity = alpha * 0.15 * (1 - distSq / maxDistSq);
                     this.ctx.strokeStyle = `rgba(${linkInk}, ${opacity})`;
                     this.ctx.beginPath();
                     this.ctx.moveTo(p1.x, p1.y);
@@ -641,25 +683,33 @@ export class WelcomeAnimation {
     }
 
     drawTrails(alpha) {
+        const ctx = this.ctx;
+        const trailAlpha = alpha * 0.4;
+        ctx.globalAlpha = trailAlpha;
+        ctx.lineWidth = 1.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        const strokeRun = (run) => {
+            if (run.length < 2) return;
+            ctx.beginPath();
+            ctx.moveTo(run[0].x, run[0].y);
+            for (let i = 1; i < run.length; i++) {
+                ctx.lineTo(run[i].x, run[i].y);
+            }
+            ctx.stroke();
+        };
+
         for (let particle of this.floatingParticles) {
             if (particle.fireworksState && particle.fireworksState.phase !== 'alive') continue;
-            if (particle.trail.length < 2) continue;
+            if (!particle.trail || particle.trail.length < 2) continue;
 
-            const trailAlpha = alpha * 0.4;
-            this.ctx.strokeStyle = particle.color;
-            this.ctx.globalAlpha = trailAlpha;
-            this.ctx.lineWidth = 1.5;
-            this.ctx.lineCap = 'round';
-            this.ctx.lineJoin = 'round';
-
-            this.ctx.beginPath();
-            this.ctx.moveTo(particle.trail[0].x, particle.trail[0].y);
-            for (let i = 1; i < particle.trail.length; i++) {
-                this.ctx.lineTo(particle.trail[i].x, particle.trail[i].y);
-            }
-            this.ctx.stroke();
+            ctx.strokeStyle = particle.color;
+            // forEachRun drops teleport segments (edge wrap, drag, resize) so a
+            // sprite can never paint a full-span line across the canvas.
+            particle.trail.forEachRun(strokeRun, TRAIL_MAX_SEGMENT);
         }
-        this.ctx.globalAlpha = 1;
+        ctx.globalAlpha = 1;
     }
 
     startAnimationLoop() {
