@@ -586,6 +586,11 @@
 .turn-notice-bubble {
     position: absolute;
     z-index: 100;
+    /* Anchored explicitly. With position:absolute and no offsets the bubble
+       fell into normal flow at the foot of #gameScreen, landing on top of the
+       footer's Controls button. Lift it clear of the footer bar. */
+    right: 16px;
+    bottom: 88px;
     max-width: 280px;
     padding: 10px 14px;
     background: #111424;
