@@ -8,6 +8,7 @@
 
 import { LevelsProgress } from './LevelsProgress.js';
 import { SpriteFireworksManager, advanceSpriteLifecycle } from './SpriteFireworks.js';
+import { SPRITE_PALETTES, hexToRgbChannels } from './sprite-palette.js';
 import { SpriteTrail, TRAIL_CAPACITY, TRAIL_MAX_SEGMENT } from './sprite-trail.js';
 
 export class WelcomeAnimation {
@@ -32,22 +33,9 @@ export class WelcomeAnimation {
         this.mouseInfluenceRadius = 200;
         this.connectionDistance = 140;
         this.particleTypes = ['circle', 'square', 'triangle', 'diamond'];
-        // Cosmic "Shape Keeper" palette — electric cyan, neon magenta, deep blue
-        // and solar amber, sampled from assets/branding/shape-keeper-hero.jpg.
-        this.colorPalette = {
-            light: [
-                { primary: '#0a86ad', secondary: '#2bb8d6', accent: '#7fe3f5' }, // Cosmic cyan
-                { primary: '#8a12d6', secondary: '#b45cf0', accent: '#dcb0ff' }, // Nebula magenta
-                { primary: '#1f4fd8', secondary: '#4d7bf0', accent: '#a9c2ff' }, // Deep blue
-                { primary: '#a2590a', secondary: '#d98a1f', accent: '#f6c96b' }, // Solar amber
-            ],
-            dark: [
-                { primary: '#00f0ff', secondary: '#0088ff', accent: '#7ffcff' }, // Cosmic cyan
-                { primary: '#e000ff', secondary: '#8a00ff', accent: '#ff8cff' }, // Nebula magenta
-                { primary: '#ffc700', secondary: '#ff8c00', accent: '#ffe680' }, // Solar amber
-                { primary: '#22ff00', secondary: '#7dff5c', accent: '#c8ffb0' }, // Neon lime
-            ],
-        };
+        // Full-spectrum sprite ink, one family per hue band. Lives in
+        // ui/sprite-palette so the hue/contrast contract is unit-testable.
+        this.colorPalette = SPRITE_PALETTES;
         // Canvas clear colour + constellation link ink per theme. These mirror the
         // cosmic substrate tokens in styles/cosmic-identity.css so the animated
         // canvas never tints the page off-brand.
@@ -183,6 +171,9 @@ export class WelcomeAnimation {
             vy: (Math.random() - 0.5) * 1.5,
             color,
             baseColor: color,
+            // Pre-parsed channels: the draw loop builds rgba() strings every
+            // frame, so never parse the hex on the hot path.
+            rgb: hexToRgbChannels(color),
             size: 2 + Math.random() * 3,
             baseSize: 2 + Math.random() * 3,
             type: this.particleTypes[Math.floor(Math.random() * this.particleTypes.length)],
@@ -653,13 +644,16 @@ export class WelcomeAnimation {
     }
 
     drawConnections(alpha) {
-        const linkInk = this.themedInk(this.constellationInk);
+        const fallbackInk = this.themedInk(this.constellationInk);
         const maxDistSq = this.connectionDistance * this.connectionDistance;
         this.ctx.lineWidth = 0.8;
 
         for (let i = 0; i < this.floatingParticles.length; i++) {
             const p1 = this.floatingParticles[i];
             if (p1.fireworksState && p1.fireworksState.phase !== 'alive') continue;
+            // The link takes its colour from the sprite that owns it, so the
+            // constellation spans the whole palette instead of a cyan haze.
+            const linkInk = p1.rgb || fallbackInk;
             const nearby = this.getNeighboringParticles(p1);
 
             for (let p2 of nearby) {
@@ -671,7 +665,11 @@ export class WelcomeAnimation {
                 const distSq = dx * dx + dy * dy;
 
                 if (distSq < maxDistSq) {
-                    const opacity = alpha * 0.15 * (1 - distSq / maxDistSq);
+                    // 0.34 is calibrated, not invented: with per-sprite ink the
+                    // links no longer stack into one bright cyan mass, so the
+                    // old 0.15 read as a faint wash (9.7k vivid px measured vs
+                    // 17.6k here) while the hue spread stays full-spectrum.
+                    const opacity = alpha * 0.34 * (1 - distSq / maxDistSq);
                     this.ctx.strokeStyle = `rgba(${linkInk}, ${opacity})`;
                     this.ctx.beginPath();
                     this.ctx.moveTo(p1.x, p1.y);
