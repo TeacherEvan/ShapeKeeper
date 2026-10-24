@@ -100,6 +100,26 @@ unaffected. If a ShapeKeeper sidecar is running, kill it first.
 - Beating level 100 unlocks the fireworks sparkle easter egg permanently.
 - Missed turn on timer expiry: a random free line is drawn on the player's behalf across local hot-seat, Levels mode, and online multiplayer.
 
+### Background sprite invariants
+
+- The floating background sprites live in `src/ui/WelcomeAnimation.js`; their
+  ink lives in `src/ui/sprite-palette.js` and their motion history in
+  `src/ui/sprite-trail.js`. Do not inline either back into the animation class.
+- **A sprite may never paint a line across the canvas.** Any teleport (edge
+  wrap, grab-drag, resize) must `trail.clear()`, and `drawTrails()` only strokes
+  `SpriteTrail.forEachRun()`, which splits on any segment longer than
+  `TRAIL_MAX_SEGMENT` (160 px). Regression gate:
+  `tests/welcome-animation-trail-lines.test.js`.
+- **The ink is a full spectrum, not a cyan wash.** Every hue band (red, orange,
+  amber, green, cyan, blue, purple, magenta, pink) must be present in both
+  themes, every ink HSL-saturated >= 60%, and every ink >= 3:1 non-text contrast
+  against its theme backdrop (WCAG 1.4.11). Regression gate:
+  `tests/cosmic-identity.test.js` -> "sprite ink covers the full spectrum".
+- **No gridlines, anywhere.** The board substrate is a nebula wash only —
+  `drawDynamicBackground()` must not stroke full-span straight lines (the 40 px
+  canvas grid was removed on 2026-10-24; the CSS sheet of grid lines was removed
+  earlier).
+
 ### Convex naming rule
 
 - Files under `convex/` must match `[A-Za-z0-9_.]` (no hyphens); use camelCase. Enforced by `tests/convex-module-hygiene.test.js`.
