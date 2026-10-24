@@ -12,6 +12,7 @@
 | -------------------------------------------------------------- | ----------------------------------------------- |
 | [QUICKSTART.md](development/QUICKSTART.md)                     | Getting started guide for developers            |
 | [CODE_AUDIT.md](development/CODE_AUDIT.md)                     | Code quality and architecture audit             |
+| [SPRITE-AUDIT-2026-10-24.md](development/SPRITE-AUDIT-2026-10-24.md) | Background sprite ink & line-artefact audit + remediation |
 | [PR_SUMMARY.md](development/PR_SUMMARY.md)                     | Populate feature sync & turn-based optimization |
 | [MERGE_CONFLICT_GUIDE.md](development/MERGE_CONFLICT_GUIDE.md) | How to resolve merge conflicts                  |
 
