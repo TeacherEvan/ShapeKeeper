@@ -31,30 +31,10 @@ export function drawDynamicBackground(game) {
     game.ctx.fillStyle = gradient;
     game.ctx.fillRect(0, 0, game.logicalWidth, game.logicalHeight);
 
-    drawSubtleGridPattern(game, isDark);
+    // Substrate is a nebula wash ONLY. The scrolling 40px grid was removed
+    // (product owner, twice: "Remove colour gridlines!!!") — it painted a sheet
+    // of horizontal + vertical lines straight through the board.
     drawFloatingGeometry(game, isDark, time);
-}
-
-function drawSubtleGridPattern(game, isDark) {
-    const gridSize = 40;
-    const lineColor = isDark ? 'rgba(100, 100, 140, 0.03)' : 'rgba(80, 80, 120, 0.02)';
-
-    game.ctx.strokeStyle = lineColor;
-    game.ctx.lineWidth = 0.5;
-
-    const offsetX = (Date.now() / 2000) % gridSize;
-    const offsetY = (Date.now() / 3000) % gridSize;
-
-    game.ctx.beginPath();
-    for (let x = -offsetX; x < game.logicalWidth + gridSize; x += gridSize) {
-        game.ctx.moveTo(x, 0);
-        game.ctx.lineTo(x, game.logicalHeight);
-    }
-    for (let y = -offsetY; y < game.logicalHeight + gridSize; y += gridSize) {
-        game.ctx.moveTo(0, y);
-        game.ctx.lineTo(game.logicalWidth, y);
-    }
-    game.ctx.stroke();
 }
 
 function drawFloatingGeometry(game, isDark, time) {
