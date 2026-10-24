@@ -1,7 +1,7 @@
 /**
  * ShapeKeeper - Levels Progress & Sprite Collection Manager
  *
- * Persists level unlocks (1..100), grid progression, and collected background sprites.
+ * Persists level progress (1..100), grid progression, and collected background sprites.
  * Key invariants:
  * - Max level = 100.
  * - Level 1 starts with 3x3 grid and only 1 colorful sprite in the background.
@@ -12,7 +12,8 @@
  *   - Levels 90..99: 10x10.
  *   - Level 100: 10x15.
  * - Turn timer scales by +2s per completed level, capped at 30s.
- * - Win a level match: +1 sprite (even if already completed), unlocks next level up to 100.
+ * - Donation edition: all 100 levels are open. Winning still records completion
+ *   and awards a sprite, but `unlockedLevel` no longer gates entry.
  * - Lose a level match: -1 sprite (floored at 1).
  * - Beating Level 100 unlocks the special fireworks sparkle easter egg.
  * - Default visual sprites (120) on game launch are only displayed until the first "Levels" game is played.
@@ -26,6 +27,7 @@ export const BASE_LEVEL_TURN_DURATION_SECONDS = 7;
 export const SECONDS_PER_COMPLETED_LEVEL = 2;
 export const MAX_LEVEL_TURN_DURATION_SECONDS = 30;
 export const MIN_SPRITES_AFTER_TRIGGER = 1;
+export const ALL_LEVELS_UNLOCKED = true;
 
 export function getTurnDurationForLevel(completedCountOverride) {
     const completedCount = Number.isFinite(completedCountOverride)
@@ -169,8 +171,11 @@ export class LevelsProgress {
     }
 
     static isLevelUnlocked(level) {
+        const lvl = Number(level);
+        if (!Number.isFinite(lvl) || lvl < 1 || lvl > MAX_LEVEL) return false;
+        if (ALL_LEVELS_UNLOCKED) return true;
         const state = this.getState();
-        return level <= state.unlockedLevel;
+        return lvl <= state.unlockedLevel;
     }
 
     static isLevelCompleted(level) {

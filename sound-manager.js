@@ -210,6 +210,35 @@ export class SoundManager {
     }
 
     /**
+     * Soft, friendly chime for the optional donation prompt.
+     * The caller must have resumed the audio context after a user gesture.
+     */
+    playDonationChime() {
+        if (!this.enabled || !this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const notes = [659.25, 783.99, 987.77]; // E5, G5, B5
+
+            notes.forEach((freq, index) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const start = now + index * 0.08;
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, start);
+                gain.gain.setValueAtTime(0.055, start);
+                gain.gain.exponentialRampToValueAtTime(0.001, start + 0.32);
+
+                osc.connect(gain).connect(this.ctx.destination);
+                osc.start(start);
+                osc.stop(start + 0.35);
+            });
+        } catch {
+            // Audio context unavailable — the prompt is still fully usable.
+        }
+    }
+
+    /**
      * Play effect reveal sound
      */
     playEffectRevealSound(type) {

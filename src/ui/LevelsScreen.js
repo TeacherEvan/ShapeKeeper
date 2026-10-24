@@ -8,6 +8,7 @@
 import { DotsAndBoxesGame } from '../../dots-and-boxes-game.js';
 import { requestFullscreen } from './Fullscreen.js';
 import {
+    ALL_LEVELS_UNLOCKED,
     LevelsProgress,
     MAX_LEVEL,
     getGridSizeForLevel,
@@ -77,7 +78,9 @@ export function renderLevelsGrid(deps) {
         spriteBadge.textContent = String(state.spritesObtained);
     }
     if (unlockedBadge) {
-        unlockedBadge.textContent = `${state.unlockedLevel}/${MAX_LEVEL}`;
+        unlockedBadge.textContent = ALL_LEVELS_UNLOCKED
+            ? `${MAX_LEVEL}/${MAX_LEVEL} open`
+            : `${state.unlockedLevel}/${MAX_LEVEL}`;
     }
     if (timerBadge) {
         timerBadge.textContent = `${currentTurnDuration}s`;
@@ -93,7 +96,7 @@ export function renderLevelsGrid(deps) {
 
         for (let lvl = tier.start; lvl <= tier.end; lvl++) {
             const { cols, rows } = getGridSizeForLevel(lvl);
-            const isUnlocked = lvl <= state.unlockedLevel;
+            const isUnlocked = LevelsProgress.isLevelUnlocked(lvl);
             const isCompleted = state.completedLevels.includes(lvl);
 
             const btn = document.createElement('button');

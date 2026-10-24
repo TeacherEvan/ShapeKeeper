@@ -748,6 +748,48 @@
                     <button id="winnerMainMenu" class="start-btn secondary">Main Menu</button>
                 </div>
             </section>
+
+            <!-- Optional donation prompt. A tip jar, not a paywall. -->
+            <div
+                id="donationPromptOverlay"
+                class="donation-prompt-overlay"
+                data-testid="donation-prompt"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="donationPromptTitle"
+                aria-describedby="donationPromptBody"
+                hidden
+            >
+                <div class="donation-prompt-card">
+                    <div class="donation-prompt-heart" aria-hidden="true">❤️</div>
+                    <h2 id="donationPromptTitle">Consider donating ❤️</h2>
+                    <p id="donationPromptBody">
+                        ShapeKeeper is free — every level is open. If it made you smile, a small
+                        donation helps keep it going.
+                    </p>
+                    <div class="donation-prompt-actions">
+                        <button
+                            id="donationSureBtn"
+                            class="start-btn donation-sure"
+                            data-testid="donation-sure-button"
+                            type="button"
+                        >
+                            Sure
+                        </button>
+                        <button
+                            id="donationLaterBtn"
+                            class="start-btn secondary donation-later"
+                            data-testid="donation-later-button"
+                            type="button"
+                            aria-label="Maybe later"
+                            title="Maybe later"
+                        >
+                            🐷
+                        </button>
+                    </div>
+                    <p class="donation-prompt-note">No unlocks, no perks — just a tip jar.</p>
+                </div>
+            </div>
         </main>
 
         <div

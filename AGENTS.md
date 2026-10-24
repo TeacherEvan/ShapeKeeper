@@ -95,7 +95,8 @@ unaffected. If a ShapeKeeper sidecar is running, kill it first.
 - Level 1 starts with 3x3 grid and 1 colorful sprite in the background.
 - Grid tiers: Levels 1..25 (scales 3x3 up to 7x5), Levels 26..50 (6x8), Levels 51..89 (8x8), Levels 90..99 (10x10), Level 100 (10x15).
 - Turn timer: 7s base + 2s per completed level, capped at 30s.
-- Win a level: +1 sprite, unlocks next level up to 100.
+- **Donation edition (2026-10-25): all 100 levels are open.** `LevelsProgress.isLevelUnlocked()` returns true for 1..100; winning still records completion and awards a sprite, but `unlockedLevel` no longer gates entry. Keep the progress counters for stats and the Level 100 easter egg.
+- The optional donation prompt appears at most once per 5 completed levels, is dismissible, never blocks play, and must not grant donor-only perks or cosmetics.
 - Lose a level (defeat or tie): -1 sprite (floored at 1).
 - Beating level 100 unlocks the fireworks sparkle easter egg permanently.
 - Missed turn on timer expiry: a random free line is drawn on the player's behalf across local hot-seat, Levels mode, and online multiplayer.

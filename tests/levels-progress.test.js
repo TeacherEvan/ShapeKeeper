@@ -108,6 +108,15 @@ describe('LevelsProgress & Grid Progression', () => {
         expect(state.easterEggJustUnlocked).toBe(false);
     });
 
+    it('keeps every valid level open in the donation edition', () => {
+        expect(LevelsProgress.isLevelUnlocked(1)).toBe(true);
+        expect(LevelsProgress.isLevelUnlocked(25)).toBe(true);
+        expect(LevelsProgress.isLevelUnlocked(26)).toBe(true);
+        expect(LevelsProgress.isLevelUnlocked(100)).toBe(true);
+        expect(LevelsProgress.isLevelUnlocked(0)).toBe(false);
+        expect(LevelsProgress.isLevelUnlocked(101)).toBe(false);
+    });
+
     it('recordLevelLoss decrements sprite count floored at 1', () => {
         LevelsProgress.triggerLevelsMode();
         LevelsProgress.recordLevelWin(1);

@@ -70,6 +70,17 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 - **Fullscreen Mode** - Immersive gameplay experience
 - **Landscape Optimization** - Best experience in landscape orientation
 
+### Donation edition
+
+All 100 levels are open. Every fifth completed level offers a dismissible
+“Consider donating ❤️” prompt with **Sure** (opens the configured donation
+link) and **🐷** (maybe later). It never blocks progression and never grants
+donor-only levels, cosmetics, or status.
+
+Set the target in `config.js` with `window.DONATION_URL`. An empty string
+disables the prompt; the current fallback is an email link until a donation
+provider (Ko-fi, PayFast, etc.) is chosen.
+
 ## 🚀 Quick Start
 
 ### Option 1: Local Web Server (Recommended)

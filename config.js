@@ -26,4 +26,11 @@
     if (typeof window.FEATURE_SYNC_RESILIENCE !== 'boolean') {
         window.FEATURE_SYNC_RESILIENCE = true;
     }
+
+    // Optional tip jar. Every level is open; this never unlocks anything.
+    // Replace with a Ko-fi / PayFast / Buy Me a Coffee URL when one exists.
+    // Empty string disables the prompt entirely.
+    if (typeof window.DONATION_URL !== 'string') {
+        window.DONATION_URL = 'mailto:ewiebotha@gmail.com?subject=ShapeKeeper%20donation';
+    }
 })();
