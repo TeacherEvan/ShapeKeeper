@@ -11,7 +11,12 @@ export const GAME_CONSTANTS = {
     DOT_RADIUS: 1.6,
     LINE_WIDTH: 6, // 300% increase from original 2
     CELL_SIZE_MIN: 8,
-    CELL_SIZE_MAX: 40,
+    // Was 40, which capped a 10x10 board at 400x400 px on every screen:
+    // setupCanvas() adapts cell size to the container, then this clamp
+    // overrode it, leaving the board postage-stamp small on a laptop or
+    // projector. 72 lets the board use the space the container actually has,
+    // while CELL_SIZE_MIN still protects 30x30 grids.
+    CELL_SIZE_MAX: 72,
     GRID_OFFSET: 20,
     POPULATE_PLAYER_ID: 3, // Player ID for populate feature lines
     GHOST_LINE_OPACITY: 0.3, // Opacity for ghost lines (invisible to opponent)
