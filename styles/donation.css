@@ -129,6 +129,19 @@
     }
 }
 
+/* Gratitude view — shown only after the player chose to donate. Cooler palette
+   so it reads as a thank-you, not a second ask. */
+.donation-thanks {
+    border-color: rgba(170, 215, 255, 0.45);
+    background:
+        radial-gradient(circle at 50% 0%, rgba(150, 200, 255, 0.16), transparent 55%),
+        var(--bg-elevated, #16213e);
+}
+
+.donation-thanks .donation-prompt-heart {
+    animation: donationHeartBeat 2.6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .donation-prompt-overlay,
     .donation-prompt-card,
