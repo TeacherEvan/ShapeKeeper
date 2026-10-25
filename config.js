@@ -29,8 +29,9 @@
 
     // Optional tip jar. Every level is open; this never unlocks anything.
     // Replace with a Ko-fi / PayFast / Buy Me a Coffee URL when one exists.
-    // Empty string disables the prompt entirely.
+    // Empty string disables the prompt entirely. The local page is a policy-safe
+    // fallback until a real donation rail is connected.
     if (typeof window.DONATION_URL !== 'string') {
-        window.DONATION_URL = 'mailto:ewiebotha@gmail.com?subject=ShapeKeeper%20donation';
+        window.DONATION_URL = 'donate.html';
     }
 })();

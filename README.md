@@ -78,8 +78,8 @@ link) and **🐷** (maybe later). It never blocks progression and never grants
 donor-only levels, cosmetics, or status.
 
 Set the target in `config.js` with `window.DONATION_URL`. An empty string
-disables the prompt; the current fallback is an email link until a donation
-provider (Ko-fi, PayFast, etc.) is chosen.
+disables the prompt. The current value is `/donate.html`, a local page with an
+email fallback until a real donation provider (Ko-fi, PayFast, etc.) is chosen.
 
 ## 🚀 Quick Start
 

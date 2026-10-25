@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="robots" content="noindex" />
+        <meta name="theme-color" content="#030611" />
+        <title>Support ShapeKeeper</title>
+        <style>
+            :root {
+                color-scheme: dark;
+                --ink: #f8f4ea;
+                --muted: #b9c3d6;
+                --gold: #ffd166;
+                --rose: #ff8fab;
+                --panel: #0b1430;
+                --line: rgba(255, 209, 102, 0.28);
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                min-height: 100vh;
+                display: grid;
+                place-items: center;
+                padding: 24px;
+                color: var(--ink);
+                background:
+                    radial-gradient(circle at 50% 0%, rgba(255, 143, 171, 0.16), transparent 45%),
+                    radial-gradient(circle at 90% 80%, rgba(92, 124, 255, 0.12), transparent 40%),
+                    #030611;
+                font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
+            }
+
+            .shell {
+                width: min(560px, 100%);
+            }
+
+            .back {
+                display: inline-block;
+                margin-bottom: 18px;
+                color: var(--muted);
+                text-decoration: none;
+                font-size: 0.9rem;
+            }
+
+            .back:hover {
+                color: var(--gold);
+            }
+
+            .card {
+                padding: clamp(26px, 6vw, 42px);
+                border: 1px solid var(--line);
+                border-radius: 24px;
+                background: linear-gradient(160deg, rgba(255, 143, 171, 0.1), transparent 45%), var(--panel);
+                box-shadow:
+                    0 24px 70px rgba(0, 0, 0, 0.65),
+                    0 0 60px rgba(255, 143, 171, 0.12);
+                text-align: center;
+            }
+
+            .heart {
+                font-size: 2.8rem;
+                line-height: 1;
+                margin-bottom: 10px;
+            }
+
+            h1 {
+                margin: 0 0 14px;
+                font-size: clamp(1.8rem, 5vw, 2.4rem);
+                letter-spacing: -0.02em;
+            }
+
+            p {
+                margin: 0 auto 14px;
+                max-width: 44ch;
+                color: var(--muted);
+                line-height: 1.6;
+                font-size: 1rem;
+            }
+
+            strong {
+                color: var(--ink);
+            }
+
+            .button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 50px;
+                margin: 12px 0 10px;
+                padding: 12px 26px;
+                border-radius: 999px;
+                background: linear-gradient(135deg, #ffd166, #ffb347);
+                color: #201400;
+                font-weight: 700;
+                text-decoration: none;
+                box-shadow: 0 8px 24px rgba(255, 209, 102, 0.24);
+            }
+
+            .button:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 12px 30px rgba(255, 209, 102, 0.34);
+            }
+
+            .note {
+                margin-top: 18px;
+                font-size: 0.8rem;
+                color: rgba(248, 244, 234, 0.55);
+            }
+
+            .secondary {
+                display: inline-block;
+                margin-top: 14px;
+                color: var(--muted);
+                font-size: 0.9rem;
+            }
+
+            .secondary:hover {
+                color: var(--gold);
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .button:hover {
+                    transform: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <main class="shell">
+            <a class="back" href="/">← Back to ShapeKeeper</a>
+            <section class="card" aria-labelledby="donateTitle">
+                <div class="heart" aria-hidden="true">❤️</div>
+                <h1 id="donateTitle">Support ShapeKeeper</h1>
+                <p>
+                    ShapeKeeper is <strong>free</strong>. Every level is open, and there is no
+                    paywall.
+                </p>
+                <p>
+                    Donations are optional. They do <strong>not</strong> unlock levels, grant
+                    perks or status, or buy priority support. No goods or services are provided,
+                    and donations are not tax-deductible.
+                </p>
+                <p>
+                    A dedicated donation link is being set up. Until it is ready, email us and
+                    we will send the details.
+                </p>
+                <a
+                    class="button"
+                    href="mailto:ewiebotha@gmail.com?subject=ShapeKeeper%20donation"
+                >
+                    Email us to donate
+                </a>
+                <p class="note">
+                    Please do not send card numbers, bank details, or passwords by email.
+                </p>
+                <a class="secondary" href="/">Keep playing →</a>
+            </section>
+        </main>
+    </body>
+</html>
