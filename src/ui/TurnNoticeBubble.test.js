@@ -40,7 +40,7 @@ describe('TurnNoticeBubble', () => {
         }
     });
 
-    it('renders ai-penalty speech bubble and automatically hides after 2 seconds', () => {
+    it('renders ai-penalty speech bubble and automatically hides after 3 seconds', () => {
         const bubble = new TurnNoticeBubble(container);
         bubble.show('ai-penalty');
 
@@ -50,11 +50,11 @@ describe('TurnNoticeBubble', () => {
         expect(el.classList.contains('active')).toBe(true);
         expect(el.innerHTML).toContain('🤖');
 
-        // Fast-forward 1999ms: still active
-        vi.advanceTimersByTime(1999);
+        // Fast-forward 2999ms: still active
+        vi.advanceTimersByTime(2999);
         expect(el.classList.contains('active')).toBe(true);
 
-        // Fast-forward to 2000ms: class removed
+        // Fast-forward to 3000ms: class removed
         vi.advanceTimersByTime(1);
         expect(el.classList.contains('active')).toBe(false);
 

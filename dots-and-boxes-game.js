@@ -231,6 +231,45 @@ export class DotsAndBoxesGame {
         return this.effectSystem.revealMultiplier(squareKey);
     }
 
+    /**
+     * Make a penalty box impossible to miss: red vignette pulse, a big −80%
+     * stamp over the board, a screen shake, and a 3-second speech bubble.
+     *
+     * @param {{isAiPlayer: boolean}} options
+     */
+    showPenaltyFeedback({ isAiPlayer = false } = {}) {
+        const host = document.getElementById('gameScreen') || document.body;
+        this.triggerPenaltyOverlay(host, 'penalty-flash', 800);
+        this.triggerPenaltyOverlay(host, 'penalty-stamp', 1600, '−80%');
+
+        if (!prefersReducedMotion()) {
+            this.shakeIntensity = Math.max(this.shakeIntensity || 0, 14);
+        }
+
+        this.turnNoticeBubble?.show(isAiPlayer ? 'ai-penalty' : 'player-penalty');
+        announceAlert(
+            isAiPlayer
+                ? 'Penalty box. The AI score was reduced to twenty percent.'
+                : 'Penalty box. Your score was reduced to twenty percent.'
+        );
+    }
+
+    triggerPenaltyOverlay(host, className, durationMs, text = '') {
+        let el = host.querySelector(`.${className}`);
+        if (!el) {
+            el = document.createElement('div');
+            el.className = className;
+            el.setAttribute('aria-hidden', 'true');
+            if (text) el.textContent = text;
+            host.appendChild(el);
+        }
+        el.classList.remove('active');
+        void el.offsetWidth;
+        el.classList.add('active');
+        clearTimeout(el._resetTimer);
+        el._resetTimer = setTimeout(() => el.classList.remove('active'), durationMs);
+    }
+
     showWinner() {
         this.uiManager.showWinner();
     }
@@ -491,12 +530,11 @@ export class DotsAndBoxesGame {
                             this.currentPlayer === 1 ? this.player1Color : this.player2Color
                         );
                         this.soundManager.playPenaltySound?.();
-                        if (
-                            this.localMode === 'ai' &&
-                            this.currentPlayer === (this.aiPlayerNumber || 2)
-                        ) {
-                            this.turnNoticeBubble?.show('ai-penalty');
-                        }
+                        this.showPenaltyFeedback({
+                            isAiPlayer:
+                                this.localMode === 'ai' &&
+                                this.currentPlayer === (this.aiPlayerNumber || 2),
+                        });
                     }
                 });
                 this.soundManager.playSquareSound(this.comboCount);

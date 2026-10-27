@@ -1,12 +1,18 @@
 /**
  * TurnNoticeBubble - Comic-style speech bubble notifications
  *
- * Provides funny 2-second speech bubbles for:
+ * Provides punchy speech bubbles for:
  * - AI penalty box triggers (0.2x multiplier)
+ * - Player penalty box triggers
  * - Missed turn / timeout auto-moves
+ *
+ * Bubbles stay up for NOTICE_DURATION_MS (3s) so a penalty is impossible to miss.
  *
  * @module ui/TurnNoticeBubble
  */
+
+/** How long a bubble stays on screen. Shared with the CSS animation length. */
+export const NOTICE_DURATION_MS = 3000;
 
 export const AI_PENALTY_QUIPS = [
     'Who put a discount on my box?!',
@@ -25,6 +31,15 @@ export const AI_PENALTY_QUIPS = [
     'I demand to speak to the Shape Keeper!',
     'My points just went through a hot wash cycle!',
     'That was not points... that was crumbs!',
+];
+
+export const PLAYER_PENALTY_QUIPS = [
+    'Ouch! That box bit you. −80%.',
+    'That was a mine, not a prize!',
+    'Boxed! Your score just shrank.',
+    'Told you those ones sparkle for a reason.',
+    'Sorry friend — that is a 0.2x trap.',
+    'Penalty! Even I felt that one.',
 ];
 
 export const TIMEOUT_QUIPS = [
@@ -50,6 +65,7 @@ export class TurnNoticeBubble {
         this.element = null;
         this.hideTimeout = null;
         this.lastAiQuip = null;
+        this.lastPlayerQuip = null;
         this.lastTimeoutQuip = null;
     }
 
@@ -94,6 +110,11 @@ export class TurnNoticeBubble {
             this.lastAiQuip = quip;
             avatar = '🤖';
             el.className = 'turn-notice-bubble ai-penalty';
+        } else if (variant === 'player-penalty') {
+            quip = getNextRandomQuip(PLAYER_PENALTY_QUIPS, this.lastPlayerQuip);
+            this.lastPlayerQuip = quip;
+            avatar = '💥';
+            el.className = 'turn-notice-bubble player-penalty';
         } else {
             quip = getNextRandomQuip(TIMEOUT_QUIPS, this.lastTimeoutQuip);
             this.lastTimeoutQuip = quip;
@@ -112,13 +133,13 @@ export class TurnNoticeBubble {
         void el.offsetWidth;
         el.classList.add('active');
 
-        // Visible for 2 seconds
+        // Keep it on screen long enough to actually read.
         this.hideTimeout = setTimeout(() => {
             if (this.element) {
                 this.element.classList.remove('active');
             }
             this.hideTimeout = null;
-        }, 2000);
+        }, NOTICE_DURATION_MS);
     }
 
     destroy() {
