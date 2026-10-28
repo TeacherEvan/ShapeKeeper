@@ -148,12 +148,17 @@ function buildDialog() {
     const buy = document.createElement('a');
     buy.className = 'unlock-gate-buy';
     buy.dataset.testid = 'unlock-gate-buy';
-    buy.textContent = 'Buy the unlock';
+    buy.textContent = getCheckoutUrl()
+        ? 'Buy the unlock'
+        : 'Checkout opens when the store is approved';
     buy.href = getCheckoutUrl() || '#';
     buy.target = '_blank';
     buy.rel = 'noopener noreferrer';
     if (!getCheckoutUrl()) {
+        // No door yet: keep the price and the offer visible, but never present a
+        // buy button that goes nowhere without saying so.
         buy.setAttribute('aria-disabled', 'true');
+        buy.classList.add('unlock-gate-buy-pending');
         buy.addEventListener('click', (event) => event.preventDefault());
     }
 

@@ -27,11 +27,12 @@
         window.FEATURE_SYNC_RESILIENCE = true;
     }
 
-    // Paid unlock. Levels 1..19 are free; one purchase opens the rest.
-    // Leave PAYWALL_ENABLED false until a working checkout URL is set, or the
-    // levels above 19 become unreachable with nowhere to buy them.
+    // Paid unlock. Levels 1..19 are free; one purchase opens 20..100.
+    // ON since 2026-10-29 (owner decision). UNLOCK_CHECKOUT_URL stays empty until
+    // the Lemon Squeezy store is approved; the gate shows the price and says so
+    // rather than presenting a buy button that goes nowhere.
     if (typeof window.PAYWALL_ENABLED !== 'boolean') {
-        window.PAYWALL_ENABLED = false;
+        window.PAYWALL_ENABLED = true;
     }
     if (typeof window.UNLOCK_CHECKOUT_URL !== 'string') {
         window.UNLOCK_CHECKOUT_URL = '';

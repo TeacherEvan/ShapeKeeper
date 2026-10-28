@@ -36,6 +36,14 @@ describe('DonationPrompt', () => {
         expect(shouldShowDonationPrompt(11)).toBe(false);
     });
 
+    it('never asks for a tip once the paid edition is on', () => {
+        window.PAYWALL_ENABLED = true;
+        expect(shouldShowDonationPrompt(5)).toBe(false);
+        expect(shouldShowDonationPrompt(10, { force: true })).toBe(false);
+        window.PAYWALL_ENABLED = false;
+        expect(shouldShowDonationPrompt(5)).toBe(true);
+    });
+
     it('shows the prompt, plays the chime, and opens the donation URL on Sure', async () => {
         const open = vi.spyOn(window, 'open').mockReturnValue(null);
         const soundManager = {

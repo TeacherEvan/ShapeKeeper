@@ -56,6 +56,10 @@ export function getDonationUrl() {
 }
 
 export function shouldShowDonationPrompt(level, { force = false } = {}) {
+    // A paid edition must never also ask for tips: "donations where no product
+    // exists, or where the price exceeds the product's value" is a prohibited
+    // pattern for every mainstream processor, and it contradicts the checkout.
+    if (typeof window !== 'undefined' && window.PAYWALL_ENABLED === true) return false;
     if (!getDonationUrl()) return false;
     if (force) return true;
 

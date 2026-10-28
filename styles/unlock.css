@@ -59,7 +59,13 @@
 }
 
 .unlock-gate {
+    /* The global reset zeroes margins, so a <dialog> needs explicit centring. */
+    position: fixed;
+    inset: 0;
+    margin: auto;
     width: min(460px, calc(100% - 32px));
+    max-height: calc(100% - 32px);
+    overflow: auto;
     padding: 0;
     border: 1px solid rgba(140, 200, 255, 0.45);
     border-radius: var(--radius-xl, 18px);
