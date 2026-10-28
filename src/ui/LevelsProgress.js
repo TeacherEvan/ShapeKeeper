@@ -12,8 +12,10 @@
  *   - Levels 90..99: 10x10.
  *   - Level 100: 10x15.
  * - Turn timer scales by +2s per completed level, capped at 30s.
- * - Donation edition: all 100 levels are open. Winning still records completion
- *   and awards a sprite, but `unlockedLevel` no longer gates entry.
+ * - Free edition: levels 1..FREE_LEVELS (19) are playable and unlock in order.
+ *   Levels FREE_LEVELS+1..100 require an entitlement (one purchase unlocks all).
+ * - A save with any progress past FREE_LEVELS, or a completed level above it, is
+ *   grandfathered as entitled so existing players never lose access.
  * - Lose a level match: -1 sprite (floored at 1).
  * - Beating Level 100 unlocks the special fireworks sparkle easter egg.
  * - Default visual sprites (120) on game launch are only displayed until the first "Levels" game is played.
@@ -27,7 +29,17 @@ export const BASE_LEVEL_TURN_DURATION_SECONDS = 7;
 export const SECONDS_PER_COMPLETED_LEVEL = 2;
 export const MAX_LEVEL_TURN_DURATION_SECONDS = 30;
 export const MIN_SPRITES_AFTER_TRIGGER = 1;
-export const ALL_LEVELS_UNLOCKED = true;
+// Last level playable without a purchase. One purchase unlocks every level after it.
+export const FREE_LEVELS = 19;
+
+/**
+ * The paywall is opt-in per deployment. While `window.PAYWALL_ENABLED` is not
+ * true the game keeps its free, all-levels-open behaviour, so shipping this code
+ * cannot lock anyone out of a level they can already reach.
+ */
+export function isPaywallOn() {
+    return typeof window !== 'undefined' && window.PAYWALL_ENABLED === true;
+}
 
 export function getTurnDurationForLevel(completedCountOverride) {
     const completedCount = Number.isFinite(completedCountOverride)
@@ -58,6 +70,7 @@ function getInitialState() {
         unlockedLevel: 1,
         completedLevels: [],
         spritesObtained: 0,
+        entitled: false,
     };
 }
 
@@ -81,14 +94,23 @@ export class LevelsProgress {
                 unlockedLevel = 26;
             }
 
+            // Grandfather any save that already reached past the free tier: a player who
+            // played the 2026 donation edition must not be pushed behind a paywall.
+            let entitled = parsed.entitled === true;
+            if (!entitled) {
+                const highestCompleted = completedLevels.length ? Math.max(...completedLevels) : 0;
+                entitled = unlockedLevel > FREE_LEVELS || highestCompleted > FREE_LEVELS;
+            }
+
             return {
                 levelsTriggered: Boolean(parsed.levelsTriggered),
-                unlockedLevel,
+                unlockedLevel: entitled ? unlockedLevel : Math.min(unlockedLevel, FREE_LEVELS),
                 completedLevels,
                 spritesObtained: Math.max(
                     parsed.levelsTriggered ? MIN_SPRITES_AFTER_TRIGGER : 0,
                     Number(parsed.spritesObtained) || 0
                 ),
+                entitled,
             };
         } catch {
             return getInitialState();
@@ -141,8 +163,10 @@ export class LevelsProgress {
             state.completedLevels.sort((a, b) => a - b);
         }
 
-        if (lvlNum >= state.unlockedLevel && state.unlockedLevel < MAX_LEVEL) {
-            state.unlockedLevel = Math.min(MAX_LEVEL, lvlNum + 1);
+        // Progress can only climb to the free ceiling until the player is entitled.
+        const ceiling = state.entitled || !isPaywallOn() ? MAX_LEVEL : FREE_LEVELS;
+        if (lvlNum >= state.unlockedLevel && state.unlockedLevel < ceiling) {
+            state.unlockedLevel = Math.min(ceiling, lvlNum + 1);
         }
 
         const easterEggJustUnlocked =
@@ -173,9 +197,30 @@ export class LevelsProgress {
     static isLevelUnlocked(level) {
         const lvl = Number(level);
         if (!Number.isFinite(lvl) || lvl < 1 || lvl > MAX_LEVEL) return false;
-        if (ALL_LEVELS_UNLOCKED) return true;
+        // Paywall off: free-for-all, identical to the donation edition.
+        if (!isPaywallOn()) return true;
         const state = this.getState();
+        if (state.entitled) return true;
+        if (lvl > FREE_LEVELS) return false;
         return lvl <= state.unlockedLevel;
+    }
+
+    static isEntitled() {
+        return this.getState().entitled;
+    }
+
+    /**
+     * Record a purchase. One entitlement opens every level above the free tier.
+     * The caller is responsible for having verified the licence with the seller.
+     */
+    static setEntitled(value = true) {
+        const state = this.getState();
+        state.entitled = Boolean(value);
+        if (state.entitled) {
+            state.unlockedLevel = Math.max(state.unlockedLevel, FREE_LEVELS + 1);
+        }
+        this.saveState(state);
+        return state;
     }
 
     static isLevelCompleted(level) {

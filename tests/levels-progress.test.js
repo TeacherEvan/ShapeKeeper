@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
     EASTER_EGG_LEVEL,
+    FREE_LEVELS,
     LevelsProgress,
     MAX_LEVEL,
     MAX_LEVEL_TURN_DURATION_SECONDS,
@@ -12,6 +13,9 @@ import {
 describe('LevelsProgress & Grid Progression', () => {
     beforeEach(() => {
         localStorage.clear();
+        // Production default: the paywall ships off, so the game keeps its
+        // existing all-levels-open behaviour until a checkout exists.
+        window.PAYWALL_ENABLED = false;
     });
 
     it('scales grid sizes across all 5 tiers up to level 100', () => {
@@ -79,6 +83,10 @@ describe('LevelsProgress & Grid Progression', () => {
         expect(state.unlockedLevel).toBe(3);
         expect(state.spritesObtained).toBe(3);
 
+        // Progression past level FREE_LEVELS requires the entitlement; this test
+        // covers the 1..100 ladder, so grant it explicitly.
+        LevelsProgress.setEntitled(true);
+
         // Win level 24 -> unlocks 25
         state = LevelsProgress.recordLevelWin(24);
         expect(state.unlockedLevel).toBe(25);
@@ -108,13 +116,59 @@ describe('LevelsProgress & Grid Progression', () => {
         expect(state.easterEggJustUnlocked).toBe(false);
     });
 
-    it('keeps every valid level open in the donation edition', () => {
+    it('keeps every level open while the paywall flag is off', () => {
+        expect(LevelsProgress.isLevelUnlocked(20)).toBe(true);
+        expect(LevelsProgress.isLevelUnlocked(MAX_LEVEL)).toBe(true);
+        const state = LevelsProgress.recordLevelWin(50);
+        expect(state.unlockedLevel).toBe(Math.min(MAX_LEVEL, 51));
+    });
+
+    it('gates every level above FREE_LEVELS behind one entitlement', () => {
+        window.PAYWALL_ENABLED = true;
         expect(LevelsProgress.isLevelUnlocked(1)).toBe(true);
-        expect(LevelsProgress.isLevelUnlocked(25)).toBe(true);
-        expect(LevelsProgress.isLevelUnlocked(26)).toBe(true);
-        expect(LevelsProgress.isLevelUnlocked(100)).toBe(true);
+        expect(LevelsProgress.isLevelUnlocked(2)).toBe(false);
+
+        for (let level = 1; level < FREE_LEVELS; level++) {
+            LevelsProgress.recordLevelWin(level);
+        }
+        expect(LevelsProgress.isLevelUnlocked(FREE_LEVELS)).toBe(true);
+        expect(LevelsProgress.isLevelUnlocked(FREE_LEVELS + 1)).toBe(false);
+        expect(LevelsProgress.isLevelUnlocked(MAX_LEVEL)).toBe(false);
+        expect(LevelsProgress.isEntitled()).toBe(false);
+
+        LevelsProgress.setEntitled(true);
+        expect(LevelsProgress.isEntitled()).toBe(true);
+        expect(LevelsProgress.isLevelUnlocked(FREE_LEVELS + 1)).toBe(true);
+        expect(LevelsProgress.isLevelUnlocked(MAX_LEVEL)).toBe(true);
         expect(LevelsProgress.isLevelUnlocked(0)).toBe(false);
         expect(LevelsProgress.isLevelUnlocked(101)).toBe(false);
+    });
+
+    it('caps progression at the free ceiling until entitled', () => {
+        window.PAYWALL_ENABLED = true;
+        for (let level = 1; level <= FREE_LEVELS; level++) {
+            LevelsProgress.recordLevelWin(level);
+        }
+        const state = LevelsProgress.getState();
+        expect(state.entitled).toBe(false);
+        expect(state.unlockedLevel).toBe(FREE_LEVELS);
+        expect(LevelsProgress.isLevelUnlocked(FREE_LEVELS + 1)).toBe(false);
+    });
+
+    it('grandfathers a save that already reached past the free tier', () => {
+        window.PAYWALL_ENABLED = true;
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+                levelsTriggered: true,
+                unlockedLevel: 40,
+                completedLevels: [1, 20],
+                spritesObtained: 5,
+            })
+        );
+        const state = LevelsProgress.getState();
+        expect(state.entitled).toBe(true);
+        expect(LevelsProgress.isLevelUnlocked(60)).toBe(true);
     });
 
     it('recordLevelLoss decrements sprite count floored at 1', () => {

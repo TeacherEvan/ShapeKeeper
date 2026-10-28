@@ -27,6 +27,22 @@
         window.FEATURE_SYNC_RESILIENCE = true;
     }
 
+    // Paid unlock. Levels 1..19 are free; one purchase opens the rest.
+    // Leave PAYWALL_ENABLED false until a working checkout URL is set, or the
+    // levels above 19 become unreachable with nowhere to buy them.
+    if (typeof window.PAYWALL_ENABLED !== 'boolean') {
+        window.PAYWALL_ENABLED = false;
+    }
+    if (typeof window.UNLOCK_CHECKOUT_URL !== 'string') {
+        window.UNLOCK_CHECKOUT_URL = '';
+    }
+    if (typeof window.UNLOCK_PRICE_LABEL !== 'string') {
+        window.UNLOCK_PRICE_LABEL = 'USD 6.99 — one time, every level';
+    }
+    if (typeof window.LICENSE_VALIDATE_URL !== 'string') {
+        window.LICENSE_VALIDATE_URL = 'https://api.lemonsqueezy.com/v1/licenses/validate';
+    }
+
     // Optional tip jar. Every level is open; this never unlocks anything.
     // Replace with a Ko-fi / PayFast / Buy Me a Coffee URL when one exists.
     // Empty string disables the prompt entirely. The local page is a policy-safe
