@@ -88,7 +88,7 @@ export class DotsAndBoxesGame {
 
         // Initialize all systems
         this.soundManager = new SoundManager();
-        this.particleSystem = new ParticleSystem();
+        this.particleSystem = new ParticleSystem(this);
         this.animationSystem = new AnimationSystem();
         this.gameState = new GameState(this);
         this.gameLogic = new GameLogic(this);
@@ -235,6 +235,10 @@ export class DotsAndBoxesGame {
 
     async revealMultiplier(squareKey) {
         return this.effectSystem.revealMultiplier(squareKey);
+    }
+
+    async tapSquare(squareKey) {
+        return this.effectSystem.tapSquare(squareKey);
     }
 
     /**
@@ -1142,6 +1146,8 @@ export class DotsAndBoxesGame {
         this.replayIndex = payload.replayIndex;
         this.turnDurationMs = payload.config.turnDurationMs ?? 0;
         this.restoreMoveSnapshot(payload.state);
+        this.gameState.setupCanvas();
+        this.accessibleGrid?.rebuild?.();
         this.initLocalTurnTimer();
         this.uiManager.updateReplayControls();
         this.renderAchievementPanel();
@@ -1332,6 +1338,10 @@ export class DotsAndBoxesGame {
             return;
         }
         const clock = this._localTurnClock;
+        if (Number.isFinite(clock.pausedRemainingMs)) {
+            this.turnRemainingMs = clock.pausedRemainingMs;
+            return;
+        }
         if (clock.player !== this.currentPlayer || clock.deadline === 0) {
             clock.player = this.currentPlayer;
             clock.deadline = now + this.turnDurationSeconds * 1000;
@@ -1340,6 +1350,15 @@ export class DotsAndBoxesGame {
         }
         const remaining = clock.deadline - now;
         this.turnRemainingMs = remaining > 0 ? remaining : 0;
+
+        if (this.turnRemainingMs != null && this.turnDurationSeconds > 0) {
+            maybeAnnounceTimeLow(
+                this,
+                this.localTurnCounter,
+                this.turnRemainingMs,
+                this.turnDurationSeconds * 1000
+            );
+        }
 
         // Audio-visual urgency: sound ticking & screen vignette during last 3 seconds
         const isUrgent =

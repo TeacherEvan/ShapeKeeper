@@ -14,6 +14,11 @@ export function initializeMultipliers(system) {
     const { game } = system;
     game.squareMultipliers = {};
 
+    if (game.isMultiplayer) {
+        game.mineCount = 0;
+        return;
+    }
+
     const totalSquares = Math.max(0, (game.gridRows - 1) * (game.gridCols - 1));
     if (totalSquares === 0) {
         game.mineCount = 0;
