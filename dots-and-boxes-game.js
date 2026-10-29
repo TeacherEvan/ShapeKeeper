@@ -76,6 +76,9 @@ export class DotsAndBoxesGame {
 
         this.timedOut = false;
         this.gameOverHandled = false;
+        // One payment per level result. A fresh game starts unrecorded; the
+        // guard only matters if a future refactor ever reuses an instance.
+        this._levelResultRecorded = false;
         this.turnRemainingMs = null;
         this._localTurnClock = null;
 
