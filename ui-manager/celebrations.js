@@ -5,7 +5,7 @@
 import { announceAlert, announceStatus } from '../src/ui/AccessibilityAnnouncer.js';
 import { LevelsProgress, MAX_LEVEL, getTurnDurationForLevel } from '../src/ui/LevelsProgress.js';
 import { showScreen } from '../src/ui/ScreenTransition.js';
-import { prefersReducedMotion } from '../utils.js';
+import { formatHexAlpha, prefersReducedMotion } from '../utils.js';
 
 function getTurnIndicator() {
     return document.getElementById('turnIndicator');
@@ -18,6 +18,9 @@ function spawnDirectionalBurst(game, count, createParticle) {
 }
 
 export function triggerBonusTurnVisual(game, refreshUI) {
+    if (game?.uiManager) {
+        game.uiManager.turnBannerLockUntil = Date.now() + 1500;
+    }
     const turnIndicator = getTurnIndicator();
     if (turnIndicator) {
         turnIndicator.textContent = '🎁 BONUS TURN! 🎁';
@@ -48,6 +51,9 @@ export function triggerBonusTurnVisual(game, refreshUI) {
 }
 
 export function triggerSkipTurnVisual(game, skippedPlayer, refreshUI) {
+    if (game?.uiManager) {
+        game.uiManager.turnBannerLockUntil = Date.now() + 2000;
+    }
     const turnIndicator = getTurnIndicator();
     if (turnIndicator) {
         turnIndicator.textContent = `❄️ Player ${skippedPlayer} is FROZEN! Turn skipped! ❄️`;
@@ -72,6 +78,9 @@ export function triggerSkipTurnVisual(game, skippedPlayer, refreshUI) {
 }
 
 export function triggerDoublePointsVisual(game, refreshUI) {
+    if (game?.uiManager) {
+        game.uiManager.turnBannerLockUntil = Date.now() + 1500;
+    }
     const turnIndicator = getTurnIndicator();
     if (turnIndicator) {
         turnIndicator.textContent = '✨ DOUBLE POINTS! ✨';
@@ -101,6 +110,9 @@ export function triggerDoublePointsVisual(game, refreshUI) {
 }
 
 export function triggerDoubleLineReminder(game, refreshUI) {
+    if (game?.uiManager) {
+        game.uiManager.turnBannerLockUntil = Date.now() + 2000;
+    }
     const turnIndicator = getTurnIndicator();
     if (turnIndicator) {
         turnIndicator.textContent = '⚡ LIGHTNING! Draw another line! ⚡';
@@ -152,8 +164,35 @@ function buildWinnerScoreEntry(player, winner, isTie = false) {
     return entry;
 }
 
+let activeConfettiAnim = null;
+let activeFireworksAnim = null;
+let activeFireworksInterval = null;
+
+export function stopCelebrationAnimations() {
+    if (activeConfettiAnim) {
+        cancelAnimationFrame(activeConfettiAnim);
+        activeConfettiAnim = null;
+    }
+    if (activeFireworksAnim) {
+        cancelAnimationFrame(activeFireworksAnim);
+        activeFireworksAnim = null;
+    }
+    if (activeFireworksInterval) {
+        clearInterval(activeFireworksInterval);
+        activeFireworksInterval = null;
+    }
+    document.getElementById('confettiCanvas')?.remove();
+    document.getElementById('fireworksCanvas')?.remove();
+}
+
 export function launchConfetti(accentColor) {
     if (prefersReducedMotion()) return;
+    if (activeConfettiAnim) {
+        cancelAnimationFrame(activeConfettiAnim);
+        activeConfettiAnim = null;
+    }
+    document.getElementById('confettiCanvas')?.remove();
+
     const canvas = document.createElement('canvas');
     canvas.id = 'confettiCanvas';
     canvas.style.cssText =
@@ -220,18 +259,29 @@ export function launchConfetti(accentColor) {
 
         frame += 1;
         if (activeCount > 0 && frame < 300) {
-            requestAnimationFrame(animate);
+            activeConfettiAnim = requestAnimationFrame(animate);
             return;
         }
 
+        activeConfettiAnim = null;
         canvas.remove();
     };
 
-    animate();
+    activeConfettiAnim = requestAnimationFrame(animate);
 }
 
 export function launchFireworks(accentColor) {
     if (prefersReducedMotion()) return;
+    if (activeFireworksAnim) {
+        cancelAnimationFrame(activeFireworksAnim);
+        activeFireworksAnim = null;
+    }
+    if (activeFireworksInterval) {
+        clearInterval(activeFireworksInterval);
+        activeFireworksInterval = null;
+    }
+    document.getElementById('fireworksCanvas')?.remove();
+
     const canvas = document.createElement('canvas');
     canvas.id = 'fireworksCanvas';
     canvas.style.cssText =
@@ -247,9 +297,10 @@ export function launchFireworks(accentColor) {
     const colors = [accentColor, '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1'];
 
     let launchCount = 0;
-    const launchInterval = setInterval(() => {
+    activeFireworksInterval = setInterval(() => {
         if (launchCount >= 8) {
-            clearInterval(launchInterval);
+            clearInterval(activeFireworksInterval);
+            activeFireworksInterval = null;
             return;
         }
 
@@ -309,11 +360,7 @@ export function launchFireworks(accentColor) {
             if (particle.life > 0) {
                 ctx.beginPath();
                 ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
-                ctx.fillStyle =
-                    particle.color +
-                    Math.floor(particle.life * 255)
-                        .toString(16)
-                        .padStart(2, '0');
+                ctx.fillStyle = formatHexAlpha(particle.color, particle.life);
                 ctx.fill();
                 continue;
             }
@@ -322,17 +369,19 @@ export function launchFireworks(accentColor) {
         }
 
         if (particles.length > 0 || fireworks.some((firework) => !firework.exploded)) {
-            requestAnimationFrame(animate);
+            activeFireworksAnim = requestAnimationFrame(animate);
             return;
         }
 
+        activeFireworksAnim = null;
         setTimeout(() => canvas.remove(), 1000);
     };
 
-    animate();
+    activeFireworksAnim = requestAnimationFrame(animate);
 }
 
 export function hideGameOverSplash() {
+    stopCelebrationAnimations();
     const overlay = document.getElementById('gameOverSplashOverlay');
     if (overlay) {
         overlay.hidden = true;

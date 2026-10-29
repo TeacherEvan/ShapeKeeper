@@ -1,6 +1,6 @@
 import { GAME_CONSTANTS } from '../constants.js';
 import { isMineMultiplier } from '../effect-system/mines.js';
-import { easeOutQuad, lerp } from '../utils.js';
+import { easeOutQuad, formatHexAlpha, lerp } from '../utils.js';
 
 export function drawLines(game) {
     // Precompute lookups once (O(n)) so per-line checks are O(1) instead of O(n^2).
@@ -168,11 +168,7 @@ export function drawSquaresWithAnimations(game) {
             game.ctx.translate(animation.centerX, animation.centerY);
             game.ctx.scale(scale, scale);
             game.ctx.translate(-animation.centerX, -animation.centerY);
-            game.ctx.fillStyle =
-                color +
-                Math.floor(alpha * 0.25 * 255)
-                    .toString(16)
-                    .padStart(2, '0');
+            game.ctx.fillStyle = formatHexAlpha(color, alpha * 0.25);
             game.ctx.fillRect(x, y, game.cellSize, game.cellSize);
             game.ctx.restore();
             game.ctx.shadowBlur = 0;

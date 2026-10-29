@@ -11,6 +11,7 @@ import {
     hideGameOverSplash,
     showGameOverSplash,
     showWinner as renderWinnerScreen,
+    stopCelebrationAnimations,
     triggerBonusTurnVisual as showBonusTurnVisual,
     triggerDoubleLineReminder as showDoubleLineReminder,
     triggerDoublePointsVisual as showDoublePointsVisual,
@@ -132,23 +133,20 @@ export class UIManager {
             turnText = `Player ${this.game.currentPlayer}'s Turn`;
         }
 
-        if (
-            this.lastRenderedState.turnText !== turnText ||
-            turnIndicator.textContent !== turnText
-        ) {
-            turnIndicator.textContent = turnText;
-            this.lastRenderedState.turnText = turnText;
-            announceStatus(turnText);
-        }
+        const bannerLocked = Number(this.turnBannerLockUntil) > Date.now();
+        if (!bannerLocked) {
+            if (this.lastRenderedState.turnText !== turnText) {
+                turnIndicator.textContent = turnText;
+                this.lastRenderedState.turnText = turnText;
+                announceStatus(turnText);
+            }
 
-        const turnColor =
-            this.game.currentPlayer === 1 ? this.game.player1Color : this.game.player2Color;
-        if (
-            this.lastRenderedState.turnColor !== turnColor ||
-            turnIndicator.style.color !== turnColor
-        ) {
-            turnIndicator.style.color = turnColor;
-            this.lastRenderedState.turnColor = turnColor;
+            const turnColor =
+                this.game.currentPlayer === 1 ? this.game.player1Color : this.game.player2Color;
+            if (this.lastRenderedState.turnColor !== turnColor) {
+                turnIndicator.style.color = turnColor;
+                this.lastRenderedState.turnColor = turnColor;
+            }
         }
     }
 
@@ -279,5 +277,12 @@ export class UIManager {
      */
     hideGameOverSplash() {
         hideGameOverSplash();
+    }
+
+    /**
+     * Stop active celebration animations and remove canvases
+     */
+    stopCelebrations() {
+        stopCelebrationAnimations();
     }
 }

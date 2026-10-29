@@ -1,5 +1,5 @@
 import { GAME_CONSTANTS } from '../constants.js';
-import { expDecay, prefersReducedMotion } from '../utils.js';
+import { expDecay, formatHexAlpha, prefersReducedMotion } from '../utils.js';
 
 /**
  * How fast the background hue follows the score difference. Matches the old
@@ -282,11 +282,7 @@ export function drawParticles(game) {
             for (let index = 0; index < particle.trail.length - 1; index += 1) {
                 const trailAlpha = (index / particle.trail.length) * particle.life * 0.4;
                 const trailSize = particle.size * (index / particle.trail.length);
-                game.ctx.fillStyle =
-                    particle.color +
-                    Math.floor(trailAlpha * 255)
-                        .toString(16)
-                        .padStart(2, '0');
+                game.ctx.fillStyle = formatHexAlpha(particle.color, trailAlpha);
                 game.ctx.beginPath();
                 game.ctx.arc(
                     particle.trail[index].x,
@@ -302,11 +298,7 @@ export function drawParticles(game) {
         if (particle.spark) {
             game.ctx.shadowColor = particle.color;
             game.ctx.shadowBlur = 10;
-            game.ctx.fillStyle =
-                particle.color +
-                Math.floor(particle.life * 255)
-                    .toString(16)
-                    .padStart(2, '0');
+            game.ctx.fillStyle = formatHexAlpha(particle.color, particle.life);
             game.ctx.beginPath();
             game.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
             game.ctx.fill();
@@ -315,11 +307,7 @@ export function drawParticles(game) {
         }
 
         if (particle.smoke) {
-            game.ctx.fillStyle =
-                particle.color +
-                Math.floor(particle.life * 128)
-                    .toString(16)
-                    .padStart(2, '0');
+            game.ctx.fillStyle = formatHexAlpha(particle.color, particle.life * 0.5);
             game.ctx.beginPath();
             game.ctx.arc(
                 particle.x,
@@ -332,11 +320,7 @@ export function drawParticles(game) {
             return;
         }
 
-        game.ctx.fillStyle =
-            particle.color +
-            Math.floor(particle.life * 255)
-                .toString(16)
-                .padStart(2, '0');
+        game.ctx.fillStyle = formatHexAlpha(particle.color, particle.life);
         game.ctx.beginPath();
         game.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         game.ctx.fill();
