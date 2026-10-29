@@ -64,6 +64,10 @@ Served with `python3 -m http.server 8123`, localStorage progressed to
   `7×5 · 💣 4` (25); footer chip `2 hidden` before the first hit, `1 hidden`
   after, `aria-label` "2 hidden mines left on this board", no overlap with the
   turn indicator.
+- Phone check (390×844, level 100, 38 px boxes): before the fix the bomb
+  overlapped the owner number; mine boxes now draw a smaller owner number in both
+  passes and a 10 px bomb tucked into the lower-left, confirmed at 6× zoom with
+  no glyph collisions.
 
 ## Files
 

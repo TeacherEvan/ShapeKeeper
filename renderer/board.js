@@ -116,11 +116,20 @@ export function drawSquares(game) {
         const { row, col } = game.gameLogic.parseSquareKey(squareKey);
         const x = game.offsetX + col * game.cellSize;
         const y = game.offsetY + row * game.cellSize;
+        // A fired mine also draws a bomb in the lower-left of the box, so its
+        // owner number shrinks to keep the two glyphs from colliding on the
+        // 38 px cells a level-100 board gets on a phone.
+        const isMine =
+            game.revealedMultipliers?.has(squareKey) &&
+            isMineMultiplier(game.squareMultipliers?.[squareKey]);
 
         game.ctx.fillStyle = player === 1 ? game.player1Color + '40' : game.player2Color + '40';
         game.ctx.fillRect(x, y, game.cellSize, game.cellSize);
         game.ctx.fillStyle = player === 1 ? game.player1Color : game.player2Color;
-        game.ctx.font = `bold ${Math.max(8, Math.min(game.cellSize / 2, 20))}px Arial`;
+        game.ctx.font = `bold ${Math.max(
+            8,
+            Math.min(game.cellSize / (isMine ? 3.4 : 2), 20)
+        )}px Arial`;
         game.ctx.textAlign = 'center';
         game.ctx.textBaseline = 'middle';
         game.ctx.fillText(player.toString(), x + game.cellSize / 2, y + game.cellSize / 2);
@@ -169,40 +178,41 @@ export function drawSquaresWithAnimations(game) {
             game.ctx.shadowBlur = 0;
         }
 
+        const multiplierData = game.squareMultipliers?.[squareKey];
+        const isMine = game.revealedMultipliers?.has(squareKey) && isMineMultiplier(multiplierData);
+
         game.ctx.fillStyle = color;
-        game.ctx.font = `bold ${game.cellSize * 0.4}px Arial`;
+        // Keep the owner number clear of the bomb on small boards.
+        game.ctx.font = `bold ${game.cellSize * (isMine ? 0.28 : 0.4)}px Arial`;
         game.ctx.textAlign = 'center';
         game.ctx.textBaseline = 'middle';
         game.ctx.fillText(player, x + game.cellSize / 2, y + game.cellSize / 2);
 
-        if (game.revealedMultipliers?.has(squareKey)) {
-            const multiplierData = game.squareMultipliers[squareKey];
-            if (isMineMultiplier(multiplierData)) {
-                // A fired mine keeps a permanent 💣 so the box reads as
-                // "this one was mined" instead of "I did something wrong".
-                const bombSize = Math.max(12, Math.min(game.cellSize * 0.3, 26));
-                game.ctx.font = `${bombSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", Arial`;
-                game.ctx.textAlign = 'center';
-                game.ctx.textBaseline = 'middle';
-                game.ctx.fillText('💣', x + game.cellSize * 0.26, y + game.cellSize * 0.72);
+        if (isMine) {
+            // A fired mine keeps a permanent 💣 so the box reads as
+            // "this one was mined" instead of "I did something wrong".
+            const bombSize = Math.max(10, Math.min(game.cellSize * 0.26, 26));
+            game.ctx.font = `${bombSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", Arial`;
+            game.ctx.textAlign = 'center';
+            game.ctx.textBaseline = 'middle';
+            game.ctx.fillText('💣', x + game.cellSize * 0.22, y + game.cellSize * 0.74);
 
-                // Keep the penalty value readable without stealing the box.
-                game.ctx.font = `bold ${Math.max(7, game.cellSize * 0.16)}px Arial`;
-                game.ctx.fillStyle = '#FFD700';
-                game.ctx.textAlign = 'right';
-                game.ctx.textBaseline = 'top';
-                game.ctx.fillText('×0.2', x + game.cellSize - 3, y + 3);
-                game.ctx.textAlign = 'center';
-                game.ctx.textBaseline = 'middle';
-            } else if (multiplierData && multiplierData.type === 'multiplier') {
-                game.ctx.font = `bold ${game.cellSize * 0.25}px Arial`;
-                game.ctx.fillStyle = '#FFD700';
-                game.ctx.fillText(
-                    `x${multiplierData.value}`,
-                    x + game.cellSize / 2,
-                    y + game.cellSize * 0.75
-                );
-            }
+            // Keep the penalty value readable without stealing the box.
+            game.ctx.font = `bold ${Math.max(7, game.cellSize * 0.16)}px Arial`;
+            game.ctx.fillStyle = '#FFD700';
+            game.ctx.textAlign = 'right';
+            game.ctx.textBaseline = 'top';
+            game.ctx.fillText('×0.2', x + game.cellSize - 3, y + 3);
+            game.ctx.textAlign = 'center';
+            game.ctx.textBaseline = 'middle';
+        } else if (multiplierData && multiplierData.type === 'multiplier') {
+            game.ctx.font = `bold ${game.cellSize * 0.25}px Arial`;
+            game.ctx.fillStyle = '#FFD700';
+            game.ctx.fillText(
+                `x${multiplierData.value}`,
+                x + game.cellSize / 2,
+                y + game.cellSize * 0.75
+            );
         }
 
         // Opponent-tap indicator: a small ✋ in the top-right of the square,
