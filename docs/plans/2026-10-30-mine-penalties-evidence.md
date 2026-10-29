@@ -46,7 +46,7 @@ Served with `python3 -m http.server 8123`, localStorage progressed to
   `target production`, `githubCommitSha 9cba478…`, aliased to
   `shape-keeper.vercel.app`.
 - `curl https://shape-keeper.vercel.app/effect-system/mines.js` → 200 and
-  contains `FIRST_MINE_LEVEL` / `MAX_MINE_DENSITY`; `renderer/board.js` contains
+  contains `FIRST_MINE_LEVEL` / `MAX_MINE_COUNT`; `renderer/board.js` contains
   `💣`; `dots-and-boxes-game.js` contains `announceMineBoard`.
 - Live Chromium on production: level 15 start toast reads
   `💣 2 hidden mines on this board — a mined box cuts your score to 20%.`,

@@ -40,7 +40,8 @@ test.describe('Mine penalties', () => {
         await expect(page.locator('[data-level="14"] .level-grid-label')).not.toContainText('💣');
         await expect(page.locator('[data-level="15"] .level-grid-label')).toContainText('💣 2');
         await expect(page.locator('[data-level="25"] .level-grid-label')).toContainText('💣 4');
-        await expect(page.locator('[data-level="100"] .level-grid-label')).toContainText('💣 31');
+        await expect(page.locator('[data-level="100"] .level-grid-label')).toContainText('💣 5');
+        await expect(page.locator('[data-level="35"] .level-grid-label')).toContainText('💣 5');
     });
 
     test('level 14 seeds no mines and hides the chip', async ({ page }) => {

@@ -47,18 +47,18 @@ describe('mine policy — level gate and doubling', () => {
         expect(getMineCountForLevel(24, 40)).toBe(2);
     });
 
-    it('doubles every 10 levels', () => {
+    it('doubles every 10 levels up to the 5-mine cap', () => {
         expect(getMineCountForLevel(25, 400)).toBe(4);
-        expect(getMineCountForLevel(35, 400)).toBe(8);
-        expect(getMineCountForLevel(45, 400)).toBe(16);
-        expect(getMineCountForLevel(55, 400)).toBe(32);
+        expect(getMineCountForLevel(35, 400)).toBe(5);
+        expect(getMineCountForLevel(45, 400)).toBe(5);
+        expect(getMineCountForLevel(55, 400)).toBe(5);
     });
 
-    it('caps density so late boards never become all mines', () => {
-        // Level 55 on a real 8x8 board is 49 boxes; 25% = 12.
-        expect(getMineCountForLevel(55, 49)).toBe(12);
-        // Level 100 on a 10x15 board is 126 boxes; 25% = 31.
-        expect(getMineCountForLevel(100, 126)).toBe(31);
+    it('caps the count at 5 mines from level 35 onward', () => {
+        expect(getMineCountForLevel(35, 35)).toBe(5);
+        expect(getMineCountForLevel(45, 35)).toBe(5);
+        expect(getMineCountForLevel(55, 49)).toBe(5);
+        expect(getMineCountForLevel(100, 126)).toBe(5);
         // Never more mines than boxes, even on a tiny board.
         expect(getMineCountForLevel(100, 2)).toBe(2);
     });
@@ -157,12 +157,12 @@ describe('EffectSystem — seeding', () => {
         }
     });
 
-    it('seeds the level-100 count on a 10x15 board', () => {
+    it('seeds the capped count on a 10x15 board', () => {
         const game = makeGame({ currentLevel: 100, gridRows: 15, gridCols: 10 });
         new EffectSystem(game).initializeMultipliers();
 
-        expect(game.mineCount).toBe(31);
-        expect(Object.keys(game.squareMultipliers)).toHaveLength(31);
+        expect(game.mineCount).toBe(5);
+        expect(Object.keys(game.squareMultipliers)).toHaveLength(5);
     });
 });
 

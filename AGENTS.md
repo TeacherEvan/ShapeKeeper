@@ -104,8 +104,8 @@ unaffected. If a ShapeKeeper sidecar is running, kill it first.
 ### Mine/penalty invariants (2026-10-30)
 
 - A **mine** is a hidden box that cuts the claiming player's score to **20% (−80%)** once.
-- **No mines before level 15.** Level 15 opens with **2** mines; the count **doubles every 10 levels** (2, 4, 8, 16, …).
-- Density is capped at `MAX_MINE_DENSITY = 0.25` of the board (`effect-system/mines.js`) so late boards never become all mines. Tune that one constant, not the doubling math.
+- **No mines before level 15.** Level 15 opens with **2** mines; the count **doubles every 10 levels** (2, 4, 8, …) but is **capped at 5**.
+- The count maxes out at **5 mines per board** (`MAX_MINE_COUNT` in `effect-system/mines.js`): 2 → 4 → 5, fixed at 5 from level 35 to 100. Tune that one constant, not the doubling math.
 - Mines are **invisible until triggered**. Once triggered the box keeps a **💣** marker for the rest of the level (plus a small `×0.2`), the level start shows a `💣 N hidden mines` toast, the footer chip (`#mineCounter`) counts the hidden mines left, and every Levels button shows its board's mine count (`N×M · 💣 K`). The marker and chip are the teaching signal — players must not read a penalty as their own mistake.
 - Mines are a **Levels-mode** feature. Casual local hot-seat and online multiplayer build the game at the default level (1) and therefore seed zero mines; online keeps its server-side multiplier table as the single source of truth.
 - Regression gates: `tests/mine-placement.test.js` (policy, placement, chip count, rendering), `effect-system.test.js` (seeding), `tests/penalty-box-animation.test.js` (the 0.2× path still fires), `tests/e2e/mines.spec.js` (grid badges, level-14 silence, level-15 toast + chip + fired box).

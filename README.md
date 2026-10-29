@@ -23,7 +23,7 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 - **Turn-Based Online Multiplayer** - Chess-like communication with Convex backend
 - **Open Lobby Browser** - JOIN LOBBY lists every open lobby in realtime (host, players, grid, Allowed Time); one click joins — no room codes, no passcodes
 - **Allowed Time Turn Timer** - Configurable per-turn timer (Off, 10s, 15s, 30s, 60s) in both local hot-seat and online play with lava countdown visualization
-- **Mines (Levels 15+)** - A mined box cuts the claiming player's whole score to 20%. Level 15 opens with **2** mines and the count doubles every 10 levels (capped at 25% of the board so late boards stay playable). Mines are invisible until claimed; the box then keeps a 💣 marker, the footer chip counts the ones left, and the Levels grid shows each board's mine count before you enter.
+- **Mines (Levels 15+)** - A mined box cuts the claiming player's whole score to 20%. Level 15 opens with **2** mines and the count doubles every 10 levels, capped at **5** per board. Mines are invisible until claimed; the box then keeps a 💣 marker, the footer chip counts the ones left, and the Levels grid shows each board's mine count before you enter.
 - **Rematch System** - Instant rematch in local hot-seat and consent-based online rematch, preserving grid settings and timer configuration
 - **Opponent Tap Mechanic** (multiplayer) - Tap an opponent's completed box to drop its multiplier from 2x → 0.5x before they reveal. Real-time hand-eye coordination layer on top of turn-based play.
 - **Smart turn logic** - Complete a square, keep your turn!
@@ -390,7 +390,7 @@ Contributions welcome! Feel free to:
 
 ### v4.6.0 (Mine penalties)
 
-- **Mines are a Levels feature now** - Nothing below level 15. Level 15 starts with 2 mines, doubling every 10 levels (2 → 4 → 8 → 16 → …) and capped at 25% of the board (`effect-system/mines.js`). Casual local and online games seed none.
+- **Mines are a Levels feature now** - Nothing below level 15. Level 15 starts with 2 mines, doubling every 10 levels (2 → 4 → 8 → …) but capped at **5 mines per board**. Casual local and online games seed none.
 - **Legible, not mysterious** - Mines stay invisible until they fire; the fired box keeps a permanent 💣 marker plus a small `×0.2`, the footer chip counts the hidden mines left, the level-start toast explains the rule, and every Levels button shows its board's mine count.
 - **Copy follows the mechanic** - The −80% stamp, speech bubble and screen-reader announcement all say "mine" instead of "penalty box", so a hit no longer reads as a mistake the player made.
 

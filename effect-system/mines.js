@@ -6,9 +6,8 @@
  *
  * - No mines before level 15.
  * - Level 15 opens with 2 mines, placed at random.
- * - The count doubles every 10 levels: 2, 4, 8, 16, ...
+ * - The count doubles every 10 levels (2, 4, 8, ...) but never exceeds 5.
  * - Mines are invisible until they fire; the box then keeps a 💣 marker.
- * - Density is capped so late boards never become wall-to-wall mines.
  *
  * Everything here is pure so the policy can be tested without a game instance.
  */
@@ -18,11 +17,11 @@ export const BASE_MINE_COUNT = 2;
 export const MINE_LEVEL_STEP = 10;
 
 /**
- * Ceiling on how much of the board may be mined. The raw doubling rule reaches
- * 100% of the board around level 55; at that point every box is a trap and the
- * board stops being a game. 25% keeps the late levels brutal but playable.
+ * Hard ceiling on mines per board (owner, 2026-10-30: "mines max out at 5").
+ * The doubling rule reaches 8 on level 35, so every level from 35 to 100 plays
+ * with five mines.
  */
-export const MAX_MINE_DENSITY = 0.25;
+export const MAX_MINE_COUNT = 5;
 
 /**
  * How many mines a level gets.
@@ -39,9 +38,8 @@ export function getMineCountForLevel(level, totalSquares) {
 
     const doublings = Math.floor((lvl - FIRST_MINE_LEVEL) / MINE_LEVEL_STEP);
     const raw = BASE_MINE_COUNT * 2 ** doublings;
-    const densityCap = Math.max(BASE_MINE_COUNT, Math.floor(squares * MAX_MINE_DENSITY));
 
-    return Math.min(raw, densityCap, squares);
+    return Math.min(raw, MAX_MINE_COUNT, squares);
 }
 
 /**

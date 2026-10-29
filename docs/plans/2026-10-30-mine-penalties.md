@@ -16,7 +16,7 @@ it fires, so the same confusion repeats every level.
    the teaching signal: "that box was mined", not "you played badly".
 2. **No mines before level 15.** Level 15 starts with **2** mines, placed at
    random, **invisible** until triggered.
-3. **The count doubles every 10 levels:** 2 → 4 → 8 → 16 → …
+3. **The count doubles every 10 levels but maxes out at 5 mines:** 2 → 4 → 5 (owner, later on 2026-10-30: “mines max out at 5”).
 4. Chat collaboration stays quiet: no raw command output pasted into Telegram.
    Evidence lives in files; the owner gets short status lines.
 
@@ -24,23 +24,18 @@ it fires, so the same confusion repeats every level.
 
 Board squares = (cols − 1) × (rows − 1) from `getGridSizeForLevel`.
 
-| Levels | Board | Rule count | Density cap (25%) | Shipped |
+| Levels | Board | Doubling rule | Cap | Shipped |
 |---|---|---|---|---|
 | 1–14 | 3×3 → 5×5 | 0 | — | 0 |
-| 15–24 | 5×5 (16 boxes) | 2 | 4 | 2 |
-| 25–34 | 7×5 (24 boxes) | 4 | 6 | 4 |
-| 35–44 | 6×8 (35 boxes) | 8 | 8 | 8 |
-| 45–54 | 6×8 (35 boxes) | 16 | 8 | 8 |
-| 55–64 | 8×8 (49 boxes) | 32 | 12 | 12 |
-| 65–74 | 8×8 (49 boxes) | 64 | 12 | 12 |
-| 75–84 | 8×8 (49 boxes) | 128 | 12 | 12 |
-| 85–89 | 8×8 (49 boxes) | 256 | 12 | 12 |
-| 90–99 | 10×10 (81 boxes) | 512 | 20 | 20 |
-| 100 | 10×15 (126 boxes) | 1024 | 31 | 31 |
+| 15–24 | 5×5 (16 boxes) | 2 | 5 | 2 |
+| 25–34 | 7×5 (24 boxes) | 4 | 5 | 4 |
+| 35–44 | 6×8 (35 boxes) | 8 | 5 | 5 |
+| 45–100 | up to 10×15 (126 boxes) | 16 → 1024 | 5 | 5 |
 
 **Why the cap:** unbounded doubling makes every box on the board a mine from
-level 55 onward, which stops being a game. `MAX_MINE_DENSITY = 0.25` is the one
-knob to turn if the owner wants it harsher or gentler.
+level 55 onward, which stops being a game; the owner settled it at **5 mines**
+from level 35 up. `MAX_MINE_COUNT = 5` in `effect-system/mines.js` is the one
+knob to turn.
 
 ## Scope
 
@@ -68,7 +63,7 @@ no warning before a mined board loaded.
 
 | File | Change |
 |---|---|
-| `effect-system/mines.js` (new) | `FIRST_MINE_LEVEL`, `BASE_MINE_COUNT`, `MINE_LEVEL_STEP`, `MAX_MINE_DENSITY`, `getMineCountForLevel(level, totalSquares)`, `placeMines(squareKeys, count, rng)`, `isMineMultiplier(data)`, `countHiddenMines(...)` — pure and deterministic under an injected RNG |
+| `effect-system/mines.js` (new) | `FIRST_MINE_LEVEL`, `BASE_MINE_COUNT`, `MINE_LEVEL_STEP`, `MAX_MINE_COUNT`, `getMineCountForLevel(level, totalSquares)`, `placeMines(squareKeys, count, rng)`, `isMineMultiplier(data)`, `countHiddenMines(...)` — pure and deterministic under an injected RNG |
 | `effect-system/init.js` | seed `mineCount` mines, tagged `{ type: 'multiplier', value: 0.2, isMine: true }`; set `game.mineCount`; no mines below level 15 |
 | `dots-and-boxes-game.js` | mine-aware penalty branch; level-start toast; **footer chip that counts hidden mines down to "board clear"**; mine wording in the alert; stamp reads `💣 −80%` |
 | `ui-manager.js` | refresh the chip on every UI pass so undo/redo/replay stay honest |
@@ -80,10 +75,7 @@ no warning before a mined board loaded.
 
 ## Tests
 
-- `tests/mine-placement.test.js` (new): level gate at 14/15, doubling at
-  15/25/35/45, density cap at 100, seeded placement is unique and exact, empty
-  board returns nothing, `isMineMultiplier` accepts the legacy value-only shape,
-  `countHiddenMines` counts correctly.
+- Add `MAX_MINE_COUNT = 5` to the tests' expectations: 2 (15–24), 4 (25–34), 5 (35+); no board ever seeds more than five.
 - `effect-system.test.js` (updated): level 1 seeds nothing; level 15 seeds 2
   tagged mines; non-levels construction stays clean.
 - `tests/e2e/mines.spec.js` (new): the Levels grid badge appears only at 15+;
