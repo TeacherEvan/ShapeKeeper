@@ -18,6 +18,7 @@ describe('Levels mode loss celebration and sprite stake', () => {
             rotate: vi.fn(),
         });
         document.body.innerHTML = `
+            <h1 id="winnerScreenTitle">Game Over!</h1>
             <div id="winnerText"></div>
             <div id="finalScores"></div>
             <button id="playAgain"></button>
@@ -60,15 +61,52 @@ describe('Levels mode loss celebration and sprite stake', () => {
         expect(LevelsProgress.getState().spritesObtained).toBe(2); // Still 2, not 1!
     });
 
-    it('deducts 1 sprite on tie and shows safe message when reaching minimum of 1 sprite', () => {
+    it('treats a draw as a win: +1 sprite, level recorded, next level offered', () => {
         LevelsProgress.triggerLevelsMode();
         // Start with 1 sprite
         expect(LevelsProgress.getState().spritesObtained).toBe(1);
 
         const mockGame = {
             isLevelsMode: true,
-            currentLevel: 1,
-            scores: { 1: 4, 2: 4 }, // Tie in Levels mode = fail
+            currentLevel: 2,
+            scores: { 1: 2, 2: 2 }, // Draw in Levels mode = win
+            player1Color: '#ff0000',
+            player2Color: '#0000ff',
+            soundManager: {
+                playInvalidSound: vi.fn(),
+                playVictorySound: vi.fn(),
+            },
+        };
+
+        showWinner(mockGame);
+
+        const state = LevelsProgress.getState();
+        expect(state.spritesObtained).toBe(2);
+        expect(state.completedLevels).toContain(2);
+        expect(mockGame._nextLevelToPlay).toBe(3);
+        expect(mockGame._levelResultRecorded).toBe(true);
+
+        const winnerText = document.getElementById('winnerText');
+        expect(winnerText.innerHTML).toContain('Draw');
+        expect(winnerText.innerHTML).toContain('+1 Sprite');
+        expect(document.getElementById('winnerScreenTitle').textContent).toBe('Draw!');
+        const ranks = [...document.querySelectorAll('#finalScores .final-score-rank')].map(
+            (el) => el.textContent
+        );
+        expect(ranks).toEqual(['🥇', '🥇']);
+        expect(mockGame.soundManager.playVictorySound).toHaveBeenCalled();
+        expect(mockGame.soundManager.playInvalidSound).not.toHaveBeenCalled();
+    });
+
+    it('still takes a sprite when the AI out-scores the player', () => {
+        LevelsProgress.triggerLevelsMode();
+        LevelsProgress.recordLevelWin(1);
+        expect(LevelsProgress.getState().spritesObtained).toBe(2);
+
+        const mockGame = {
+            isLevelsMode: true,
+            currentLevel: 2,
+            scores: { 1: 1, 2: 3 }, // AI wins
             player1Color: '#ff0000',
             player2Color: '#0000ff',
             soundManager: {
@@ -80,8 +118,9 @@ describe('Levels mode loss celebration and sprite stake', () => {
         showWinner(mockGame);
 
         expect(LevelsProgress.getState().spritesObtained).toBe(1);
-        const winnerText = document.getElementById('winnerText');
-        expect(winnerText.innerHTML).toContain('Your last sprite is safe');
+        expect(document.getElementById('winnerText').innerHTML).toContain('Level 2 Failed');
+        expect(mockGame._nextLevelToPlay).toBe(2);
+        expect(mockGame.soundManager.playInvalidSound).toHaveBeenCalled();
     });
 
     it('shows level 100 completion secret announcement when beating level 100', () => {

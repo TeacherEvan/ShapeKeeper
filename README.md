@@ -381,6 +381,11 @@ Contributions welcome! Feel free to:
 
 ## 📝 Version History
 
+### v4.7.0 (Draws count as wins)
+
+- **A draw clears the level** - If the board ends level (e.g. 2–2), Levels mode now records the level, pays the +1 sprite and offers the next level instead of failing you. The AI has to actually out-score you to take a sprite.
+- **Copy matches the rule** - The win screen says `🤝 Level N Complete — Draw!` with a "draw counts as a win" note; only a real AI win shows `Level N Failed`.
+
 ### v4.6.0 (Mine penalties)
 
 - **Mines are a Levels feature now** - Nothing below level 15. Level 15 starts with 2 mines, doubling every 10 levels (2 → 4 → 8 → 16 → …) and capped at 25% of the board (`effect-system/mines.js`). Casual local and online games seed none.

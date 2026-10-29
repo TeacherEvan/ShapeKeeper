@@ -125,13 +125,15 @@ export function triggerDoubleLineReminder(game, refreshUI) {
     }));
 }
 
-function buildWinnerScoreEntry(player, rankIndex, winner) {
+function buildWinnerScoreEntry(player, winner, isTie = false) {
     const entry = document.createElement('div');
-    entry.className = `final-score-entry ${player.num === winner ? 'winner' : ''}`.trim();
+    const isWinner = isTie || player.num === winner;
+    entry.className = `final-score-entry ${isWinner ? 'winner' : ''}`.trim();
 
     const rank = document.createElement('span');
     rank.className = 'final-score-rank';
-    rank.textContent = rankIndex === 0 ? '🥇' : '🥈';
+    // A draw gives both players the gold: nobody lost, so nobody is second.
+    rank.textContent = isWinner ? '🥇' : '🥈';
 
     const color = document.createElement('div');
     color.className = 'final-score-color';
@@ -405,10 +407,25 @@ export function showWinner(game) {
     }
 
     const winner = game.scores[1] > game.scores[2] ? 1 : game.scores[2] > game.scores[1] ? 2 : 0;
+    const isTie = winner === 0;
     const winnerColor =
         winner === 1 ? game.player1Color : winner === 2 ? game.player2Color : '#FFD700';
 
-    const isLevelsDefeat = Boolean(game.isLevelsMode && winner !== 1);
+    // A draw counts as a win in Levels mode (owner decision 2026-10-30): the AI
+    // has to actually out-score the player to take a sprite. A tie clears the
+    // level, pays the sprite and offers the next one.
+    const isLevelsDefeat = Boolean(game.isLevelsMode && winner === 2);
+
+    // The heading used to read "Game Over!" even on a cleared level. Match it
+    // to the result so a win or draw never looks like a loss.
+    const titleEl = document.getElementById('winnerScreenTitle');
+    if (titleEl) {
+        if (game.isLevelsMode && !isLevelsDefeat) {
+            titleEl.textContent = isTie ? 'Draw!' : 'Level Complete!';
+        } else {
+            titleEl.textContent = 'Game Over!';
+        }
+    }
 
     if (isLevelsDefeat) {
         game.soundManager?.playInvalidSound?.();
@@ -427,7 +444,7 @@ export function showWinner(game) {
 
     if (winnerText) {
         if (game.isLevelsMode) {
-            if (winner === 1) {
+            if (winner === 1 || isTie) {
                 const state = !game._levelResultRecorded
                     ? LevelsProgress.recordLevelWin(game.currentLevel)
                     : LevelsProgress.getState();
@@ -437,7 +454,13 @@ export function showWinner(game) {
                 }
                 const updatedTurnDuration = getTurnDurationForLevel(state.completedLevels.length);
                 const durationSuffix = updatedTurnDuration >= 30 ? ' (max 30s)' : ' (+2s/lvl)';
-                let winHtml = `🏆 Level ${game.currentLevel} Complete! 🏆<br><span style="font-size: 0.6em; color: #00f0ff;">✨ +1 Sprite (Total: ${state.spritesObtained}) · ⏱️ Turn Timer: ${updatedTurnDuration}s${durationSuffix} ✨</span>`;
+                const headline = isTie
+                    ? `🤝 Level ${game.currentLevel} Complete — Draw! 🤝`
+                    : `🏆 Level ${game.currentLevel} Complete! 🏆`;
+                const drawNote = isTie
+                    ? '<br><span style="font-size: 0.55em; color: #ffd700;">🤝 A draw counts as a win — level cleared.</span>'
+                    : '';
+                let winHtml = `${headline}${drawNote}<br><span style="font-size: 0.6em; color: #00f0ff;">✨ +1 Sprite (Total: ${state.spritesObtained}) · ⏱️ Turn Timer: ${updatedTurnDuration}s${durationSuffix} ✨</span>`;
                 if (state.easterEggJustUnlocked) {
                     winHtml += `<br><span style="font-size: 0.55em; color: #ffd700;">🎆 You beat level 100! Secret unlocked — check the home screen! 🎆</span>`;
                 }
@@ -495,7 +518,7 @@ export function showWinner(game) {
 
     if (finalScores) {
         finalScores.replaceChildren(
-            ...players.map((player, index) => buildWinnerScoreEntry(player, index, winner))
+            ...players.map((player) => buildWinnerScoreEntry(player, winner, isTie))
         );
     }
 
