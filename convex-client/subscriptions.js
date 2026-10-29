@@ -145,7 +145,10 @@
                               }
                             : null,
                         lines: { length: (newState.lines || []).length },
-                        squares: { length: (newState.squares || []).length },
+                        squares: (newState.squares || []).map((sq) => ({
+                            taps: sq?.taps || 0,
+                            multiplierRevealed: Boolean(sq?.multiplierRevealed),
+                        })),
                         players: (newState.players || []).map((player) => ({
                             score: player?.score || 0,
                         })),
@@ -161,7 +164,7 @@
 
         shared.state.gameStateSubscription = client.onUpdate(
             shared.api.games.getGameState,
-            { roomId: shared.state.currentRoomId },
+            { roomId: shared.state.currentRoomId, sessionId: shared.SESSION_ID },
             optimizedCallback
         );
 

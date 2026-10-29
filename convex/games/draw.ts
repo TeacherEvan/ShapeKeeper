@@ -157,6 +157,23 @@ export async function drawLineHandler(ctx: any, args: any) {
         return { error: 'Game not in progress' };
     }
 
+    const players = await ctx.db
+        .query('players')
+        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
+        .collect();
+
+    const callingPlayer = players.find((p: any) => p.sessionId === args.sessionId);
+    if (!callingPlayer) {
+        log('[drawLine] Error: Caller not in room', {
+            roomId: args.roomId,
+            sessionId: args.sessionId,
+        });
+        return { error: 'Not a player in this room' };
+    }
+
+    const sortedPlayers = players.sort((a: any, b: any) => a.playerIndex - b.playerIndex);
+    const currentPlayer = sortedPlayers[room.currentPlayerIndex];
+
     // Authoritative server-side turn deadline. The browser renders the
     // countdown, but a hostile client could bypass that and call this
     // mutation directly; the server must enforce the window itself.
@@ -169,14 +186,7 @@ export async function drawLineHandler(ctx: any, args: any) {
     if (isTurnExpired(room)) {
         const turnDurationMs = resolveTurnDurationMs(room);
         if (turnDurationMs > 0) {
-            const skipPlayers = await ctx.db
-                .query('players')
-                .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
-                .collect();
-            const sortedSkipPlayers = skipPlayers.sort(
-                (a: any, b: any) => a.playerIndex - b.playerIndex
-            );
-            const timedOutPlayer = sortedSkipPlayers[room.currentPlayerIndex];
+            const timedOutPlayer = sortedPlayers[room.currentPlayerIndex];
             if (timedOutPlayer) {
                 const drawnLines = await ctx.db
                     .query('lines')
@@ -192,7 +202,7 @@ export async function drawLineHandler(ctx: any, args: any) {
                         ctx,
                         room,
                         timedOutPlayer,
-                        sortedSkipPlayers,
+                        sortedPlayers,
                         autoLine
                     );
                     warn('[drawLine] Turn expired — random auto-line drawn', {
@@ -224,14 +234,6 @@ export async function drawLineHandler(ctx: any, args: any) {
         });
         return { error: 'Invalid line' };
     }
-
-    const players = await ctx.db
-        .query('players')
-        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
-        .collect();
-
-    const sortedPlayers = players.sort((a: any, b: any) => a.playerIndex - b.playerIndex);
-    const currentPlayer = sortedPlayers[room.currentPlayerIndex];
 
     log('[drawLine] Turn validation', {
         currentPlayerIndex: room.currentPlayerIndex,
