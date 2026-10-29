@@ -10,6 +10,7 @@
 
 import type * as auth_token from "../auth/token.js";
 import type * as crons from "../crons.js";
+import type * as entitlements from "../entitlements.js";
 import type * as games from "../games.js";
 import type * as games_draw from "../games/draw.js";
 import type * as games_lineValidation from "../games/lineValidation.js";
@@ -22,6 +23,7 @@ import type * as games_turnDeadline from "../games/turnDeadline.js";
 import type * as games_turnTimer from "../games/turnTimer.js";
 import type * as games_turn_deadline from "../games/turn_deadline.js";
 import type * as games_turn_duration from "../games/turn_duration.js";
+import type * as http from "../http.js";
 import type * as log from "../log.js";
 import type * as mutations_createRoom from "../mutations/createRoom.js";
 import type * as mutations_joinRoom from "../mutations/joinRoom.js";
@@ -33,6 +35,7 @@ import type * as mutations_toggleReady from "../mutations/toggleReady.js";
 import type * as mutations_updateGridSize from "../mutations/updateGridSize.js";
 import type * as mutations_updatePlayer from "../mutations/updatePlayer.js";
 import type * as mutations_updateTurnDuration from "../mutations/updateTurnDuration.js";
+import type * as purchases from "../purchases.js";
 import type * as queries_roomQueries from "../queries/roomQueries.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as rate_limit from "../rate_limit.js";
@@ -40,6 +43,8 @@ import type * as rooms from "../rooms.js";
 import type * as rooms_settings from "../rooms/settings.js";
 import type * as rooms_shared from "../rooms/shared.js";
 import type * as rooms_sharedUtils from "../rooms/sharedUtils.js";
+import type * as utils_crypto from "../utils/crypto.js";
+import type * as utils_relay from "../utils/relay.js";
 import type * as utils_roomUtils from "../utils/roomUtils.js";
 
 import type {
@@ -51,6 +56,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   "auth/token": typeof auth_token;
   crons: typeof crons;
+  entitlements: typeof entitlements;
   games: typeof games;
   "games/draw": typeof games_draw;
   "games/lineValidation": typeof games_lineValidation;
@@ -63,6 +69,7 @@ declare const fullApi: ApiFromModules<{
   "games/turnTimer": typeof games_turnTimer;
   "games/turn_deadline": typeof games_turn_deadline;
   "games/turn_duration": typeof games_turn_duration;
+  http: typeof http;
   log: typeof log;
   "mutations/createRoom": typeof mutations_createRoom;
   "mutations/joinRoom": typeof mutations_joinRoom;
@@ -74,6 +81,7 @@ declare const fullApi: ApiFromModules<{
   "mutations/updateGridSize": typeof mutations_updateGridSize;
   "mutations/updatePlayer": typeof mutations_updatePlayer;
   "mutations/updateTurnDuration": typeof mutations_updateTurnDuration;
+  purchases: typeof purchases;
   "queries/roomQueries": typeof queries_roomQueries;
   rateLimit: typeof rateLimit;
   rate_limit: typeof rate_limit;
@@ -81,6 +89,8 @@ declare const fullApi: ApiFromModules<{
   "rooms/settings": typeof rooms_settings;
   "rooms/shared": typeof rooms_shared;
   "rooms/sharedUtils": typeof rooms_sharedUtils;
+  "utils/crypto": typeof utils_crypto;
+  "utils/relay": typeof utils_relay;
   "utils/roomUtils": typeof utils_roomUtils;
 }>;
 

@@ -23,20 +23,38 @@ checkout in a new tab (`noopener,noreferrer`). The app never handles card data.
 
 ## The entitlement, honestly described
 
-- A licence key is validated against the seller's own licence endpoint
-  (`POST /v1/licenses/validate`, Lemon Squeezy's documented Licence API). A key
-  the seller reports invalid never sets the entitlement.
-- The **raw key is kept in localStorage** (`shapekeeper_license.v1`) so the unlock
-  can be re-validated after a refund. This is a deliberate trade-off, documented in
-  `SECURITY.md`: the gate is **honest-buyer enforcement, not DRM**, and a local
-  game can always be edited by its owner. It is stated here because a reader of
-  the repository deserves to know it before selling anything.
-- **Consequence to be honest about:** until a server-side entitlement exists, a
-  refund only takes effect when the player next re-validates. The server-truth
-  path (`convex/entitlements.ts` — hash + instance id, never the key) is the
-  planned increment; it is not live.
-- `convex/entitlements.ts` is present but **nothing writes to it yet**: the
-  Lemon Squeezy webhook relay that records a paid order does not exist.
+**Server truth is the design.** The flow, end to end:
+
+1. The buyer pays on Lemon Squeezy and receives a licence key.
+2. The player enters the key **once**. It travels to our own Convex backend
+   (`entitlements.redeemEntitlement`), never to Lemon Squeezy from the browser.
+3. The backend exchanges it with Lemon Squeezy's Licence API and keeps the
+   **SHA-256 hash** of the key plus the **instance id** Lemon Squeezy issues
+   for that device. The raw key is never written to our database and never
+   returns to the browser.
+4. The browser keeps **only the instance id** (`shapekeeper_entitlement.v1`).
+   That is what `entitlements.checkEntitlement` is asked about.
+5. A paid order arrives at `POST /lemonsqueezy/webhook`. The signature is
+   verified against the raw body (HMAC-SHA256, constant-time), the order is
+   recorded, and the purchase is linked to the licence hash.
+6. A refund (`order_refunded`) revokes every entitlement carrying that hash.
+   The refund bites **without the player doing anything**.
+
+**Known limits, stated plainly:**
+
+- **The fallback path exists.** If our backend cannot be reached, the browser
+  asks Lemon Squeezy directly and grants a **session-only** entitlement — the
+  key is used and forgotten, never stored. It does not survive a reload.
+- **The interim build's raw key is erased.** A `shapekeeper_license.v1` record
+  left by the earlier local-only gate is exchanged once and then deleted.
+- **Nothing is enforced on the client.** `isLevelUnlocked` is decoration; the
+  bundle is readable. This is honest-buyer enforcement, not DRM — and a local
+  game can always be edited by its owner.
+- **Convex must be able to run.** The relay and the entitlement checks live on
+  a Convex deployment. On 2026-10-29 that deployment was **disabled by
+  exceeding Convex's free-plan limits**, which took the payment path down with
+  it. A paid plan (or a schedule that fits the allowance) is a precondition,
+  not an optimisation.
 
 ## Rules (each one binds the code)
 

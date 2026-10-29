@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
-import { internalMutation, query } from './_generated/server';
+import { internalMutation, mutation, query } from './_generated/server';
+import { sha256Hex } from './utils/crypto';
 
 /**
  * Purchased entitlements (Lemon Squeezy).
@@ -97,6 +98,128 @@ export const checkEntitlement = query({
         return { active: true, productId: row.productId };
     },
 });
+
+/**
+ * Server truth: the key is exchanged for an instance id HERE, on the server,
+ * and the browser keeps only that instance id. The raw key never comes back
+ * to the client, and it is never written to the database — only its SHA-256
+ * hash is.
+ *
+ * The product allow-list is the guard against "any product on this account
+ * grants the game": Lemon Squeezy may hold other products later.
+ */
+export const redeemEntitlement = mutation({
+    args: {
+        licenseKey: v.string(),
+        instanceName: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const licenseKey = args.licenseKey.trim();
+        if (licenseKey.length < 8) {
+            return { active: false as const, reason: 'malformed_key' as const };
+        }
+
+        const allowedProducts = (process.env.LEMONSQUEEZY_PRODUCT_IDS ?? '')
+            .split(',')
+            .map((id) => id.trim())
+            .filter(Boolean);
+        if (allowedProducts.length === 0) {
+            // Fail closed: an unconfigured server grants nothing.
+            return { active: false as const, reason: 'products_not_configured' as const };
+        }
+
+        const instanceName = (args.instanceName.trim() || 'unknown-device').slice(0, 120);
+
+        let response: Response;
+        try {
+            response = await fetch('https://api.lemonsqueezy.com/v1/licenses/activate', {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    license_key: licenseKey,
+                    instance_name: instanceName,
+                }).toString(),
+            });
+        } catch {
+            return { active: false as const, reason: 'license_service_unreachable' as const };
+        }
+
+        let payload: any = null;
+        try {
+            payload = await response.json();
+        } catch {
+            payload = null;
+        }
+
+        if (!payload || payload.activated !== true) {
+            return { active: false as const, reason: classifyActivationFailure(payload) };
+        }
+
+        const instanceId = String(payload?.instance?.id ?? '');
+        const productId = String(payload?.license_key?.meta?.product_id ?? '');
+        if (!instanceId) {
+            return { active: false as const, reason: 'activation_failed' as const };
+        }
+        if (!allowedProducts.includes(productId)) {
+            // A valid key for a DIFFERENT product is still not this game.
+            return { active: false as const, reason: 'product_not_allowed' as const };
+        }
+
+        const licenseKeyHash = sha256Hex(licenseKey);
+        const purchase = await ctx.db
+            .query('purchases')
+            .withIndex('by_license_hash', (q) => q.eq('licenseKeyHash', licenseKeyHash))
+            .first();
+
+        const now = Date.now();
+        const existing = await ctx.db
+            .query('entitlements')
+            .withIndex('by_instance', (q) => q.eq('instanceId', instanceId))
+            .first();
+
+        if (existing) {
+            await ctx.db.patch(existing._id, {
+                status: 'active',
+                revokedAt: undefined,
+                lastValidatedAt: now,
+            });
+        } else {
+            await ctx.db.insert('entitlements', {
+                licenseKeyHash,
+                instanceId,
+                productId,
+                storeId: String(payload?.license_key?.meta?.store_id ?? ''),
+                orderId: purchase?.orderId,
+                status: 'active',
+                seats: Number(payload?.license_key?.activation_limit ?? 1) || 1,
+                createdAt: now,
+                lastValidatedAt: now,
+            });
+        }
+
+        // The client receives the instance id and the product — never the key,
+        // never the hash, never an email or an order id.
+        return { active: true as const, instanceId, productId };
+    },
+});
+
+/**
+ * Turn Lemon Squeezy's error text into a stable reason code. The raw text is
+ * not returned to the browser: it can echo order detail, and a stable code is
+ * what the client can act on.
+ */
+function classifyActivationFailure(payload: any): 'key_not_found' | 'activation_limit_reached' | 'key_expired' | 'key_disabled' | 'activation_failed' {
+    const text = String(payload?.error ?? '').toLowerCase();
+    if (!text) return 'activation_failed';
+    if (text.includes('activation limit') || text.includes('activation_limit')) return 'activation_limit_reached';
+    if (text.includes('expired')) return 'key_expired';
+    if (text.includes('disabled')) return 'key_disabled';
+    if (text.includes('not valid') || text.includes('not found') || text.includes('does not exist')) return 'key_not_found';
+    return 'activation_failed';
+}
 
 /**
  * Stamp a re-validation. The cron sweep calls this after asking Lemon Squeezy

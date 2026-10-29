@@ -123,4 +123,23 @@ export default defineSchema({
         .index('by_license_hash', ['licenseKeyHash'])
         .index('by_instance', ['instanceId'])
         .index('by_status', ['status']),
+
+    // Paid orders, recorded by the Lemon Squeezy webhook. The licence key is
+    // NEVER stored here either — only its SHA-256 hash — so this table is not
+    // a key-disclosure oracle if it is ever read. `orderId` is the join key
+    // back to Lemon Squeezy, so a refund can revoke without the key.
+    purchases: defineTable({
+        orderId: v.string(),
+        licenseKeyHash: v.string(),
+        productId: v.string(),
+        variantId: v.optional(v.string()),
+        storeId: v.string(),
+        status: v.union(v.literal('paid'), v.literal('refunded')),
+        testMode: v.optional(v.boolean()),
+        createdAt: v.number(),
+        refundedAt: v.optional(v.number()),
+    })
+        .index('by_license_hash', ['licenseKeyHash'])
+        .index('by_order', ['orderId'])
+        .index('by_status', ['status']),
 });

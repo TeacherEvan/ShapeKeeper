@@ -14,6 +14,7 @@ import { initializeTheme } from './src/ui/ThemeManager.js';
 import { WelcomeAnimation } from './src/ui/WelcomeAnimation.js';
 import { HomePager } from './src/ui/home/HomePager.js';
 import { AmbientSoundscape } from './src/audio/AmbientSoundscape.js';
+import { initEntitlement } from './src/ui/UnlockGate.js';
 
 // Initialize core instances
 let welcomeAnimation = null;
@@ -42,6 +43,12 @@ if (document.readyState === 'loading') {
 function initializeApp() {
     // Initialize theme
     initializeTheme();
+
+    // Check the paid entitlement and redeem a key that arrived in the URL.
+    // Fire-and-forget: the menu must not wait on the network.
+    Promise.resolve(initEntitlement()).catch((error) => {
+        console.warn('[Welcome] Entitlement init failed:', error);
+    });
 
     // Initialize ambient soundscape
     soundscape = new AmbientSoundscape();
