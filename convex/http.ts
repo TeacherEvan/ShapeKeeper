@@ -74,8 +74,9 @@ http.route({
 
 /**
  * A cheap liveness probe for the desk that has to confirm the endpoint is
- * alive before pointing a webhook at it. It reports whether the secret is
- * configured; it never reports the secret.
+ * alive before pointing a webhook at it. It reports WHETHER each secret is
+ * configured and never the value — nor the store id or product ids, which are
+ * no business of an anonymous caller.
  */
 http.route({
     path: '/lemonsqueezy/health',
@@ -86,8 +87,7 @@ http.route({
                 ok: true,
                 secretConfigured: Boolean(process.env.LEMONSQUEEZY_WEBHOOK_SECRET),
                 apiKeyConfigured: Boolean(process.env.LEMONSQUEEZY_API_KEY),
-                storeId: process.env.LEMONSQUEEZY_STORE_ID ?? null,
-                products: process.env.LEMONSQUEEZY_PRODUCT_IDS ?? null,
+                productsConfigured: Boolean(process.env.LEMONSQUEEZY_PRODUCT_IDS),
             }),
             { status: 200 },
         );

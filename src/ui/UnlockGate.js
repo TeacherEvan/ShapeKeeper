@@ -196,10 +196,12 @@ const REASON_MESSAGES = {
     activation_limit_reached: 'That key is already active on the maximum number of devices.',
     key_expired: 'That key has expired.',
     key_disabled: 'That key was disabled.',
+    key_refunded: 'That key belongs to a refunded order, so it cannot unlock the game.',
     product_not_allowed: 'That key is for a different product.',
     products_not_configured:
         'The unlock service is not fully configured yet. Please contact support.',
     license_service_unreachable: 'Could not reach the licence service. Check your connection.',
+    rate_limited: 'Too many attempts. Wait a few minutes and try again.',
     activation_failed: 'That key could not be verified. Check your receipt, or contact support.',
 };
 

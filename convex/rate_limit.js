@@ -34,6 +34,15 @@ const DEFAULT_WINDOWS = {
     toggleReady: { max: 10, windowMs: 5000 },
     updatePlayer: { max: 10, windowMs: 5000 },
     updateTurnDuration: { max: 6, windowMs: 5000 },
+    // Licence redemption spends an OUTBOUND Lemon Squeezy request and writes a
+    // row, so it needs a ceiling the other mutations do not. Per device: a
+    // player types a key once, maybe twice after a typo.
+    redeemEntitlement: { max: 5, windowMs: 600000 },
+    // The device bucket is keyed on a CLIENT-SUPPLIED name, so a script can
+    // rotate it. This second, global bucket is what actually caps the outbound
+    // request rate — the failure mode that already disabled this deployment
+    // once (the 5-second cron sweep) was quota, not cleverness.
+    redeemEntitlementGlobal: { max: 30, windowMs: 60000 },
 };
 
 export async function checkRateLimit(ctx, action, sessionId, opts = {}) {

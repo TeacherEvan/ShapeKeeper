@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { internalMutation, mutation, query } from './_generated/server';
+import { checkRateLimit } from './rateLimit';
 import { sha256Hex } from './utils/crypto';
 
 /**
@@ -130,6 +131,19 @@ export const redeemEntitlement = mutation({
 
         const instanceName = (args.instanceName.trim() || 'unknown-device').slice(0, 120);
 
+        // Every call below this line spends an outbound Lemon Squeezy request.
+        // Two buckets: one per device (honest retries), one global (a script
+        // rotating device names cannot outrun it). Best-effort, fail-open, like
+        // the rest of the game's limiter.
+        const deviceBudget = await checkRateLimit(ctx, 'redeemEntitlement', instanceName);
+        if (!deviceBudget.allowed) {
+            return { active: false as const, reason: 'rate_limited' as const };
+        }
+        const globalBudget = await checkRateLimit(ctx, 'redeemEntitlementGlobal', 'all');
+        if (!globalBudget.allowed) {
+            return { active: false as const, reason: 'rate_limited' as const };
+        }
+
         let response: Response;
         try {
             response = await fetch('https://api.lemonsqueezy.com/v1/licenses/activate', {
@@ -173,6 +187,13 @@ export const redeemEntitlement = mutation({
             .query('purchases')
             .withIndex('by_license_hash', (q) => q.eq('licenseKeyHash', licenseKeyHash))
             .first();
+
+        // A refund is authoritative even if Lemon Squeezy still lets the key
+        // activate: our own record says the money came back, so the key must not
+        // buy the game a second time.
+        if (purchase && purchase.status === 'refunded') {
+            return { active: false as const, reason: 'key_refunded' as const };
+        }
 
         const now = Date.now();
         const existing = await ctx.db
