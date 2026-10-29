@@ -88,6 +88,5 @@ Verdict: **PASS-WITH-NOTES** (`VERDICT: PASS-WITH-NOTES`), reviewed at `632cf3e`
 | Replaying a completed level pays +1 sprite each time | INFO | Pre-existing economy quirk; flagged for the owner, not changed. |
 | `_levelResultRecorded` is only ever set true | INFO | Safe today because every level start builds a new game instance. Noted for a future refactor. |
 
-QA's own limitation, recorded verbatim: the hover-lift positive control is untestable in
-that headless engine (`(hover: hover)` is false), so the reduced-motion guard is verified
-but its necessity was not measurable there.
+| N1 — the committed spec covered only the not-entitled branch | LOW (coverage) | **Addressed**: the spec now also covers an entitled player receiving `Next Level (20)` and a paywall-off build where every level is enterable. |
+| N2 — a bare `npx playwright test` needs `PLAYWRIGHT_CHROMIUM_EXECUTABLE` + video off on the QA box | LOW (harness/env) | Environment note, not a repo defect; `playwright.config.js` already honours the env var. |
