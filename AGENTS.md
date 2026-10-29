@@ -110,6 +110,16 @@ unaffected. If a ShapeKeeper sidecar is running, kill it first.
 - Mines are a **Levels-mode** feature. Casual local hot-seat and online multiplayer build the game at the default level (1) and therefore seed zero mines; online keeps its server-side multiplier table as the single source of truth.
 - Regression gates: `tests/mine-placement.test.js` (policy, placement, rendering), `effect-system.test.js` (seeding), `tests/penalty-box-animation.test.js` (the 0.2× path still fires).
 
+### Agent ↔ owner collaboration protocol
+
+The product owner reads status on a phone. Keep the channel quiet and the evidence in the repo.
+
+- **One short status line per milestone.** No raw command output, diffs, stack traces, or file dumps pasted into chat — those go to `docs/plans/YYYY-MM-DD-<work>-evidence.md`.
+- **Cite a handle, not a feeling:** test name, commit SHA, file path, or deploy URL. "Done" without a handle is not done.
+- **Batch questions.** Ask everything needed in one message; do not drip-feed clarification requests.
+- **Ask before anything that leaves the machine** (push, deploy, email, public post). Local edits, tests, and docs do not need a check-in.
+- **Never re-paste the plan.** Write it to `docs/plans/`, then report the path and the 3-line summary.
+
 ### Background sprite invariants
 
 - The floating background sprites live in `src/ui/WelcomeAnimation.js`; their
