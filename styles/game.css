@@ -333,6 +333,7 @@
     font-family: var(--font-sans);
     font-size: 0.8rem;
     font-weight: 600;
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
 

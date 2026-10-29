@@ -18,7 +18,7 @@ import {
 import { showToast } from './src/ui/Toast.js';
 import { announceAlert, announceStatus } from './src/ui/AccessibilityAnnouncer.js';
 import { notifyAchievementUnlock, renderAchievementPanel } from './src/ui/AchievementPanel.js';
-import { getDotRenderRadius, prefersReducedMotion } from './utils.js';
+import { getDotRenderRadius, expDecay, prefersReducedMotion } from './utils.js';
 import { TutorialSystem } from './tutorial-system.js';
 import { findOptimalMinimaxMove } from './src/ai/MinimaxEngine.js';
 import { DisposableRegistry } from './src/lifecycle/DisposableRegistry.js';
@@ -1151,6 +1151,13 @@ export class DotsAndBoxesGame {
     animate() {
         const now = Date.now();
 
+        // Frame-rate independent decay. These constants reproduce the old
+        // per-frame multipliers at 60 fps (shake 0.9, pulse 0.92) but behave
+        // identically on 120 Hz displays.
+        const lastAnimateAt = Number(this._lastAnimateAt) || now;
+        const dtSeconds = Math.min(Math.max((now - lastAnimateAt) / 1000, 0), 0.1);
+        this._lastAnimateAt = now;
+
         // Update particles
         this.particleSystem.updateParticles(this.logicalWidth, this.logicalHeight);
 
@@ -1159,13 +1166,13 @@ export class DotsAndBoxesGame {
 
         // Decay effects
         if (this.shakeIntensity > 0.1) {
-            this.shakeIntensity *= this.shakeDecay;
+            this.shakeIntensity = expDecay(this.shakeIntensity, 0, 6.32, dtSeconds);
         } else {
             this.shakeIntensity = 0;
         }
 
         if (this.screenPulse > 0.01) {
-            this.screenPulse *= 0.92;
+            this.screenPulse = expDecay(this.screenPulse, 0, 5.0, dtSeconds);
         } else {
             this.screenPulse = 0;
         }

@@ -385,6 +385,7 @@ Contributions welcome! Feel free to:
 
 - **A draw clears the level** - If the board ends level (e.g. 2–2), Levels mode now records the level, pays the +1 sprite and offers the next level instead of failing you. The AI has to actually out-score you to take a sprite.
 - **Copy matches the rule** - The win screen says `🤝 Level N Complete — Draw!` with a "draw counts as a win" note; only a real AI win shows `Level N Failed`.
+- **Smoother motion** - Background hue, screen shake and screen pulse now decay by elapsed time, so they behave identically on 60 Hz and 120 Hz displays. The level-100 shimmer and card lift also respect `prefers-reduced-motion`, and the mine counter uses tabular figures so the count no longer jitters.
 
 ### v4.6.0 (Mine penalties)
 
