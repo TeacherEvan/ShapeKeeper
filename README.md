@@ -386,6 +386,7 @@ Contributions welcome! Feel free to:
 - **A draw clears the level** - If the board ends level (e.g. 2–2), Levels mode now records the level, pays the +1 sprite and offers the next level instead of failing you. The AI has to actually out-score you to take a sprite.
 - **Copy matches the rule** - The win screen says `🤝 Level N Complete — Draw!` with a "draw counts as a win" note; only a real AI win shows `Level N Failed`.
 - **Smoother motion** - Background hue, screen shake and screen pulse now decay by elapsed time, so they behave identically on 60 Hz and 120 Hz displays. The level-100 shimmer and card lift also respect `prefers-reduced-motion`, and the mine counter uses tabular figures so the count no longer jitters.
+- **Paywall respected on Next Level** - A draw or win on the last free level (19) now opens the unlock gate instead of starting level 20; the button reads `Unlock Level 20 →`. `startLevelMatch` is the single choke point, so the grid, retry and next-level paths all honour the entitlement.
 
 ### v4.6.0 (Mine penalties)
 

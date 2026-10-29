@@ -43,7 +43,9 @@ and `<tr>` markup (`references/preflight_scanner_notes.md`), not live readouts.
 | `dots-and-boxes-game.js` | shake (6.32/s) and screen pulse (5.0/s) decay by elapsed time, clamped at 100 ms |
 | `styles/game.css` | `.mine-counter { font-variant-numeric: tabular-nums }` |
 | `styles/menu-layout.css` | `prefers-reduced-motion` block: level-100 shimmer `animation: none`, card lift `transform: none`, transitions off |
-| `ui-manager/celebrations.js` | heading follows the result (`Draw!` / `Level Complete!` / `Game Over!`); both players get 🥇 and the `winner` class on a draw |
+
+The result-screen heading and tie medals ship in the companion commit `772e906`
+(`feat(levels): a draw clears the level`), not in `632cf3e`.
 
 Functional bindings were not touched: every `id`, `data-testid`, `aria-*` attribute, event
 handler and state field is unchanged. The only JS signature change is an internal,
@@ -70,3 +72,22 @@ heading, score rows and buttons.
 - The remaining 22 LOW numeric-jitter hits are scanner false positives on static prose.
 - No token re-theming: the existing palette already passes contrast and is the product's
   identity; changing it would be a redesign, not a polish pass.
+
+## 6. QA record (peer desk — Benjamin, N95)
+
+Verdict: **PASS-WITH-NOTES** (`VERDICT: PASS-WITH-NOTES`), reviewed at `632cf3e` with
+`npm ci`, 625 unit tests, lint and a live browser run. Findings and disposition:
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| F1 — a draw/win on the last free level opened level 20 without an entitlement (the Next Level handler bypassed the gate) | HIGH | **Fixed**: `startLevelMatch` now refuses a locked level and opens the unlock gate; the result button reads `Unlock Level N →`. Regression gate `tests/e2e/paywall-level-gate.spec.js`. |
+| F2 — a timeout defeat takes no sprite while an AI out-score does | LOW | **Owner decision** (AGENTS says a level is lost only when the AI out-scores). Left as-is. |
+| F3 — `recordLevelLoss` docstring still said "defeat or tie" | LOW | **Fixed**. |
+| F4 — this plan attributed the heading change to the wrong commit | LOW | **Fixed** in §3. |
+| Casual hot-seat draws also get 🥇/🥇, under a "Game Over!" heading | INFO | Accepted: nobody lost, so nobody is second. Out of scope of the Levels rule. |
+| Replaying a completed level pays +1 sprite each time | INFO | Pre-existing economy quirk; flagged for the owner, not changed. |
+| `_levelResultRecorded` is only ever set true | INFO | Safe today because every level start builds a new game instance. Noted for a future refactor. |
+
+QA's own limitation, recorded verbatim: the hover-lift positive control is untestable in
+that headless engine (`(hover: hover)` is false), so the reduced-motion guard is verified
+but its necessity was not measurable there.

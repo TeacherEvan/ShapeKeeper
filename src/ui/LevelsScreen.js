@@ -20,6 +20,14 @@ import { showScreen } from './ScreenTransition.js';
 import { isPaywallEnabled, openUnlockGate } from './UnlockGate.js';
 
 export function startLevelMatch(levelNumber, deps) {
+    // Single choke point for every entry path: the levels grid, "Next Level",
+    // and "Retry Level". Without this a draw or win on the last free level
+    // would hand the player a locked level just by pressing the primary button.
+    if (!LevelsProgress.isLevelUnlocked(levelNumber)) {
+        openUnlockGate({ onUnlocked: () => startLevelMatch(levelNumber, deps) });
+        return;
+    }
+
     const { getState, setActiveGame } = deps;
     const { welcomeAnimation } = getState();
 

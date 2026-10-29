@@ -468,8 +468,13 @@ export function showWinner(game) {
                 winnerText.style.color = winnerColor;
                 if (playAgainBtn) {
                     if (game.currentLevel < MAX_LEVEL) {
-                        playAgainBtn.textContent = `Next Level (${game.currentLevel + 1}) →`;
-                        game._nextLevelToPlay = game.currentLevel + 1;
+                        const nextLevel = game.currentLevel + 1;
+                        // Never promise a level the player cannot enter: above
+                        // the free tier the button opens the unlock gate instead.
+                        playAgainBtn.textContent = LevelsProgress.isLevelUnlocked(nextLevel)
+                            ? `Next Level (${nextLevel}) →`
+                            : `Unlock Level ${nextLevel} →`;
+                        game._nextLevelToPlay = nextLevel;
                     } else {
                         playAgainBtn.textContent = `Replay Level ${MAX_LEVEL} ★`;
                         game._nextLevelToPlay = MAX_LEVEL;

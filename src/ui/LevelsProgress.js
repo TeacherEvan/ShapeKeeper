@@ -178,8 +178,8 @@ export class LevelsProgress {
     }
 
     /**
-     * Called when a player loses a match in Levels mode (defeat or tie).
-     * Deducts 1 sprite, floored at 1.
+     * Called when a player loses a match in Levels mode (the AI out-scored them).
+     * A draw is a win and never reaches this path.
      */
     static recordLevelLoss(level) {
         const state = this.getState();
