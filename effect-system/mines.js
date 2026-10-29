@@ -39,6 +39,9 @@ export function getMineCountForLevel(level, totalSquares) {
     const doublings = Math.floor((lvl - FIRST_MINE_LEVEL) / MINE_LEVEL_STEP);
     const raw = BASE_MINE_COUNT * 2 ** doublings;
 
+    // `squares` is the never-more-mines-than-boxes floor. On a degenerate board
+    // (one or two boxes) it can undercut the opening count, but real Levels
+    // boards start at 16 boxes, so the 2/4/5 bands are never affected.
     return Math.min(raw, MAX_MINE_COUNT, squares);
 }
 

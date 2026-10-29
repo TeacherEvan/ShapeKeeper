@@ -73,7 +73,7 @@ describe('mine policy — level gate and doubling', () => {
 });
 
 describe('mine placement', () => {
-    it('returns exactly the requested number of distinct keys', () => {
+    it('places exactly the requested number of distinct keys (helper, not policy)', () => {
         const keys = Array.from({ length: 49 }, (_, i) => `${Math.floor(i / 7)},${i % 7}`);
         const mines = placeMines(keys, 12, seededRng(7));
 
