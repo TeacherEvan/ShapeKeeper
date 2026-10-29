@@ -60,6 +60,57 @@ test.describe('Mine penalties', () => {
         expect(info).toEqual({ mineCount: 0, seeded: 0 });
     });
 
+    test('a capped board seeds five mines and counts them down', async ({ page }) => {
+        await bootWithProgress(page);
+        await startLevel(page, 35);
+
+        await expect(page.locator('.toast-notification .toast-message')).toContainText(
+            '5 hidden mines'
+        );
+        await expect(page.locator('#mineCounterCount')).toHaveText('5 hidden');
+
+        const seeded = await page.evaluate(() => ({
+            mineCount: window.__shapeKeeperActiveGame?.mineCount,
+            entries: Object.keys(window.__shapeKeeperActiveGame?.squareMultipliers ?? {}).length,
+        }));
+        expect(seeded).toEqual({ mineCount: 5, entries: 5 });
+
+        // Fire the first mine through the real move loop.
+        const fired = await page.evaluate(async () => {
+            const game = window.__shapeKeeperActiveGame;
+            game.localMode = 'human';
+            game.localTurnTimer?.pause?.();
+            const key = Object.keys(game.squareMultipliers)[0];
+            const [row, col] = key.split(',').map(Number);
+            const edges = [
+                [
+                    { row, col },
+                    { row, col: col + 1 },
+                ],
+                [
+                    { row: row + 1, col },
+                    { row: row + 1, col: col + 1 },
+                ],
+                [
+                    { row, col },
+                    { row: row + 1, col },
+                ],
+                [
+                    { row, col: col + 1 },
+                    { row: row + 1, col: col + 1 },
+                ],
+            ];
+            for (const [a, b] of edges) await game.drawLine(a, b, { source: 'ai' });
+            return {
+                revealed: game.revealedMultipliers.size,
+                chip: document.getElementById('mineCounterCount').textContent,
+            };
+        });
+
+        const remaining = 5 - fired.revealed;
+        expect(fired.chip).toBe(remaining === 0 ? 'board clear' : `${remaining} hidden`);
+    });
+
     test('level 15 warns, marks a fired box with 💣 and counts the mines down', async ({
         page,
     }) => {

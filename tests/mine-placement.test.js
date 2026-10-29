@@ -4,6 +4,7 @@ import { EffectSystem } from '../effect-system.js';
 import {
     BASE_MINE_COUNT,
     FIRST_MINE_LEVEL,
+    MAX_MINE_COUNT,
     countHiddenMines,
     getMineCountForLevel,
     isMineMultiplier,
@@ -55,7 +56,8 @@ describe('mine policy — level gate and doubling', () => {
     });
 
     it('caps the count at 5 mines from level 35 onward', () => {
-        expect(getMineCountForLevel(35, 35)).toBe(5);
+        expect(MAX_MINE_COUNT).toBe(5);
+        expect(getMineCountForLevel(35, 35)).toBe(MAX_MINE_COUNT);
         expect(getMineCountForLevel(45, 35)).toBe(5);
         expect(getMineCountForLevel(55, 49)).toBe(5);
         expect(getMineCountForLevel(100, 126)).toBe(5);
