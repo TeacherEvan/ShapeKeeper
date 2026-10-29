@@ -317,6 +317,40 @@
     width: 100%;
 }
 
+/* Hidden-mine chip (levels 15+). The level-start toast explains the rule once;
+   this chip keeps it visible for the whole level and counts down as mines fire. */
+.mine-counter {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 196, 0, 0.45);
+    background: rgba(255, 176, 32, 0.12);
+    color: #ffd36b;
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.mine-counter[hidden] {
+    display: none;
+}
+
+.mine-counter-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.mine-counter.is-clear {
+    border-color: rgba(120, 200, 140, 0.45);
+    background: rgba(80, 180, 110, 0.12);
+    color: #a8e6b0;
+}
+
 .turn-indicator {
     position: relative;
     z-index: 1;

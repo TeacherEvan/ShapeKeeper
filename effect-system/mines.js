@@ -78,3 +78,22 @@ export function isMineMultiplier(data) {
     if (!data || data.type !== 'multiplier') return false;
     return data.isMine === true || data.value === 0.2;
 }
+
+/**
+ * How many mines are still hidden. Drives the footer chip, which is the
+ * persistent explanation of the mechanic after the level-start toast is gone.
+ *
+ * @param {Record<string, object>} squareMultipliers
+ * @param {Set<string>|string[]} [revealed]
+ * @returns {number}
+ */
+export function countHiddenMines(squareMultipliers, revealed) {
+    if (!squareMultipliers || typeof squareMultipliers !== 'object') return 0;
+
+    const seen = revealed instanceof Set ? revealed : new Set(revealed || []);
+    let hidden = 0;
+    for (const [key, data] of Object.entries(squareMultipliers)) {
+        if (isMineMultiplier(data) && !seen.has(key)) hidden += 1;
+    }
+    return hidden;
+}

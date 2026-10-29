@@ -1,7 +1,7 @@
 import { AnimationSystem } from './animation-system.js';
 import { FEATURE_FLAGS, GAME_CONSTANTS } from './constants.js';
 import { EffectSystem } from './effect-system.js';
-import { isMineMultiplier } from './effect-system/mines.js';
+import { countHiddenMines, isMineMultiplier } from './effect-system/mines.js';
 import { GameLogic } from './game-logic.js';
 import { GameState } from './game-state.js';
 import { InputHandler } from './input-handler.js';
@@ -126,6 +126,7 @@ export class DotsAndBoxesGame {
         this.disposables.addDisposable(this.accessibleGrid);
         this.effectSystem.initializeMultipliers();
         this.announceMineBoard();
+        this.updateMineCounter();
         this.particleSystem.initializeAmbientParticles();
 
         // Setup event listeners
@@ -234,6 +235,38 @@ export class DotsAndBoxesGame {
     }
 
     /**
+     * Keep the footer mine chip honest: "2 hidden" → "1 hidden" → "board clear".
+     * The level-start toast is gone in five seconds; the chip is what keeps the
+     * mine concept visible for the rest of the level.
+     */
+    updateMineCounter() {
+        const chip = document.getElementById('mineCounter');
+        const countEl = document.getElementById('mineCounterCount');
+        if (!chip || !countEl) return;
+
+        const total = Object.values(this.squareMultipliers || {}).filter(isMineMultiplier).length;
+        if (total === 0) {
+            chip.hidden = true;
+            this._lastMineCounter = null;
+            return;
+        }
+
+        const hidden = countHiddenMines(this.squareMultipliers, this.revealedMultipliers);
+        if (this._lastMineCounter === hidden && !chip.hidden) return;
+
+        this._lastMineCounter = hidden;
+        chip.hidden = false;
+        chip.classList.toggle('is-clear', hidden === 0);
+        countEl.textContent = hidden === 0 ? 'board clear' : `${hidden} hidden`;
+        chip.setAttribute(
+            'aria-label',
+            hidden === 0
+                ? 'All mines on this board have been triggered'
+                : `${hidden} hidden ${hidden === 1 ? 'mine' : 'mines'} left on this board`
+        );
+    }
+
+    /**
      * Tell the player, once at level start, that this board is mined. Without
      * this the penalty reads as "I did something wrong" instead of "that box
      * was mined before I claimed it".
@@ -244,7 +277,7 @@ export class DotsAndBoxesGame {
 
         const label = mines === 1 ? 'mine' : 'mines';
         showToast(
-            `💣 ${mines} hidden ${label} on this board — a mined box cuts your score to 20%.`,
+            `💣 ${mines} hidden ${label} on this board — a mined box cuts your score to 20% and stays marked.`,
             'warning',
             5000
         );
@@ -551,6 +584,7 @@ export class DotsAndBoxesGame {
                                 this.localMode === 'ai' &&
                                 this.currentPlayer === (this.aiPlayerNumber || 2),
                         });
+                        this.updateMineCounter();
                     }
                 });
                 this.soundManager.playSquareSound(this.comboCount);

@@ -51,27 +51,48 @@ knob to turn if the owner wants it harsher or gentler.
 - Penalty effect itself is unchanged: the claiming player's score is multiplied by
   0.2 (−80%), once, at claim time.
 
+## Second pass — making the rule legible for the whole level
+
+The first pass marked the box and explained the rule once at level start. That
+still left two gaps: the toast is gone in five seconds, and the level list gave
+no warning before a mined board loaded.
+
+- Footer chip `#mineCounter`: `2 hidden → 1 hidden → board clear`, `role=status`,
+  `aria-live=polite`, refreshed on every UI pass so undo/redo cannot desync it.
+- Levels grid: each button prints its board's mine count (`7×5 · 💣 4`), so the
+  ramp is visible before entering.
+- Toast copy now says the box "stays marked", naming the marker the player will
+  see after the first hit.
+
 ## Implementation
 
 | File | Change |
 |---|---|
-| `effect-system/mines.js` (new) | `FIRST_MINE_LEVEL`, `BASE_MINE_COUNT`, `MINE_LEVEL_STEP`, `MAX_MINE_DENSITY`, `getMineCountForLevel(level, totalSquares)`, `placeMines(squareKeys, count, rng)`, `isMineMultiplier(data)` — pure and deterministic under an injected RNG |
+| `effect-system/mines.js` (new) | `FIRST_MINE_LEVEL`, `BASE_MINE_COUNT`, `MINE_LEVEL_STEP`, `MAX_MINE_DENSITY`, `getMineCountForLevel(level, totalSquares)`, `placeMines(squareKeys, count, rng)`, `isMineMultiplier(data)`, `countHiddenMines(...)` — pure and deterministic under an injected RNG |
 | `effect-system/init.js` | seed `mineCount` mines, tagged `{ type: 'multiplier', value: 0.2, isMine: true }`; set `game.mineCount`; no mines below level 15 |
-| `dots-and-boxes-game.js` | mine-aware penalty branch; level-start toast (`💣 N mines hidden…`); mine wording in the alert; stamp reads `💣 −80%` |
+| `dots-and-boxes-game.js` | mine-aware penalty branch; level-start toast; **footer chip that counts hidden mines down to "board clear"**; mine wording in the alert; stamp reads `💣 −80%` |
+| `ui-manager.js` | refresh the chip on every UI pass so undo/redo/replay stay honest |
+| `index.html` + `styles/game.css` | `#mineCounter` pill in the game footer (role=status, aria-live) |
+| `src/ui/LevelsScreen.js` | every level button shows its board's mine count (`7×5 · 💣 4`) |
 | `renderer/board.js` | revealed mine draws a 💣 at the bottom of the box plus a small `×0.2` in the corner |
 | `src/ui/TurnNoticeBubble.js` | player penalty avatar becomes 💣 instead of 💥 |
-| `AGENTS.md` | mine invariants + agent↔owner collaboration protocol |
+| `AGENTS.md` + `README.md` | mine invariants, player-facing feature/version notes, collaboration protocol |
 
 ## Tests
 
 - `tests/mine-placement.test.js` (new): level gate at 14/15, doubling at
   15/25/35/45, density cap at 100, seeded placement is unique and exact, empty
-  board returns nothing, `isMineMultiplier` accepts the legacy value-only shape.
+  board returns nothing, `isMineMultiplier` accepts the legacy value-only shape,
+  `countHiddenMines` counts correctly.
 - `effect-system.test.js` (updated): level 1 seeds nothing; level 15 seeds 2
   tagged mines; non-levels construction stays clean.
+- `tests/e2e/mines.spec.js` (new): the Levels grid badge appears only at 15+;
+  level 14 seeds nothing and hides the chip; level 15 shows the toast and the
+  "2 hidden" chip, a real move-loop claim of a mined box flips the chip to
+  "1 hidden" (or "board clear" if two fire), stamps `💣 −80%`, and leaves the
+  `isMine` data the renderer needs.
 - `tests/penalty-box-animation.test.js` unchanged and must stay green (the 0.2×
   path still fires the animation and bubble).
-- `renderer/board` bomb glyph covered in the new test file with a canvas mock.
 
 ## Verification
 

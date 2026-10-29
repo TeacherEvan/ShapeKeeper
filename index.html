@@ -639,6 +639,18 @@
 
                 <footer class="game-footer">
                     <div
+                        id="mineCounter"
+                        class="mine-counter"
+                        data-testid="mine-counter"
+                        role="status"
+                        aria-live="polite"
+                        aria-atomic="true"
+                        hidden
+                    >
+                        <span class="mine-counter-icon" aria-hidden="true">💣</span>
+                        <span id="mineCounterCount" class="mine-counter-count">0 hidden</span>
+                    </div>
+                    <div
                         class="turn-indicator"
                         id="turnIndicator"
                         role="status"

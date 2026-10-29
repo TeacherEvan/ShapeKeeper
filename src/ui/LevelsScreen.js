@@ -7,6 +7,7 @@
 
 import { DotsAndBoxesGame } from '../../dots-and-boxes-game.js';
 import { requestFullscreen } from './Fullscreen.js';
+import { getMineCountForLevel } from '../../effect-system/mines.js';
 import {
     FREE_LEVELS,
     LevelsProgress,
@@ -136,6 +137,7 @@ export function renderLevelsGrid(deps) {
 
         for (let lvl = tier.start; lvl <= tier.end; lvl++) {
             const { cols, rows } = getGridSizeForLevel(lvl);
+            const mineCount = getMineCountForLevel(lvl, (cols - 1) * (rows - 1));
             const isUnlocked = LevelsProgress.isLevelUnlocked(lvl);
             const isCompleted = state.completedLevels.includes(lvl);
             // A locked level above the free tier is a purchase prompt, not a dead end.
@@ -152,9 +154,12 @@ export function renderLevelsGrid(deps) {
             btn.dataset.testid = `level-button-${lvl}`;
             btn.disabled = !isUnlocked && !opensGate;
 
+            // Show the mine count up front: walking into a mined board without
+            // warning is what made players read the penalty as their own error.
+            const mineLabel = mineCount > 0 ? ` · 💣 ${mineCount}` : '';
             btn.innerHTML = `
                 <span class="level-num">Level ${lvl}</span>
-                <span class="level-grid-label">${cols}×${rows}</span>
+                <span class="level-grid-label">${cols}×${rows}${mineLabel}</span>
                 <span class="level-status-icon">${isCompleted ? '★' : isUnlocked ? '▶' : '🔒'}</span>
             `;
 

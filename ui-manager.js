@@ -55,6 +55,10 @@ export class UIManager {
      * Update UI elements
      */
     updateUI() {
+        // The mine chip tracks revealed mines; undo/redo restores the revealed
+        // set without going through the penalty branch, so refresh it here too.
+        this.game.updateMineCounter?.();
+
         const now = Date.now();
         if (now - this.game.lastUIUpdate < this.game.uiUpdateInterval) {
             return;

@@ -53,6 +53,18 @@ Served with `python3 -m http.server 8123`, localStorage progressed to
   `mineCount = 2`, triggering the first seeded mine (box `3,1`) put it in
   `revealedMultipliers` and showed the `💣 That was a mine, not a prize!` bubble.
 
+## Second-pass verification (chip + grid badges + e2e)
+
+- `npm run lint` → clean.
+- `npx vitest run` → **86 files, 624 tests passed**.
+- `npx playwright test tests/e2e/mines.spec.js --project=chromium` → **3 passed**:
+  grid badge only at 15+, level 14 silent, level 15 toast + chip + real
+  move-loop mine claim (`💣 −80%`, chip `1 hidden`).
+- Browser check at 1280×577: level cards read `5×5` (14) → `5×5 · 💣 2` (15) →
+  `7×5 · 💣 4` (25); footer chip `2 hidden` before the first hit, `1 hidden`
+  after, `aria-label` "2 hidden mines left on this board", no overlap with the
+  turn indicator.
+
 ## Files
 
 - `effect-system/mines.js` (new) — policy + placement + `isMineMultiplier`

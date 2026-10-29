@@ -4,6 +4,7 @@ import { EffectSystem } from '../effect-system.js';
 import {
     BASE_MINE_COUNT,
     FIRST_MINE_LEVEL,
+    countHiddenMines,
     getMineCountForLevel,
     isMineMultiplier,
     placeMines,
@@ -104,6 +105,26 @@ describe('isMineMultiplier', () => {
         expect(isMineMultiplier({ type: 'multiplier', value: 0.5 })).toBe(false);
         expect(isMineMultiplier(undefined)).toBe(false);
         expect(isMineMultiplier({ type: 'truthOrDare' })).toBe(false);
+    });
+});
+
+describe('countHiddenMines', () => {
+    const board = {
+        '0,0': { type: 'multiplier', value: 0.2, isMine: true },
+        '0,1': { type: 'multiplier', value: 0.2, isMine: true },
+        '1,0': { type: 'multiplier', value: 5 },
+    };
+
+    it('counts mines that have not fired', () => {
+        expect(countHiddenMines(board, new Set())).toBe(2);
+        expect(countHiddenMines(board, new Set(['0,0']))).toBe(1);
+        expect(countHiddenMines(board, new Set(['0,0', '0,1']))).toBe(0);
+    });
+
+    it('accepts an array of revealed keys and tolerates empty stores', () => {
+        expect(countHiddenMines(board, ['0,1'])).toBe(1);
+        expect(countHiddenMines(null, new Set())).toBe(0);
+        expect(countHiddenMines({}, new Set())).toBe(0);
     });
 });
 
