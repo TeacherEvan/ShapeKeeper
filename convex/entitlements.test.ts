@@ -148,50 +148,52 @@ describe('entitlements', () => {
  * environment is set per test, and the assertions are about what reaches the
  * database — the part that can hand out a free game if it is wrong.
  */
-describe('redeemEntitlement', () => {
-    const KEY = 'ABCD-1234-EFGH-5678';
-    const KEY_HASH = sha256Hex(KEY);
-    const PRODUCT = '1361446';
 
-    function stubLicenseApi(payload: unknown, ok = true) {
-        const calls: any[] = [];
-        vi.stubGlobal(
-            'fetch',
-            vi.fn(async (url: string, init: any) => {
-                calls.push({ url, init });
-                return { ok, json: async () => payload };
-            }),
-        );
-        return calls;
+const KEY = 'ABCD-1234-EFGH-5678';
+const KEY_HASH = sha256Hex(KEY);
+const PRODUCT = '1361446';
+
+function stubLicenseApi(payload: unknown, ok = true) {
+    const calls: any[] = [];
+    vi.stubGlobal(
+        'fetch',
+        vi.fn(async (url: string, init: any) => {
+            calls.push({ url, init });
+            return { ok, json: async () => payload };
+        }),
+    );
+    return calls;
+}
+
+function withEnv(vars: Record<string, string | undefined>) {
+    const saved: Record<string, string | undefined> = {};
+    for (const [key, value] of Object.entries(vars)) {
+        saved[key] = process.env[key];
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
     }
-
-    function withEnv(vars: Record<string, string | undefined>) {
-        const saved: Record<string, string | undefined> = {};
-        for (const [key, value] of Object.entries(vars)) {
-            saved[key] = process.env[key];
+    return () => {
+        for (const [key, value] of Object.entries(saved)) {
             if (value === undefined) delete process.env[key];
             else process.env[key] = value;
         }
-        return () => {
-            for (const [key, value] of Object.entries(saved)) {
-                if (value === undefined) delete process.env[key];
-                else process.env[key] = value;
-            }
-        };
-    }
-
-    const ACTIVATED = {
-        activated: true,
-        instance: { id: 'inst-9' },
-        license_key: {
-            activation_limit: 3,
-            meta: { product_id: PRODUCT, store_id: '474582' },
-        },
     };
+}
 
-    afterEach(() => {
-        vi.unstubAllGlobals();
-    });
+const ACTIVATED = {
+    activated: true,
+    instance: { id: 'inst-9' },
+    license_key: {
+        activation_limit: 3,
+        meta: { product_id: PRODUCT, store_id: '474582' },
+    },
+};
+
+afterEach(() => {
+    vi.unstubAllGlobals();
+});
+
+describe('redeemEntitlement', () => {
 
     it('fails closed when no product allow-list is configured', async () => {
         const restore = withEnv({ LEMONSQUEEZY_PRODUCT_IDS: undefined });
@@ -317,6 +319,151 @@ describe('redeemEntitlement', () => {
         expect(res).toEqual({ active: false, reason: 'rate_limited' });
         // Five outbound calls, not six: the refused attempt never reached LS.
         expect(calls).toHaveLength(5);
+        restore();
+    });
+});
+
+/**
+ * The daily sweep is the slow path that makes a dead licence stop working when
+ * no webhook ever said so. It must never mark anything valid on a failed
+ * request, and it must never spend money it does not need to.
+ */
+describe('licensesDueForCheck', () => {
+    it('returns active entitlements oldest-checked first and skips the unlinked', async () => {
+        const { ctx } = makeCtx([
+            { _id: 'e1', instanceId: 'a', orderId: 'o1', status: 'active', lastValidatedAt: 30 },
+            { _id: 'e2', instanceId: 'b', orderId: 'o2', status: 'active', lastValidatedAt: 10 },
+            { _id: 'e3', instanceId: 'c', status: 'active' },
+            { _id: 'e4', instanceId: 'd', orderId: 'o4', status: 'revoked', lastValidatedAt: 1 },
+        ]);
+
+        const res = await (ent.licensesDueForCheck as any)._handler(ctx, { limit: 5 });
+
+        expect(res.due.map((r: any) => r.instanceId)).toEqual(['b', 'a']);
+        expect(res.active).toBe(3);
+        expect(res.unchecked).toBe(1);
+    });
+
+    it('respects the batch limit', async () => {
+        const seed = Array.from({ length: 10 }, (_, i) => ({
+            _id: `e${i}`,
+            instanceId: `i${i}`,
+            orderId: `o${i}`,
+            status: 'active',
+            lastValidatedAt: i,
+        }));
+        const { ctx } = makeCtx(seed);
+
+        const res = await (ent.licensesDueForCheck as any)._handler(ctx, { limit: 3 });
+
+        expect(res.due).toHaveLength(3);
+        expect(res.due[0].instanceId).toBe('i0');
+    });
+});
+
+describe('sweepExpiredLicenses', () => {
+    const DUE = {
+        due: [
+            { instanceId: 'inst-live', orderId: 'order-live' },
+            { instanceId: 'inst-dead', orderId: 'order-dead' },
+        ],
+        unchecked: 0,
+        active: 2,
+    };
+
+    function sweepCtx(keyStatus: () => Promise<any>) {
+        const mutations: any[] = [];
+        return {
+            mutations,
+            ctx: {
+                runQuery: vi.fn(async () => DUE),
+                runMutation: vi.fn(async (_ref: any, args: any) => {
+                    mutations.push(args);
+                    return { updated: true };
+                }),
+                fetchImpl: keyStatus,
+            } as any,
+        };
+    }
+
+    it('does nothing, and claims nothing, without an API key', async () => {
+        const restore = withEnv({ LEMONSQUEEZY_API_KEY: undefined });
+        const { ctx, mutations } = sweepCtx(async () => ({ status: 'active' }));
+
+        const res = await (ent.sweepExpiredLicenses as any)._handler(ctx, {});
+
+        expect(res).toEqual({ skipped: 'no_api_key', checked: 0, revoked: 0 });
+        expect(mutations).toHaveLength(0);
+        restore();
+    });
+
+    it('revokes a key that is no longer active and stamps the live one', async () => {
+        const restore = withEnv({ LEMONSQUEEZY_API_KEY: 'test-api-key' });
+        const byOrder: Record<string, string> = {
+            'order-live': 'active',
+            'order-dead': 'expired',
+        };
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: string) => {
+                const orderId = decodeURIComponent(String(url).split('filter[order_id]=')[1] ?? '');
+                return {
+                    ok: true,
+                    json: async () => ({
+                        data: [{ attributes: { status: byOrder[orderId] } }],
+                    }),
+                };
+            }),
+        );
+        const { ctx, mutations } = sweepCtx(async () => ({}));
+
+        const res = await (ent.sweepExpiredLicenses as any)._handler(ctx, {});
+
+        expect(res.checked).toBe(1);
+        expect(res.revoked).toBe(1);
+        expect(mutations).toEqual([
+            { instanceId: 'inst-live', valid: true },
+            { instanceId: 'inst-dead', valid: false },
+        ]);
+        vi.unstubAllGlobals();
+        restore();
+    });
+
+    it('treats an unreachable licence API as unknown, never as valid', async () => {
+        const restore = withEnv({ LEMONSQUEEZY_API_KEY: 'test-api-key' });
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async () => {
+                throw new Error('network down');
+            }),
+        );
+        const { ctx, mutations } = sweepCtx(async () => ({}));
+
+        const res = await (ent.sweepExpiredLicenses as any)._handler(ctx, {});
+
+        expect(res.unreachable).toBe(2);
+        expect(mutations).toHaveLength(0);
+        vi.unstubAllGlobals();
+        restore();
+    });
+
+    it('refuses a test-mode purchase instead of unlocking the live game', async () => {
+        const restore = withEnv({
+            LEMONSQUEEZY_PRODUCT_IDS: PRODUCT,
+            LEMONSQUEEZY_ALLOW_TEST_ORDERS: undefined,
+        });
+        stubLicenseApi(ACTIVATED);
+        const { ctx, rows } = makeCtx([
+            { _id: 'p1', orderId: 'order-1', licenseKeyHash: KEY_HASH, status: 'paid', testMode: true },
+        ]);
+
+        const res = await (ent.redeemEntitlement as any)._handler(ctx, {
+            licenseKey: KEY,
+            instanceName: 'device-1',
+        });
+
+        expect(res).toEqual({ active: false, reason: 'test_order' });
+        expect(rows.filter((r: any) => r.instanceId !== undefined)).toHaveLength(0);
         restore();
     });
 });

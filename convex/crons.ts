@@ -30,6 +30,21 @@ crons.interval(
   {}
 );
 
+/**
+ * Licence-status sweep, once a day.
+ *
+ * The refund webhook is the fast path; this catches what an event never told us
+ * — a chargeback, an expired or disabled key. It checks a BATCH (20 by default),
+ * oldest-checked first, because the free plan's function-call allowance disabled
+ * this deployment outright once and a full sweep would do it again.
+ */
+crons.cron(
+  'sweep-licence-status',
+  '17 3 * * *',
+  internal.entitlements.sweepExpiredLicenses,
+  { batchSize: 20 }
+);
+
 // Abandoned-lobby reaper: rooms stuck at status 'lobby' with no activity
 // for 2 hours are deleted with their players.
 const sweepStaleLobbiesRef =

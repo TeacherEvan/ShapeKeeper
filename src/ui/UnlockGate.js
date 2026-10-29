@@ -197,6 +197,7 @@ const REASON_MESSAGES = {
     key_expired: 'That key has expired.',
     key_disabled: 'That key was disabled.',
     key_refunded: 'That key belongs to a refunded order, so it cannot unlock the game.',
+    test_order: 'That key came from a test order. The real key is in your receipt.',
     product_not_allowed: 'That key is for a different product.',
     products_not_configured:
         'The unlock service is not fully configured yet. Please contact support.',

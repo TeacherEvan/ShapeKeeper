@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
-import { internalMutation, mutation, query } from './_generated/server';
+import { internalAction, internalMutation, internalQuery, mutation, query } from './_generated/server';
+import { internal } from './_generated/api';
 import { checkRateLimit } from './rateLimit';
 import { sha256Hex } from './utils/crypto';
 
@@ -195,6 +196,17 @@ export const redeemEntitlement = mutation({
             return { active: false as const, reason: 'key_refunded' as const };
         }
 
+        // A test-mode order is free by design — that is the whole point of test
+        // mode — so it must not unlock the live game. The flag is only readable
+        // here because the webhook recorded it; without this check it was
+        // decoration.
+        if (
+            purchase?.testMode === true &&
+            process.env.LEMONSQUEEZY_ALLOW_TEST_ORDERS !== 'true'
+        ) {
+            return { active: false as const, reason: 'test_order' as const };
+        }
+
         const now = Date.now();
         const existing = await ctx.db
             .query('entitlements')
@@ -243,9 +255,10 @@ function classifyActivationFailure(payload: any): 'key_not_found' | 'activation_
 }
 
 /**
- * Stamp a re-validation. The cron sweep calls this after asking Lemon Squeezy
- * whether the key is still valid, so a dead licence stops opening levels even
- * when its refund webhook never arrived.
+ * Stamp a re-validation, or revoke outright. Called by
+ * `sweepExpiredLicenses` below, and by nothing else — a refund webhook is the
+ * fast path; this is the slow one for a chargeback or an expiry that never
+ * produced an event we received.
  */
 export const markValidated = internalMutation({
     args: { instanceId: v.string(), valid: v.boolean() },
@@ -264,5 +277,143 @@ export const markValidated = internalMutation({
             await ctx.db.patch(row._id, { status: 'revoked', revokedAt: now });
         }
         return { updated: true };
+    },
+});
+
+/**
+ * The entitlements that have gone longest without a check.
+ *
+ * Server-side revalidation is possible WITHOUT holding the secret: Lemon
+ * Squeezy's licence-key LIST endpoint filters by `order_id`, and every
+ * entitlement carries the order it came from. So the cron checks the order, not
+ * the key — the reason the key is never stored stays intact.
+ *
+ * Rows with no order id (a redemption that beat its webhook) are skipped
+ * honestly rather than assumed valid.
+ */
+export const licensesDueForCheck = internalQuery({
+    args: { limit: v.number() },
+    handler: async (ctx, args) => {
+        const rows = await ctx.db
+            .query('entitlements')
+            .withIndex('by_status', (q) => q.eq('status', 'active'))
+            .collect();
+
+        const due = rows
+            .filter((row) => typeof row.orderId === 'string' && row.orderId.length > 0)
+            .sort((a, b) => (a.lastValidatedAt ?? 0) - (b.lastValidatedAt ?? 0))
+            .slice(0, Math.min(Math.max(args.limit, 1), 100))
+            .map((row) => ({
+                instanceId: row.instanceId,
+                orderId: row.orderId as string,
+            }));
+
+        return { due, unchecked: rows.length - due.length, active: rows.length };
+    },
+});
+
+/**
+ * Daily licence-status sweep.
+ *
+ * The refund webhook is the fast path. This is the slow one, and it exists
+ * because a webhook can be missed: a chargeback, an expired key, a disabled
+ * key, a hand-edited row in the seller's dashboard. Without it an entitlement
+ * granted once is granted forever, and `markValidated` was a mutation nothing
+ * called.
+ *
+ * Deliberately a BATCH: the free plan's function-call allowance once disabled
+ * this deployment outright, so this spends a bounded number of requests a day
+ * (one per entitlement, oldest-checked first) instead of sweeping everything.
+ */
+interface LicenseSweepBatch {
+    due: Array<{ instanceId: string; orderId: string }>;
+    unchecked: number;
+    active: number;
+}
+
+interface LicenseSweepResult {
+    skipped?: 'no_api_key';
+    active?: number;
+    unchecked?: number;
+    examined?: number;
+    checked?: number;
+    revoked?: number;
+    unreachable?: number;
+}
+
+export const sweepExpiredLicenses = internalAction({
+    args: { batchSize: v.optional(v.number()) },
+    // Explicit annotations break the inference cycle: this action calls a query
+    // in its own module, so TypeScript cannot infer either from the other.
+    handler: async (ctx, args): Promise<LicenseSweepResult> => {
+        const apiKey = process.env.LEMONSQUEEZY_API_KEY;
+        if (!apiKey) {
+            // Fail honest: no key, no check. Do not silently mark anything valid.
+            return { skipped: 'no_api_key' as const, checked: 0, revoked: 0 };
+        }
+
+        const batch: LicenseSweepBatch = await ctx.runQuery(
+            internal.entitlements.licensesDueForCheck,
+            { limit: args.batchSize ?? 20 },
+        );
+
+        let checked = 0;
+        let revoked = 0;
+        let unreachable = 0;
+
+        for (const target of batch.due) {
+            let status = '';
+            try {
+                const response = await fetch(
+                    `https://api.lemonsqueezy.com/v1/license-keys?filter[order_id]=${encodeURIComponent(target.orderId)}`,
+                    {
+                        headers: {
+                            Accept: 'application/vnd.api+json',
+                            Authorization: `Bearer ${apiKey}`,
+                        },
+                    },
+                );
+                if (!response.ok) {
+                    unreachable += 1;
+                    continue;
+                }
+                const body: any = await response.json();
+                const key = Array.isArray(body?.data) ? body.data[0] : null;
+                status = String(key?.attributes?.status ?? '').toLowerCase();
+            } catch {
+                unreachable += 1;
+                continue;
+            }
+
+            // An order with no licence key at all is not evidence of fraud; leave
+            // it alone and let the next sweep look again.
+            if (!status) {
+                unreachable += 1;
+                continue;
+            }
+
+            if (status === 'active') {
+                await ctx.runMutation(internal.entitlements.markValidated, {
+                    instanceId: target.instanceId,
+                    valid: true,
+                });
+                checked += 1;
+            } else {
+                await ctx.runMutation(internal.entitlements.markValidated, {
+                    instanceId: target.instanceId,
+                    valid: false,
+                });
+                revoked += 1;
+            }
+        }
+
+        return {
+            active: batch.active,
+            unchecked: batch.unchecked,
+            examined: batch.due.length,
+            checked,
+            revoked,
+            unreachable,
+        };
     },
 });
