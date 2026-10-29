@@ -38,7 +38,9 @@
         window.UNLOCK_CHECKOUT_URL = '';
     }
     if (typeof window.UNLOCK_PRICE_LABEL !== 'string') {
-        window.UNLOCK_PRICE_LABEL = 'USD 6.99 — one time, every level';
+        // The Lemon Squeezy store's currency is ZAR (product 1361446 = ZAR 129.00).
+        // A USD figure here would be a false price, not a translation.
+        window.UNLOCK_PRICE_LABEL = 'ZAR 129.00 — one time, every level';
     }
     if (typeof window.LICENSE_VALIDATE_URL !== 'string') {
         window.LICENSE_VALIDATE_URL = 'https://api.lemonsqueezy.com/v1/licenses/validate';
