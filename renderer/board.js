@@ -1,4 +1,5 @@
 import { GAME_CONSTANTS } from '../constants.js';
+import { isMineMultiplier } from '../effect-system/mines.js';
 import { easeOutQuad, lerp } from '../utils.js';
 
 export function drawLines(game) {
@@ -174,9 +175,26 @@ export function drawSquaresWithAnimations(game) {
         game.ctx.textBaseline = 'middle';
         game.ctx.fillText(player, x + game.cellSize / 2, y + game.cellSize / 2);
 
-        if (game.revealedMultipliers.has(squareKey)) {
+        if (game.revealedMultipliers?.has(squareKey)) {
             const multiplierData = game.squareMultipliers[squareKey];
-            if (multiplierData && multiplierData.type === 'multiplier') {
+            if (isMineMultiplier(multiplierData)) {
+                // A fired mine keeps a permanent 💣 so the box reads as
+                // "this one was mined" instead of "I did something wrong".
+                const bombSize = Math.max(12, Math.min(game.cellSize * 0.3, 26));
+                game.ctx.font = `${bombSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", Arial`;
+                game.ctx.textAlign = 'center';
+                game.ctx.textBaseline = 'middle';
+                game.ctx.fillText('💣', x + game.cellSize * 0.26, y + game.cellSize * 0.72);
+
+                // Keep the penalty value readable without stealing the box.
+                game.ctx.font = `bold ${Math.max(7, game.cellSize * 0.16)}px Arial`;
+                game.ctx.fillStyle = '#FFD700';
+                game.ctx.textAlign = 'right';
+                game.ctx.textBaseline = 'top';
+                game.ctx.fillText('×0.2', x + game.cellSize - 3, y + 3);
+                game.ctx.textAlign = 'center';
+                game.ctx.textBaseline = 'middle';
+            } else if (multiplierData && multiplierData.type === 'multiplier') {
                 game.ctx.font = `bold ${game.cellSize * 0.25}px Arial`;
                 game.ctx.fillStyle = '#FFD700';
                 game.ctx.fillText(

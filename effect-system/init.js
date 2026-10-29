@@ -1,8 +1,24 @@
+import { getMineCountForLevel, placeMines } from './mines.js';
+
+/**
+ * Seed the board's hidden mines.
+ *
+ * Only levels mode has mines, and only from level 15 (see `mines.js`). Casual
+ * local and online games construct the game at the default level, so they get
+ * an empty table — online keeps its own server-side multiplier table as the
+ * single source of truth.
+ *
+ * @param {{ game: object }} system
+ */
 export function initializeMultipliers(system) {
     const { game } = system;
     game.squareMultipliers = {};
+
     const totalSquares = Math.max(0, (game.gridRows - 1) * (game.gridCols - 1));
-    if (totalSquares === 0) return;
+    if (totalSquares === 0) {
+        game.mineCount = 0;
+        return;
+    }
 
     const allSquareKeys = [];
     for (let row = 0; row < game.gridRows - 1; row++) {
@@ -11,14 +27,15 @@ export function initializeMultipliers(system) {
         }
     }
 
-    for (let i = allSquareKeys.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [allSquareKeys[i], allSquareKeys[j]] = [allSquareKeys[j], allSquareKeys[i]];
-    }
+    const mineCount = getMineCountForLevel(game.currentLevel, totalSquares);
+    game.mineCount = mineCount;
+    if (mineCount === 0) return;
 
-    // 20% of the board contains secret 0.2x multipliers (at least 1 on any non-empty board)
-    const multiplierCount = Math.max(1, Math.round(totalSquares * 0.2));
-    for (let i = 0; i < multiplierCount && i < allSquareKeys.length; i++) {
-        game.squareMultipliers[allSquareKeys[i]] = { type: 'multiplier', value: 0.2 };
+    for (const squareKey of placeMines(allSquareKeys, mineCount)) {
+        game.squareMultipliers[squareKey] = {
+            type: 'multiplier',
+            value: 0.2,
+            isMine: true,
+        };
     }
 }

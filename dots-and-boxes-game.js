@@ -1,6 +1,7 @@
 import { AnimationSystem } from './animation-system.js';
 import { FEATURE_FLAGS, GAME_CONSTANTS } from './constants.js';
 import { EffectSystem } from './effect-system.js';
+import { isMineMultiplier } from './effect-system/mines.js';
 import { GameLogic } from './game-logic.js';
 import { GameState } from './game-state.js';
 import { InputHandler } from './input-handler.js';
@@ -124,6 +125,7 @@ export class DotsAndBoxesGame {
         this.accessibleGrid = new AccessibleGridTree(this);
         this.disposables.addDisposable(this.accessibleGrid);
         this.effectSystem.initializeMultipliers();
+        this.announceMineBoard();
         this.particleSystem.initializeAmbientParticles();
 
         // Setup event listeners
@@ -232,6 +234,24 @@ export class DotsAndBoxesGame {
     }
 
     /**
+     * Tell the player, once at level start, that this board is mined. Without
+     * this the penalty reads as "I did something wrong" instead of "that box
+     * was mined before I claimed it".
+     */
+    announceMineBoard() {
+        const mines = Number(this.mineCount) || 0;
+        if (mines <= 0) return;
+
+        const label = mines === 1 ? 'mine' : 'mines';
+        showToast(
+            `💣 ${mines} hidden ${label} on this board — a mined box cuts your score to 20%.`,
+            'warning',
+            5000
+        );
+        announceStatus(`${mines} hidden ${label} on this board.`);
+    }
+
+    /**
      * Make a penalty box impossible to miss: red vignette pulse, a big −80%
      * stamp over the board, a screen shake, and a 3-second speech bubble.
      *
@@ -240,7 +260,7 @@ export class DotsAndBoxesGame {
     showPenaltyFeedback({ isAiPlayer = false } = {}) {
         const host = document.getElementById('gameScreen') || document.body;
         this.triggerPenaltyOverlay(host, 'penalty-flash', 800);
-        this.triggerPenaltyOverlay(host, 'penalty-stamp', 1600, '−80%');
+        this.triggerPenaltyOverlay(host, 'penalty-stamp', 1600, '💣 −80%');
 
         if (!prefersReducedMotion()) {
             this.shakeIntensity = Math.max(this.shakeIntensity || 0, 14);
@@ -249,8 +269,8 @@ export class DotsAndBoxesGame {
         this.turnNoticeBubble?.show(isAiPlayer ? 'ai-penalty' : 'player-penalty');
         announceAlert(
             isAiPlayer
-                ? 'Penalty box. The AI score was reduced to twenty percent.'
-                : 'Penalty box. Your score was reduced to twenty percent.'
+                ? 'Mine! The AI score was cut to twenty percent.'
+                : 'Mine! Your score was cut to twenty percent.'
         );
     }
 
@@ -504,11 +524,7 @@ export class DotsAndBoxesGame {
                     );
 
                     const multiplierData = this.squareMultipliers?.[squareKey];
-                    if (
-                        multiplierData &&
-                        multiplierData.type === 'multiplier' &&
-                        multiplierData.value === 0.2
-                    ) {
+                    if (isMineMultiplier(multiplierData)) {
                         this.revealedMultipliers.add(squareKey);
                         this.scores[this.currentPlayer] =
                             Math.round(this.scores[this.currentPlayer] * 0.2 * 100) / 100;

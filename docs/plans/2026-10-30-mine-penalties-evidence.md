@@ -1,0 +1,50 @@
+# Evidence — mine penalties (2026-10-30)
+
+Every command below ran in `/home/leandi-duplessis/github/workspaces/ShapeKeeper` on
+the working tree that was pushed to `main`.
+
+## Quality gates
+
+| Gate | Command | Result |
+|---|---|---|
+| Lint | `npm run lint` | exit 0, no findings |
+| Convex types | `npx convex typecheck` | `✔ Typecheck passed` |
+| Unit | `npx vitest run` | **86 files, 622 tests passed** (27.5 s) |
+| Build | `npm run build` | `No build step required` (expected) |
+| Smoke e2e | `npm run test:e2e:smoke` | `1 passed` — boots to main menu without page errors |
+
+Targeted run before the full suite: `tests/mine-placement.test.js`,
+`effect-system.test.js`, `tests/penalty-box-animation.test.js`,
+`dots-and-boxes-game.test.js` → 4 files, 32 tests passed.
+
+## Live browser verification (local server, Chromium)
+
+Served with `python3 -m http.server 8123`, localStorage progressed to
+`unlockedLevel: 100, entitled: true`.
+
+1. **Level 15 start**
+   - Toast text: `💣 2 hidden mines on this board — a mined box cuts your score to 20%.`
+   - Captured instance: `mineCount = 2`
+   - Seed sample: `{"2,1":{"type":"multiplier","value":0.2,"isMine":true},"1,1":{...}}`
+   - No marker is visible on the board before a mine fires.
+2. **Triggered mine (box `1,1`)**
+   - Scores: `{"1":0,"2":0}` → `{"1":0,"2":0.2}` (claim +1, then ×0.2)
+   - `revealedMultipliers`: `["1,1"]`
+   - Penalty stamp text: `💣 −80%`
+   - Speech bubble: `💣` avatar + `Boxed! Your score just shrank.`
+   - 6× zoom of the claimed box: bomb glyph bottom-left, `×0.2` top-right,
+     player number `2` centred — the permanent marker survives the animation.
+3. **Renderer harness** importing `/renderer/board.js` directly onto a scratch
+   canvas: the fired-mine branch draws `💣` and `×0.2`; an unrevealed mine draws
+   neither.
+
+## Files
+
+- `effect-system/mines.js` (new) — policy + placement + `isMineMultiplier`
+- `effect-system/init.js` — level-gated seeding, `game.mineCount`
+- `dots-and-boxes-game.js` — mine branch, level-start toast, mine wording
+- `renderer/board.js` — permanent 💣 marker
+- `src/ui/TurnNoticeBubble.js` — 💣 avatar for player penalties
+- `tests/mine-placement.test.js` (new), `effect-system.test.js` (updated)
+- `AGENTS.md` — mine invariants, collaboration protocol
+- `docs/plans/2026-10-30-mine-penalties.md` — the plan

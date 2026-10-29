@@ -113,7 +113,7 @@ export class TurnNoticeBubble {
         } else if (variant === 'player-penalty') {
             quip = getNextRandomQuip(PLAYER_PENALTY_QUIPS, this.lastPlayerQuip);
             this.lastPlayerQuip = quip;
-            avatar = '💥';
+            avatar = '💣';
             el.className = 'turn-notice-bubble player-penalty';
         } else {
             quip = getNextRandomQuip(TIMEOUT_QUIPS, this.lastTimeoutQuip);
