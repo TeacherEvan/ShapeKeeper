@@ -38,6 +38,21 @@ Served with `python3 -m http.server 8123`, localStorage progressed to
    canvas: the fired-mine branch draws `💣` and `×0.2`; an unrevealed mine draws
    neither.
 
+## Production verification
+
+- Push: `e84a0b5..9cba478 main -> main`; local `HEAD` and `origin/main` both
+  `9cba4789e0a9874b6292494492b0b2919e5cd0b8`.
+- Vercel deployment `dpl_7zft9ZFR828nj3LAmttTruxpHKeq`: `state READY`,
+  `target production`, `githubCommitSha 9cba478…`, aliased to
+  `shape-keeper.vercel.app`.
+- `curl https://shape-keeper.vercel.app/effect-system/mines.js` → 200 and
+  contains `FIRST_MINE_LEVEL` / `MAX_MINE_DENSITY`; `renderer/board.js` contains
+  `💣`; `dots-and-boxes-game.js` contains `announceMineBoard`.
+- Live Chromium on production: level 15 start toast reads
+  `💣 2 hidden mines on this board — a mined box cuts your score to 20%.`,
+  `mineCount = 2`, triggering the first seeded mine (box `3,1`) put it in
+  `revealedMultipliers` and showed the `💣 That was a mine, not a prize!` bubble.
+
 ## Files
 
 - `effect-system/mines.js` (new) — policy + placement + `isMineMultiplier`
