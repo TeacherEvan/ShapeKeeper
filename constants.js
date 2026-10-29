@@ -85,39 +85,3 @@ export const TIMING_CONSTANTS = {
     SNAPSHOT_TTL_MS: 48 * 60 * 60 * 1000, // purge snapshots older than 48h (FR-4)
     SNAPSHOT_PREFIX: 'shapekeeper.online.snapshots.', // localStorage key prefix (FR-4)
 };
-
-export const HYPOTHETICALS = [
-    'Would you rather fight 100 duck-sized horses or 1 horse-sized duck?',
-    'Would you rather have unlimited money or unlimited time?',
-    'Would you rather be able to fly or be invisible?',
-    'Would you rather live without music or without movies?',
-    'Would you rather always be 10 minutes late or 20 minutes early?',
-    'Would you rather have a rewind button or a pause button for your life?',
-    'Would you rather know how you die or when you die?',
-    'Would you rather speak all languages or talk to animals',
-    'Would you rather give up social media forever or never watch TV again?',
-    'Would you rather be famous for something bad or unknown for something great?',
-];
-
-export const DARES = [
-    'Be Dared! (The group decides your fate)',
-    'Dare the person to your right! (Make it good)',
-];
-
-export const TRUTHS = [
-    'Receive a Truth! (The group asks you anything)',
-    'Give a Truth! (Ask the person to your left anything)',
-];
-
-export const PHYSICAL_CHALLENGES = [
-    'Do a dramatic slow-motion replay of capturing that square!',
-    'Stand on one foot until your next turn!',
-    'Touch your nose with your tongue (or try)!',
-    'Do your best superhero pose!',
-    'Give the player on your left a high five!',
-    'Do the robot dance for 10 seconds!',
-    'Spin around 3 times!',
-    'Do an air guitar solo!',
-    'Make the most ridiculous face you can!',
-    'Do a victory dance right now!',
-];

@@ -276,6 +276,8 @@ export class TutorialSystem {
 
     resetBoardForNormalMatch() {
         this.game.gameState.initializeGameState();
+        this.game.particleSystem?.initializeAmbientParticles?.();
+        this.game.initLocalTurnTimer?.();
         this.game.effectSystem.initializeMultipliers();
         this.game.initialLocalSnapshot = this.game.captureMoveSnapshot();
         this.game.moveHistory = [];

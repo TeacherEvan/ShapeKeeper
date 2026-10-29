@@ -77,7 +77,15 @@ export class WelcomeAnimation {
         this.initializeSpatialPartitioning();
     }
 
+    clearAllParticleTrails() {
+        if (!Array.isArray(this.floatingParticles)) return;
+        for (const p of this.floatingParticles) {
+            p.trail?.clear?.();
+        }
+    }
+
     handleViewportResize() {
+        this.clearAllParticleTrails();
         this.initializeCanvas();
     }
 
@@ -130,6 +138,7 @@ export class WelcomeAnimation {
     transitionToGameScreen() {
         const gameCanvas = document.getElementById('gameBackgroundCanvas');
         if (gameCanvas) {
+            this.clearAllParticleTrails();
             this.canvas = gameCanvas;
             this.ctx = gameCanvas.getContext('2d');
             this.isDimmed = true;
@@ -140,6 +149,7 @@ export class WelcomeAnimation {
     transitionToMainMenu() {
         const welcomeCanvas = document.getElementById('welcomeCanvas');
         if (welcomeCanvas) {
+            this.clearAllParticleTrails();
             this.canvas = welcomeCanvas;
             this.ctx = welcomeCanvas.getContext('2d');
             this.isDimmed = false;

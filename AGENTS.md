@@ -95,7 +95,7 @@ unaffected. If a ShapeKeeper sidecar is running, kill it first.
 - Level 1 starts with 3x3 grid and 1 colorful sprite in the background.
 - Grid tiers: Levels 1..25 (scales 3x3 up to 7x5), Levels 26..50 (6x8), Levels 51..89 (8x8), Levels 90..99 (10x10), Level 100 (10x15).
 - Turn timer: 7s base + 2s per completed level, capped at 30s.
-- **Donation edition (2026-10-25): all 100 levels are open.** `LevelsProgress.isLevelUnlocked()` returns true for 1..100; winning still records completion and awards a sprite, but `unlockedLevel` no longer gates entry. Keep the progress counters for stats and the Level 100 easter egg.
+- **Levels access & Paid Edition (2026-10-29):** Levels 1..19 are free and unlock sequentially. Levels 20..100 require an entitlement via the paywall (`FREE_LEVELS = 19`). `window.PAYWALL_ENABLED` toggles the gate; while false, all 100 levels remain open. Any existing save progress past level 19 is grandfathered as entitled.
 - The optional donation prompt appears at most once per 5 completed levels, is dismissible, never blocks play, and must not grant donor-only perks or cosmetics.
 - Lose a level only when the AI **out-scores** you: -1 sprite (floored at 1). **A draw counts as a win**: the level is recorded, +1 sprite is paid, and the next level is offered. The AI has to actually win to take a sprite.
 - Beating level 100 unlocks the fireworks sparkle easter egg permanently.
