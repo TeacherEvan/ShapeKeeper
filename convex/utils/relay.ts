@@ -39,6 +39,58 @@ export interface RelayOptions {
     refundPurchase: (args: RelayRefundArgs) => Promise<{ revoked: number; refunded: number }>;
 }
 
+/**
+ * Lemon Squeezy order statuses that mean "the money came back, or never came".
+ * `partial_refund` still removes the licence: half a game is not a permitted
+ * state for a single-purchase unlock, and `fraudulent` is worse.
+ */
+const REVOKING_STATUSES = new Set(['refunded', 'partial_refund', 'fraudulent']);
+
+function orderStatusOf(attributes: any): string {
+    return String(attributes?.status ?? '')
+        .trim()
+        .toLowerCase();
+}
+
+/**
+ * Revoke the entitlements carrying an order's licence key. Shared by the
+ * `order_refunded` event and by any `order_created` that arrives already
+ * refunded or fraudulent.
+ */
+async function revokeForOrder(
+    options: RelayOptions,
+    orderId: string,
+    attributes: any,
+    eventName: string,
+): Promise<RelayResult> {
+    const licenseKey = await options.resolveLicenseKey(
+        orderId,
+        String(attributes?.license_key ?? ''),
+    );
+
+    if (!licenseKey) {
+        // Report it honestly rather than pretend it was handled.
+        return {
+            status: 202,
+            body: { ok: false, event: eventName, orderId, revoked: 0, linked: false },
+        };
+    }
+
+    const result = await options.refundPurchase({ licenseKeyHash: sha256Hex(licenseKey) });
+
+    return {
+        status: 200,
+        body: {
+            ok: true,
+            event: eventName,
+            orderId,
+            revoked: result.revoked,
+            refunded: result.refunded,
+            linked: true,
+        },
+    };
+}
+
 export async function handleLemonSqueezyEvent(options: RelayOptions): Promise<RelayResult> {
     const { raw, signature, secret, storeId } = options;
 
@@ -70,6 +122,21 @@ export async function handleLemonSqueezyEvent(options: RelayOptions): Promise<Re
 
     if (eventName === 'order_created') {
         if (!orderId) return { status: 202, body: { ok: true, ignored: 'no_order_id' } };
+
+        // The STATUS is the gate, not the event name. Lemon Squeezy mints the
+        // licence key at order creation, so a pending order presents a key that
+        // activates long before the money arrives — and a fraudulent one arrives
+        // with a key that was never paid for. Only `paid` records a purchase.
+        const orderStatus = orderStatusOf(attributes);
+        if (REVOKING_STATUSES.has(orderStatus)) {
+            return revokeForOrder(options, orderId, attributes, eventName);
+        }
+        if (orderStatus !== 'paid') {
+            return {
+                status: 202,
+                body: { ok: true, ignored: `order_status:${orderStatus || 'unknown'}` },
+            };
+        }
 
         const item = attributes?.first_order_item ?? {};
         const licenseKey = await options.resolveLicenseKey(
@@ -104,32 +171,7 @@ export async function handleLemonSqueezyEvent(options: RelayOptions): Promise<Re
     if (eventName === 'order_refunded') {
         if (!orderId) return { status: 202, body: { ok: true, ignored: 'no_order_id' } };
 
-        const licenseKey = await options.resolveLicenseKey(
-            orderId,
-            String(attributes?.license_key ?? ''),
-        );
-
-        if (!licenseKey) {
-            // Report it honestly rather than pretend it was handled.
-            return {
-                status: 202,
-                body: { ok: false, event: eventName, orderId, revoked: 0, linked: false },
-            };
-        }
-
-        const result = await options.refundPurchase({ licenseKeyHash: sha256Hex(licenseKey) });
-
-        return {
-            status: 200,
-            body: {
-                ok: true,
-                event: eventName,
-                orderId,
-                revoked: result.revoked,
-                refunded: result.refunded,
-                linked: true,
-            },
-        };
+        return revokeForOrder(options, orderId, attributes, eventName);
     }
 
     // Any other event is acknowledged and ignored. Lemon Squeezy retries on

@@ -32,7 +32,12 @@ export const recordPurchase = internalMutation({
                 licenseKeyHash: args.licenseKeyHash,
                 productId: args.productId,
                 variantId: args.variantId ?? existing.variantId,
-                status: args.status ?? existing.status,
+                // A refund is TERMINAL. Lemon Squeezy retries webhooks and can
+                // deliver an `order_created` after the `order_refunded`; letting
+                // that patch write `paid` back over `refunded` would make the
+                // record lie about money we no longer hold.
+                status:
+                    existing.status === 'refunded' ? 'refunded' : (args.status ?? existing.status),
                 // A test order must never be silently promoted to a real one:
                 // once any copy of the order said "test", it stays a test.
                 testMode: (existing.testMode ?? false) || (args.testMode ?? false),

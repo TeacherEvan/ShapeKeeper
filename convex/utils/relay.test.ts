@@ -19,6 +19,7 @@ function orderPayload(options: {
     productId?: string;
     variantId?: string;
     testMode?: boolean;
+    status?: string;
 } = {}) {
     const {
         event = 'order_created',
@@ -28,6 +29,7 @@ function orderPayload(options: {
         productId = '1361446',
         variantId = '2126128',
         testMode = false,
+        status = event === 'order_refunded' ? 'refunded' : 'paid',
     } = options;
 
     return {
@@ -37,7 +39,7 @@ function orderPayload(options: {
             type: 'orders',
             attributes: {
                 store_id: storeId,
-                status: event === 'order_refunded' ? 'refunded' : 'paid',
+                status,
                 license_key: licenseKey,
                 test_mode: testMode,
                 first_order_item: {
@@ -196,5 +198,65 @@ describe('other events', () => {
         expect(result.body.ignored).toBe('subscription_created');
         expect(recordPurchase).not.toHaveBeenCalled();
         expect(refundPurchase).not.toHaveBeenCalled();
+    });
+});
+
+/**
+ * The event name lies; the STATUS is the truth. Lemon Squeezy mints the licence
+ * key at order creation, so an unpaid or fraudulent order arrives with a key
+ * that activates. Only `paid` may record a purchase.
+ */
+describe('order status gating', () => {
+    const statuses = ['pending', 'failed'];
+
+    for (const status of statuses) {
+        it(`ignores an order whose status is "${status}"`, async () => {
+            const { promise, recordPurchase, refundPurchase } = call(orderPayload({ status }));
+            const result = await promise;
+
+            expect(result.status).toBe(202);
+            expect(result.body.ignored).toBe(`order_status:${status}`);
+            expect(recordPurchase).not.toHaveBeenCalled();
+            expect(refundPurchase).not.toHaveBeenCalled();
+        });
+    }
+
+    it('treats a fraudulent order as a revocation, not a purchase', async () => {
+        const { promise, recordPurchase, refundPurchase } = call(
+            orderPayload({ status: 'fraudulent' }),
+        );
+        const result = await promise;
+
+        expect(recordPurchase).not.toHaveBeenCalled();
+        expect(refundPurchase).toHaveBeenCalledTimes(1);
+        expect(result.body.revoked).toBe(1);
+    });
+
+    it('treats a partial refund as a revocation of the whole unlock', async () => {
+        const { promise, recordPurchase, refundPurchase } = call(
+            orderPayload({ status: 'partial_refund' }),
+        );
+        const result = await promise;
+
+        expect(recordPurchase).not.toHaveBeenCalled();
+        expect(refundPurchase).toHaveBeenCalledTimes(1);
+        expect(result.status).toBe(200);
+    });
+
+    it('ignores an order that carries no status at all rather than assume it was paid', async () => {
+        const { promise, recordPurchase } = call(orderPayload({ status: '' }));
+        const result = await promise;
+
+        expect(result.status).toBe(202);
+        expect(result.body.ignored).toBe('order_status:unknown');
+        expect(recordPurchase).not.toHaveBeenCalled();
+    });
+
+    it('records a paid order', async () => {
+        const { promise, recordPurchase } = call(orderPayload({ status: 'paid' }));
+        const result = await promise;
+
+        expect(result.status).toBe(200);
+        expect(recordPurchase).toHaveBeenCalledTimes(1);
     });
 });

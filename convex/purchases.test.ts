@@ -113,3 +113,26 @@ describe('refundPurchase', () => {
         expect(result.revoked).toBe(0);
     });
 });
+
+describe('refund is terminal', () => {
+    it('does not let a retried order_created un-refund a purchase', async () => {
+        const { ctx, rows } = makeCtx([
+            { _id: 'p1', orderId: 'order-1', licenseKeyHash: 'hash-abc', status: 'refunded' },
+        ]);
+
+        await (purchases.recordPurchase as any)._handler(ctx, PURCHASE);
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0].status).toBe('refunded');
+    });
+
+    it('still records a paid order that was never refunded', async () => {
+        const { ctx, rows } = makeCtx([
+            { _id: 'p1', orderId: 'order-1', licenseKeyHash: 'hash-abc', status: 'paid' },
+        ]);
+
+        await (purchases.recordPurchase as any)._handler(ctx, PURCHASE);
+
+        expect(rows[0].status).toBe('paid');
+    });
+});
