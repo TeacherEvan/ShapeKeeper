@@ -102,3 +102,14 @@ export class SpriteSparks {
         this.cursor = 0;
     }
 }
+
+/** Safe haptic vibration wrapper (vibrates only when hardware/browser allows). */
+export function triggerHaptic(pattern = 10) {
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+        try {
+            navigator.vibrate(pattern);
+        } catch (_e) {
+            // Ignore devices without haptics
+        }
+    }
+}

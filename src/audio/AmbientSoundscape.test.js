@@ -174,7 +174,9 @@ describe('AmbientSoundscape', () => {
 
         soundscape.playInteractionChime(300, 200, 2, 'grab');
         // The chime voice gain feeds the chime bus, never the faded master.
-        const voiceGain = mockContext.createGain.mock.results.at(-2).value;
+        const voiceGain = mockContext.createGain.mock.results.find((r) =>
+            r.value.connect.mock.calls.some(([n]) => n === soundscape.chimeBus)
+        ).value;
         expect(voiceGain.connect).toHaveBeenCalledWith(soundscape.chimeBus);
         expect(voiceGain.connect).not.toHaveBeenCalledWith(soundscape.masterGain);
     });
@@ -252,5 +254,15 @@ describe('AmbientSoundscape', () => {
         soundscape.handleInteraction({ type: 'grab', x: 10, y: 10, speed: 2 });
         expect(chime).toHaveBeenCalledTimes(1);
         soundscape.destroy();
+    });
+    it('handles singularity and supernova interaction types with harmonic chimes', () => {
+        const soundscape = new AmbientSoundscape();
+        const chimeSpy = vi.spyOn(soundscape, 'playInteractionChime');
+
+        soundscape.handleInteraction({ type: 'singularity_start', x: 200, y: 150 });
+        soundscape.handleInteraction({ type: 'supernova', x: 200, y: 150, speed: 4 });
+
+        expect(chimeSpy).toHaveBeenCalledWith(200, 150, 4, 'supernova');
+        expect(CHIME_PROFILES.supernova.gain).toBeGreaterThan(1);
     });
 });

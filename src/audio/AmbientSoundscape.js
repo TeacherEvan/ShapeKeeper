@@ -10,6 +10,8 @@
  * @module audio/AmbientSoundscape
  */
 
+import { triggerHaptic } from '../ui/sprite-sparks.js';
+
 export const PENTATONIC_SCALE = [
     220.0, // A3
     246.94, // B3
@@ -50,6 +52,8 @@ export const CHIME_PROFILES = {
     firework: { octave: 2, duration: 2.0, jitter: 0.6, gain: 0.8, overtone: 0.4, echo: 0.3 },
     sparkle: { octave: 1, duration: 0.7, jitter: 0.2, gain: 0.45, overtone: 0.3, echo: 0.12 },
     touch: { octave: 1, duration: 2.2, jitter: 0.8, gain: 1, overtone: 0.5, echo: 0.25 },
+    singularity: { octave: 0.5, duration: 3.2, jitter: 0.2, gain: 1.1, overtone: 0.7, echo: 0.4 },
+    supernova: { octave: 1.5, duration: 3.0, jitter: 0.4, gain: 1.25, overtone: 0.8, echo: 0.45 },
 };
 
 /** Chimes go through their own bus; the drone fade must never mute them. */
@@ -272,11 +276,30 @@ export class AmbientSoundscape {
         const osc = this.ctx.createOscillator();
         const overtone = this.ctx.createOscillator();
 
-        // Sine primary + a brighter partial that dies first, like a struck bell.
+        // Sine primary + crystal FM modulator + harmonic partial.
         osc.type = 'sine';
         osc.frequency.setValueAtTime(noteFreq, now);
         // A few cents of random detune so repeated notes never sound sampled.
         osc.detune.setValueAtTime((Math.random() - 0.5) * 8, now);
+
+        // FM Modulator: Inharmonic crystal bell ratio (2.76x) decaying rapidly (180ms)
+        let fmOsc = null;
+        let fmGain = null;
+        try {
+            fmOsc = this.ctx.createOscillator();
+            fmGain = this.ctx.createGain();
+            fmOsc.type = 'sine';
+            fmOsc.frequency.setValueAtTime(noteFreq * 2.76, now);
+            const fmDepth = noteFreq * 0.9;
+            fmGain.gain.setValueAtTime(fmDepth, now);
+            fmGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+            fmOsc.connect(fmGain);
+            fmGain.connect(osc.frequency);
+            fmOsc.start(now);
+            fmOsc.stop(now + 0.22);
+        } catch (_e) {
+            // Graceful fallback if FM oscillator routing is unavailable
+        }
 
         overtone.type = 'triangle';
         overtone.frequency.setValueAtTime(noteFreq * 2, now);
@@ -396,12 +419,24 @@ export class AmbientSoundscape {
 
         this.modulateWithPointer(x, y, speed);
 
+        if (type === 'grab') {
+            triggerHaptic(8);
+        } else if (type === 'fling') {
+            if (speed > 2) triggerHaptic(12);
+        } else if (type === 'supernova') {
+            triggerHaptic([20, 35, 25]);
+        } else if (type === 'singularity_start') {
+            triggerHaptic([12, 30, 12]);
+        }
+
         if (
             type === 'grab' ||
             type === 'fling' ||
             type === 'ripple' ||
             type === 'tap' ||
-            type === 'firework'
+            type === 'firework' ||
+            type === 'singularity' ||
+            type === 'supernova'
         ) {
             if (type === 'grab' || type === 'touch') {
                 // The grab chime already voices this zone; strum from the next.
