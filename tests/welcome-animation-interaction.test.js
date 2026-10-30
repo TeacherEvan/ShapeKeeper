@@ -39,6 +39,9 @@ describe('WelcomeAnimation sprite interactions and ripples', () => {
             closePath: vi.fn(),
             save: vi.fn(),
             restore: vi.fn(),
+            translate: vi.fn(),
+            rotate: vi.fn(),
+            rect: vi.fn(),
             createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
             createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
         });
@@ -336,4 +339,78 @@ describe('WelcomeAnimation sprite interactions and ripples', () => {
         expect(PHYSICS_STEP_MS).toBeCloseTo(16.667, 2);
         rafSpy.mockRestore();
     }, 10000);
+
+    it('activates gravitational singularity on touch-and-hold and releases supernova bloom', () => {
+        const events = [];
+        anim.onInteraction((e) => events.push(e));
+
+        for (const pt of anim.floatingParticles) {
+            pt.x = 9000;
+            pt.y = 9000;
+        }
+
+        const p = anim.floatingParticles[0];
+        p.x = 200;
+        p.y = 200;
+
+        canvas.dispatchEvent(
+            new PointerEvent('pointerdown', { clientX: 300, clientY: 300, pointerId: 10 })
+        );
+
+        const ptr = anim.activePointers.get(10);
+        ptr.startTime -= 300;
+
+        anim.updateParticlePositions();
+        expect(ptr.isSingularity).toBe(true);
+        expect(events).toContainEqual(
+            expect.objectContaining({ type: 'singularity_start', x: 300, y: 300 })
+        );
+
+        window.dispatchEvent(
+            new PointerEvent('pointerup', { clientX: 300, clientY: 300, pointerId: 10 })
+        );
+
+        expect(events).toContainEqual(
+            expect.objectContaining({ type: 'supernova', x: 300, y: 300, speed: 5 })
+        );
+        expect(anim.sparks.length).toBeGreaterThanOrEqual(20);
+    });
+
+    it('emits stardust wake on pointermove across empty space', () => {
+        for (const pt of anim.floatingParticles) {
+            pt.x = 9000;
+            pt.y = 9000;
+        }
+
+        canvas.dispatchEvent(
+            new PointerEvent('pointerdown', { clientX: 100, clientY: 100, pointerId: 11 })
+        );
+        anim.sparks.clear();
+
+        window.dispatchEvent(
+            new PointerEvent('pointermove', { clientX: 140, clientY: 140, pointerId: 11 })
+        );
+
+        expect(anim.sparks.length).toBeGreaterThan(0);
+    });
+
+    it('drawParticleShape applies squash & stretch and draws celestial core', () => {
+        const p = anim.floatingParticles[0];
+        p.vx = 5;
+        p.vy = 0;
+        const mockCtx = {
+            save: vi.fn(),
+            restore: vi.fn(),
+            translate: vi.fn(),
+            rotate: vi.fn(),
+            scale: vi.fn(),
+            beginPath: vi.fn(),
+            arc: vi.fn(),
+            fill: vi.fn(),
+        };
+        anim.drawParticleShape(mockCtx, p, 100, 100, 10, 1);
+        expect(mockCtx.translate).toHaveBeenCalledWith(100, 100);
+        expect(mockCtx.scale).toHaveBeenCalled();
+        expect(mockCtx.fill).toHaveBeenCalledTimes(2);
+    });
 });

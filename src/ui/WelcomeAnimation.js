@@ -340,6 +340,34 @@ export class WelcomeAnimation {
     updateParticlePositions() {
         this.updateSpatialPartitionGrid();
 
+        const nowTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        for (const ptr of this.activePointers.values()) {
+            const heldDuration = nowTime - ptr.startTime;
+            const travelled = Math.hypot(
+                ptr.x - (ptr.startX ?? ptr.x),
+                ptr.y - (ptr.startY ?? ptr.y)
+            );
+            if (!ptr.isSingularity && heldDuration >= 280 && travelled <= TAP_SLOP_PX) {
+                ptr.isSingularity = true;
+                this.notifyInteraction({ type: 'singularity_start', x: ptr.x, y: ptr.y });
+            }
+            if (ptr.isSingularity && Math.random() < 0.3) {
+                const angle = Math.random() * Math.PI * 2;
+                const spawnDist = 35 + Math.random() * 65;
+                this.emitSparks(
+                    ptr.x + Math.cos(angle) * spawnDist,
+                    ptr.y + Math.sin(angle) * spawnDist,
+                    this.noteInk(ptr.x),
+                    {
+                        count: 1,
+                        speed: 1.5,
+                        driftX: -Math.cos(angle) * 1.8 - Math.sin(angle) * 1.2,
+                        driftY: -Math.sin(angle) * 1.8 + Math.cos(angle) * 1.2,
+                    }
+                );
+            }
+        }
+
         for (let particle of this.floatingParticles) {
             this.advancePop(particle);
 
@@ -354,13 +382,21 @@ export class WelcomeAnimation {
 
             this.applyFlockingBehavior(particle);
 
-            // Swirl around active pointers
+            // Swirl or gravitational singularity around active pointers
             for (const ptr of this.activePointers.values()) {
                 const dx = ptr.x - particle.x;
                 const dy = ptr.y - particle.y;
-                const distSq = dx * dx + dy * dy;
-                if (distSq < 250 * 250 && distSq > 400) {
-                    const dist = Math.sqrt(distSq);
+                const dist = Math.hypot(dx, dy);
+
+                if (ptr.isSingularity) {
+                    if (dist > 8) {
+                        const pull = Math.min(2.5, 400 / (dist + 50));
+                        const tangentX = -dy / dist;
+                        const tangentY = dx / dist;
+                        particle.vx += (dx / dist) * pull * 0.12 + tangentX * pull * 0.18;
+                        particle.vy += (dy / dist) * pull * 0.12 + tangentY * pull * 0.18;
+                    }
+                } else if (dist < 250 && dist > 20) {
                     const tangentX = -dy / dist;
                     const tangentY = dx / dist;
                     particle.vx += tangentX * 0.4 + (dx / dist) * 0.15;
@@ -587,8 +623,19 @@ export class WelcomeAnimation {
             this.notifyInteraction({ type: 'drag', x, y, speed });
         } else if (this.activePointers.has(e.pointerId)) {
             const ptr = this.activePointers.get(e.pointerId);
+            const moveDx = x - ptr.x;
+            const moveDy = y - ptr.y;
+            const moveDist = Math.hypot(moveDx, moveDy);
             ptr.x = x;
             ptr.y = y;
+            if (moveDist > 2) {
+                this.emitSparks(x, y, this.noteInk(x), {
+                    count: 1,
+                    speed: 0.8,
+                    driftX: -moveDx * 0.08,
+                    driftY: -moveDy * 0.08,
+                });
+            }
             this.notifyInteraction({ type: 'swirl', x, y, speed: 1.2 });
         }
     }
@@ -627,7 +674,37 @@ export class WelcomeAnimation {
                 ptr.x - (ptr.startX ?? ptr.x),
                 ptr.y - (ptr.startY ?? ptr.y)
             );
-            if (heldDuration < 280 && travelled <= TAP_SLOP_PX && e.type !== 'pointercancel') {
+            if (ptr.isSingularity) {
+                // Supernova bloom release!
+                for (const particle of this.floatingParticles) {
+                    if (particle.isGrabbed) continue;
+                    const dx = particle.x - ptr.x;
+                    const dy = particle.y - ptr.y;
+                    const dist = Math.hypot(dx, dy) || 1;
+                    if (dist < 360) {
+                        const blast = Math.min(14, (1 - dist / 360) * 12 + 3);
+                        particle.vx = (dx / dist) * blast;
+                        particle.vy = (dy / dist) * blast;
+                        particle.popV = (particle.popV || 0) + 0.35;
+                    }
+                }
+                this.ripples.push({
+                    x: ptr.x,
+                    y: ptr.y,
+                    radius: 4,
+                    maxRadius: 280,
+                    alpha: 1.0,
+                    baseAlpha: 1.0,
+                    t: 0,
+                    hue: hueForX(ptr.x, this.logicalWidth),
+                });
+                this.emitSparks(ptr.x, ptr.y, this.noteInk(ptr.x), { count: 24, speed: 5.5 });
+                this.notifyInteraction({ type: 'supernova', x: ptr.x, y: ptr.y, speed: 5 });
+            } else if (
+                heldDuration < 280 &&
+                travelled <= TAP_SLOP_PX &&
+                e.type !== 'pointercancel'
+            ) {
                 // Quick tap on empty space -> ripple!
                 this.ripples.push({
                     x: ptr.x,
@@ -647,34 +724,66 @@ export class WelcomeAnimation {
     }
 
     drawParticleShape(ctx, particle, x, y, size, alpha) {
+        ctx.save?.();
         ctx.globalAlpha = alpha;
-        ctx.fillStyle = particle.color;
 
-        switch (particle.type) {
+        const vx = particle.vx || 0;
+        const vy = particle.vy || 0;
+        const speed = Math.hypot(vx, vy);
+
+        ctx.translate?.(x, y);
+
+        // Disney Principle #1: Squash & Stretch along velocity vector
+        if (!this.reducedMotion && speed > 0.8 && !particle.isGrabbed) {
+            const angle = Math.atan2(vy, vx);
+            const stretch = Math.min(1.8, 1 + speed * 0.08);
+            const squash = 1 / Math.sqrt(stretch);
+            ctx.rotate?.(angle);
+            ctx.scale?.(stretch, squash);
+        }
+
+        // 1. Primary outer shape
+        ctx.fillStyle = particle.color;
+        this.renderShapeGeometry(ctx, particle.type, size);
+        ctx.fill?.();
+
+        // 2. Luminous Celestial Core: bright jewel-like inner nucleus
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = alpha * 0.72;
+        this.renderShapeGeometry(ctx, particle.type, size * 0.42);
+        ctx.fill?.();
+
+        ctx.restore?.();
+    }
+
+    renderShapeGeometry(ctx, type, size) {
+        ctx.beginPath?.();
+        switch (type) {
             case 'circle':
-                ctx.beginPath();
-                ctx.arc(x, y, size, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.arc?.(0, 0, size, 0, Math.PI * 2);
                 break;
             case 'square':
-                ctx.fillRect(x - size, y - size, size * 2, size * 2);
+                if (typeof ctx.rect === 'function') {
+                    ctx.rect(-size, -size, size * 2, size * 2);
+                } else if (typeof ctx.fillRect === 'function') {
+                    ctx.fillRect(-size, -size, size * 2, size * 2);
+                }
                 break;
             case 'triangle':
-                ctx.beginPath();
-                ctx.moveTo(x, y - size);
-                ctx.lineTo(x + size, y + size);
-                ctx.lineTo(x - size, y + size);
-                ctx.closePath();
-                ctx.fill();
+                ctx.moveTo?.(0, -size * 1.15);
+                ctx.lineTo?.(size, size * 0.85);
+                ctx.lineTo?.(-size, size * 0.85);
+                ctx.closePath?.();
                 break;
             case 'diamond':
-                ctx.beginPath();
-                ctx.moveTo(x, y - size);
-                ctx.lineTo(x + size, y);
-                ctx.lineTo(x, y + size);
-                ctx.lineTo(x - size, y);
-                ctx.closePath();
-                ctx.fill();
+                ctx.moveTo?.(0, -size * 1.15);
+                ctx.lineTo?.(size * 0.9, 0);
+                ctx.lineTo?.(0, size * 1.15);
+                ctx.lineTo?.(-size * 0.9, 0);
+                ctx.closePath?.();
+                break;
+            default:
+                ctx.arc?.(0, 0, size, 0, Math.PI * 2);
                 break;
         }
     }
@@ -704,6 +813,23 @@ export class WelcomeAnimation {
         this.drawTrails(particleAlpha);
 
         if (this.ripples.length > 0) this.drawRipples();
+
+        for (const ptr of this.activePointers.values()) {
+            if (!ptr.isSingularity) continue;
+            const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+            const pulse = Math.sin(now / 140) * 4;
+            const hue = hueForX(ptr.x, this.logicalWidth);
+            const lightness = this.isDarkTheme() ? 68 : 45;
+            this.ctx.save();
+            this.ctx.strokeStyle = `hsla(${hue}, 100%, ${lightness}%, 0.65)`;
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.arc(ptr.x, ptr.y, 24 + pulse, 0, Math.PI * 2);
+            this.ctx.stroke();
+            this.ctx.fillStyle = `hsla(${hue}, 100%, ${lightness}%, 0.15)`;
+            this.ctx.fill();
+            this.ctx.restore();
+        }
 
         // Draw particles
         for (let particle of this.floatingParticles) {
