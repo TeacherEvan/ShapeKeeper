@@ -29,6 +29,17 @@ export const BASE_LEVEL_TURN_DURATION_SECONDS = 7;
 export const SECONDS_PER_COMPLETED_LEVEL = 2;
 export const MAX_LEVEL_TURN_DURATION_SECONDS = 30;
 export const MIN_SPRITES_AFTER_TRIGGER = 1;
+export const MAX_VISIBLE_SPRITES = 300;
+
+/**
+ * Returns the number of sprites visible on home and side screens:
+ * strictly the collected amount, floored at 1 (so new players have a sprite to touch),
+ * capped at MAX_VISIBLE_SPRITES (300) for performance.
+ */
+export function getVisibleSpriteCount(state = LevelsProgress.getState()) {
+    const collected = Math.floor(Number(state?.spritesObtained) || 0);
+    return Math.min(MAX_VISIBLE_SPRITES, Math.max(MIN_SPRITES_AFTER_TRIGGER, collected));
+}
 // Last level playable without a purchase. One purchase unlocks every level after it.
 export const FREE_LEVELS = 19;
 

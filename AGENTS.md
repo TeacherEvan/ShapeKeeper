@@ -125,6 +125,11 @@ The product owner reads status on a phone. Keep the channel quiet and the eviden
 - The floating background sprites live in `src/ui/WelcomeAnimation.js`; their
   ink lives in `src/ui/sprite-palette.js` and their motion history in
   `src/ui/sprite-trail.js`. Do not inline either back into the animation class.
+- **The playground shows strictly the sprites the player collected (2026-10-30).**
+  There is no demo default or 120-sprite fallback. Home and both side screens draw
+  `getVisibleSpriteCount(state)`: `spritesObtained`, floored at 1 (so new players have a
+  sprite to interact with), and capped at 300 for device performance. Do not reintroduce
+  a fixed demo count like 120.
 - **A sprite may never paint a line across the canvas.** Any teleport (edge
   wrap, grab-drag, resize) must `trail.clear()`, and `drawTrails()` only strokes
   `SpriteTrail.forEachRun()`, which splits on any segment longer than
@@ -192,6 +197,11 @@ Scope to the area you touched. Body explains WHY, not WHAT (the diff shows
 WHAT). One concern per commit; do not mix a refactor with a feature.
 
 ## Pitfalls (dated)
+
+- **2026-10-30 — 120 demo sprites decision reversed.** The 2026-10-21 spec originally
+  stipulated 120 demo sprites before Levels was played and on side screens. The product
+  owner explicitly changed this requirement: players must interact only with the amount
+  of sprites they collect (minimum 1, capped at 300 on screen). Never restore 120.
 
 - **2026-08-25 — passcode-vs-env confusion.** Earlier draft proposals tried
   to use a static passcode from env or a per-process secret. The product

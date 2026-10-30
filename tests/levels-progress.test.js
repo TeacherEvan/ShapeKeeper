@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
     EASTER_EGG_LEVEL,
+    MAX_VISIBLE_SPRITES,
+    getVisibleSpriteCount,
     FREE_LEVELS,
     LevelsProgress,
     MAX_LEVEL,
@@ -247,5 +249,27 @@ describe('LevelsProgress & Grid Progression', () => {
 
         // 99 completed levels -> capped at 30s
         expect(getTurnDurationForLevel(99)).toBe(30);
+    });
+});
+
+describe('getVisibleSpriteCount', () => {
+    it('floors at 1 for undefined, null, non-numeric, 0, or negative spritesObtained', () => {
+        expect(getVisibleSpriteCount(null)).toBe(1);
+        expect(getVisibleSpriteCount({})).toBe(1);
+        expect(getVisibleSpriteCount({ spritesObtained: 0 })).toBe(1);
+        expect(getVisibleSpriteCount({ spritesObtained: -5 })).toBe(1);
+        expect(getVisibleSpriteCount({ spritesObtained: NaN })).toBe(1);
+    });
+
+    it('returns exact collected count between 1 and MAX_VISIBLE_SPRITES', () => {
+        expect(getVisibleSpriteCount({ spritesObtained: 1 })).toBe(1);
+        expect(getVisibleSpriteCount({ spritesObtained: 7 })).toBe(7);
+        expect(getVisibleSpriteCount({ spritesObtained: 42 })).toBe(42);
+        expect(getVisibleSpriteCount({ spritesObtained: 300 })).toBe(300);
+    });
+
+    it('caps at MAX_VISIBLE_SPRITES (300) when collection exceeds it', () => {
+        expect(getVisibleSpriteCount({ spritesObtained: 301 })).toBe(MAX_VISIBLE_SPRITES);
+        expect(getVisibleSpriteCount({ spritesObtained: 1000 })).toBe(MAX_VISIBLE_SPRITES);
     });
 });

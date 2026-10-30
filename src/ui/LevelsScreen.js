@@ -37,7 +37,7 @@ export function startLevelMatch(levelNumber, deps) {
         splashOverlay.hidden = true;
     }
 
-    // Trigger Levels mode: flips levelsTriggered to true and clears default 120 sprites to 1
+    // Trigger Levels mode: flips levelsTriggered to true and ensures at least 1 sprite
     LevelsProgress.triggerLevelsMode();
 
     if (welcomeAnimation) {
