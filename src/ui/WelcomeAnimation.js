@@ -6,10 +6,35 @@
  * @module ui/WelcomeAnimation
  */
 
-import { LevelsProgress } from './LevelsProgress.js';
+import { LevelsProgress, getVisibleSpriteCount } from './LevelsProgress.js';
 import { SpriteFireworksManager, advanceSpriteLifecycle } from './SpriteFireworks.js';
 import { SPRITE_PALETTES, hexToRgbChannels } from './sprite-palette.js';
+import { SpriteSparks } from './sprite-sparks.js';
 import { SpriteTrail, TRAIL_CAPACITY, TRAIL_MAX_SEGMENT } from './sprite-trail.js';
+
+/**
+ * All sprite physics were tuned per *frame* at 60 Hz. Stepping on a fixed
+ * clock keeps 90/120/144 Hz phones from running the playground at 1.5-2.4x
+ * speed (and with half-length motion trails).
+ */
+export const PHYSICS_STEP_MS = 1000 / 60;
+/** Accept frames up to this early so 60 Hz timer jitter never drops a step. */
+const STEP_JITTER_MS = 2;
+/** Catch-up cap after a hitch: never spiral into a burst of updates. */
+const MAX_STEPS_PER_FRAME = 2;
+/** Pointer travel (px) beyond which a press is a swipe, not a tap. */
+export const TAP_SLOP_PX = 14;
+/** Number of musical zones across the screen; mirrors the pentatonic scale. */
+const NOTE_ZONES = 10;
+/** Scale a grabbed sprite swells to; the spring overshoots it on release. */
+const GRAB_SCALE = 1.7;
+
+/** Spectrum hue (degrees) for a screen x, quantised to the sound's note zones. */
+export function hueForX(x, width) {
+    if (!(width > 0)) return 0;
+    const zone = Math.min(NOTE_ZONES - 1, Math.max(0, Math.floor((x / width) * NOTE_ZONES)));
+    return Math.round((zone / (NOTE_ZONES - 1)) * 300);
+}
 
 export class WelcomeAnimation {
     constructor() {
@@ -17,11 +42,8 @@ export class WelcomeAnimation {
         this.ctx = this.canvas.getContext('2d');
         this.floatingParticles = [];
         const levelsState = LevelsProgress.getState();
-        // Default 120 sprites on launch until first Levels game is played;
-        // once Levels is triggered, only displayed obtained sprites (starting at 1).
-        this.particleCount = levelsState.levelsTriggered
-            ? Math.max(1, levelsState.spritesObtained)
-            : 120;
+        // Sprites shown on home and side screens strictly reflect collected count (min 1, max 300).
+        this.particleCount = getVisibleSpriteCount(levelsState);
         this.animationFrameId = null;
         this.isDimmed = false;
         this.fireworksManager = new SpriteFireworksManager();
@@ -45,6 +67,13 @@ export class WelcomeAnimation {
         this.activePointers = new Map();
         this.grabbedSprites = new Map();
         this.ripples = [];
+        this.sparks = new SpriteSparks();
+        this.stepAccumulator = 0;
+        this.reducedMotion = Boolean(
+            typeof window !== 'undefined' &&
+            typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-reduced-motion: reduce)')?.matches
+        );
         this.onInteractionCallback = null;
 
         this.initializeCanvas();
@@ -164,7 +193,11 @@ export class WelcomeAnimation {
         this.transitionToMainMenu();
     }
 
-    createSingleParticle() {
+    /**
+     * @param {{spawn?: boolean}} [opts] spawn=true grows the sprite in with an
+     *   elastic pop instead of appearing at full size.
+     */
+    createSingleParticle({ spawn = false } = {}) {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const palette = this.colorPalette[isDark ? 'dark' : 'light'];
         const colorSet = palette[Math.floor(Math.random() * palette.length)];
@@ -193,6 +226,8 @@ export class WelcomeAnimation {
             trail: new SpriteTrail(TRAIL_CAPACITY),
             pulsePhase: Math.random() * Math.PI * 2,
             pulseSpeed: 0.02 + Math.random() * 0.03,
+            pop: spawn && !this.reducedMotion ? 0 : 1,
+            popV: 0,
         };
     }
 
@@ -205,34 +240,28 @@ export class WelcomeAnimation {
     syncWithLevelsProgress() {
         const state = LevelsProgress.getState();
         this.isEasterEggActive = LevelsProgress.isEasterEggUnlocked(state);
-        if (state.levelsTriggered) {
-            const targetCount = Math.max(1, state.spritesObtained);
-            this.particleCount = targetCount;
-            while (this.floatingParticles.length > targetCount) {
-                this.floatingParticles.pop();
-            }
-            while (this.floatingParticles.length < targetCount) {
-                this.floatingParticles.push(this.createSingleParticle());
-            }
+        const targetCount = getVisibleSpriteCount(state);
+        this.particleCount = targetCount;
+        while (this.floatingParticles.length > targetCount) {
+            this.releaseIfGrabbed(this.floatingParticles.pop());
+        }
+        while (this.floatingParticles.length < targetCount) {
+            this.floatingParticles.push(this.createSingleParticle({ spawn: true }));
         }
     }
 
     setSideScreenActive(active) {
         this.isSideScreenActive = active;
-        const state = LevelsProgress.getState();
-        const targetCount = active
-            ? 120
-            : state.levelsTriggered
-              ? Math.max(1, state.spritesObtained)
-              : 120;
+        this.syncWithLevelsProgress();
+    }
 
-        this.particleCount = targetCount;
-        while (this.floatingParticles.length < targetCount) {
-            this.floatingParticles.push(this.createSingleParticle());
+    /** Drop any pointer still holding a sprite that just left the flock. */
+    releaseIfGrabbed(particle) {
+        if (!particle?.isGrabbed) return;
+        for (const [id, grab] of this.grabbedSprites) {
+            if (grab.particle === particle) this.grabbedSprites.delete(id);
         }
-        while (this.floatingParticles.length > targetCount) {
-            this.floatingParticles.pop();
-        }
+        particle.isGrabbed = false;
     }
 
     applyFlockingBehavior(particle) {
@@ -312,6 +341,8 @@ export class WelcomeAnimation {
         this.updateSpatialPartitionGrid();
 
         for (let particle of this.floatingParticles) {
+            this.advancePop(particle);
+
             // A grabbed sprite is teleported by the pointer: its stored history
             // would smear a diagonal streak across the canvas, so drop it.
             if (particle.isGrabbed) {
@@ -343,8 +374,10 @@ export class WelcomeAnimation {
                 const dy = particle.y - ripple.y;
                 const dist = Math.hypot(dx, dy);
                 if (Math.abs(dist - ripple.radius) < 30 && dist > 0) {
-                    particle.vx += (dx / dist) * 1.8;
-                    particle.vy += (dy / dist) * 1.8;
+                    // The shove fades with the wave, so late rings only nudge.
+                    const push = 1.8 * Math.max(0, 1 - (ripple.t ?? 0));
+                    particle.vx += (dx / dist) * push;
+                    particle.vy += (dy / dist) * push;
                 }
             }
 
@@ -361,15 +394,56 @@ export class WelcomeAnimation {
             }
         }
 
-        // Update ripples
+        // Update ripples: ease-out expansion (fast start, soft landing) with a
+        // matching fade, instead of a constant-speed linear ring.
         for (let i = this.ripples.length - 1; i >= 0; i--) {
             const r = this.ripples[i];
-            r.radius += 4.5;
-            r.alpha -= 0.02;
-            if (r.alpha <= 0 || r.radius >= r.maxRadius) {
+            r.t = (r.t ?? 0) + 0.03;
+            const t = Math.min(1, r.t);
+            const eased = 1 - Math.pow(1 - t, 3);
+            r.radius = 2 + (r.maxRadius - 2) * eased;
+            r.alpha = (r.baseAlpha ?? 0.85) * Math.pow(1 - t, 1.6);
+            if (r.t >= 1 || r.alpha <= 0.005) {
                 this.ripples.splice(i, 1);
             }
         }
+
+        this.sparks.update();
+    }
+
+    /**
+     * Damped spring on the sprite's scale: swells when grabbed, overshoots
+     * and settles when released, and pops in elastically when spawned.
+     */
+    advancePop(particle) {
+        if (typeof particle.pop !== 'number') {
+            particle.pop = 1;
+            particle.popV = 0;
+        }
+        if (this.reducedMotion) {
+            particle.pop = 1;
+            particle.popV = 0;
+            return;
+        }
+        const target = particle.isGrabbed ? GRAB_SCALE : 1;
+        particle.popV = ((particle.popV || 0) + (target - particle.pop) * 0.22) * 0.72;
+        particle.pop = Math.max(0, particle.pop + particle.popV);
+    }
+
+    isDarkTheme() {
+        return document.documentElement.getAttribute('data-theme') === 'dark';
+    }
+
+    /** Note-matched ink for ripples/sparks, legible on both theme backdrops. */
+    noteInk(x, alpha = 1) {
+        const hue = hueForX(x, this.logicalWidth);
+        const lightness = this.isDarkTheme() ? 66 : 42;
+        return `hsla(${hue}, 100%, ${lightness}%, ${alpha})`;
+    }
+
+    emitSparks(x, y, color, opts) {
+        if (this.reducedMotion) return;
+        this.sparks.burst(x, y, color, opts);
     }
 
     /**
@@ -467,6 +541,8 @@ export class WelcomeAnimation {
         if (hit) {
             hit.isGrabbed = true;
             hit.trail.clear();
+            hit.popV = (hit.popV || 0) + 0.25;
+            this.emitSparks(x, y, hit.color, { count: 6, speed: 2.2 });
             this.grabbedSprites.set(e.pointerId, {
                 particle: hit,
                 lastX: x,
@@ -480,6 +556,8 @@ export class WelcomeAnimation {
             this.activePointers.set(e.pointerId, {
                 x,
                 y,
+                startX: x,
+                startY: y,
                 startTime: typeof performance !== 'undefined' ? performance.now() : Date.now(),
             });
             this.notifyInteraction({ type: 'touch', x, y, speed: 1 });
@@ -530,12 +608,26 @@ export class WelcomeAnimation {
             grab.particle.vy = Math.max(-12, Math.min(12, grab.vy || 0));
             this.grabbedSprites.delete(e.pointerId);
             const speed = Math.hypot(grab.vx, grab.vy);
+            if (speed > 2) {
+                this.emitSparks(x, y, grab.particle.color, {
+                    count: Math.min(14, 4 + Math.round(speed)),
+                    speed: 2 + speed * 0.3,
+                    driftX: grab.vx * 0.25,
+                    driftY: grab.vy * 0.25,
+                });
+            }
             this.notifyInteraction({ type: 'fling', x, y, speed });
         } else if (this.activePointers.has(e.pointerId)) {
             const ptr = this.activePointers.get(e.pointerId);
             const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
             const heldDuration = now - ptr.startTime;
-            if (heldDuration < 280) {
+            // A page swipe that starts on empty canvas is quick too: only a press
+            // that stayed put (and was not cancelled) counts as a tap.
+            const travelled = Math.hypot(
+                ptr.x - (ptr.startX ?? ptr.x),
+                ptr.y - (ptr.startY ?? ptr.y)
+            );
+            if (heldDuration < 280 && travelled <= TAP_SLOP_PX && e.type !== 'pointercancel') {
                 // Quick tap on empty space -> ripple!
                 this.ripples.push({
                     x: ptr.x,
@@ -543,7 +635,11 @@ export class WelcomeAnimation {
                     radius: 2,
                     maxRadius: 180,
                     alpha: 0.85,
+                    baseAlpha: 0.85,
+                    t: 0,
+                    hue: hueForX(ptr.x, this.logicalWidth),
                 });
+                this.emitSparks(ptr.x, ptr.y, this.noteInk(ptr.x), { count: 10, speed: 3.2 });
                 this.notifyInteraction({ type: 'ripple', x: ptr.x, y: ptr.y, speed: 3 });
             }
             this.activePointers.delete(e.pointerId);
@@ -607,17 +703,7 @@ export class WelcomeAnimation {
         // Draw particle trails
         this.drawTrails(particleAlpha);
 
-        if (this.ripples.length > 0) {
-            this.ctx.save();
-            for (const r of this.ripples) {
-                this.ctx.strokeStyle = `rgba(0, 240, 255, ${Math.max(0, r.alpha)})`;
-                this.ctx.lineWidth = 2.5;
-                this.ctx.beginPath();
-                this.ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
-                this.ctx.stroke();
-            }
-            this.ctx.restore();
-        }
+        if (this.ripples.length > 0) this.drawRipples();
 
         // Draw particles
         for (let particle of this.floatingParticles) {
@@ -633,7 +719,13 @@ export class WelcomeAnimation {
                 this.ctx.shadowColor = particle.color;
                 this.ctx.shadowBlur = 20;
                 this.ctx.beginPath();
-                this.ctx.arc(particle.x, particle.y, particle.size * 2.8, 0, Math.PI * 2);
+                this.ctx.arc(
+                    particle.x,
+                    particle.y,
+                    particle.size * 2.8 * (1 + 0.08 * Math.sin(this.lastFrameTime / 90)),
+                    0,
+                    Math.PI * 2
+                );
                 this.ctx.stroke();
                 this.ctx.restore();
             }
@@ -643,14 +735,46 @@ export class WelcomeAnimation {
                 particle,
                 particle.x,
                 particle.y,
-                particle.size * eggScale,
+                particle.size * eggScale * (particle.pop ?? 1),
                 particleAlpha * eggAlpha
             );
         }
 
+        this.sparks.render(this.ctx, { additive: this.isDarkTheme() });
+
         if (this.isEasterEggActive && !this.isDimmed) {
             this.fireworksManager.render(this.ctx);
         }
+    }
+
+    /** Note-coloured double ring with a soft fill; thins as it fades. */
+    drawRipples() {
+        const ctx = this.ctx;
+        ctx.save();
+        for (const r of this.ripples) {
+            const a = Math.max(0, r.alpha);
+            const hue = r.hue ?? hueForX(r.x, this.logicalWidth);
+            const lightness = this.isDarkTheme() ? 66 : 42;
+            const ink = (alpha) => `hsla(${hue}, 100%, ${lightness}%, ${alpha})`;
+
+            ctx.fillStyle = ink(a * 0.1);
+            ctx.beginPath();
+            ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = ink(a);
+            ctx.lineWidth = 0.8 + 2.4 * a;
+            ctx.beginPath();
+            ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = ink(a * 0.5);
+            ctx.lineWidth = 0.6 + 1.2 * a;
+            ctx.beginPath();
+            ctx.arc(r.x, r.y, r.radius * 0.72, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        ctx.restore();
     }
 
     drawConnections(alpha) {
@@ -744,8 +868,19 @@ export class WelcomeAnimation {
             this.fireworksManager.update(dtMs);
         }
 
-        this.updateParticlePositions();
-        this.renderParticles();
+        // Fixed 60 Hz physics: see PHYSICS_STEP_MS. Frames that land between
+        // steps (high-refresh displays) skip both update and draw, so motion
+        // speed and trail length are identical on every display.
+        this.stepAccumulator += dtMs;
+        const steps = Math.min(
+            MAX_STEPS_PER_FRAME,
+            Math.floor((this.stepAccumulator + STEP_JITTER_MS) / PHYSICS_STEP_MS)
+        );
+        if (steps > 0) {
+            this.stepAccumulator = Math.max(0, this.stepAccumulator - steps * PHYSICS_STEP_MS);
+            for (let i = 0; i < steps; i++) this.updateParticlePositions();
+            this.renderParticles();
+        }
         this.animationFrameId = requestAnimationFrame(() => this.startAnimationLoop());
     }
 
