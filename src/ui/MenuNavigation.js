@@ -309,6 +309,7 @@ function initializeMultiplayerGame(roomState) {
         deferInitialReady: true,
     });
     multiplayerGame.isMultiplayer = true;
+    multiplayerGame.isOnline = true;
     multiplayerGame.myPlayerNumber = myIndex + 1;
     multiplayerGame.isHost = resolvedIsHost;
     setActiveGame(multiplayerGame);

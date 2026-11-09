@@ -5,7 +5,7 @@
 import { announceAlert, announceStatus } from '../src/ui/AccessibilityAnnouncer.js';
 import { LevelsProgress, MAX_LEVEL, getTurnDurationForLevel } from '../src/ui/LevelsProgress.js';
 import { showScreen } from '../src/ui/ScreenTransition.js';
-import { prefersReducedMotion } from '../utils.js';
+import { formatHexAlpha, prefersReducedMotion } from '../utils.js';
 
 function getTurnIndicator() {
     return document.getElementById('turnIndicator');
@@ -18,6 +18,9 @@ function spawnDirectionalBurst(game, count, createParticle) {
 }
 
 export function triggerBonusTurnVisual(game, refreshUI) {
+    if (game?.uiManager) {
+        game.uiManager.turnBannerLockUntil = Date.now() + 1500;
+    }
     const turnIndicator = getTurnIndicator();
     if (turnIndicator) {
         turnIndicator.textContent = '🎁 BONUS TURN! 🎁';
@@ -48,6 +51,9 @@ export function triggerBonusTurnVisual(game, refreshUI) {
 }
 
 export function triggerSkipTurnVisual(game, skippedPlayer, refreshUI) {
+    if (game?.uiManager) {
+        game.uiManager.turnBannerLockUntil = Date.now() + 2000;
+    }
     const turnIndicator = getTurnIndicator();
     if (turnIndicator) {
         turnIndicator.textContent = `❄️ Player ${skippedPlayer} is FROZEN! Turn skipped! ❄️`;
@@ -72,6 +78,9 @@ export function triggerSkipTurnVisual(game, skippedPlayer, refreshUI) {
 }
 
 export function triggerDoublePointsVisual(game, refreshUI) {
+    if (game?.uiManager) {
+        game.uiManager.turnBannerLockUntil = Date.now() + 1500;
+    }
     const turnIndicator = getTurnIndicator();
     if (turnIndicator) {
         turnIndicator.textContent = '✨ DOUBLE POINTS! ✨';
@@ -101,6 +110,9 @@ export function triggerDoublePointsVisual(game, refreshUI) {
 }
 
 export function triggerDoubleLineReminder(game, refreshUI) {
+    if (game?.uiManager) {
+        game.uiManager.turnBannerLockUntil = Date.now() + 2000;
+    }
     const turnIndicator = getTurnIndicator();
     if (turnIndicator) {
         turnIndicator.textContent = '⚡ LIGHTNING! Draw another line! ⚡';
@@ -125,13 +137,15 @@ export function triggerDoubleLineReminder(game, refreshUI) {
     }));
 }
 
-function buildWinnerScoreEntry(player, rankIndex, winner) {
+function buildWinnerScoreEntry(player, winner, isTie = false) {
     const entry = document.createElement('div');
-    entry.className = `final-score-entry ${player.num === winner ? 'winner' : ''}`.trim();
+    const isWinner = isTie || player.num === winner;
+    entry.className = `final-score-entry ${isWinner ? 'winner' : ''}`.trim();
 
     const rank = document.createElement('span');
     rank.className = 'final-score-rank';
-    rank.textContent = rankIndex === 0 ? '🥇' : '🥈';
+    // A draw gives both players the gold: nobody lost, so nobody is second.
+    rank.textContent = isWinner ? '🥇' : '🥈';
 
     const color = document.createElement('div');
     color.className = 'final-score-color';
@@ -150,8 +164,35 @@ function buildWinnerScoreEntry(player, rankIndex, winner) {
     return entry;
 }
 
+let activeConfettiAnim = null;
+let activeFireworksAnim = null;
+let activeFireworksInterval = null;
+
+export function stopCelebrationAnimations() {
+    if (activeConfettiAnim) {
+        cancelAnimationFrame(activeConfettiAnim);
+        activeConfettiAnim = null;
+    }
+    if (activeFireworksAnim) {
+        cancelAnimationFrame(activeFireworksAnim);
+        activeFireworksAnim = null;
+    }
+    if (activeFireworksInterval) {
+        clearInterval(activeFireworksInterval);
+        activeFireworksInterval = null;
+    }
+    document.getElementById('confettiCanvas')?.remove();
+    document.getElementById('fireworksCanvas')?.remove();
+}
+
 export function launchConfetti(accentColor) {
     if (prefersReducedMotion()) return;
+    if (activeConfettiAnim) {
+        cancelAnimationFrame(activeConfettiAnim);
+        activeConfettiAnim = null;
+    }
+    document.getElementById('confettiCanvas')?.remove();
+
     const canvas = document.createElement('canvas');
     canvas.id = 'confettiCanvas';
     canvas.style.cssText =
@@ -218,18 +259,29 @@ export function launchConfetti(accentColor) {
 
         frame += 1;
         if (activeCount > 0 && frame < 300) {
-            requestAnimationFrame(animate);
+            activeConfettiAnim = requestAnimationFrame(animate);
             return;
         }
 
+        activeConfettiAnim = null;
         canvas.remove();
     };
 
-    animate();
+    activeConfettiAnim = requestAnimationFrame(animate);
 }
 
 export function launchFireworks(accentColor) {
     if (prefersReducedMotion()) return;
+    if (activeFireworksAnim) {
+        cancelAnimationFrame(activeFireworksAnim);
+        activeFireworksAnim = null;
+    }
+    if (activeFireworksInterval) {
+        clearInterval(activeFireworksInterval);
+        activeFireworksInterval = null;
+    }
+    document.getElementById('fireworksCanvas')?.remove();
+
     const canvas = document.createElement('canvas');
     canvas.id = 'fireworksCanvas';
     canvas.style.cssText =
@@ -245,9 +297,10 @@ export function launchFireworks(accentColor) {
     const colors = [accentColor, '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1'];
 
     let launchCount = 0;
-    const launchInterval = setInterval(() => {
+    activeFireworksInterval = setInterval(() => {
         if (launchCount >= 8) {
-            clearInterval(launchInterval);
+            clearInterval(activeFireworksInterval);
+            activeFireworksInterval = null;
             return;
         }
 
@@ -307,11 +360,7 @@ export function launchFireworks(accentColor) {
             if (particle.life > 0) {
                 ctx.beginPath();
                 ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
-                ctx.fillStyle =
-                    particle.color +
-                    Math.floor(particle.life * 255)
-                        .toString(16)
-                        .padStart(2, '0');
+                ctx.fillStyle = formatHexAlpha(particle.color, particle.life);
                 ctx.fill();
                 continue;
             }
@@ -320,17 +369,19 @@ export function launchFireworks(accentColor) {
         }
 
         if (particles.length > 0 || fireworks.some((firework) => !firework.exploded)) {
-            requestAnimationFrame(animate);
+            activeFireworksAnim = requestAnimationFrame(animate);
             return;
         }
 
+        activeFireworksAnim = null;
         setTimeout(() => canvas.remove(), 1000);
     };
 
-    animate();
+    activeFireworksAnim = requestAnimationFrame(animate);
 }
 
 export function hideGameOverSplash() {
+    stopCelebrationAnimations();
     const overlay = document.getElementById('gameOverSplashOverlay');
     if (overlay) {
         overlay.hidden = true;
@@ -405,10 +456,25 @@ export function showWinner(game) {
     }
 
     const winner = game.scores[1] > game.scores[2] ? 1 : game.scores[2] > game.scores[1] ? 2 : 0;
+    const isTie = winner === 0;
     const winnerColor =
         winner === 1 ? game.player1Color : winner === 2 ? game.player2Color : '#FFD700';
 
-    const isLevelsDefeat = Boolean(game.isLevelsMode && winner !== 1);
+    // A draw counts as a win in Levels mode (owner decision 2026-10-30): the AI
+    // has to actually out-score the player to take a sprite. A tie clears the
+    // level, pays the sprite and offers the next one.
+    const isLevelsDefeat = Boolean(game.isLevelsMode && winner === 2);
+
+    // The heading used to read "Game Over!" even on a cleared level. Match it
+    // to the result so a win or draw never looks like a loss.
+    const titleEl = document.getElementById('winnerScreenTitle');
+    if (titleEl) {
+        if (game.isLevelsMode && !isLevelsDefeat) {
+            titleEl.textContent = isTie ? 'Draw!' : 'Level Complete!';
+        } else {
+            titleEl.textContent = 'Game Over!';
+        }
+    }
 
     if (isLevelsDefeat) {
         game.soundManager?.playInvalidSound?.();
@@ -427,7 +493,7 @@ export function showWinner(game) {
 
     if (winnerText) {
         if (game.isLevelsMode) {
-            if (winner === 1) {
+            if (winner === 1 || isTie) {
                 const state = !game._levelResultRecorded
                     ? LevelsProgress.recordLevelWin(game.currentLevel)
                     : LevelsProgress.getState();
@@ -437,7 +503,13 @@ export function showWinner(game) {
                 }
                 const updatedTurnDuration = getTurnDurationForLevel(state.completedLevels.length);
                 const durationSuffix = updatedTurnDuration >= 30 ? ' (max 30s)' : ' (+2s/lvl)';
-                let winHtml = `🏆 Level ${game.currentLevel} Complete! 🏆<br><span style="font-size: 0.6em; color: #00f0ff;">✨ +1 Sprite (Total: ${state.spritesObtained}) · ⏱️ Turn Timer: ${updatedTurnDuration}s${durationSuffix} ✨</span>`;
+                const headline = isTie
+                    ? `🤝 Level ${game.currentLevel} Complete — Draw! 🤝`
+                    : `🏆 Level ${game.currentLevel} Complete! 🏆`;
+                const drawNote = isTie
+                    ? '<br><span style="font-size: 0.55em; color: #ffd700;">🤝 A draw counts as a win — level cleared.</span>'
+                    : '';
+                let winHtml = `${headline}${drawNote}<br><span style="font-size: 0.6em; color: #00f0ff;">✨ +1 Sprite (Total: ${state.spritesObtained}) · ⏱️ Turn Timer: ${updatedTurnDuration}s${durationSuffix} ✨</span>`;
                 if (state.easterEggJustUnlocked) {
                     winHtml += `<br><span style="font-size: 0.55em; color: #ffd700;">🎆 You beat level 100! Secret unlocked — check the home screen! 🎆</span>`;
                 }
@@ -445,8 +517,13 @@ export function showWinner(game) {
                 winnerText.style.color = winnerColor;
                 if (playAgainBtn) {
                     if (game.currentLevel < MAX_LEVEL) {
-                        playAgainBtn.textContent = `Next Level (${game.currentLevel + 1}) →`;
-                        game._nextLevelToPlay = game.currentLevel + 1;
+                        const nextLevel = game.currentLevel + 1;
+                        // Never promise a level the player cannot enter: above
+                        // the free tier the button opens the unlock gate instead.
+                        playAgainBtn.textContent = LevelsProgress.isLevelUnlocked(nextLevel)
+                            ? `Next Level (${nextLevel}) →`
+                            : `Unlock Level ${nextLevel} →`;
+                        game._nextLevelToPlay = nextLevel;
                     } else {
                         playAgainBtn.textContent = `Replay Level ${MAX_LEVEL} ★`;
                         game._nextLevelToPlay = MAX_LEVEL;
@@ -495,7 +572,7 @@ export function showWinner(game) {
 
     if (finalScores) {
         finalScores.replaceChildren(
-            ...players.map((player, index) => buildWinnerScoreEntry(player, index, winner))
+            ...players.map((player) => buildWinnerScoreEntry(player, winner, isTie))
         );
     }
 

@@ -58,7 +58,7 @@ function evaluateImmediateSquareGain(gameLogic, lines, lineKey, gridRows, gridCo
 /**
  * Heuristic evaluation of a board position from AI's perspective.
  */
-function evaluatePosition(gameLogic, lines, gridRows, gridCols) {
+function evaluatePosition(gameLogic, lines, gridRows, gridCols, isMaximizing = true) {
     const analysis = analyzeBoardChains(
         gridRows,
         gridCols,
@@ -68,13 +68,15 @@ function evaluatePosition(gameLogic, lines, gridRows, gridCols) {
     );
 
     let score = 0;
+    // When isMaximizing is true, it is AI's turn at the leaf; a 3-edge square is an immediate capture (+10).
+    // When isMaximizing is false, it is the opponent's turn; a 3-edge square is conceded to the opponent (-10).
+    const captureWeight = isMaximizing ? 10 : -10;
+
     for (const cell of analysis.cells) {
         if (cell.isCompleted || cell.isClaimedByShape) continue;
         if (cell.degree === 3) {
-            // Immediate capture exists
-            score += 10;
+            score += captureWeight;
         } else if (cell.degree === 2) {
-            // Dangerous 3rd-edge trap
             score -= 5;
         }
     }
@@ -98,7 +100,7 @@ function minimax(
 ) {
     if (depth === 0) {
         return {
-            score: evaluatePosition(gameLogic, lines, gridRows, gridCols),
+            score: evaluatePosition(gameLogic, lines, gridRows, gridCols, isMaximizing),
             move: null,
         };
     }

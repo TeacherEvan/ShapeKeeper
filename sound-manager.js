@@ -383,5 +383,11 @@ export class SoundManager {
             soundToggle.textContent = this.enabled ? '🔊' : '🔇';
             soundToggle.classList.toggle('muted', !this.enabled);
         }
+        // Let the home soundscape honour the same mute switch.
+        if (typeof window !== 'undefined' && typeof CustomEvent === 'function') {
+            window.dispatchEvent(
+                new CustomEvent('shapekeeper:soundToggled', { detail: { enabled: this.enabled } })
+            );
+        }
     }
 }

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { HomePager, resolveSwipe } from './HomePager.js';
+import { HomePager, applyRubberBand, resolveSwipe } from './HomePager.js';
 
 describe('resolveSwipe', () => {
     it('returns currentPosition when width is non-positive or missing', () => {
@@ -192,5 +192,59 @@ describe('HomePager', () => {
 
         expect(pager.isDragging).toBe(false);
         pager.destroy();
+    });
+    it('rubber-bands past the last page and locks vertical drags out', () => {
+        window.innerWidth = 1000;
+        const pager = new HomePager(menuLayer, { container });
+        pager.goTo(1, false);
+
+        const down = (x, y) =>
+            container.dispatchEvent(
+                new MouseEvent('pointerdown', { clientX: x, clientY: y, bubbles: true })
+            );
+        const move = (x, y) =>
+            window.dispatchEvent(new MouseEvent('pointermove', { clientX: x, clientY: y }));
+
+        // Inside the dead zone nothing moves yet.
+        down(500, 300);
+        move(503, 300);
+        expect(pager.axisLocked).toBe(false);
+
+        // Dragging left on the last page: resists instead of following 1:1.
+        move(300, 302);
+        expect(pager.axisLocked).toBe(true);
+        const shown = Number(/translateX\((-?[\d.]+)px\)/.exec(menuLayer.style.transform)[1]);
+        expect(shown).toBeLessThan(-1000);
+        expect(shown).toBeGreaterThan(-1200);
+        window.dispatchEvent(new MouseEvent('pointerup', { clientX: 300, clientY: 302 }));
+        expect(pager.position).toBe(1);
+
+        // A mostly-vertical drag is released to the page, not turned sideways.
+        down(500, 300);
+        move(505, 340);
+        expect(pager.isDragging).toBe(false);
+        pager.destroy();
+    });
+
+    it('snaps back instead of paging when the pointer is cancelled mid-drag', () => {
+        window.innerWidth = 1000;
+        const pager = new HomePager(menuLayer, { container });
+        container.dispatchEvent(
+            new MouseEvent('pointerdown', { clientX: 800, clientY: 300, bubbles: true })
+        );
+        window.dispatchEvent(new MouseEvent('pointermove', { clientX: 300, clientY: 300 }));
+        window.dispatchEvent(new MouseEvent('pointercancel', { clientX: 300, clientY: 300 }));
+        expect(pager.position).toBe(0);
+        pager.destroy();
+    });
+});
+
+describe('applyRubberBand', () => {
+    it('is the identity inside the page range and resists beyond it', () => {
+        expect(applyRubberBand(-400, 1000)).toBe(-400);
+        expect(applyRubberBand(1000, 1000)).toBe(1000);
+        expect(applyRubberBand(1200, 1000)).toBeCloseTo(1070, 5);
+        expect(applyRubberBand(-1200, 1000)).toBeCloseTo(-1070, 5);
+        expect(applyRubberBand(50, 0)).toBe(50);
     });
 });

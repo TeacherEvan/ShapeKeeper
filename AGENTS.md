@@ -95,17 +95,41 @@ unaffected. If a ShapeKeeper sidecar is running, kill it first.
 - Level 1 starts with 3x3 grid and 1 colorful sprite in the background.
 - Grid tiers: Levels 1..25 (scales 3x3 up to 7x5), Levels 26..50 (6x8), Levels 51..89 (8x8), Levels 90..99 (10x10), Level 100 (10x15).
 - Turn timer: 7s base + 2s per completed level, capped at 30s.
-- **Donation edition (2026-10-25): all 100 levels are open.** `LevelsProgress.isLevelUnlocked()` returns true for 1..100; winning still records completion and awards a sprite, but `unlockedLevel` no longer gates entry. Keep the progress counters for stats and the Level 100 easter egg.
+- **Levels access & Paid Edition (2026-10-29):** Levels 1..19 are free and unlock sequentially. Levels 20..100 require an entitlement via the paywall (`FREE_LEVELS = 19`). `window.PAYWALL_ENABLED` toggles the gate; while false, all 100 levels remain open. Any existing save progress past level 19 is grandfathered as entitled.
 - The optional donation prompt appears at most once per 5 completed levels, is dismissible, never blocks play, and must not grant donor-only perks or cosmetics.
-- Lose a level (defeat or tie): -1 sprite (floored at 1).
+- Lose a level only when the AI **out-scores** you: -1 sprite (floored at 1). **A draw counts as a win**: the level is recorded, +1 sprite is paid, and the next level is offered. The AI has to actually win to take a sprite.
 - Beating level 100 unlocks the fireworks sparkle easter egg permanently.
 - Missed turn on timer expiry: a random free line is drawn on the player's behalf across local hot-seat, Levels mode, and online multiplayer.
+
+### Mine/penalty invariants (2026-10-30)
+
+- A **mine** is a hidden box that cuts the claiming player's score to **20% (−80%)** once.
+- **No mines before level 15.** Level 15 opens with **2** mines; the count **doubles every 10 levels** (2, 4, 8, …) but is **capped at 5**.
+- The count maxes out at **5 mines per board** (`MAX_MINE_COUNT` in `effect-system/mines.js`): 2 → 4 → 5, fixed at 5 from level 35 to 100. Tune that one constant, not the doubling math.
+- Mines are **invisible until triggered**. Once triggered the box keeps a **💣** marker for the rest of the level (plus a small `×0.2`), the level start shows a `💣 N hidden mines` toast, the footer chip (`#mineCounter`) counts the hidden mines left, and every Levels button shows its board's mine count (`N×M · 💣 K`). The marker and chip are the teaching signal — players must not read a penalty as their own mistake.
+- Mines are a **Levels-mode** feature. Casual local hot-seat and online multiplayer build the game at the default level (1) and therefore seed zero mines; online keeps its server-side multiplier table as the single source of truth.
+- Regression gates: `tests/mine-placement.test.js` (policy, placement, chip count, rendering), `effect-system.test.js` (seeding), `tests/penalty-box-animation.test.js` (the 0.2× path still fires), `tests/e2e/mines.spec.js` (grid badges, level-14 silence, level-15 toast + chip + fired box).
+
+### Agent ↔ owner collaboration protocol
+
+The product owner reads status on a phone. Keep the channel quiet and the evidence in the repo.
+
+- **One short status line per milestone.** No raw command output, diffs, stack traces, or file dumps pasted into chat — those go to `docs/plans/YYYY-MM-DD-<work>-evidence.md`.
+- **Cite a handle, not a feeling:** test name, commit SHA, file path, or deploy URL. "Done" without a handle is not done.
+- **Batch questions.** Ask everything needed in one message; do not drip-feed clarification requests.
+- **Ask before anything that leaves the machine** (push, deploy, email, public post). Local edits, tests, and docs do not need a check-in.
+- **Never re-paste the plan.** Write it to `docs/plans/`, then report the path and the 3-line summary.
 
 ### Background sprite invariants
 
 - The floating background sprites live in `src/ui/WelcomeAnimation.js`; their
   ink lives in `src/ui/sprite-palette.js` and their motion history in
   `src/ui/sprite-trail.js`. Do not inline either back into the animation class.
+- **The playground shows strictly the sprites the player collected (2026-10-30).**
+  There is no demo default or 120-sprite fallback. Home and both side screens draw
+  `getVisibleSpriteCount(state)`: `spritesObtained`, floored at 1 (so new players have a
+  sprite to interact with), and capped at 300 for device performance. Do not reintroduce
+  a fixed demo count like 120.
 - **A sprite may never paint a line across the canvas.** Any teleport (edge
   wrap, grab-drag, resize) must `trail.clear()`, and `drawTrails()` only strokes
   `SpriteTrail.forEachRun()`, which splits on any segment longer than
@@ -173,6 +197,11 @@ Scope to the area you touched. Body explains WHY, not WHAT (the diff shows
 WHAT). One concern per commit; do not mix a refactor with a feature.
 
 ## Pitfalls (dated)
+
+- **2026-10-30 — 120 demo sprites decision reversed.** The 2026-10-21 spec originally
+  stipulated 120 demo sprites before Levels was played and on side screens. The product
+  owner explicitly changed this requirement: players must interact only with the amount
+  of sprites they collect (minimum 1, capped at 300 on screen). Never restore 120.
 
 - **2026-08-25 — passcode-vs-env confusion.** Earlier draft proposals tried
   to use a static passcode from env or a per-process secret. The product

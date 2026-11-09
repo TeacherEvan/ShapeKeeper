@@ -7,16 +7,27 @@
 
 import { DotsAndBoxesGame } from '../../dots-and-boxes-game.js';
 import { requestFullscreen } from './Fullscreen.js';
+import { getMineCountForLevel } from '../../effect-system/mines.js';
 import {
-    ALL_LEVELS_UNLOCKED,
+    FREE_LEVELS,
     LevelsProgress,
     MAX_LEVEL,
     getGridSizeForLevel,
     getTurnDurationForLevel,
+    isPaywallOn,
 } from './LevelsProgress.js';
 import { showScreen } from './ScreenTransition.js';
+import { isPaywallEnabled, openUnlockGate } from './UnlockGate.js';
 
 export function startLevelMatch(levelNumber, deps) {
+    // Single choke point for every entry path: the levels grid, "Next Level",
+    // and "Retry Level". Without this a draw or win on the last free level
+    // would hand the player a locked level just by pressing the primary button.
+    if (!LevelsProgress.isLevelUnlocked(levelNumber)) {
+        openUnlockGate({ onUnlocked: () => startLevelMatch(levelNumber, deps) });
+        return;
+    }
+
     const { getState, setActiveGame } = deps;
     const { welcomeAnimation } = getState();
 
@@ -26,7 +37,7 @@ export function startLevelMatch(levelNumber, deps) {
         splashOverlay.hidden = true;
     }
 
-    // Trigger Levels mode: flips levelsTriggered to true and clears default 120 sprites to 1
+    // Trigger Levels mode: flips levelsTriggered to true and ensures at least 1 sprite
     LevelsProgress.triggerLevelsMode();
 
     if (welcomeAnimation) {
@@ -63,6 +74,10 @@ const TIERS = [
     { start: 100, end: 100, label: 'Level 100 · ★ 10×15 Grand Finale' },
 ];
 
+function getShowUnlockCta(state) {
+    return Boolean(state) && !state.entitled && isPaywallEnabled();
+}
+
 export function renderLevelsGrid(deps) {
     const container = document.getElementById('levelsGridContainer');
     const spriteBadge = document.getElementById('levelsSpriteCountBadge');
@@ -78,15 +93,49 @@ export function renderLevelsGrid(deps) {
         spriteBadge.textContent = String(state.spritesObtained);
     }
     if (unlockedBadge) {
-        unlockedBadge.textContent = ALL_LEVELS_UNLOCKED
+        // With the paywall off the whole grid is open, exactly like the donation edition.
+        const allOpen = state.entitled || !isPaywallOn();
+        unlockedBadge.textContent = allOpen
             ? `${MAX_LEVEL}/${MAX_LEVEL} open`
-            : `${state.unlockedLevel}/${MAX_LEVEL}`;
+            : `${Math.min(state.unlockedLevel, FREE_LEVELS)}/${MAX_LEVEL} · ${FREE_LEVELS} free`;
     }
     if (timerBadge) {
         timerBadge.textContent = `${currentTurnDuration}s`;
     }
 
     container.innerHTML = '';
+
+    // Paywall call to action. Created once, then reused; hidden when the player
+    // is entitled or when the paywall flag is off (the live build until launch).
+    let cta = document.getElementById('levelsUnlockCta');
+    if (!getShowUnlockCta(state)) {
+        if (cta) cta.hidden = true;
+    } else {
+        if (!cta) {
+            cta = document.createElement('div');
+            cta.id = 'levelsUnlockCta';
+            cta.className = 'levels-unlock-cta';
+            cta.dataset.testid = 'levels-unlock-cta';
+
+            const ctaCopy = document.createElement('p');
+            ctaCopy.className = 'levels-unlock-cta-copy';
+            ctaCopy.textContent = `Levels 1–${FREE_LEVELS} are free. One payment opens levels ${
+                FREE_LEVELS + 1
+            }–${MAX_LEVEL}.`;
+
+            const ctaBtn = document.createElement('button');
+            ctaBtn.type = 'button';
+            ctaBtn.className = 'levels-unlock-cta-button';
+            ctaBtn.textContent = 'Unlock every level';
+            ctaBtn.addEventListener('click', () => {
+                openUnlockGate({ onUnlocked: () => renderLevelsGrid(deps) });
+            });
+
+            cta.append(ctaCopy, ctaBtn);
+            container.parentElement?.insertBefore(cta, container);
+        }
+        cta.hidden = false;
+    }
 
     for (const tier of TIERS) {
         const tierHeader = document.createElement('div');
@@ -96,8 +145,12 @@ export function renderLevelsGrid(deps) {
 
         for (let lvl = tier.start; lvl <= tier.end; lvl++) {
             const { cols, rows } = getGridSizeForLevel(lvl);
+            const mineCount = getMineCountForLevel(lvl, (cols - 1) * (rows - 1));
             const isUnlocked = LevelsProgress.isLevelUnlocked(lvl);
             const isCompleted = state.completedLevels.includes(lvl);
+            // A locked level above the free tier is a purchase prompt, not a dead end.
+            const opensGate =
+                !isUnlocked && !state.entitled && lvl > FREE_LEVELS && isPaywallEnabled();
 
             const btn = document.createElement('button');
             btn.type = 'button';
@@ -107,17 +160,24 @@ export function renderLevelsGrid(deps) {
             }
             btn.dataset.level = String(lvl);
             btn.dataset.testid = `level-button-${lvl}`;
-            btn.disabled = !isUnlocked;
+            btn.disabled = !isUnlocked && !opensGate;
 
+            // Show the mine count up front: walking into a mined board without
+            // warning is what made players read the penalty as their own error.
+            const mineLabel = mineCount > 0 ? ` · 💣 ${mineCount}` : '';
             btn.innerHTML = `
                 <span class="level-num">Level ${lvl}</span>
-                <span class="level-grid-label">${cols}×${rows}</span>
+                <span class="level-grid-label">${cols}×${rows}${mineLabel}</span>
                 <span class="level-status-icon">${isCompleted ? '★' : isUnlocked ? '▶' : '🔒'}</span>
             `;
 
             if (isUnlocked) {
                 btn.addEventListener('click', () => {
                     startLevelMatch(lvl, deps);
+                });
+            } else if (opensGate) {
+                btn.addEventListener('click', () => {
+                    openUnlockGate({ onUnlocked: () => renderLevelsGrid(deps) });
                 });
             }
 

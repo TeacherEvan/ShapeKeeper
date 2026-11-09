@@ -74,7 +74,7 @@
 
         return shared.runQuery(
             shared.api.games.getGameState,
-            { roomId: shared.state.currentRoomId },
+            { roomId: shared.state.currentRoomId, sessionId: shared.SESSION_ID },
             'getting game state'
         );
     }

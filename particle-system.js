@@ -34,17 +34,15 @@ import {
     createWildcardParticles,
 } from './particle-system/effects.js';
 import { createMultiplierParticles, spawnSparkleEmojis } from './particle-system/spawners.js';
-import { TypedParticlePool } from './src/particles/TypedParticlePool.js';
 
 export class ParticleSystem {
-    constructor() {
+    constructor(game = null) {
+        this.game = game;
         this.particles = [];
         this.ambientParticles = [];
         this.sparkleEmojis = [];
         // Object pool reuses dead particles to avoid per-burst GC churn.
         this.pool = createParticlePool(GAME_CONSTANTS.PARTICLE_POOL_SIZE);
-        // Zero-allocation Struct-of-Arrays (SoA) TypedParticlePool for high-frequency bursts
-        this.soaPool = new TypedParticlePool(GAME_CONSTANTS.PARTICLE_POOL_SIZE || 200);
         this.initializeAmbientParticles();
     }
 

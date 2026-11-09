@@ -10,6 +10,7 @@
 
 import type * as auth_token from "../auth/token.js";
 import type * as crons from "../crons.js";
+import type * as entitlements from "../entitlements.js";
 import type * as games from "../games.js";
 import type * as games_draw from "../games/draw.js";
 import type * as games_lineValidation from "../games/lineValidation.js";
@@ -51,6 +52,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   "auth/token": typeof auth_token;
   crons: typeof crons;
+  entitlements: typeof entitlements;
   games: typeof games;
   "games/draw": typeof games_draw;
   "games/lineValidation": typeof games_lineValidation;

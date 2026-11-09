@@ -29,15 +29,28 @@ describe('EffectSystem — delegation', () => {
         expect(sys.game).toBe(game);
     });
 
-    it('initializeMultipliers delegates to the game multiplier store with 20% 0.2x multipliers', () => {
+    it('seeds nothing on a non-levels board (level 1)', () => {
         const game = makeGame();
         const sys = new EffectSystem(game);
         sys.initializeMultipliers();
-        // 5x5 grid of squares => 25 squares; 20% of 25 => 5 squares get 0.2x multiplier
+        expect(Object.keys(game.squareMultipliers)).toHaveLength(0);
+        expect(game.mineCount).toBe(0);
+    });
+
+    it('seeds the level-15 mine count with tagged mines', () => {
+        const game = makeGame({ currentLevel: 15 });
+        const sys = new EffectSystem(game);
+        sys.initializeMultipliers();
+        // 5x5 dots => 16 squares; level 15 => 2 mines
         const keys = Object.keys(game.squareMultipliers);
-        expect(keys.length).toBe(5);
+        expect(keys.length).toBe(2);
+        expect(game.mineCount).toBe(2);
         for (const k of keys) {
-            expect(game.squareMultipliers[k]).toEqual({ type: 'multiplier', value: 0.2 });
+            expect(game.squareMultipliers[k]).toEqual({
+                type: 'multiplier',
+                value: 0.2,
+                isMine: true,
+            });
         }
     });
 

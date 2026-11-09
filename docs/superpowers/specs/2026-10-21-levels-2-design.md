@@ -35,7 +35,7 @@ Build order: **1 → 3 → 2 → 6 → 4 → 5**. Feature 6 comes after 2 so it 
 |---|---|---|
 | 1 | Side screens | The **same home screen extended**, with no buttons or pictures. Only sprites, all interactive |
 | 2 | Muting | **Fade-out** only, no mute gesture |
-| 3 | Sprites before Levels | Show the **120 demo sprites** |
+| 3 | Sprites before Levels | ~~Show the 120 demo sprites~~ **Superseded 2026-10-30:** Show strictly collected sprites (minimum 1, capped at 300) |
 | 4 | Online auto-move | **Yes**, done on the server in Convex |
 | 5 | Auto-line choice | **Uniformly random** among all free lines, with no "safe-line" filtering |
 
@@ -279,7 +279,7 @@ flowchart LR
     L["◀ Empty side (sprites only)"] <-->|swipe| H["Home: sprites + menu layer"] <-->|swipe| R["Empty side (sprites only) ▶"]
 ```
 
-- Sprite count follows the existing home rule: **120 demo sprites** until the first Levels game, then the sprites you've collected (✅ confirmed).
+- Sprite count follows the updated home rule (amended 2026-10-30): ~~120 demo sprites~~ **strictly the sprites you've collected** (minimum 1, capped at 300) across home and side screens.
 - If the fireworks easter egg is unlocked, it plays on the side screens too, and you can play with the sprites while they explode and respawn.
 
 #### [MODIFY] [index.html](file:///home/leandi-duplessis/github/workspaces/ShapeKeeper/index.html) (`#mainMenuScreen`)

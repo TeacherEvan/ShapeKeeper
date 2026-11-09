@@ -27,10 +27,28 @@
         window.FEATURE_SYNC_RESILIENCE = true;
     }
 
+    // Paid unlock. Levels 1..19 are free; one purchase opens 20..100.
+    // ON since 2026-10-29 (owner decision). UNLOCK_CHECKOUT_URL stays empty until
+    // the Lemon Squeezy store is approved; the gate shows the price and says so
+    // rather than presenting a buy button that goes nowhere.
+    if (typeof window.PAYWALL_ENABLED !== 'boolean') {
+        window.PAYWALL_ENABLED = true;
+    }
+    if (typeof window.UNLOCK_CHECKOUT_URL !== 'string') {
+        window.UNLOCK_CHECKOUT_URL = '';
+    }
+    if (typeof window.UNLOCK_PRICE_LABEL !== 'string') {
+        window.UNLOCK_PRICE_LABEL = 'USD 6.99 — one time, every level';
+    }
+    if (typeof window.LICENSE_VALIDATE_URL !== 'string') {
+        window.LICENSE_VALIDATE_URL = 'https://api.lemonsqueezy.com/v1/licenses/validate';
+    }
+
     // Optional tip jar. Every level is open; this never unlocks anything.
     // Replace with a Ko-fi / PayFast / Buy Me a Coffee URL when one exists.
-    // Empty string disables the prompt entirely.
+    // Empty string disables the prompt entirely. The local page is a policy-safe
+    // fallback until a real donation rail is connected.
     if (typeof window.DONATION_URL !== 'string') {
-        window.DONATION_URL = 'mailto:ewiebotha@gmail.com?subject=ShapeKeeper%20donation';
+        window.DONATION_URL = 'donate.html';
     }
 })();

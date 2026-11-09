@@ -1,8 +1,40 @@
 import { isAuthorisedHostAsync, projectPlayersForClient, projectRoomForClient } from '../auth/token';
-import { POPULATE_PLAYER_INDEX } from './shared';
+import { POPULATE_PLAYER_INDEX, normalizeLineKey } from './shared';
 import { validateLineKey } from './lineValidation';
 import { log, errorLog, warn } from '../log';
 import { checkRateLimit } from '../rate_limit';
+
+function wouldLineCompleteAnySquare(lineKey: string, lineSet: Set<string>, gridSize: number): boolean {
+    const [start, end] = lineKey.split('-');
+    const [r1, c1] = start.split(',').map(Number);
+    const [r2, c2] = end.split(',').map(Number);
+
+    const potentialSquares: Array<{ row: number; col: number }> = [];
+    if (r1 === r2) {
+        const col = Math.min(c1, c2);
+        if (r1 > 0) potentialSquares.push({ row: r1 - 1, col });
+        if (r1 < gridSize - 1) potentialSquares.push({ row: r1, col });
+    } else {
+        const row = Math.min(r1, r2);
+        if (c1 > 0) potentialSquares.push({ row, col: c1 - 1 });
+        if (c1 < gridSize - 1) potentialSquares.push({ row, col: c1 });
+    }
+
+    for (const square of potentialSquares) {
+        const { row, col } = square;
+        const topLine = normalizeLineKey(row, col, row, col + 1);
+        const bottomLine = normalizeLineKey(row + 1, col, row + 1, col + 1);
+        const leftLine = normalizeLineKey(row, col, row + 1, col);
+        const rightLine = normalizeLineKey(row, col + 1, row + 1, col + 1);
+
+        const edges = [topLine, bottomLine, leftLine, rightLine];
+        const existingCount = edges.filter((e) => lineSet.has(e)).length;
+        if (existingCount >= 3) {
+            return true;
+        }
+    }
+    return false;
+}
 
 export function computeEffectiveMultiplier(multiplier: any, taps: number): any {
     if (multiplier === null) return null;
@@ -419,18 +451,17 @@ export async function populateLinesHandler(ctx: any, args: any) {
         linesToInsert: args.lineKeys.length,
     });
 
+    const roomLines = await ctx.db
+        .query('lines')
+        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
+        .collect();
+    const lineSet = new Set<string>(roomLines.map((l: any) => String(l.lineKey)));
+
     let insertedCount = 0;
     let skippedCount = 0;
 
     for (const lineKey of validatedLineKeys) {
-        const existingLine = await ctx.db
-            .query('lines')
-            .withIndex('by_room_and_key', (q: any) =>
-                q.eq('roomId', args.roomId).eq('lineKey', lineKey)
-            )
-            .first();
-
-        if (existingLine) {
+        if (lineSet.has(lineKey) || wouldLineCompleteAnySquare(lineKey, lineSet, room.gridSize)) {
             skippedCount++;
             continue;
         }
@@ -442,6 +473,7 @@ export async function populateLinesHandler(ctx: any, args: any) {
             playerIndex: POPULATE_PLAYER_INDEX,
             createdAt: Date.now(),
         });
+        lineSet.add(lineKey);
         insertedCount++;
     }
 

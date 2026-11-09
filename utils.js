@@ -183,3 +183,57 @@ export function prefersReducedMotion() {
         window.matchMedia('(prefers-reduced-motion: reduce)').matches
     );
 }
+
+/**
+ * Safely format a color with alpha transparency for Canvas 2D / CSS.
+ * Clamps alpha to [0, 1] to prevent invalid negative hex values (e.g. #ff0000-5).
+ * Expands 3-digit hex (#RGB) to 6-digit hex before appending alpha.
+ * Replaces existing alpha in 8-digit hex (#RRGGBBAA).
+ * Falls back safely for non-hex colors.
+ *
+ * @param {string} color - Hex color (#RGB, #RRGGBB, #RRGGBBAA) or CSS color
+ * @param {number} alpha - Alpha value (0 to 1)
+ * @returns {string} Safe color string with alpha applied
+ */
+export function formatHexAlpha(color, alpha) {
+    if (typeof color !== 'string') return '#00000000';
+    const clamped = Math.max(0, Math.min(1, Number.isFinite(alpha) ? alpha : 0));
+    const alphaHex = Math.floor(clamped * 255)
+        .toString(16)
+        .padStart(2, '0');
+
+    const trimmed = color.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) {
+        return `${trimmed}${alphaHex}`;
+    }
+    if (/^#[0-9a-fA-F]{3}$/.test(trimmed)) {
+        const [, r, g, b] = trimmed;
+        return `#${r}${r}${g}${g}${b}${b}${alphaHex}`;
+    }
+    if (/^#[0-9a-fA-F]{8}$/.test(trimmed)) {
+        return `${trimmed.slice(0, 7)}${alphaHex}`;
+    }
+    const rgbMatch = trimmed.match(/^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i);
+    if (rgbMatch) {
+        return `rgba(${rgbMatch[1]}, ${rgbMatch[2]}, ${rgbMatch[3]}, ${clamped})`;
+    }
+    return trimmed;
+}
+
+/**
+ * Frame-rate independent exponential decay.
+ *
+ * A per-frame multiplier (`value *= 0.9`) converges at a different speed on a
+ * 60 Hz and a 120 Hz display. This closes the same fraction of the remaining
+ * gap per *second*, so the motion is identical at any refresh rate.
+ *
+ * @param {number} current - Current value
+ * @param {number} target - Value being approached
+ * @param {number} decayPerSecond - Rate constant (higher = snappier)
+ * @param {number} dtSeconds - Elapsed seconds since the previous frame
+ * @returns {number} Decayed value
+ */
+export function expDecay(current, target, decayPerSecond, dtSeconds) {
+    const dt = Math.max(0, Number(dtSeconds) || 0);
+    return target + (current - target) * Math.exp(-decayPerSecond * dt);
+}

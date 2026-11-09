@@ -34,12 +34,30 @@ export function resolveSwipe({ dx, dy, dtMs, currentPosition, width }) {
     return newPos;
 }
 
+/** Pointer travel (px) before a press is judged to be a swipe or a scroll. */
+export const DRAG_DEAD_ZONE_PX = 8;
+/** Fraction of finger travel the layer follows once past the first/last page. */
+export const RUBBER_BAND_FACTOR = 0.35;
+
+/**
+ * Rubber-band the layer at the ends. Valid offsets run from -width (page +1)
+ * to +width (page -1); dragging beyond that still moves, but with growing
+ * resistance, which tells the finger "no more pages" without a dead stop.
+ */
+export function applyRubberBand(offsetPx, width) {
+    if (!width || width <= 0) return offsetPx;
+    if (offsetPx > width) return width + (offsetPx - width) * RUBBER_BAND_FACTOR;
+    if (offsetPx < -width) return -width + (offsetPx + width) * RUBBER_BAND_FACTOR;
+    return offsetPx;
+}
+
 export class HomePager {
     constructor(menuLayerEl, options = {}) {
         this.menuLayer = menuLayerEl || document.getElementById('homeMenuLayer');
         this.container = options.container || document.getElementById('mainMenuScreen');
         this.position = 0; // -1, 0, or 1
         this.isDragging = false;
+        this.axisLocked = false;
         this.startX = 0;
         this.startY = 0;
         this.startTime = 0;
@@ -85,6 +103,7 @@ export class HomePager {
         }
 
         this.isDragging = true;
+        this.axisLocked = false;
         this.startX = e.clientX;
         this.startY = e.clientY;
         this.startTime = performance.now();
@@ -102,18 +121,39 @@ export class HomePager {
         this.currentDx = e.clientX - this.startX;
         this.currentDy = e.clientY - this.startY;
 
+        // Decide the gesture's axis once, after a small dead zone. A vertical
+        // drag is not ours: hand it back instead of wobbling the menu sideways.
+        if (!this.axisLocked) {
+            if (Math.hypot(this.currentDx, this.currentDy) < DRAG_DEAD_ZONE_PX) return;
+            if (Math.abs(this.currentDx) < 1.4 * Math.abs(this.currentDy)) {
+                this.isDragging = false;
+                this.currentDx = 0;
+                this.currentDy = 0;
+                this.updateLayerTransform(true);
+                return;
+            }
+            this.axisLocked = true;
+        }
+
         const width = window.innerWidth || 800;
         const baseOffset = -this.position * width;
-        const totalOffset = baseOffset + this.currentDx;
+        const totalOffset = applyRubberBand(baseOffset + this.currentDx, width);
 
         if (this.menuLayer) {
             this.menuLayer.style.transform = `translateX(${totalOffset}px)`;
         }
     }
 
-    handlePointerUp(_e) {
+    handlePointerUp(e) {
         if (!this.isDragging) return;
         this.isDragging = false;
+
+        // A cancelled pointer (browser took over the gesture) must not turn a
+        // half-finished drag into a page change: spring back where we were.
+        if (e && e.type === 'pointercancel') {
+            this.goTo(this.position, true);
+            return;
+        }
 
         const dtMs = performance.now() - this.startTime;
         const width = window.innerWidth || 800;
