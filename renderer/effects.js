@@ -1,13 +1,25 @@
 import { GAME_CONSTANTS } from '../constants.js';
-import { prefersReducedMotion } from '../utils.js';
+import { expDecay, formatHexAlpha, prefersReducedMotion } from '../utils.js';
+
+/**
+ * How fast the background hue follows the score difference. Matches the old
+ * per-frame `* 0.02` at 60 fps (−60 · ln 0.98 ≈ 1.21/s) while staying identical
+ * on 120 Hz displays.
+ */
+const HUE_DECAY_PER_SECOND = 1.21;
 
 export function drawDynamicBackground(game) {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const scoreDiff = game.scores[1] - game.scores[2];
     const targetHue = 220 + scoreDiff * 2;
-    game.backgroundHue += (targetHue - game.backgroundHue) * 0.02;
 
-    const time = Date.now() / 3000;
+    const now = Date.now();
+    const lastHueAt = Number(game._backgroundHueAt) || now;
+    const dtSeconds = Math.min(Math.max((now - lastHueAt) / 1000, 0), 0.1);
+    game._backgroundHueAt = now;
+    game.backgroundHue = expDecay(game.backgroundHue, targetHue, HUE_DECAY_PER_SECOND, dtSeconds);
+
+    const time = now / 3000;
 
     const gradient = game.ctx.createRadialGradient(
         game.logicalWidth / 2 + Math.sin(time) * 30,
@@ -31,30 +43,10 @@ export function drawDynamicBackground(game) {
     game.ctx.fillStyle = gradient;
     game.ctx.fillRect(0, 0, game.logicalWidth, game.logicalHeight);
 
-    drawSubtleGridPattern(game, isDark);
+    // Substrate is a nebula wash ONLY. The scrolling 40px grid was removed
+    // (product owner, twice: "Remove colour gridlines!!!") — it painted a sheet
+    // of horizontal + vertical lines straight through the board.
     drawFloatingGeometry(game, isDark, time);
-}
-
-function drawSubtleGridPattern(game, isDark) {
-    const gridSize = 40;
-    const lineColor = isDark ? 'rgba(100, 100, 140, 0.03)' : 'rgba(80, 80, 120, 0.02)';
-
-    game.ctx.strokeStyle = lineColor;
-    game.ctx.lineWidth = 0.5;
-
-    const offsetX = (Date.now() / 2000) % gridSize;
-    const offsetY = (Date.now() / 3000) % gridSize;
-
-    game.ctx.beginPath();
-    for (let x = -offsetX; x < game.logicalWidth + gridSize; x += gridSize) {
-        game.ctx.moveTo(x, 0);
-        game.ctx.lineTo(x, game.logicalHeight);
-    }
-    for (let y = -offsetY; y < game.logicalHeight + gridSize; y += gridSize) {
-        game.ctx.moveTo(0, y);
-        game.ctx.lineTo(game.logicalWidth, y);
-    }
-    game.ctx.stroke();
 }
 
 function drawFloatingGeometry(game, isDark, time) {
@@ -290,11 +282,7 @@ export function drawParticles(game) {
             for (let index = 0; index < particle.trail.length - 1; index += 1) {
                 const trailAlpha = (index / particle.trail.length) * particle.life * 0.4;
                 const trailSize = particle.size * (index / particle.trail.length);
-                game.ctx.fillStyle =
-                    particle.color +
-                    Math.floor(trailAlpha * 255)
-                        .toString(16)
-                        .padStart(2, '0');
+                game.ctx.fillStyle = formatHexAlpha(particle.color, trailAlpha);
                 game.ctx.beginPath();
                 game.ctx.arc(
                     particle.trail[index].x,
@@ -310,11 +298,7 @@ export function drawParticles(game) {
         if (particle.spark) {
             game.ctx.shadowColor = particle.color;
             game.ctx.shadowBlur = 10;
-            game.ctx.fillStyle =
-                particle.color +
-                Math.floor(particle.life * 255)
-                    .toString(16)
-                    .padStart(2, '0');
+            game.ctx.fillStyle = formatHexAlpha(particle.color, particle.life);
             game.ctx.beginPath();
             game.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
             game.ctx.fill();
@@ -323,11 +307,7 @@ export function drawParticles(game) {
         }
 
         if (particle.smoke) {
-            game.ctx.fillStyle =
-                particle.color +
-                Math.floor(particle.life * 128)
-                    .toString(16)
-                    .padStart(2, '0');
+            game.ctx.fillStyle = formatHexAlpha(particle.color, particle.life * 0.5);
             game.ctx.beginPath();
             game.ctx.arc(
                 particle.x,
@@ -340,11 +320,7 @@ export function drawParticles(game) {
             return;
         }
 
-        game.ctx.fillStyle =
-            particle.color +
-            Math.floor(particle.life * 255)
-                .toString(16)
-                .padStart(2, '0');
+        game.ctx.fillStyle = formatHexAlpha(particle.color, particle.life);
         game.ctx.beginPath();
         game.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         game.ctx.fill();

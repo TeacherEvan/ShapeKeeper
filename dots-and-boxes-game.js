@@ -1,6 +1,7 @@
 import { AnimationSystem } from './animation-system.js';
 import { FEATURE_FLAGS, GAME_CONSTANTS } from './constants.js';
 import { EffectSystem } from './effect-system.js';
+import { countHiddenMines, isMineMultiplier } from './effect-system/mines.js';
 import { GameLogic } from './game-logic.js';
 import { GameState } from './game-state.js';
 import { InputHandler } from './input-handler.js';
@@ -17,7 +18,7 @@ import {
 import { showToast } from './src/ui/Toast.js';
 import { announceAlert, announceStatus } from './src/ui/AccessibilityAnnouncer.js';
 import { notifyAchievementUnlock, renderAchievementPanel } from './src/ui/AchievementPanel.js';
-import { getDotRenderRadius, prefersReducedMotion } from './utils.js';
+import { getDotRenderRadius, expDecay, prefersReducedMotion } from './utils.js';
 import { TutorialSystem } from './tutorial-system.js';
 import { findOptimalMinimaxMove } from './src/ai/MinimaxEngine.js';
 import { DisposableRegistry } from './src/lifecycle/DisposableRegistry.js';
@@ -75,6 +76,9 @@ export class DotsAndBoxesGame {
 
         this.timedOut = false;
         this.gameOverHandled = false;
+        // One payment per level result. A fresh game starts unrecorded; the
+        // guard only matters if a future refactor ever reuses an instance.
+        this._levelResultRecorded = false;
         this.turnRemainingMs = null;
         this._localTurnClock = null;
 
@@ -84,7 +88,7 @@ export class DotsAndBoxesGame {
 
         // Initialize all systems
         this.soundManager = new SoundManager();
-        this.particleSystem = new ParticleSystem();
+        this.particleSystem = new ParticleSystem(this);
         this.animationSystem = new AnimationSystem();
         this.gameState = new GameState(this);
         this.gameLogic = new GameLogic(this);
@@ -124,6 +128,8 @@ export class DotsAndBoxesGame {
         this.accessibleGrid = new AccessibleGridTree(this);
         this.disposables.addDisposable(this.accessibleGrid);
         this.effectSystem.initializeMultipliers();
+        this.announceMineBoard();
+        this.updateMineCounter();
         this.particleSystem.initializeAmbientParticles();
 
         // Setup event listeners
@@ -229,6 +235,99 @@ export class DotsAndBoxesGame {
 
     async revealMultiplier(squareKey) {
         return this.effectSystem.revealMultiplier(squareKey);
+    }
+
+    async tapSquare(squareKey) {
+        return this.effectSystem.tapSquare(squareKey);
+    }
+
+    /**
+     * Keep the footer mine chip honest: "2 hidden" → "1 hidden" → "board clear".
+     * The level-start toast is gone in five seconds; the chip is what keeps the
+     * mine concept visible for the rest of the level.
+     */
+    updateMineCounter() {
+        const chip = document.getElementById('mineCounter');
+        const countEl = document.getElementById('mineCounterCount');
+        if (!chip || !countEl) return;
+
+        const total = Object.values(this.squareMultipliers || {}).filter(isMineMultiplier).length;
+        if (total === 0) {
+            chip.hidden = true;
+            this._lastMineCounter = null;
+            return;
+        }
+
+        const hidden = countHiddenMines(this.squareMultipliers, this.revealedMultipliers);
+        if (this._lastMineCounter === hidden && !chip.hidden) return;
+
+        this._lastMineCounter = hidden;
+        chip.hidden = false;
+        chip.classList.toggle('is-clear', hidden === 0);
+        countEl.textContent = hidden === 0 ? 'board clear' : `${hidden} hidden`;
+        chip.setAttribute(
+            'aria-label',
+            hidden === 0
+                ? 'All mines on this board have been triggered'
+                : `${hidden} hidden ${hidden === 1 ? 'mine' : 'mines'} left on this board`
+        );
+    }
+
+    /**
+     * Tell the player, once at level start, that this board is mined. Without
+     * this the penalty reads as "I did something wrong" instead of "that box
+     * was mined before I claimed it".
+     */
+    announceMineBoard() {
+        const mines = Number(this.mineCount) || 0;
+        if (mines <= 0) return;
+
+        const label = mines === 1 ? 'mine' : 'mines';
+        showToast(
+            `💣 ${mines} hidden ${label} on this board — a mined box cuts your score to 20% and stays marked.`,
+            'warning',
+            5000
+        );
+        announceStatus(`${mines} hidden ${label} on this board.`);
+    }
+
+    /**
+     * Make a penalty box impossible to miss: red vignette pulse, a big −80%
+     * stamp over the board, a screen shake, and a 3-second speech bubble.
+     *
+     * @param {{isAiPlayer: boolean}} options
+     */
+    showPenaltyFeedback({ isAiPlayer = false } = {}) {
+        const host = document.getElementById('gameScreen') || document.body;
+        this.triggerPenaltyOverlay(host, 'penalty-flash', 800);
+        this.triggerPenaltyOverlay(host, 'penalty-stamp', 1600, '💣 −80%');
+
+        if (!prefersReducedMotion()) {
+            this.shakeIntensity = Math.max(this.shakeIntensity || 0, 14);
+        }
+
+        this.turnNoticeBubble?.show(isAiPlayer ? 'ai-penalty' : 'player-penalty');
+        announceAlert(
+            isAiPlayer
+                ? 'Mine! The AI score was cut to twenty percent.'
+                : 'Mine! Your score was cut to twenty percent.'
+        );
+    }
+
+    triggerPenaltyOverlay(host, className, durationMs, text = '') {
+        let el = host.querySelector(`.${className}`);
+        if (!el) {
+            el = document.createElement('div');
+            el.className = className;
+            el.setAttribute('aria-hidden', 'true');
+            if (text) el.textContent = text;
+            host.appendChild(el);
+        }
+        el.classList.remove('active');
+        void el.offsetWidth;
+        el.classList.add('active');
+        clearTimeout(el._resetTimer);
+        el._resetTimer = setTimeout(() => el.classList.remove('active'), durationMs);
     }
 
     showWinner() {
@@ -465,11 +564,7 @@ export class DotsAndBoxesGame {
                     );
 
                     const multiplierData = this.squareMultipliers?.[squareKey];
-                    if (
-                        multiplierData &&
-                        multiplierData.type === 'multiplier' &&
-                        multiplierData.value === 0.2
-                    ) {
+                    if (isMineMultiplier(multiplierData)) {
                         this.revealedMultipliers.add(squareKey);
                         this.scores[this.currentPlayer] =
                             Math.round(this.scores[this.currentPlayer] * 0.2 * 100) / 100;
@@ -491,12 +586,12 @@ export class DotsAndBoxesGame {
                             this.currentPlayer === 1 ? this.player1Color : this.player2Color
                         );
                         this.soundManager.playPenaltySound?.();
-                        if (
-                            this.localMode === 'ai' &&
-                            this.currentPlayer === (this.aiPlayerNumber || 2)
-                        ) {
-                            this.turnNoticeBubble?.show('ai-penalty');
-                        }
+                        this.showPenaltyFeedback({
+                            isAiPlayer:
+                                this.localMode === 'ai' &&
+                                this.currentPlayer === (this.aiPlayerNumber || 2),
+                        });
+                        this.updateMineCounter();
                     }
                 });
                 this.soundManager.playSquareSound(this.comboCount);
@@ -1051,6 +1146,8 @@ export class DotsAndBoxesGame {
         this.replayIndex = payload.replayIndex;
         this.turnDurationMs = payload.config.turnDurationMs ?? 0;
         this.restoreMoveSnapshot(payload.state);
+        this.gameState.setupCanvas();
+        this.accessibleGrid?.rebuild?.();
         this.initLocalTurnTimer();
         this.uiManager.updateReplayControls();
         this.renderAchievementPanel();
@@ -1063,6 +1160,13 @@ export class DotsAndBoxesGame {
     animate() {
         const now = Date.now();
 
+        // Frame-rate independent decay. These constants reproduce the old
+        // per-frame multipliers at 60 fps (shake 0.9, pulse 0.92) but behave
+        // identically on 120 Hz displays.
+        const lastAnimateAt = Number(this._lastAnimateAt) || now;
+        const dtSeconds = Math.min(Math.max((now - lastAnimateAt) / 1000, 0), 0.1);
+        this._lastAnimateAt = now;
+
         // Update particles
         this.particleSystem.updateParticles(this.logicalWidth, this.logicalHeight);
 
@@ -1071,13 +1175,13 @@ export class DotsAndBoxesGame {
 
         // Decay effects
         if (this.shakeIntensity > 0.1) {
-            this.shakeIntensity *= this.shakeDecay;
+            this.shakeIntensity = expDecay(this.shakeIntensity, 0, 6.32, dtSeconds);
         } else {
             this.shakeIntensity = 0;
         }
 
         if (this.screenPulse > 0.01) {
-            this.screenPulse *= 0.92;
+            this.screenPulse = expDecay(this.screenPulse, 0, 5.0, dtSeconds);
         } else {
             this.screenPulse = 0;
         }
@@ -1234,6 +1338,10 @@ export class DotsAndBoxesGame {
             return;
         }
         const clock = this._localTurnClock;
+        if (Number.isFinite(clock.pausedRemainingMs)) {
+            this.turnRemainingMs = clock.pausedRemainingMs;
+            return;
+        }
         if (clock.player !== this.currentPlayer || clock.deadline === 0) {
             clock.player = this.currentPlayer;
             clock.deadline = now + this.turnDurationSeconds * 1000;
@@ -1242,6 +1350,15 @@ export class DotsAndBoxesGame {
         }
         const remaining = clock.deadline - now;
         this.turnRemainingMs = remaining > 0 ? remaining : 0;
+
+        if (this.turnRemainingMs != null && this.turnDurationSeconds > 0) {
+            maybeAnnounceTimeLow(
+                this,
+                this.localTurnCounter,
+                this.turnRemainingMs,
+                this.turnDurationSeconds * 1000
+            );
+        }
 
         // Audio-visual urgency: sound ticking & screen vignette during last 3 seconds
         const isUrgent =

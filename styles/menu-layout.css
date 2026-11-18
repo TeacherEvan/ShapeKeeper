@@ -780,7 +780,11 @@ input[type='color']:focus {
     color: var(--text-primary, #ffffff);
     font-family: var(--font-sans);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .level-btn.level-100 {
@@ -837,4 +841,20 @@ input[type='color']:focus {
 .level-btn .level-status-icon {
     font-size: 0.9rem;
     margin-top: 4px;
+}
+
+/* Reduced motion: the level-100 shimmer is an infinite glow animation and the
+   card lift is a spatial transform. Both are decoration, so they collapse for
+   players who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+    .level-btn,
+    .level-btn.level-100 {
+        animation: none;
+        transition: none;
+    }
+
+    .level-btn.unlocked:hover,
+    .level-btn.completed:hover {
+        transform: none;
+    }
 }

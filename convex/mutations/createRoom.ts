@@ -34,8 +34,22 @@ export const createRoom = mutation({
         .first();
     }
 
-    // Generate silly passcode [Adjective][Animal]
-    const passcode = generateSillyPasscode();
+    // Generate silly passcode [Adjective][Animal] with live by_passcode collision check
+    let passcode = generateSillyPasscode();
+    let existingPasscodeRoom = await ctx.db
+      .query('rooms')
+      .withIndex('by_passcode', (q: any) => q.eq('passcode', passcode))
+      .first();
+
+    let passcodeCollisions = 0;
+    while (existingPasscodeRoom && passcodeCollisions < 10) {
+      passcodeCollisions++;
+      passcode = generateSillyPasscode();
+      existingPasscodeRoom = await ctx.db
+        .query('rooms')
+        .withIndex('by_passcode', (q: any) => q.eq('passcode', passcode))
+        .first();
+    }
 
     // Generate host token for this room
     const hostToken = crypto.randomUUID();

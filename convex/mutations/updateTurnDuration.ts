@@ -37,31 +37,25 @@ export const updateTurnDuration = mutation({
         let seconds = args.turnDurationSeconds;
         let ms = args.turnDurationMs;
 
-        const patchData: Record<string, any> = {
-            updatedAt: Date.now(),
-        };
-
-        if (seconds !== undefined) {
-            const validation = validateTurnDurationSeconds(seconds);
-            if (!validation.ok) return { error: validation.error };
-            seconds = validation.seconds;
-            patchData.turnDurationSeconds = seconds;
-            if (ms === undefined) {
-                ms = (seconds ?? 0) * 1000;
-                patchData.turnDurationMs = ms;
-            }
-        }
-
-        if (ms !== undefined) {
-            if (seconds === undefined && !(ALLOWED_TURN_DURATIONS_MS as readonly number[]).includes(ms)) {
-                return { error: 'Invalid turn duration' };
-            }
-            patchData.turnDurationMs = ms;
-        }
-
         if (seconds === undefined && ms === undefined) {
             return { error: 'Must provide turnDurationSeconds or turnDurationMs' };
         }
+
+        if (ms === undefined && seconds !== undefined) {
+            ms = seconds * 1000;
+        }
+
+        if (!(ALLOWED_TURN_DURATIONS_MS as readonly number[]).includes(ms!)) {
+            return { error: 'Invalid turn duration' };
+        }
+
+        seconds = Math.round(ms! / 1000);
+
+        const patchData: Record<string, any> = {
+            turnDurationSeconds: seconds,
+            turnDurationMs: ms,
+            updatedAt: Date.now(),
+        };
 
         await ctx.db.patch(args.roomId, patchData);
         return { success: true };

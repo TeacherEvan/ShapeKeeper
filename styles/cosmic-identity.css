@@ -175,6 +175,15 @@
     animation: plateRise 0.8s var(--easing-emphasis) both;
 }
 
+/* Invisible checkout link wrapped around the brand plate. `display: contents`
+ * keeps the plate layout byte-identical (the <img> stays the flex item); the
+ * anchor itself renders nothing and adds no underline or box. */
+.brand-plate-link {
+    display: contents;
+    text-decoration: none;
+    outline: none;
+}
+
 .brand-plate {
     display: block;
     width: min(88%, 340px);

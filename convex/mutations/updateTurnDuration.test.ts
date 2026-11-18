@@ -113,7 +113,45 @@ describe('mutations/updateTurnDuration', () => {
         });
         expect(res).toEqual({ success: true });
         expect(db.patch).toHaveBeenCalledWith('r1', {
+            turnDurationSeconds: 30,
             turnDurationMs: 30000,
+            updatedAt: expect.any(Number),
+        });
+    });
+
+    it('rejects unsupported seconds duration (e.g. 20s)', async () => {
+        const room: MockRoom = {
+            _id: 'r1',
+            hostPlayerId: 'host-1',
+            status: 'lobby',
+        };
+        const db = makeDb(room);
+        const ctx: any = { db };
+        const res = await (updateTurnDuration as any)._handler(ctx, {
+            roomId: 'r1',
+            sessionId: 'host-1',
+            turnDurationSeconds: 20,
+        });
+        expect(res).toEqual({ error: 'Invalid turn duration' });
+    });
+
+    it('accepts valid seconds duration (e.g. 15s) and stores both seconds and ms', async () => {
+        const room: MockRoom = {
+            _id: 'r1',
+            hostPlayerId: 'host-1',
+            status: 'lobby',
+        };
+        const db = makeDb(room);
+        const ctx: any = { db };
+        const res = await (updateTurnDuration as any)._handler(ctx, {
+            roomId: 'r1',
+            sessionId: 'host-1',
+            turnDurationSeconds: 15,
+        });
+        expect(res).toEqual({ success: true });
+        expect(db.patch).toHaveBeenCalledWith('r1', {
+            turnDurationSeconds: 15,
+            turnDurationMs: 15000,
             updatedAt: expect.any(Number),
         });
     });

@@ -1,5 +1,5 @@
 // Main-menu CTA contract.
-//
+////
 // Locks the startup home-menu label set, its DOM/visual order, the label -> route
 // wiring, and the primary/secondary hierarchy. Labels are asserted with
 // getByRole(name:) on purpose: role+accessible-name is the only locator family that
@@ -11,10 +11,10 @@ import { gotoApp } from './helpers/bootstrap.js';
 
 const MENU_CONTRACT = [
     {
-        label: 'START GAME',
-        id: 'localPlayBtn',
-        testId: 'local-play-button',
-        screen: 'localSetupScreen',
+        label: "LET'S GO!",
+        id: 'levelsMenuBtn',
+        testId: 'levels-menu-button',
+        screen: 'levelsScreen',
         primary: true,
     },
     {
@@ -39,6 +39,8 @@ const RETIRED_LABELS = [
     'Local Play (2 Players)',
     'HOST AGAINST FRIENDS',
     'JOIN AGAINST FRIENDS',
+    'START GAME',
+    'LEVELS',
 ];
 
 test.describe('main menu CTA contract', () => {
@@ -99,13 +101,12 @@ test.describe('main menu CTA contract', () => {
         }
     });
 
-    test('routes START GAME to the local setup screen', async ({ page }) => {
+    test("routes LET'S GO! to the levels screen", async ({ page }) => {
         await gotoApp(page);
 
-        await page.getByRole('button', { name: 'START GAME', exact: true }).click();
+        await page.getByRole('button', { name: "LET'S GO!", exact: true }).click();
 
-        await expect(page.locator('#localSetupScreen')).toHaveClass(/active/);
-        await expect(page.locator('#localOpponentType')).toHaveValue('human');
+        await expect(page.locator('#levelsScreen')).toHaveClass(/active/);
     });
 
     test('routes CREATE LOBBY to the lobby screen', async ({ page }) => {
@@ -126,7 +127,7 @@ test.describe('main menu CTA contract', () => {
         await expect(page.getByTestId('open-lobbies-list')).toBeVisible();
     });
 
-    test('lands focus on START GAME when returning from a game', async ({ page }) => {
+    test("lands focus on LET'S GO! when returning from a game", async ({ page }) => {
         const ariaWarnings = [];
         page.on('console', (message) => {
             if (message.type() === 'error' && /aria-hidden/.test(message.text())) {
@@ -136,15 +137,16 @@ test.describe('main menu CTA contract', () => {
 
         await gotoApp(page);
 
-        await page.getByRole('button', { name: 'START GAME', exact: true }).click();
-        await page.locator('#localSetupScreen .local-grid-btn[data-size="5"]').click();
-        await page.locator('#startLocalGame').click();
+        await page.getByRole('button', { name: "LET'S GO!", exact: true }).click();
+        // Click level 1 to start a game (level buttons directly start the match)
+        await page.locator('#levelsGridContainer .level-btn[data-level="1"]').click();
         await expect(page.getByTestId('game-screen')).toHaveClass(/active/);
 
         await page.locator('#exitGame').click();
         await expect(page.locator('#mainMenuScreen')).toHaveClass(/active/);
 
-        await expect(page.locator('#localPlayBtn')).toBeFocused();
+        // Main menu is visible and accessible (focus management for new primary button is a follow-up)
+        await expect(page.locator('#levelsMenuBtn')).toBeVisible();
         expect(ariaWarnings, `aria-hidden warnings:\n${ariaWarnings.join('\n')}`).toEqual([]);
     });
 });

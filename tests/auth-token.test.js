@@ -124,16 +124,18 @@ describe('projectRoomForClient', () => {
     const room = {
         _id: 'rooms:1',
         roomCode: 'ABC123',
+        passcode: 'EasterPig',
         hostPlayerId: 'session_host',
         hostTokenHash: 'hash_secret',
         status: 'lobby',
         gridSize: 5,
     };
 
-    it('strips hostTokenHash and hostPlayerId from the projection', () => {
+    it('strips hostTokenHash, hostPlayerId, and passcode from the projection', () => {
         const out = projectRoomForClient(room);
         expect(out).not.toHaveProperty('hostTokenHash');
         expect(out).not.toHaveProperty('hostPlayerId');
+        expect(out).not.toHaveProperty('passcode');
     });
 
     it('keeps non-secret fields', () => {

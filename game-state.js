@@ -255,7 +255,9 @@ export class GameState {
                 this.game.uiManager.displayLoadingSkeleton(true);
                 this.setupCanvas();
                 this.game.draw();
-                this.game.uiManager.displayLoadingSkeleton(false);
+                if (!this.game.options?.deferInitialReady) {
+                    this.game.uiManager.displayLoadingSkeleton(false);
+                }
             }, 300);
             this.game.resizeTimeout = timeoutId;
             if (this.game.disposables) {
@@ -276,7 +278,9 @@ export class GameState {
                 const timeoutId = setTimeout(() => {
                     this.setupCanvas();
                     this.game.draw();
-                    this.game.uiManager.displayLoadingSkeleton(false);
+                    if (!this.game.options?.deferInitialReady) {
+                        this.game.uiManager.displayLoadingSkeleton(false);
+                    }
                 }, 100);
                 if (this.game.disposables) {
                     this.game.disposables.addTimeout(timeoutId);
@@ -355,18 +359,29 @@ export class GameState {
             return;
         }
 
-        const lineCount = Math.max(1, Math.floor(safeLines.length * 0.1));
+        const targetCount = Math.max(1, Math.floor(safeLines.length * 0.1));
+        const shuffled = [...safeLines].sort(() => Math.random() - 0.5);
 
-        const shuffled = safeLines.sort(() => Math.random() - 0.5);
-        const selectedLines = shuffled.slice(0, lineCount);
+        // Select lines incrementally so two lines in the same batch never complete a 4-sided square together
+        const selectedLines = [];
+        for (const lineKey of shuffled) {
+            if (selectedLines.length >= targetCount) break;
+            if (!this.game.gameLogic.wouldCompleteSquare(lineKey)) {
+                this.game.lines.add(lineKey);
+                selectedLines.push(lineKey);
+            }
+        }
 
         if (this.game.isMultiplayer) {
+            // Revert temporary local selections before requesting authoritative server mutation
+            selectedLines.forEach((lineKey) => this.game.lines.delete(lineKey));
+
             if (!this.game.isHost) {
                 console.warn('[Game] Only host can populate in multiplayer');
                 return;
             }
 
-            if (window.ShapeKeeperConvex) {
+            if (window.ShapeKeeperConvex && selectedLines.length > 0) {
                 const result = await window.ShapeKeeperConvex.populateLines(selectedLines);
                 if (result.error) {
                     console.error('[Game] Error populating lines:', result.error);
@@ -379,7 +394,6 @@ export class GameState {
         }
 
         selectedLines.forEach((lineKey) => {
-            this.game.lines.add(lineKey);
             this.game.lineOwners.set(lineKey, GAME_CONSTANTS.POPULATE_PLAYER_ID);
             this.game.animationSystem.addPulsatingLine(
                 lineKey,
@@ -388,6 +402,11 @@ export class GameState {
             );
         });
 
+        this.game.initialLocalSnapshot = this.game.captureMoveSnapshot();
+        this.game.moveHistory = [];
+        this.game.redoHistory = [];
+        this.game.replayIndex = 0;
+        this.game.uiManager.updateReplayControls();
         this.game.draw();
         this.game.uiManager.updatePopulateButtonVisibility();
     }

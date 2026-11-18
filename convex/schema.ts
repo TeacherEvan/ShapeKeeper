@@ -104,4 +104,23 @@ export default defineSchema({
         windowStart: v.number(), // server epoch (ms) when the current window began
         count: v.number(), // requests consumed in the current window
     }).index('by_key', ['key']),
+    // Purchased entitlements (Lemon Squeezy). The licence key itself is never
+    // stored — only its SHA-256 hash, computed by the webhook relay, plus the
+    // instance id LS issues per activation. checkEntitlement returns no PII, so
+    // the public query cannot become a key-disclosure oracle.
+    entitlements: defineTable({
+        licenseKeyHash: v.string(),
+        instanceId: v.string(),
+        productId: v.string(),
+        storeId: v.string(),
+        orderId: v.optional(v.string()),
+        status: v.union(v.literal('active'), v.literal('revoked')),
+        seats: v.number(),
+        createdAt: v.number(),
+        lastValidatedAt: v.optional(v.number()),
+        revokedAt: v.optional(v.number()),
+    })
+        .index('by_license_hash', ['licenseKeyHash'])
+        .index('by_instance', ['instanceId'])
+        .index('by_status', ['status']),
 });

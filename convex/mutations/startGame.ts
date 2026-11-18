@@ -1,31 +1,9 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
 import { armTurnTimer } from '../games/turnTimer';
-
 import { getHostTokenHash } from '../utils/roomUtils';
 
-// Compute the turn-end epoch from the room's Allowed Time. Shared logic
-// lives in games/turn_duration; this local mirror keeps the pure function
-// testable and avoids a cross-module import cycle in the mutation bundle.
-const DEFAULT_TURN_DURATION_SECONDS = 10;
-
-function computeTurnEndTime(room: any, now: number): number | undefined {
-    if (typeof room?.turnDurationMs === 'number') {
-        if (room.turnDurationMs <= 0) return undefined;
-        return now + room.turnDurationMs;
-    }
-    const seconds = room?.turnDurationSeconds;
-    if (typeof seconds !== 'number' || !Number.isFinite(seconds)) {
-        // Legacy room: default 10s
-        return now + DEFAULT_TURN_DURATION_SECONDS * 1000;
-    }
-    if (seconds <= 0) return undefined; // no limit
-    return now + Math.round(seconds * 1000);
-}
-
-// Start the game (host only). Arms the first turn's countdown using the
-// host-configured Allowed Time (unset legacy room = default 10s;
-// explicit 0 = no limit, turnEndTime stays undefined).
+// Start the game (host only). Arms the first turn's countdown via armTurnTimer.
 export const startGame = mutation({
     args: {
         roomId: v.id('rooms'),
@@ -53,21 +31,11 @@ export const startGame = mutation({
         if (!allReady) return { error: 'All players must be ready' };
 
         const startedAt = Date.now();
-        if (typeof room.turnDurationMs === 'number' && room.turnDurationMs > 0) {
-            await armTurnTimer(ctx, args.roomId, room, startedAt, {
-                status: 'playing',
-                currentPlayerIndex: 0,
-                updatedAt: startedAt,
-            });
-        } else {
-            await ctx.db.patch(args.roomId, {
-                status: 'playing',
-                currentPlayerIndex: 0,
-                turnStartTime: startedAt,
-                turnEndTime: computeTurnEndTime(room, startedAt),
-                updatedAt: startedAt,
-            });
-        }
+        await armTurnTimer(ctx, args.roomId, room, startedAt, {
+            status: 'playing',
+            currentPlayerIndex: 0,
+            updatedAt: startedAt,
+        });
 
         return { success: true };
     },

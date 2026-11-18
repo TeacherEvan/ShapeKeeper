@@ -4,6 +4,8 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { WelcomeAnimation } from '../src/ui/WelcomeAnimation.js';
+import { SPRITE_PALETTES, hexToRgbChannels } from '../src/ui/sprite-palette.js';
+import { drawDynamicBackground } from '../renderer/effects.js';
 import { getCurrentTheme, initializeTheme, toggleTheme } from '../src/ui/ThemeManager.js';
 
 /**
@@ -193,9 +195,9 @@ describe('cosmic identity — live canvas ink matches the stylesheet', () => {
         document.body.innerHTML = '';
     });
 
-    it('paints the promo palette (cyan, magenta, amber, lime)', () => {
+    it('keeps the cosmic brand inks as the first four families', () => {
         const darkInk = animation.colorPalette.dark.map((set) => set.primary);
-        expect(darkInk).toEqual(['#00f0ff', '#e000ff', '#ffc700', '#22ff00']);
+        expect(darkInk.slice(0, 4)).toEqual(['#00f0ff', '#e000ff', '#ffc700', '#22ff00']);
         expect(animation.colorPalette.light[0].primary).toBe('#0a86ad');
     });
 
@@ -219,6 +221,126 @@ describe('cosmic identity — live canvas ink matches the stylesheet', () => {
     it('links constellation particles in cyan, not grey', () => {
         expect(animation.themedInk(animation.constellationInk)).toBe('0, 240, 255');
         expect(animation.themedInk(animation.constellationInk)).not.toBe('100, 100, 120');
+    });
+});
+
+describe('cosmic identity — sprite ink covers the full spectrum', () => {
+    /** @returns {{h: number, s: number, l: number}} HSL in degrees / 0-100. */
+    function toHsl(hex) {
+        const clean = hex.replace('#', '');
+        const [r, g, b] = [0, 2, 4].map((i) => parseInt(clean.slice(i, i + 2), 16) / 255);
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const l = (max + min) / 2;
+        const d = max - min;
+        const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+        let h;
+        if (d === 0) h = 0;
+        else if (max === r) h = (60 * ((g - b) / d) + 360) % 360;
+        else if (max === g) h = 60 * ((b - r) / d) + 120;
+        else h = 60 * ((r - g) / d) + 240;
+        return { h, s: s * 100, l: l * 100 };
+    }
+
+    const BACKDROP = { light: tokens.light['--bg-primary'], dark: tokens.dark['--bg-primary'] };
+
+    /** Hue bands the product owner expects to see: red, green, blue, purple, … */
+    const REQUIRED_BANDS = {
+        red: (h) => h < 20 || h >= 340,
+        orange: (h) => h >= 20 && h < 45,
+        amber: (h) => h >= 45 && h < 70,
+        green: (h) => h >= 80 && h < 160,
+        cyan: (h) => h >= 170 && h < 205,
+        blue: (h) => h >= 205 && h < 250,
+        purple: (h) => h >= 250 && h < 285,
+        magenta: (h) => h >= 285 && h < 330,
+    };
+
+    for (const theme of ['light', 'dark']) {
+        it(`${theme} palette carries every required hue band`, () => {
+            const hues = SPRITE_PALETTES[theme].flatMap((set) => Object.values(set)).map(toHsl);
+            for (const [band, matches] of Object.entries(REQUIRED_BANDS)) {
+                expect(
+                    hues.some((ink) => matches(ink.h)),
+                    `${theme} palette is missing a ${band} ink`
+                ).toBe(true);
+            }
+        });
+
+        it(`${theme} palette inks are saturated, not pastel`, () => {
+            for (const [familyIndex, set] of SPRITE_PALETTES[theme].entries()) {
+                for (const [slot, hex] of Object.entries(set)) {
+                    expect(hex, `${theme}[${familyIndex}].${slot} is not a hex colour`).toMatch(
+                        /^#[0-9a-f]{6}$/i
+                    );
+                    expect(
+                        toHsl(hex).s,
+                        `${theme}[${familyIndex}].${slot} (${hex}) saturation`
+                    ).toBeGreaterThanOrEqual(60);
+                }
+            }
+        });
+
+        it(`${theme} palette inks clear WCAG 1.4.11 non-text contrast on the backdrop`, () => {
+            for (const [familyIndex, set] of SPRITE_PALETTES[theme].entries()) {
+                for (const [slot, hex] of Object.entries(set)) {
+                    expect(
+                        contrast(hex, BACKDROP[theme]),
+                        `${theme}[${familyIndex}].${slot} (${hex}) vs ${BACKDROP[theme]}`
+                    ).toBeGreaterThanOrEqual(3);
+                }
+            }
+        });
+    }
+
+    it('parses sprite ink to canvas rgba channels without touching the hot loop', () => {
+        expect(hexToRgbChannels('#00f0ff')).toBe('0, 240, 255');
+        expect(hexToRgbChannels('#fff')).toBe('255, 255, 255');
+        expect(hexToRgbChannels('not-a-colour')).toBe('255, 255, 255');
+    });
+});
+
+describe('cosmic identity — the board substrate draws no grid', () => {
+    it('drawDynamicBackground strokes no straight full-span line', () => {
+        const segments = [];
+        let cursor = null;
+        const ctx = {
+            createRadialGradient: () => ({ addColorStop: () => {} }),
+            fillRect: () => {},
+            save: () => {},
+            restore: () => {},
+            translate: () => {},
+            rotate: () => {},
+            beginPath: () => {},
+            closePath: () => {},
+            arc: () => {},
+            strokeRect: () => {},
+            fill: () => {},
+            stroke: () => {},
+            moveTo: (x, y) => {
+                cursor = { x, y };
+            },
+            lineTo: (x, y) => {
+                if (cursor) segments.push(Math.hypot(x - cursor.x, y - cursor.y));
+                cursor = { x, y };
+            },
+            fillStyle: '',
+            strokeStyle: '',
+            globalAlpha: 1,
+            lineWidth: 1,
+        };
+        const game = {
+            ctx,
+            logicalWidth: 1440,
+            logicalHeight: 900,
+            scores: { 1: 0, 2: 0 },
+            backgroundHue: 220,
+        };
+
+        drawDynamicBackground(game);
+
+        // The removed grid contributed ~58 lines of 900 / 1440 px per frame.
+        expect(segments.filter((len) => len >= 800)).toEqual([]);
     });
 });
 

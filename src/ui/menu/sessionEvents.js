@@ -13,6 +13,7 @@ import { buildLocalGameFromConfig, getLastLocalConfig } from './localSetupEvents
 import { showScreen } from '../ScreenTransition.js';
 import { showToast } from '../Toast.js';
 
+import { maybeShowDonationPrompt } from '../DonationPrompt.js';
 import { renderLevelsGrid, startLevelMatch } from '../LevelsScreen.js';
 import { hideGameOverSplash } from '../../../ui-manager/celebrations.js';
 
@@ -136,6 +137,21 @@ export function bindSessionEvents(deps) {
         }
         if (game?.isLevelsMode) {
             const nextLvl = game._nextLevelToPlay ?? game.currentLevel;
+            const isAdvancing = nextLvl > game.currentLevel;
+
+            if (isAdvancing) {
+                const playAgainBtn = document.getElementById('playAgain');
+                if (playAgainBtn) playAgainBtn.disabled = true;
+                try {
+                    await maybeShowDonationPrompt({
+                        level: game.currentLevel,
+                        soundManager: game.soundManager,
+                    });
+                } finally {
+                    if (playAgainBtn) playAgainBtn.disabled = false;
+                }
+            }
+
             startLevelMatch(nextLvl, deps);
             return;
         }

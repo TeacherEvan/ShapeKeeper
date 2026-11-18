@@ -41,7 +41,6 @@ export class LiveLobbyManager {
         if (room) {
             this.roomId = room._id || this.roomId;
             this.roomCode = room.roomCode || this.roomCode;
-            this.passcode = room.passcode ?? this.passcode;
             this.hostSessionId = room.hostPlayerId || this.hostSessionId;
             this.gridSize = room.gridSize ?? this.gridSize;
             this.turnDurationSeconds =

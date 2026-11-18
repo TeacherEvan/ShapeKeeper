@@ -104,25 +104,6 @@ export function bindLocalSetupEvents(deps) {
         localTurnDurationInput.addEventListener('change', onDurationInput);
     }
 
-    document.getElementById('localPlayBtn').addEventListener('click', () => {
-        activeTimerSource = null;
-        if (localTutorialMode) {
-            localTutorialMode.checked = false;
-            localTutorialMode.disabled = false;
-        }
-        if (localOpponentType) {
-            localOpponentType.value = 'human';
-        }
-        syncLocalAIControls();
-        const localTimerEl = document.getElementById('localTurnTimerSection');
-        if (localTimerEl) {
-            localTimerEl.hidden = !(
-                window.FEATURE_FLAGS?.FEATURE_LAVA_TIMER ?? window.FEATURE_LAVA_TIMER
-            );
-        }
-        showScreen('localSetupScreen');
-    });
-
     document.querySelectorAll('.local-grid-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
             document

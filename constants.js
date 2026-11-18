@@ -11,7 +11,12 @@ export const GAME_CONSTANTS = {
     DOT_RADIUS: 1.6,
     LINE_WIDTH: 6, // 300% increase from original 2
     CELL_SIZE_MIN: 8,
-    CELL_SIZE_MAX: 40,
+    // Was 40, which capped a 10x10 board at 400x400 px on every screen:
+    // setupCanvas() adapts cell size to the container, then this clamp
+    // overrode it, leaving the board postage-stamp small on a laptop or
+    // projector. 72 lets the board use the space the container actually has,
+    // while CELL_SIZE_MIN still protects 30x30 grids.
+    CELL_SIZE_MAX: 72,
     GRID_OFFSET: 20,
     POPULATE_PLAYER_ID: 3, // Player ID for populate feature lines
     GHOST_LINE_OPACITY: 0.3, // Opacity for ghost lines (invisible to opponent)
@@ -80,39 +85,3 @@ export const TIMING_CONSTANTS = {
     SNAPSHOT_TTL_MS: 48 * 60 * 60 * 1000, // purge snapshots older than 48h (FR-4)
     SNAPSHOT_PREFIX: 'shapekeeper.online.snapshots.', // localStorage key prefix (FR-4)
 };
-
-export const HYPOTHETICALS = [
-    'Would you rather fight 100 duck-sized horses or 1 horse-sized duck?',
-    'Would you rather have unlimited money or unlimited time?',
-    'Would you rather be able to fly or be invisible?',
-    'Would you rather live without music or without movies?',
-    'Would you rather always be 10 minutes late or 20 minutes early?',
-    'Would you rather have a rewind button or a pause button for your life?',
-    'Would you rather know how you die or when you die?',
-    'Would you rather speak all languages or talk to animals',
-    'Would you rather give up social media forever or never watch TV again?',
-    'Would you rather be famous for something bad or unknown for something great?',
-];
-
-export const DARES = [
-    'Be Dared! (The group decides your fate)',
-    'Dare the person to your right! (Make it good)',
-];
-
-export const TRUTHS = [
-    'Receive a Truth! (The group asks you anything)',
-    'Give a Truth! (Ask the person to your left anything)',
-];
-
-export const PHYSICAL_CHALLENGES = [
-    'Do a dramatic slow-motion replay of capturing that square!',
-    'Stand on one foot until your next turn!',
-    'Touch your nose with your tongue (or try)!',
-    'Do your best superhero pose!',
-    'Give the player on your left a high five!',
-    'Do the robot dance for 10 seconds!',
-    'Spin around 3 times!',
-    'Do an air guitar solo!',
-    'Make the most ridiculous face you can!',
-    'Do a victory dance right now!',
-];

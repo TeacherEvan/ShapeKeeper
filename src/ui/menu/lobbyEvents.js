@@ -93,6 +93,9 @@ export function bindLobbyEvents(deps) {
 
             lobbyManager.roomCode = result.roomCode;
             lobbyManager.isHost = true;
+            if (result.passcode) {
+                lobbyManager.setIdentity({ passcode: result.passcode });
+            }
             showToast('Lobby created', 'success', 4000);
         } else {
             lobbyManager.createRoom(playerName);
@@ -157,7 +160,8 @@ export function bindLobbyEvents(deps) {
         });
     }
 
-    let playerUpdateDebounceTimer = null;
+    let playerNameDebounceTimer = null;
+    let playerColorDebounceTimer = null;
 
     /**
      * Join a specific lobby by its (internal) room code. Used by the lobby
@@ -354,8 +358,8 @@ export function bindLobbyEvents(deps) {
         updateLobbyUI();
 
         if (window.ShapeKeeperConvex) {
-            if (playerUpdateDebounceTimer) clearTimeout(playerUpdateDebounceTimer);
-            playerUpdateDebounceTimer = setTimeout(async () => {
+            if (playerNameDebounceTimer) clearTimeout(playerNameDebounceTimer);
+            playerNameDebounceTimer = setTimeout(async () => {
                 await window.ShapeKeeperConvex.updatePlayer({ name: newName });
             }, 250);
         }
@@ -368,8 +372,8 @@ export function bindLobbyEvents(deps) {
         updateLobbyUI();
 
         if (window.ShapeKeeperConvex) {
-            if (playerUpdateDebounceTimer) clearTimeout(playerUpdateDebounceTimer);
-            playerUpdateDebounceTimer = setTimeout(async () => {
+            if (playerColorDebounceTimer) clearTimeout(playerColorDebounceTimer);
+            playerColorDebounceTimer = setTimeout(async () => {
                 await window.ShapeKeeperConvex.updatePlayer({ color: newColor });
             }, 250);
         }
