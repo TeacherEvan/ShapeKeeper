@@ -28,20 +28,34 @@
     }
 
     // Paid unlock. Levels 1..19 are free; one purchase opens 20..100.
-    // ON since 2026-10-29 (owner decision). UNLOCK_CHECKOUT_URL stays empty until
-    // the Lemon Squeezy store is approved; the gate shows the price and says so
-    // rather than presenting a buy button that goes nowhere.
+    // ON since 2026-10-29 (owner decision). Volume lane: R18 (~USD 1), the price
+    // point chosen for quantity over margin. Paystack pays directly into the
+    // owner's SA bank accounts, so no PayPal/Payoneer bridge is involved.
+    // Amount in kobo, read by checkout.js before it opens the Paystack modal.
+    if (typeof window.PAYSTACK_AMOUNT_KOBO !== 'number') {
+        window.PAYSTACK_AMOUNT_KOBO = 1800;
+    }
     if (typeof window.PAYWALL_ENABLED !== 'boolean') {
         window.PAYWALL_ENABLED = true;
     }
+    // Public Paystack key is safe to ship. Set to pk_live_... for real payments;
+    // while it is empty the gate keeps its buy button visibly disabled.
+    if (typeof window.PAYSTACK_PUBLIC_KEY !== 'string') {
+        window.PAYSTACK_PUBLIC_KEY = '';
+    }
+    // Enable the buy link only once a real public key has been configured.
     if (typeof window.UNLOCK_CHECKOUT_URL !== 'string') {
-        window.UNLOCK_CHECKOUT_URL = '';
+        window.UNLOCK_CHECKOUT_URL = window.PAYSTACK_PUBLIC_KEY ? '/checkout.html' : '';
     }
     if (typeof window.UNLOCK_PRICE_LABEL !== 'string') {
-        window.UNLOCK_PRICE_LABEL = 'USD 6.99 — one time, every level';
+        window.UNLOCK_PRICE_LABEL = 'R18 (about $1) — once, every level';
+    }
+    // Convex HTTP actions are served from *.convex.site, NOT *.convex.cloud.
+    if (typeof window.PAYSTACK_VERIFY_URL !== 'string') {
+        window.PAYSTACK_VERIFY_URL = 'https://precise-ladybug-504.convex.site/paystack/verify';
     }
     if (typeof window.LICENSE_VALIDATE_URL !== 'string') {
-        window.LICENSE_VALIDATE_URL = 'https://api.lemonsqueezy.com/v1/licenses/validate';
+        window.LICENSE_VALIDATE_URL = 'https://precise-ladybug-504.convex.site/license/validate';
     }
 
     // Optional tip jar. Every level is open; this never unlocks anything.

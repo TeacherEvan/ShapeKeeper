@@ -123,4 +123,28 @@ export default defineSchema({
         .index('by_license_hash', ['licenseKeyHash'])
         .index('by_instance', ['instanceId'])
         .index('by_status', ['status']),
+    // Paystack-issued unlock licences (South Africa, low-price volume lane).
+    // Kept separate from the Lemon Squeezy entitlements so either store can be
+    // retired without migrating the other. The key is stored internally ONLY so
+    // a buyer can re-open the checkout with the same reference and see it again;
+    // no public query ever reads this table.
+    paystackLicences: defineTable({
+        keyHash: v.string(), // SHA-256 of the licence key — the validation lookup
+        key: v.string(), // plaintext, internal-only (never exposed by a public query)
+        reference: v.string(), // Paystack transaction reference (idempotency key)
+        email: v.optional(v.string()),
+        amountKobo: v.number(),
+        status: v.union(v.literal('active'), v.literal('revoked')),
+        createdAt: v.number(),
+        revokedAt: v.optional(v.number()),
+    })
+        .index('by_key_hash', ['keyHash'])
+        .index('by_reference', ['reference']),
+    // Refund tombstones. A refund webhook can arrive before any licence exists;
+    // the marker stops a later out-of-order charge.success from minting an
+    // active licence for money that was already returned.
+    paystackRefunds: defineTable({
+        reference: v.string(),
+        createdAt: v.number(),
+    }).index('by_reference', ['reference']),
 });
