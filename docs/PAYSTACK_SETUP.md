@@ -55,6 +55,22 @@ npx vercel --prod
 
 `vercel.json` already allows `js.paystack.co` in the CSP.
 
+## 5b. Key hygiene (learned the hard way)
+
+- **Always copy keys with the dashboard copy icon.** Values read off a screenshot
+  were 24 hex characters; Paystack keys are 40. Both were rejected: the API said
+  `Invalid key` and the checkout modal said `Please enter a valid Key`.
+- **Verify a key before shipping it:** `curl -s https://api.paystack.co/balance
+  -H "Authorization: Bearer $KEY" -H "User-Agent: Mozilla/5.0"` must return
+  `status:true`. Paystack's Cloudflare blocks default script user-agents (error
+  1010), so send a browser User-Agent.
+- **`npx convex env set` writes to the DEV deployment by default.** Production
+  needs `--prod` (or `--deployment prod`). Without it the live HTTP actions see an
+  empty secret and fail closed with 503/401.
+- **Leave the IP whitelist empty** — Convex egress IPs change.
+- While no valid public key is set, `config.js` keeps `PAYSTACK_PUBLIC_KEY = ''`
+  so the gate stays honestly disabled instead of opening a broken modal.
+
 ## 6. Test the whole loop
 
 1. Set **test** keys in steps 2–3 and deploy.

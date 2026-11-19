@@ -41,6 +41,10 @@
     // Public Paystack key is safe to ship. Set to pk_live_... for real payments;
     // while it is empty the gate keeps its buy button visibly disabled.
     if (typeof window.PAYSTACK_PUBLIC_KEY !== 'string') {
+        // Empty until a VALID key is configured. The 24-hex values seen in the
+        // dashboard screenshot were rejected by Paystack ('Invalid key' / 'Please
+        // enter a valid Key'); real keys are 40 hex. Copy via the dashboard copy
+        // icon, verify with a test initialize call, then set pk_test_/pk_live_.
         window.PAYSTACK_PUBLIC_KEY = '';
     }
     // Enable the buy link only once a real public key has been configured.
