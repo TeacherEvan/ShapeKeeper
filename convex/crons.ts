@@ -1,21 +1,15 @@
 import { cronJobs } from 'convex/server';
-import { internal } from './_generated/api';
 
 /**
  * Scheduled jobs.
  *
- * sweepAllTurnDeadlines runs every 5 seconds. It scans every 'playing'
- * room and, for any whose Allowed Time has expired, triggers expireTurn
- * via the internal mutation sweep.
+ * Turn expiry is NOT a cron: armTurnTimer() schedules a durable
+ * `runAt(turnEndTime, internal.games.expireTurn)` on every move. A periodic
+ * sweep used to re-enqueue the same mutation every 5s for any room whose
+ * deadline had passed; when expiry failed, the transaction rolled back and
+ * the sweep retried forever (2026-11-23 Free-tier burn).
  */
 const crons = cronJobs();
-
-crons.interval(
-  'sweep-turn-deadlines',
-  { seconds: 5 },
-  internal.mutations.sweepAllTurnDeadlines.sweepAllTurnDeadlines,
-  {}
-);
 
 // Abandoned-lobby reaper: rooms stuck at status 'lobby' with no activity
 // for 2 hours are deleted with their players.
