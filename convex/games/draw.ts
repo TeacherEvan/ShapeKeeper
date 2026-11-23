@@ -1,8 +1,7 @@
 import { checkForCompletedSquares } from './squares';
 import { validateLineKey } from './line_validation';
 import { isTurnExpired } from './turn_deadline';
-import { computeTurnEndTime, resolveTurnDurationMs } from './turn_duration';
-import { armTurnTimer } from './turnTimer';
+import { armTurnTimer, normalizeTurnDuration } from './turnTimer';
 import { getAllLineKeys, pickRandomFreeLine } from './shared';
 import { log, errorLog, warn } from '../log';
 import { checkRateLimit } from '../rateLimit';
@@ -191,7 +190,7 @@ export async function drawLineHandler(ctx: any, args: any) {
     // is never stalled by a frozen or hostile client. Skipping is only
     // possible when a time limit is configured (duration > 0).
     if (isTurnExpired(room)) {
-        const turnDurationMs = resolveTurnDurationMs(room);
+        const turnDurationMs = normalizeTurnDuration(room.turnDurationMs);
         if (turnDurationMs > 0) {
             const timedOutPlayer = sortedPlayers[room.currentPlayerIndex];
             if (timedOutPlayer) {
