@@ -50,10 +50,14 @@ test.describe('Paywall gate on level entry', () => {
     test('a draw on the last free level opens the unlock gate instead of level 20', async ({
         page,
     }) => {
+        // The gate is archived off by default; force it on to exercise the
+        // reapply path without changing the shipped configuration.
+        await page.addInitScript(() => {
+            window.PAYWALL_ENABLED = true;
+        });
         await gotoApp(page);
         await seedProgress(page);
 
-        // The paywall is on in the deployed config; the gate only exists then.
         expect(await page.evaluate(() => window.PAYWALL_ENABLED)).toBe(true);
 
         await page.locator('#levelsMenuBtn').click();
@@ -78,6 +82,9 @@ test.describe('Paywall gate on level entry', () => {
     });
 
     test('an entitled player gets Next Level (20) and starts it', async ({ page }) => {
+        await page.addInitScript(() => {
+            window.PAYWALL_ENABLED = true;
+        });
         await gotoApp(page);
         await seedProgress(page, { entitled: true });
 
@@ -95,10 +102,8 @@ test.describe('Paywall gate on level entry', () => {
         await expect(page.getByTestId('unlock-gate')).toBeHidden();
     });
 
-    test('with the paywall off every level is enterable', async ({ page }) => {
-        await page.addInitScript(() => {
-            window.PAYWALL_ENABLED = false;
-        });
+    test('with the paywall archived off every level is enterable', async ({ page }) => {
+        // No init script: this is the shipped default while payment is pending.
         await gotoApp(page);
         await seedProgress(page);
 

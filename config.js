@@ -27,16 +27,18 @@
         window.FEATURE_SYNC_RESILIENCE = true;
     }
 
-    // Paid unlock. Levels 1..19 are free; one purchase opens 20..100.
-    // ON since 2026-10-29 (owner decision). Volume lane: R18 (~USD 1), the price
-    // point chosen for quantity over margin. Paystack pays directly into the
-    // owner's SA bank accounts, so no PayPal/Payoneer bridge is involved.
+    // Paid unlock — ARCHIVED 2026-11-23: the payment platform is not ready yet.
+    // Levels 1..100 stay open. The gate code remains in the source tree so it
+    // can be reapplied once the rail is live: set PAYWALL_ENABLED to true here
+    // (or in an overriding config.js) and configure a valid Paystack key.
+    // Volume lane: R18 (~USD 1), chosen for quantity over margin. Paystack pays
+    // directly into the owner's SA bank accounts, no PayPal/Payoneer bridge.
     // Amount in kobo, read by checkout.js before it opens the Paystack modal.
     if (typeof window.PAYSTACK_AMOUNT_KOBO !== 'number') {
         window.PAYSTACK_AMOUNT_KOBO = 1800;
     }
     if (typeof window.PAYWALL_ENABLED !== 'boolean') {
-        window.PAYWALL_ENABLED = true;
+        window.PAYWALL_ENABLED = false;
     }
     // Public Paystack key is safe to ship. Set to pk_live_... for real payments;
     // while it is empty the gate keeps its buy button visibly disabled.
