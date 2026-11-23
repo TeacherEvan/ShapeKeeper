@@ -92,10 +92,17 @@ export async function applyLineForPlayer(
 
     const serverReceivedAt = Date.now();
     const timingPatch: any = {
-        lastTurnClientSentAt: clientSentAt ?? null,
         lastTurnServerReceivedAt: serverReceivedAt,
         updatedAt: serverReceivedAt,
     };
+    // `rooms.lastTurnClientSentAt` is v.optional(v.number()): Convex accepts a
+    // missing field but rejects `null`. Scheduled turn expiry has no client
+    // timestamp, so omit the key instead of writing null — otherwise the whole
+    // mutation rolls back, the deadline never advances and the sweep retries it
+    // forever (2026-11-23 free-tier burn).
+    if (typeof clientSentAt === 'number' && Number.isFinite(clientSentAt)) {
+        timingPatch.lastTurnClientSentAt = clientSentAt;
+    }
 
     const nextIndex =
         completedSquares.length === 0
