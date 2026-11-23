@@ -95,7 +95,7 @@ describe('convex/games/turnTimer', () => {
             expect(patch).not.toHaveBeenCalled();
         });
 
-        it('is a no-op when fewer than 2 players in room', async () => {
+        it('clears the stale deadline when fewer than 2 players remain', async () => {
             const room = { status: 'playing', turnEndTime: 15000 };
             const patch = vi.fn();
             const ctx: any = {
@@ -111,7 +111,10 @@ describe('convex/games/turnTimer', () => {
             };
 
             await expireTurnHandler(ctx, { roomId: 'r1', expectedTurnEndTime: 15000 });
-            expect(patch).not.toHaveBeenCalled();
+            expect(patch).toHaveBeenCalledWith(
+                'r1',
+                expect.objectContaining({ turnEndTime: undefined })
+            );
         });
 
         it('draws a random line on behalf of current player and re-arms when valid', async () => {

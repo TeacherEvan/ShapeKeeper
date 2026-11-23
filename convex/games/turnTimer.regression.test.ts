@@ -90,3 +90,44 @@ describe('expireTurn writes only schema-valid room timing fields', () => {
         expect('lastTurnClientSentAt' in patch).toBe(false);
     });
 });
+
+function ctxWithPlayers(roomDoc: any, roomPlayers: any[]) {
+    const { ctx, patches } = makeCtx();
+    (ctx.db.get as any).mockImplementation(async () => roomDoc);
+    (ctx.db.query as any) = (table: string) => ({
+        withIndex: () => ({
+            collect: vi.fn(async () => (table === 'players' ? roomPlayers : [])),
+            first: vi.fn(async () => null),
+        }),
+    });
+    return { ctx, patches };
+}
+
+describe('expireTurn leaves no stale deadline when it cannot act', () => {
+    it('clears the deadline when the room has fewer than 2 players', async () => {
+        const { ctx, patches } = ctxWithPlayers(room, [players[0]]);
+
+        await expireTurnHandler(ctx, { roomId: 'r1', expectedTurnEndTime: 1000 });
+
+        expect(patches).toHaveLength(1);
+        expect(patches[0].turnEndTime).toBeUndefined();
+        expect(patches[0].turnStartTime).toBeUndefined();
+    });
+
+    it('clears the deadline when currentPlayerIndex points past the player list', async () => {
+        const { ctx, patches } = ctxWithPlayers({ ...room, currentPlayerIndex: 9 }, players);
+
+        await expireTurnHandler(ctx, { roomId: 'r1', expectedTurnEndTime: 1000 });
+
+        expect(patches).toHaveLength(1);
+        expect(patches[0].turnEndTime).toBeUndefined();
+    });
+
+    it('does not touch a newer deadline when the scheduled expiry is stale', async () => {
+        const { ctx, patches } = ctxWithPlayers({ ...room, turnEndTime: 2000 }, players);
+
+        await expireTurnHandler(ctx, { roomId: 'r1', expectedTurnEndTime: 1000 });
+
+        expect(patches).toHaveLength(0);
+    });
+});

@@ -43,10 +43,18 @@ export async function expireTurnHandler(ctx: any, args: any): Promise<void> {
             .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
             .collect()
     ).sort((a: any, b: any) => a.playerIndex - b.playerIndex);
-    if (players.length < 2) return;
-
     const currentPlayer = players[room.currentPlayerIndex];
-    if (!currentPlayer) return;
+    if (players.length < 2 || !currentPlayer) {
+        // A 'playing' room with no opponent or an invalid turn index can never
+        // expire. Clear its deadline so isTurnExpired() goes false; leaving a
+        // stale turnEndTime behind would strand the room in an expired state.
+        await ctx.db.patch(args.roomId, {
+            turnStartTime: undefined,
+            turnEndTime: undefined,
+            updatedAt: Date.now(),
+        });
+        return;
+    }
 
     const drawnLines = await ctx.db
         .query('lines')
