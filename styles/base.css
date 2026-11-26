@@ -126,6 +126,8 @@
 
 #appRoot {
     min-height: 100vh;
+    height: 100dvh;
+    min-height: 100dvh;
 }
 
 body {
@@ -135,6 +137,7 @@ body {
     overflow: hidden;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
         env(safe-area-inset-left);
     transition:
@@ -181,7 +184,8 @@ body {
 }
 
 .theme-toggle:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
     box-shadow: var(--focus-ring), var(--shadow-medium);
 }
 
@@ -189,6 +193,7 @@ body {
     display: none;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     position: relative;
     opacity: 0;
     transform: translateY(8px);
@@ -234,7 +239,8 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 a:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
     box-shadow: var(--focus-ring);
 }
 

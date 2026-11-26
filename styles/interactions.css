@@ -85,7 +85,7 @@
     }
 }
 
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
     :root {
         --border-color: #000000;
         --text-secondary: #333333;
@@ -101,6 +101,24 @@
     .start-btn {
         border-width: 3px;
     }
+}
+
+@media (forced-colors: active) {
+    :focus-visible {
+        outline: 2px solid Highlight;
+        outline-offset: 2px;
+    }
+}
+
+.pager-dot {
+    min-width: 24px;
+    min-height: 24px;
+}
+
+.achievement-panel-summary {
+    min-height: 28px;
+    display: flex;
+    align-items: center;
 }
 
 /* TODO: [UX] Consider adding haptic feedback hints via CSS. */

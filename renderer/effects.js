@@ -53,6 +53,10 @@ function drawFloatingGeometry(game, isDark, time) {
     // Skip in test environments where ctx.rotate may not exist (jsdom)
     if (typeof game.ctx.rotate !== 'function') return;
 
+    if (prefersReducedMotion()) {
+        game.backgroundGeometry = [];
+        return;
+    }
     if (!game.backgroundGeometry) {
         game.backgroundGeometry = [];
         const count = isDark ? 8 : 6;
@@ -123,6 +127,10 @@ function drawFloatingGeometry(game, isDark, time) {
 }
 
 export function drawAmbientParticles(game) {
+    if (prefersReducedMotion()) {
+        game.ambientParticles = [];
+        return;
+    }
     const now = Date.now() / 1000;
 
     if (!game.ambientParticles || game.ambientParticles.length === 0) {

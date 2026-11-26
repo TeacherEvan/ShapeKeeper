@@ -181,7 +181,8 @@
 .brand-plate-link {
     display: contents;
     text-decoration: none;
-    outline: none;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
 }
 
 .brand-plate {

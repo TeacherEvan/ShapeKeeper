@@ -13,6 +13,7 @@
     touch-action: none;
     width: 100%;
     height: 100vh;
+    height: 100dvh;
 }
 
 #welcomeCanvas,
@@ -36,6 +37,8 @@
     z-index: 1;
     width: 100%;
     min-height: 100vh;
+    height: 100dvh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     justify-content: safe center;
@@ -126,6 +129,8 @@
     padding: clamp(1.5rem, 3vw, 2.5rem);
     text-align: center;
     min-height: 100vh;
+    height: 100dvh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     justify-content: safe center;
@@ -286,7 +291,8 @@ input[type='color']:hover {
 }
 
 input[type='color']:focus {
-    outline: none;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
     border-color: var(--accent-primary);
     box-shadow: var(--focus-ring);
 }
@@ -523,7 +529,8 @@ input[type='color']:focus {
     font-family: var(--font-sans);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    outline: none;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
     transition:
         border-color var(--transition-fast) var(--easing-smooth),
         box-shadow var(--transition-fast) var(--easing-smooth);
@@ -550,7 +557,8 @@ input[type='color']:focus {
     letter-spacing: 0.3em;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    outline: none;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
     width: 100%;
     max-width: 280px;
     transition:
