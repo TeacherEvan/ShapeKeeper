@@ -100,6 +100,12 @@ export function createClockSync(opts = {}) {
             return delayBufferMs;
         },
 
+        /** Reset per-turn lag buffer and pause state. */
+        resetTurnBuffer() {
+            paused = false;
+            delayBufferMs = 0;
+        },
+
         /** Reset all state (new match). */
         reset() {
             offsetMs = 0;

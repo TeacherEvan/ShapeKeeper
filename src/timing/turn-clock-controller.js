@@ -20,9 +20,23 @@ export function createTurnClockController(game) {
     let lastLatencySampleMs = 0;
     let lastDurationMs = 0;
     let turnKey = null;
+    let pendingLocalSendAt = null;
+    let lastSampledServerReceivedAt = null;
+    let pauseResumeTimeout = null;
+
+    function clearPauseTimer() {
+        if (pauseResumeTimeout !== null) {
+            clearTimeout(pauseResumeTimeout);
+            pauseResumeTimeout = null;
+        }
+    }
 
     return {
         clock,
+
+        markLocalMoveSent(ts = Date.now()) {
+            pendingLocalSendAt = ts;
+        },
 
         /**
          * Feed an authoritative room update.
@@ -32,27 +46,42 @@ export function createTurnClockController(game) {
         onAuthoritativeRoom(room) {
             if (!room) return;
             lastDurationMs = room.turnDurationMs ?? 0;
-            turnKey = room.turnEndTime ?? null;
+            const nextTurnKey = room.turnEndTime ?? null;
+            if (nextTurnKey !== turnKey) {
+                clearPauseTimer();
+                clock.resetTurnBuffer();
+            }
+            turnKey = nextTurnKey;
 
-            // Seed the clock offset from the last move's RTT sample (FR-2).
+            // Seed the clock offset from the last move's RTT sample (FR-2),
+            // once per unique server move receipt.
             if (
                 typeof room.lastTurnClientSentAt === 'number' &&
-                typeof room.lastTurnServerReceivedAt === 'number'
+                typeof room.lastTurnServerReceivedAt === 'number' &&
+                room.lastTurnServerReceivedAt !== lastSampledServerReceivedAt
             ) {
-                // Server-measured one-way up-leg latency (what the backend
-                // actually recorded). Used for the lag-pause decision (FR-3).
-                const latency = room.lastTurnServerReceivedAt - room.lastTurnClientSentAt;
+                lastSampledServerReceivedAt = room.lastTurnServerReceivedAt;
+                const latency =
+                    pendingLocalSendAt !== null && room.lastTurnClientSentAt === pendingLocalSendAt
+                        ? Math.max(0, Date.now() - room.lastTurnClientSentAt)
+                        : room.lastTurnServerReceivedAt - room.lastTurnClientSentAt;
+                pendingLocalSendAt = null;
                 lastLatencySampleMs = latency;
-                // Offset smoothing sample: t0 = client send, tServer = server
-                // receive, t1 = our local now (proxy for client receive).
                 clock.sample(room.lastTurnClientSentAt, room.lastTurnServerReceivedAt, Date.now());
 
-                // Auto-pause when the up-leg latency exceeded the threshold (FR-3).
                 if (
                     FEATURE_FLAGS.FEATURE_SYNC_RESILIENCE &&
                     latency > TIMING_CONSTANTS.LAG_PAUSE_THRESHOLD_MS
                 ) {
                     clock.beginPause(latency);
+                    clearPauseTimer();
+                    pauseResumeTimeout = setTimeout(
+                        () => {
+                            clock.endPause();
+                            pauseResumeTimeout = null;
+                        },
+                        Math.min(Math.max(latency, 300), 1500)
+                    );
                 }
             }
 
@@ -91,9 +120,12 @@ export function createTurnClockController(game) {
 
         /** Clear turn state (match finished / left). */
         clear() {
+            clearPauseTimer();
             lastTurnEndTime = null;
             lastDurationMs = 0;
             turnKey = null;
+            pendingLocalSendAt = null;
+            lastSampledServerReceivedAt = null;
             game.turnRemainingMs = null;
             clock.reset();
         },
