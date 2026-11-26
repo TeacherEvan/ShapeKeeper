@@ -6,8 +6,8 @@ export function initializeAmbientParticles(system) {
     if (prefersReducedMotion()) return;
     // Spread ambient particles across the real board dimensions so they cover
     // the canvas instead of a hardcoded 800x600 box (AUD-3).
-    const width = system.logicalWidth || 800;
-    const height = system.logicalHeight || 600;
+    const width = system.game?.logicalWidth || system.logicalWidth || 800;
+    const height = system.game?.logicalHeight || system.logicalHeight || 600;
     for (let i = 0; i < GAME_CONSTANTS.AMBIENT_PARTICLE_COUNT; i++) {
         system.ambientParticles.push(createAmbientParticle(false, width, height));
     }

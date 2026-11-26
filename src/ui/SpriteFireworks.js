@@ -58,6 +58,7 @@ export function advanceSpriteLifecycle(sprite, dtMs, rng = Math.random, bounds =
                 if (bounds && bounds.width && bounds.height) {
                     sprite.x = 20 + rng() * (bounds.width - 40);
                     sprite.y = 20 + rng() * (bounds.height - 40);
+                    sprite.trail?.clear?.();
                 }
                 break;
             case 'respawning':
@@ -192,8 +193,6 @@ export class SpriteFireworksManager {
 
             ctx.globalAlpha = p.alpha;
             ctx.fillStyle = p.color;
-            ctx.shadowColor = p.color;
-            ctx.shadowBlur = 8;
 
             if (typeof ctx.beginPath === 'function') ctx.beginPath();
             if (typeof ctx.arc === 'function') ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);

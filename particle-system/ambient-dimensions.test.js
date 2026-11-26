@@ -41,4 +41,14 @@ describe('ambient particle dimensions', () => {
         expect(p.x).toBeLessThan(200);
         expect(p.y).toBeLessThan(150);
     });
+
+    it('reads system.game.logicalWidth/Height when called with a ParticleSystem instance', () => {
+        const rand = vi.spyOn(Math, 'random').mockReturnValue(0.999);
+        const system = { game: { logicalWidth: 1200, logicalHeight: 900 } };
+        initializeAmbientParticles(system);
+        rand.mockRestore();
+
+        expect(system.ambientParticles.some((p) => p.x > 800 && p.x < 1200)).toBe(true);
+        expect(system.ambientParticles.some((p) => p.y > 600 && p.y < 900)).toBe(true);
+    });
 });
