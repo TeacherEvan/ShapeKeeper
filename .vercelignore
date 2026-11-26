@@ -1,0 +1,13 @@
+docs/
+tests/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+playwright.config.js
+playwright-report/
+test-results/
+test-connection-pooling.html
+myenv/
+ShapeKeeper/
+.git/

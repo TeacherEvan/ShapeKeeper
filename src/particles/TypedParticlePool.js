@@ -20,7 +20,7 @@ function parseColorToUint32(color) {
             return num >>> 0;
         }
         if (color.startsWith('rgb')) {
-            const match = color.match(/\d+/g);
+            const match = color.match(/[\d.]+/g);
             if (match && match.length >= 3) {
                 const r = parseInt(match[0], 10);
                 const g = parseInt(match[1], 10);

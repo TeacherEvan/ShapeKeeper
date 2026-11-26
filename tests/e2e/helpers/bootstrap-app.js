@@ -55,6 +55,18 @@ export async function gotoApp(page, { startupTimeoutMs = 250 } = {}) {
             return;
         }
 
+        if (
+            request.url().startsWith('https://fonts.googleapis.com/') ||
+            request.url().startsWith('https://fonts.gstatic.com/')
+        ) {
+            await route.fulfill({
+                status: 200,
+                contentType: 'text/css',
+                body: '',
+            });
+            return;
+        }
+
         if (request.resourceType() === 'document') {
             const response = await route.fetch();
             let html = await response.text();

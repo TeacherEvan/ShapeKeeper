@@ -15,12 +15,6 @@ export function requestFullscreen() {
     } else if (elem.webkitRequestFullscreen) {
         // Safari
         elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) {
-        // IE11
-        elem.msRequestFullscreen();
-    } else if (elem.mozRequestFullScreen) {
-        // Firefox
-        elem.mozRequestFullScreen();
     }
 }
 
@@ -33,11 +27,5 @@ export function exitFullscreen() {
     } else if (document.webkitExitFullscreen) {
         // Safari
         document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) {
-        // IE11
-        document.msExitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-        // Firefox
-        document.mozCancelFullScreen();
     }
 }
