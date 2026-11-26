@@ -19,7 +19,7 @@ export const AI_PENALTY_QUIPS = [
     'Error 0.2: dignity not found.',
     'I meant to do that. Totally.',
     '80% off… and not the good kind.',
-    'Note to self: avoid sparkly boxes.',
+    'Note to self: watch out for hidden mines.',
     'My circuits feel… smaller.',
     "Wait, that wasn't in my minimax tree!",
     'That box was a trap! A shiny trap!',
@@ -37,7 +37,7 @@ export const PLAYER_PENALTY_QUIPS = [
     'Ouch! That box bit you. −80%.',
     'That was a mine, not a prize!',
     'Boxed! Your score just shrank.',
-    'Told you those ones sparkle for a reason.',
+    'Hidden mine! That one snuck up on you.',
     'Sorry friend — that is a 0.2x trap.',
     'Penalty! Even I felt that one.',
 ];
