@@ -607,6 +607,8 @@ export class DotsAndBoxesGame {
                 this.achievementSystem.onMoveResolved({
                     isMultiplayer: this.isMultiplayer,
                     isTutorial: this.tutorialSystem?.isActive() === true,
+                    isAI: this.localMode === 'ai',
+                    currentPlayer: actingPlayer,
                     scores: this.scores,
                     completedSquaresCount: completedSquares.length,
                     comboCount: this.comboCount,
@@ -618,6 +620,7 @@ export class DotsAndBoxesGame {
                     this.achievementSystem.onGameOver({
                         isMultiplayer: this.isMultiplayer,
                         isTutorial: this.tutorialSystem?.isActive() === true,
+                        isAI: this.localMode === 'ai',
                         scores: this.scores,
                     })
                 );

@@ -227,7 +227,9 @@ export function handleAuthoritativeGameState(gameState, deps) {
             game.lines.add(line.lineKey);
 
             const displayPlayerIndex =
-                line.playerIndex === 2 ? DotsAndBoxesGame.POPULATE_PLAYER_ID : line.playerIndex + 1;
+                line.playerIndex === -1
+                    ? DotsAndBoxesGame.POPULATE_PLAYER_ID
+                    : line.playerIndex + 1;
 
             game.lineOwners.set(line.lineKey, displayPlayerIndex);
 

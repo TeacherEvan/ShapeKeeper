@@ -18,7 +18,7 @@ export const GAME_CONSTANTS = {
     // while CELL_SIZE_MIN still protects 30x30 grids.
     CELL_SIZE_MAX: 72,
     GRID_OFFSET: 20,
-    POPULATE_PLAYER_ID: 3, // Player ID for populate feature lines
+    POPULATE_PLAYER_ID: 0, // Neutral sentinel ID for populate feature lines (never collides with Player 1..6)
     GHOST_LINE_OPACITY: 0.3, // Opacity for ghost lines (invisible to opponent)
 
     // Animation constants - tuned for 60fps smoothness

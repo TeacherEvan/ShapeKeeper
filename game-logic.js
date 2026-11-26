@@ -154,49 +154,52 @@ export class GameLogic {
         // Parse the line
         const [start, end] = parseLineKey(lineKey);
 
-        // Temporarily add the line to check
-        this.game.lines.add(lineKey);
-
-        let wouldComplete = false;
-
-        const isHorizontal = start.row === end.row;
-
-        if (isHorizontal) {
-            // Check square above
-            if (
-                start.row > 0 &&
-                this.isSquareComplete(start.row - 1, Math.min(start.col, end.col))
-            ) {
-                wouldComplete = true;
-            }
-            // Check square below
-            if (
-                !wouldComplete &&
-                start.row < this.game.gridRows - 1 &&
-                this.isSquareComplete(start.row, Math.min(start.col, end.col))
-            ) {
-                wouldComplete = true;
-            }
-        } else {
-            // Check square to the left
-            if (
-                start.col > 0 &&
-                this.isSquareComplete(Math.min(start.row, end.row), start.col - 1)
-            ) {
-                wouldComplete = true;
-            }
-            // Check square to the right
-            if (
-                !wouldComplete &&
-                start.col < this.game.gridCols - 1 &&
-                this.isSquareComplete(Math.min(start.row, end.row), start.col)
-            ) {
-                wouldComplete = true;
-            }
+        const alreadyPresent = this.game.lines.has(lineKey);
+        if (!alreadyPresent) {
+            this.game.lines.add(lineKey);
         }
 
-        // Remove the temporary line
-        this.game.lines.delete(lineKey);
+        let wouldComplete = false;
+        const isHorizontal = start.row === end.row;
+        try {
+            if (isHorizontal) {
+                // Check square above
+                if (
+                    start.row > 0 &&
+                    this.isSquareComplete(start.row - 1, Math.min(start.col, end.col))
+                ) {
+                    wouldComplete = true;
+                }
+                // Check square below
+                if (
+                    !wouldComplete &&
+                    start.row < this.game.gridRows - 1 &&
+                    this.isSquareComplete(start.row, Math.min(start.col, end.col))
+                ) {
+                    wouldComplete = true;
+                }
+            } else {
+                // Check square to the left
+                if (
+                    start.col > 0 &&
+                    this.isSquareComplete(Math.min(start.row, end.row), start.col - 1)
+                ) {
+                    wouldComplete = true;
+                }
+                // Check square to the right
+                if (
+                    !wouldComplete &&
+                    start.col < this.game.gridCols - 1 &&
+                    this.isSquareComplete(Math.min(start.row, end.row), start.col)
+                ) {
+                    wouldComplete = true;
+                }
+            }
+        } finally {
+            if (!alreadyPresent) {
+                this.game.lines.delete(lineKey);
+            }
+        }
 
         return wouldComplete;
     }
@@ -227,7 +230,7 @@ export class GameLogic {
      * Get the player who drew a line
      */
     getLinePlayer(lineKey) {
-        return this.game.lineOwners.get(lineKey) || 1;
+        return this.game.lineOwners.get(lineKey) ?? 1;
     }
 
     /**

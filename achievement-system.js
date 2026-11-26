@@ -216,11 +216,17 @@ export class AchievementSystem {
     onMoveResolved({
         isMultiplayer,
         isTutorial = false,
+        isAI = false,
+        currentPlayer = 1,
         scores,
         completedSquaresCount,
         comboCount,
     }) {
         if (isMultiplayer || isTutorial) {
+            return [];
+        }
+        if (isAI && currentPlayer !== 1) {
+            this.updateDeficitTracking(scores);
             return [];
         }
 
@@ -237,7 +243,8 @@ export class AchievementSystem {
             if (combo) unlocked.push(combo);
         }
 
-        if (Math.max(scores[1], scores[2]) >= 15) {
+        const relevantScore = isAI ? scores[1] : Math.max(scores[1], scores[2]);
+        if (relevantScore >= 15) {
             const scoreThreshold = this.unlock('score_15');
             if (scoreThreshold) unlocked.push(scoreThreshold);
         }
@@ -245,7 +252,7 @@ export class AchievementSystem {
         return unlocked;
     }
 
-    onGameOver({ isMultiplayer, isTutorial = false, scores }) {
+    onGameOver({ isMultiplayer, isTutorial = false, isAI = false, scores }) {
         if (isMultiplayer || isTutorial) {
             return [];
         }
@@ -253,7 +260,7 @@ export class AchievementSystem {
         this.updateDeficitTracking(scores);
 
         const winner = scores[1] > scores[2] ? 1 : scores[2] > scores[1] ? 2 : 0;
-        if (winner === 0) {
+        if (winner === 0 || (isAI && winner !== 1)) {
             return [];
         }
 

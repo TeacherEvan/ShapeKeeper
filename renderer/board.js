@@ -2,6 +2,13 @@ import { GAME_CONSTANTS } from '../constants.js';
 import { isMineMultiplier } from '../effect-system/mines.js';
 import { easeOutQuad, formatHexAlpha, lerp } from '../utils.js';
 
+function getPlayerColor(game, player) {
+    if (player === GAME_CONSTANTS.POPULATE_PLAYER_ID) {
+        return game.populateColor;
+    }
+    return game.playerColors?.[player] ?? (player === 1 ? game.player1Color : game.player2Color);
+}
+
 export function drawLines(game) {
     // Precompute lookups once (O(n)) so per-line checks are O(1) instead of O(n^2).
     const lineDrawingKeys = new Set(game.lineDrawings.map((a) => a.lineKey));
@@ -21,12 +28,7 @@ export function drawLines(game) {
         const player = pulsatingPlayer ?? game.gameLogic.getLinePlayer(lineKey);
         const isGhostLine = game.ghostLines && game.ghostLines.has(lineKey);
 
-        const lineColor =
-            player === GAME_CONSTANTS.POPULATE_PLAYER_ID
-                ? game.populateColor
-                : player === 1
-                  ? game.player1Color
-                  : game.player2Color;
+        const lineColor = getPlayerColor(game, player);
 
         if (isGhostLine) {
             game.ctx.save();
@@ -67,12 +69,7 @@ export function drawLineAnimations(game) {
         const currentEndY = lerp(animation.startDot.y, animation.endDot.y, easedProgress);
         const player = animation.player;
 
-        game.ctx.strokeStyle =
-            player === GAME_CONSTANTS.POPULATE_PLAYER_ID
-                ? game.populateColor
-                : player === 1
-                  ? game.player1Color
-                  : game.player2Color;
+        game.ctx.strokeStyle = getPlayerColor(game, player);
         game.ctx.lineWidth = GAME_CONSTANTS.LINE_WIDTH;
         game.ctx.lineCap = 'round';
         game.ctx.beginPath();
