@@ -143,3 +143,47 @@ describe('tapSquareHandler rate limiting', () => {
         });
     });
 });
+
+describe('tapSquareHandler membership gate', () => {
+    it('rejects a non-member sessionId even when room is playing and square exists', async () => {
+        const db: any = {
+            query: (table: string) => {
+                if (table === 'rateLimits') {
+                    return { withIndex: () => ({ unique: async () => null }) };
+                }
+                if (table === 'players') {
+                    return { withIndex: () => ({ first: async () => null }) };
+                }
+                if (table === 'squares') {
+                    return {
+                        withIndex: () => ({
+                            first: async () => ({
+                                _id: 'sq1',
+                                roomId: 'r1',
+                                squareKey: '0,0',
+                                playerId: 'p1',
+                                multiplier: { type: 'multiplier', value: 2 },
+                            }),
+                        }),
+                    };
+                }
+                return { withIndex: () => ({ first: async () => null }) };
+            },
+            insert: async () => 'rl_1',
+            patch: async () => true,
+            get: async (id: string) => {
+                if (id === 'r1') return { _id: 'r1', status: 'playing' };
+                if (id === 'p1') return { _id: 'p1', sessionId: 'real-owner' };
+                return null;
+            },
+        };
+
+        const res = await tapSquareHandler({ db } as any, {
+            roomId: 'r1',
+            sessionId: 'external-attacker',
+            squareKey: '0,0',
+        });
+
+        expect(res).toEqual({ error: 'Not a member of this room' });
+    });
+});

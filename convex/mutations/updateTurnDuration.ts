@@ -1,7 +1,6 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
-import { getHostTokenHash } from '../utils/roomUtils';
-import { validateTurnDurationSeconds } from '../games/turn_duration';
+import { isAuthorisedHostAsync } from '../auth/token';
 import { ALLOWED_TURN_DURATIONS_MS } from '../games/turnTimer';
 import { checkRateLimit } from '../rate_limit';
 
@@ -22,14 +21,15 @@ export const updateTurnDuration = mutation({
         const room = await ctx.db.get(args.roomId);
         if (!room) return { error: 'Room not found' };
 
-        // Verify host authorization (same pattern as updateGridSize)
+        // Verify host authorization (sessionId + constant-time hostTokenHash)
+        if (room.hostPlayerId !== args.sessionId) {
+            return { error: 'Only host can update turn duration' };
+        }
         if (room.hostTokenHash) {
             if (!args.hostToken) return { error: 'Host token required' };
-            const providedHash = await getHostTokenHash(args.hostToken);
-            if (providedHash !== room.hostTokenHash) return { error: 'Invalid host token' };
-        } else {
-            // Legacy room: fall back to sessionId check
-            if (room.hostPlayerId !== args.sessionId) return { error: 'Only host can update turn duration' };
+            if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
+                return { error: 'Invalid host token' };
+            }
         }
 
         if (room.status !== 'lobby') return { error: 'Cannot change turn duration after game started' };

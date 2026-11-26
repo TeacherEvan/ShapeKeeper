@@ -27,9 +27,31 @@ export const leaveRoom = mutation({
     const remainingPlayers = await ctx.db.query('players').withIndex('by_room', (q: any) => q.eq('roomId', args.roomId)).collect();
 
     if (remainingPlayers.length === 0) {
+      const lines = await ctx.db
+        .query('lines')
+        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
+        .collect();
+      for (const line of lines) {
+        await ctx.db.delete(line._id);
+      }
+
+      const squares = await ctx.db
+        .query('squares')
+        .withIndex('by_room', (q: any) => q.eq('roomId', args.roomId))
+        .collect();
+      for (const square of squares) {
+        await ctx.db.delete(square._id);
+      }
+
       await ctx.db.delete(args.roomId);
       return { success: true, roomDeleted: true };
     }
+
+    remainingPlayers.sort(
+      (a: any, b: any) =>
+        (a.playerIndex ?? 0) - (b.playerIndex ?? 0) ||
+        (a.joinedAt ?? 0) - (b.joinedAt ?? 0)
+    );
 
     if (room.hostPlayerId === args.sessionId) {
       const newHost = remainingPlayers[0];

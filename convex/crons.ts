@@ -1,4 +1,5 @@
 import { cronJobs } from 'convex/server';
+import { internal } from './_generated/api';
 
 /**
  * Scheduled jobs.
@@ -13,13 +14,10 @@ const crons = cronJobs();
 
 // Abandoned-lobby reaper: rooms stuck at status 'lobby' with no activity
 // for 2 hours are deleted with their players.
-const sweepStaleLobbiesRef =
-  'mutations/sweepStaleLobbies:sweepStaleLobbies' as any;
-
 crons.interval(
   'sweep-stale-lobbies',
   { minutes: 15 },
-  sweepStaleLobbiesRef,
+  internal.mutations.sweepStaleLobbies.sweepStaleLobbies,
   {}
 );
 

@@ -36,7 +36,10 @@ function makeDb(rooms: any[], playersByRoom: Record<string, any[]> = {}) {
                         },
                     } as any;
                 }
-                return { collect: async () => [] } as any;
+                return {
+                    collect: async () => [],
+                    withIndex: () => ({ collect: async () => [] }),
+                } as any;
             },
             delete: async (id: string) => {
                 if (String(id).startsWith('room_')) deleted.rooms.push(id);

@@ -85,4 +85,32 @@ describe('mutations/leaveRoom', () => {
         expect(db.patch).toHaveBeenCalledWith('p2', { playerIndex: 0 });
         expect(db.patch).toHaveBeenCalledWith('p3', { playerIndex: 1 });
     });
+
+    it('cascade-deletes lines and squares when the last player leaves', async () => {
+        const player: MockPlayer = { _id: 'p1' };
+        const room: MockRoom = { _id: 'r1', status: 'finished', hostPlayerId: 's1' };
+        const db: any = {
+            query: vi.fn((tableName: string) => {
+                if (tableName === 'players') {
+                    return { withIndex: () => ({ first: async () => player, collect: async () => [] }) };
+                }
+                if (tableName === 'lines') {
+                    return { withIndex: () => ({ collect: async () => [{ _id: 'l1' }] }) };
+                }
+                if (tableName === 'squares') {
+                    return { withIndex: () => ({ collect: async () => [{ _id: 'sq1' }] }) };
+                }
+                return { withIndex: () => ({ collect: async () => [] }) };
+            }),
+            get: vi.fn(async () => room),
+            delete: vi.fn(async () => true),
+            patch: vi.fn(async () => true),
+        };
+
+        const res = await (leaveRoom as any)._handler({ db }, { roomId: 'r1', sessionId: 's1' });
+        expect(res).toEqual({ success: true, roomDeleted: true });
+        expect(db.delete).toHaveBeenCalledWith('l1');
+        expect(db.delete).toHaveBeenCalledWith('sq1');
+        expect(db.delete).toHaveBeenCalledWith('r1');
+    });
 });

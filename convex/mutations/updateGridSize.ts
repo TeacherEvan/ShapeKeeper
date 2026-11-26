@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
-import { getHostTokenHash } from '../utils/roomUtils';
+import { isAuthorisedHostAsync } from '../auth/token';
 
 export const updateGridSize = mutation({
     args: {
@@ -13,14 +13,15 @@ export const updateGridSize = mutation({
         const room = await ctx.db.get(args.roomId);
         if (!room) return { error: 'Room not found' };
 
-        // Verify host authorization
+        // Verify host authorization (sessionId + constant-time hostTokenHash)
+        if (room.hostPlayerId !== args.sessionId) {
+            return { error: 'Only host can update grid size' };
+        }
         if (room.hostTokenHash) {
             if (!args.hostToken) return { error: 'Host token required' };
-            const providedHash = await getHostTokenHash(args.hostToken);
-            if (providedHash !== room.hostTokenHash) return { error: 'Invalid host token' };
-        } else {
-            // Legacy room: fall back to sessionId check
-            if (room.hostPlayerId !== args.sessionId) return { error: 'Only host can update grid size' };
+            if (!(await isAuthorisedHostAsync(room, args.sessionId, args.hostToken))) {
+                return { error: 'Invalid host token' };
+            }
         }
 
         if (room.status !== 'lobby') return { error: 'Cannot change grid size after game started' };

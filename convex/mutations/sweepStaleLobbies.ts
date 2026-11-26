@@ -1,4 +1,4 @@
-import { mutation } from '../_generated/server';
+import { internalMutation } from '../_generated/server';
 import { log } from '../log';
 
 /**
@@ -18,7 +18,7 @@ import { log } from '../log';
  */
 const STALE_LOBBY_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 
-export const sweepStaleLobbies = mutation({
+export const sweepStaleLobbies = internalMutation({
   args: {},
   handler: async (ctx) => {
     const cutoff = Date.now() - STALE_LOBBY_TTL_MS;
@@ -41,6 +41,23 @@ export const sweepStaleLobbies = mutation({
       for (const player of players) {
         await ctx.db.delete(player._id);
       }
+
+      const lines = await ctx.db
+        .query('lines')
+        .withIndex('by_room', (q: any) => q.eq('roomId', room._id))
+        .collect();
+      for (const line of lines) {
+        await ctx.db.delete(line._id);
+      }
+
+      const squares = await ctx.db
+        .query('squares')
+        .withIndex('by_room', (q: any) => q.eq('roomId', room._id))
+        .collect();
+      for (const square of squares) {
+        await ctx.db.delete(square._id);
+      }
+
       await ctx.db.delete(room._id);
       swept += 1;
 

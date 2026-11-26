@@ -217,6 +217,16 @@ export async function tapSquareHandler(ctx: any, args: any) {
         return { error: 'Game is not in progress' };
     }
 
+    const callerPlayer = await ctx.db
+        .query('players')
+        .withIndex('by_room_and_session', (q: any) =>
+            q.eq('roomId', args.roomId).eq('sessionId', args.sessionId)
+        )
+        .first();
+    if (!callerPlayer) {
+        return { error: 'Not a member of this room' };
+    }
+
     const square = await ctx.db
         .query('squares')
         .withIndex('by_room_and_key', (q: any) =>

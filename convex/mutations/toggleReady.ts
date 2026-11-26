@@ -11,6 +11,10 @@ export const toggleReady = mutation({
     const rl = await checkRateLimit(ctx, 'toggleReady', args.sessionId);
     if (!rl.allowed) return { error: 'Rate limit exceeded', resetMs: rl.resetMs };
 
+    const room = await ctx.db.get(args.roomId);
+    if (!room) return { error: 'Room not found' };
+    if (room.status !== 'lobby') return { error: 'Cannot change ready state after game started' };
+
     const player = await ctx.db
       .query('players')
       .withIndex('by_room_and_session', (q: any) => q.eq('roomId', args.roomId).eq('sessionId', args.sessionId))

@@ -6,9 +6,10 @@ interface MockPlayer {
     isReady: boolean;
 }
 
-function makeDb(player: MockPlayer | null = null) {
+function makeDb(player: MockPlayer | null = null, roomStatus: string = 'lobby') {
     const store = new Map<string, any>();
     return {
+        get: vi.fn(async (id: string) => ({ _id: id, status: roomStatus })),
         query: vi.fn((tableName?: string) => {
             if (tableName === 'rateLimits') {
                 return {

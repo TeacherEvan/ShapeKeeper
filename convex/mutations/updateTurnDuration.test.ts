@@ -184,4 +184,24 @@ describe('mutations/updateTurnDuration', () => {
             resetMs: expect.any(Number),
         });
     });
+
+    it('rejects a non-host sessionId even if a valid hostToken is presented', async () => {
+        const room: MockRoom = {
+            _id: 'r1',
+            hostPlayerId: 'host-1',
+            hostTokenHash: 'deadbeef',
+            status: 'lobby',
+        };
+        const db = makeDb(room);
+        const res = await (updateTurnDuration as any)._handler(
+            { db },
+            {
+                roomId: 'r1',
+                sessionId: 'attacker',
+                hostToken: 'raw-token',
+                turnDurationMs: 15000,
+            }
+        );
+        expect(res).toEqual({ error: 'Only host can update turn duration' });
+    });
 });
