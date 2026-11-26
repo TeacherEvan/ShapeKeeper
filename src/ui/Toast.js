@@ -9,7 +9,18 @@
  * @param {string} type - The type of toast: 'info', 'success', 'warning', 'error'
  * @param {number} duration - Duration in milliseconds (default: 4000)
  */
+let activeToastShowTimer = null;
+let activeToastHideTimer = null;
+
 export function showToast(message, type = 'info', duration = 4000) {
+    if (activeToastShowTimer) {
+        clearTimeout(activeToastShowTimer);
+        activeToastShowTimer = null;
+    }
+    if (activeToastHideTimer) {
+        clearTimeout(activeToastHideTimer);
+        activeToastHideTimer = null;
+    }
     // Remove any existing toast
     const existingToast = document.querySelector('.toast-notification');
     if (existingToast) {
@@ -42,16 +53,21 @@ export function showToast(message, type = 'info', duration = 4000) {
     document.body.appendChild(toast);
 
     // Trigger animation
-    setTimeout(() => toast.classList.add('show'), 10);
+    activeToastShowTimer = setTimeout(() => toast.classList.add('show'), 10);
 
     // Close button handler
     closeButton.addEventListener('click', () => {
+        if (activeToastHideTimer) {
+            clearTimeout(activeToastHideTimer);
+            activeToastHideTimer = null;
+        }
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     });
 
     // Auto-remove after duration
-    setTimeout(() => {
+    activeToastHideTimer = setTimeout(() => {
+        activeToastHideTimer = null;
         if (toast.parentNode) {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 300);

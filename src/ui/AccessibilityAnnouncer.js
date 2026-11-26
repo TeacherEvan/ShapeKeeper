@@ -30,3 +30,10 @@ export function announceStatus(message) {
 export function announceAlert(message) {
     scheduleAnnouncement('appAlertRegion', message);
 }
+
+export function clearPendingAnnouncements() {
+    for (const timeoutId of pendingAnnouncements.values()) {
+        clearTimeout(timeoutId);
+    }
+    pendingAnnouncements.clear();
+}

@@ -237,11 +237,29 @@ export class AccessibleGridTree {
             announceStatus(
                 `Drawing line from row ${startDot.row + 1}, column ${startDot.col + 1} to row ${row + 1}, column ${col + 1}.`
             );
-            this.game.drawLine(startDot, dot);
-            this.game.selectedDot = null;
-            this.updateAriaSelected();
-            if (this.game.draw) {
-                this.game.draw();
+            const finishSelection = () => {
+                this.game.selectedDot = null;
+                this.updateAriaSelected();
+                if (this.game.draw) {
+                    this.game.draw();
+                }
+            };
+            this.game.selectionLocked = true;
+            try {
+                const drawResult = this.game.drawLine(startDot, dot);
+                if (drawResult && typeof drawResult.then === 'function') {
+                    drawResult
+                        .then(() => finishSelection())
+                        .finally(() => {
+                            this.game.selectionLocked = false;
+                        });
+                } else {
+                    finishSelection();
+                    this.game.selectionLocked = false;
+                }
+            } catch (err) {
+                this.game.selectionLocked = false;
+                throw err;
             }
             return;
         }
