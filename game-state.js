@@ -166,7 +166,10 @@ export class GameState {
                       Math.min(116, Math.floor(Math.min(maxWidth, maxHeight) * 0.28))
                   )
                 : GAME_CONSTANTS.CELL_SIZE_MAX;
-        this.game.cellSize = Math.max(GAME_CONSTANTS.CELL_SIZE_MIN, Math.min(cellSize, adaptiveMax));
+        this.game.cellSize = Math.max(
+            GAME_CONSTANTS.CELL_SIZE_MIN,
+            Math.min(cellSize, adaptiveMax)
+        );
 
         this.game.cellSize = Math.max(
             GAME_CONSTANTS.CELL_SIZE_MIN,

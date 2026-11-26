@@ -23,14 +23,15 @@
     padding: 30px 24px 24px;
     text-align: center;
     background:
-        radial-gradient(circle at 50% 0%, rgba(255, 120, 170, 0.18), transparent 55%),
-        var(--bg-elevated, #16213e);
-    border: 1px solid rgba(255, 170, 200, 0.45);
+        radial-gradient(circle at 50% 0%, rgba(255, 120, 170, 0.16), transparent 55%),
+        var(--surface-layer-1);
+    border: 1px solid var(--border-default);
     border-radius: var(--radius-xl, 20px);
     box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.65),
-        0 0 50px rgba(255, 105, 150, 0.18);
-    animation: donationCardIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        var(--specular-top),
+        var(--shadow-elevated),
+        0 0 40px rgba(255, 105, 150, 0.14);
+    animation: donationCardIn 280ms var(--easing-smooth);
 }
 
 .donation-prompt-heart {
@@ -79,9 +80,9 @@
 }
 
 .donation-prompt-note {
-    margin: 16px 0 0 !important;
-    font-size: 0.78rem !important;
-    color: rgba(255, 255, 255, 0.5) !important;
+    margin: 16px 0 0;
+    font-size: 0.78rem;
+    color: var(--text-tertiary);
 }
 
 .donation-prompt-actions .start-btn:focus-visible {

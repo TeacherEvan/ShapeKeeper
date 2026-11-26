@@ -15,7 +15,6 @@
 }
 
 #winnerScreen {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
     justify-content: center;
     align-items: center;
 }
@@ -25,18 +24,22 @@
     margin: auto;
     padding: 40px;
     text-align: center;
-    background: var(--bg-primary);
+    background: var(--surface-layer-1);
+    border: 1px solid var(--border-default);
     border-radius: 24px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow:
-        0 20px 60px var(--shadow-color),
-        0 0 100px rgba(255, 215, 0, 0.2);
-    animation: winnerAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        var(--specular-top),
+        var(--shadow-elevated),
+        0 0 60px rgba(255, 215, 0, 0.14);
+    animation: winnerAppear 280ms var(--easing-smooth);
 }
 
 @keyframes winnerAppear {
     0% {
         opacity: 0;
-        transform: scale(0.8) translateY(30px);
+        transform: scale(0.95) translateY(14px);
     }
     100% {
         opacity: 1;
@@ -45,42 +48,38 @@
 }
 
 .winner-container h1 {
-    font-size: 3rem;
+    font-size: 2.75rem;
     margin-bottom: 10px;
     color: var(--text-primary);
-    animation: bounceIn 0.8s ease-out 0.3s both;
+    animation: slideUp 240ms var(--easing-smooth) 40ms both;
 }
 
 .winner-container h2 {
-    font-size: 2rem;
-    margin-bottom: 30px;
-    animation: slideUp 0.6s ease-out 0.5s both;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 1.75rem;
+    margin-bottom: 24px;
+    color: var(--text-secondary);
+    animation: slideUp 240ms var(--easing-smooth) 80ms both;
 }
 
 .winner-container .start-btn {
-    animation: slideUp 0.6s ease-out 0.8s both;
-    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+    animation: slideUp 240ms var(--easing-smooth) 160ms both;
     margin: 8px;
 }
 
-.winner-container .start-btn:hover {
-    transform: scale(1.05) translateY(-2px);
-    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.5);
-}
-
 .winner-container .start-btn.secondary {
-    background: var(--bg-secondary);
+    background-color: var(--surface-layer-2);
+    background-image: none;
     color: var(--text-primary);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: var(--specular-top), var(--shadow-card);
+    border: 1px solid var(--border-default);
 }
 
-.winner-container .start-btn.secondary:hover {
-    background: var(--accent-secondary, #7c3aed);
-    color: #ffffff;
-    box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
+@media (hover: hover) and (pointer: fine) {
+    .winner-container .start-btn.secondary:hover {
+        background-color: var(--surface-layer-3);
+        background-image: none;
+        border-color: var(--accent-primary);
+    }
 }
 
 @keyframes bounceIn {
@@ -112,9 +111,9 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin: 0 auto 30px;
+    margin: 0 auto 24px;
     max-width: 400px;
-    animation: slideUp 0.6s ease-out 0.6s both;
+    animation: slideUp 240ms var(--easing-smooth) 120ms both;
 }
 
 .final-score-entry {
@@ -133,22 +132,10 @@
 }
 
 .final-score-entry.winner {
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 193, 7, 0.15) 100%);
+    position: relative;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.18) 0%, rgba(255, 193, 7, 0.12) 100%);
     border: 2px solid #ffd700;
-    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
-    animation: winnerGlow 2s ease-in-out infinite;
-}
-
-@keyframes winnerGlow {
-    0%,
-    100% {
-        box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
-    }
-    50% {
-        box-shadow:
-            0 4px 30px rgba(255, 215, 0, 0.5),
-            0 0 40px rgba(255, 215, 0, 0.2);
-    }
+    box-shadow: var(--specular-top), 0 4px 20px rgba(255, 215, 0, 0.25);
 }
 
 .final-score-rank {
@@ -202,41 +189,38 @@
     margin: auto;
     padding: 34px 26px;
     text-align: center;
-    background: radial-gradient(circle at 50% 0%, #25162a 0%, var(--bg-elevated, #16213e) 75%);
+    background: var(--surface-layer-1);
     border-radius: var(--radius-xl, 20px);
-    border: 1px solid rgba(255, 75, 75, 0.45);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 50px rgba(255, 50, 50, 0.28);
-    animation: splashDropIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(var(--accent-danger-rgb), 0.45);
+    box-shadow: var(--specular-top), var(--shadow-elevated), 0 0 40px rgba(var(--accent-danger-rgb), 0.2);
+    animation: splashDropIn 320ms var(--easing-smooth);
 }
 
 .game-over-splash-badge {
     display: inline-block;
     padding: 6px 16px;
     border-radius: 9999px;
-    background: rgba(255, 68, 68, 0.22);
-    border: 1px solid rgba(255, 68, 68, 0.6);
-    color: #ff6b6b;
+    background: var(--exit-tonal-bg);
+    border: 1px solid rgba(var(--accent-danger-rgb), 0.55);
+    color: var(--exit-tonal-fg);
     font-weight: 800;
     font-size: 0.95rem;
     margin-bottom: 12px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
-    animation: pulseBadge 1.2s infinite ease-in-out;
 }
 
 .game-over-splash-title {
-    font-size: 2.4rem;
+    font-size: 2.3rem;
     font-weight: 900;
-    color: #ffffff;
+    color: var(--text-primary);
     margin-bottom: 8px;
     letter-spacing: -0.02em;
-    text-shadow: 0 0 20px rgba(255, 80, 80, 0.5), 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
 .game-over-splash-subtitle {
     font-size: 1.05rem;
-    color: var(--text-secondary, #cbd5e0);
+    color: var(--text-secondary);
     margin-bottom: 22px;
     line-height: 1.45;
 }
@@ -251,7 +235,7 @@
 .game-over-splash-shortcuts {
     margin-top: 14px;
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--text-tertiary);
     display: flex;
     justify-content: center;
     gap: 12px;
@@ -259,13 +243,14 @@
 
 .game-over-splash-shortcuts kbd {
     display: inline-block;
-    padding: 2px 6px;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 4px;
-    font-family: inherit;
+    padding: 2px 7px;
+    background: var(--surface-layer-2);
+    border: 1px solid var(--border-default);
+    border-radius: 5px;
+    box-shadow: var(--specular-top);
+    font-family: var(--font-mono);
     font-size: 0.75rem;
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .game-over-splash-actions {
@@ -301,18 +286,19 @@
     }
 }
 
-@keyframes pulseBadge {
-    0%, 100% {
-        transform: scale(1);
-        box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);
-    }
-    50% {
-        transform: scale(1.05);
-        box-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
-    }
-}
-
 @keyframes fadeInOverlay {
     from { opacity: 0; }
     to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .winner-container,
+    .winner-container h1,
+    .winner-container h2,
+    .winner-container .start-btn,
+    .final-scores,
+    .game-over-splash-overlay,
+    .game-over-splash-card {
+        animation: none;
+    }
 }

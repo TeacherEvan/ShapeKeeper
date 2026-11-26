@@ -3,8 +3,10 @@ import { isMineMultiplier } from '../effect-system/mines.js';
 import { easeOutQuad, formatHexAlpha, lerp } from '../utils.js';
 
 function isDarkTheme() {
-    return typeof document === 'undefined' ||
-        document.documentElement?.getAttribute?.('data-theme') !== 'light';
+    return (
+        typeof document === 'undefined' ||
+        document.documentElement?.getAttribute?.('data-theme') !== 'light'
+    );
 }
 
 export function resolveBoardColor(hex, dark = isDarkTheme()) {

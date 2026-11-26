@@ -134,7 +134,7 @@ export function drawLavaTimer(game, remainingMs) {
             ctx.lineWidth = 1;
             ctx.strokeStyle = urgent ? 'rgba(255, 106, 42, 0.85)' : 'rgba(255, 176, 136, 0.45)';
             ctx.stroke();
-            ctx.fillStyle = urgent ? (dark ? '#ff7d47' : '#c23b08') : (dark ? '#ffd1b3' : '#7c4912');
+            ctx.fillStyle = urgent ? (dark ? '#ff7d47' : '#c23b08') : dark ? '#ffd1b3' : '#7c4912';
             ctx.font = '700 14px "Space Mono", monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
