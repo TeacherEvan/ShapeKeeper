@@ -6,7 +6,7 @@
  * @author Teacher Evan
  */
 
-import { GAME_CONSTANTS } from './constants.js';
+import { FEATURE_FLAGS, GAME_CONSTANTS } from './constants.js';
 import {
     generateRandomColor,
     getDotRenderRadius,
@@ -32,6 +32,7 @@ export class GameState {
         this.game.claimedCells = new Set();
         this.game.selectedDot = null;
         this.game.keyboardFocusDot = null;
+        this.game.showKeyboardFocusRing = false;
         this.game.pulsatingLines = [];
         this.game.lineOwners = new Map();
 
@@ -171,14 +172,16 @@ export class GameState {
             Math.min(cellSize, adaptiveMax)
         );
 
-        this.game.cellSize = Math.max(
-            GAME_CONSTANTS.CELL_SIZE_MIN,
-            Math.min(cellSize, GAME_CONSTANTS.CELL_SIZE_MAX)
-        );
+        const topTimerPad =
+            (FEATURE_FLAGS.FEATURE_LAVA_TIMER || this.game.isLevelsMode) && maxHeight >= 220
+                ? 38
+                : 0;
         const logicalWidth =
             (this.game.gridCols - 1) * this.game.cellSize + GAME_CONSTANTS.GRID_OFFSET * 2;
         const logicalHeight =
-            (this.game.gridRows - 1) * this.game.cellSize + GAME_CONSTANTS.GRID_OFFSET * 2;
+            (this.game.gridRows - 1) * this.game.cellSize +
+            GAME_CONSTANTS.GRID_OFFSET * 2 +
+            topTimerPad;
 
         this.game.logicalWidth = logicalWidth;
         this.game.logicalHeight = logicalHeight;
@@ -207,7 +210,7 @@ export class GameState {
             newCanvas.setAttribute('aria-label', oldCanvas.getAttribute('aria-label'));
         }
         this.game.offsetX = GAME_CONSTANTS.GRID_OFFSET;
-        this.game.offsetY = GAME_CONSTANTS.GRID_OFFSET;
+        this.game.offsetY = GAME_CONSTANTS.GRID_OFFSET + topTimerPad;
         oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
         this.game.canvas = newCanvas;
         this.game.ctx = newCanvas.getContext('2d');

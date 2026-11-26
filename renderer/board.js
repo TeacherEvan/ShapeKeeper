@@ -42,7 +42,7 @@ export function drawBoardFrame(game) {
     }
 
     const dark = isDarkTheme();
-    const pad = Math.max(18, Math.min(32, game.cellSize * 0.34));
+    const pad = Math.min(GAME_CONSTANTS.GRID_OFFSET - 2, Math.max(12, game.cellSize * 0.22));
     const boardW = (game.gridCols - 1) * game.cellSize;
     const boardH = (game.gridRows - 1) * game.cellSize;
     const x = game.offsetX - pad;

@@ -69,7 +69,7 @@ export function drawSelectedDot(game) {
 }
 
 export function drawKeyboardFocusDot(game) {
-    if (!game.keyboardFocusDot || game.showKeyboardFocusRing === false) {
+    if (!game.keyboardFocusDot || !game.showKeyboardFocusRing) {
         return;
     }
 

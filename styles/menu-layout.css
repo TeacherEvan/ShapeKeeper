@@ -929,3 +929,9 @@ input[type='color']:focus {
         transform: none;
     }
 }
+
+@media (max-width: 640px) {
+    #mainMenuScreen .welcome-container {
+        padding-top: 64px;
+    }
+}
