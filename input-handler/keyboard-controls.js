@@ -63,6 +63,7 @@ export function handleCanvasBlur(handler) {
 }
 
 export function moveKeyboardFocus(handler, rowDelta, colDelta) {
+    handler.game.showKeyboardFocusRing = true;
     const currentDot = handler.game.keyboardFocusDot ||
         handler.game.selectedDot || { row: 0, col: 0 };
     setKeyboardFocusDot(handler, {

@@ -46,8 +46,8 @@ export function startLevelMatch(levelNumber, deps) {
     }
 
     const gridSize = getGridSizeForLevel(levelNumber);
-    const p1Color = document.getElementById('player1Color')?.value || '#FF0000';
-    const p2Color = document.getElementById('player2Color')?.value || '#0000FF';
+    const p1Color = document.getElementById('player1Color')?.value || '#20e7ed';
+    const p2Color = document.getElementById('player2Color')?.value || '#ea63e8';
 
     const turnDurationSeconds = getTurnDurationForLevel();
 

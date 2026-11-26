@@ -1,4 +1,5 @@
 import { getDotRenderRadius } from '../utils.js';
+import { getPlayerColor } from './board.js';
 
 export function drawDots(game) {
     if (game.dotsCanvas) {
@@ -28,7 +29,7 @@ export function drawSelectedDot(game) {
     const dotRadius = getDotRenderRadius(game.cellSize, game.isTouchDevice);
     const x = game.offsetX + game.selectedDot.col * game.cellSize;
     const y = game.offsetY + game.selectedDot.row * game.cellSize;
-    const playerColor = game.currentPlayer === 1 ? game.player1Color : game.player2Color;
+    const playerColor = getPlayerColor(game, game.currentPlayer);
     const glowPulse = 1 + Math.sin(Date.now() / 150) * 0.3;
     const pulseScale = 1 + Math.sin(Date.now() / 200) * 0.2;
     const outerGlowRadius = dotRadius + (game.isTouchDevice ? 16 : 12);
@@ -68,7 +69,7 @@ export function drawSelectedDot(game) {
 }
 
 export function drawKeyboardFocusDot(game) {
-    if (!game.keyboardFocusDot) {
+    if (!game.keyboardFocusDot || game.showKeyboardFocusRing === false) {
         return;
     }
 
@@ -81,13 +82,16 @@ export function drawKeyboardFocusDot(game) {
         return;
     }
 
+    const isDark =
+        typeof document === 'undefined' ||
+        document.documentElement?.getAttribute?.('data-theme') !== 'light';
     const dotRadius = getDotRenderRadius(game.cellSize, game.isTouchDevice);
     const x = game.offsetX + game.keyboardFocusDot.col * game.cellSize;
     const y = game.offsetY + game.keyboardFocusDot.row * game.cellSize;
     const pulseScale = 1 + Math.sin(Date.now() / 180) * 0.12;
 
     game.ctx.save();
-    game.ctx.strokeStyle = 'rgba(21, 101, 192, 0.95)';
+    game.ctx.strokeStyle = isDark ? 'rgba(0, 240, 255, 0.92)' : 'rgba(10, 109, 149, 0.92)';
     game.ctx.lineWidth = 3;
     game.ctx.setLineDash([6, 4]);
     game.ctx.beginPath();

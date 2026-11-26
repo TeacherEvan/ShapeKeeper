@@ -158,6 +158,15 @@ export class GameState {
         const cellSizeWidth = Math.floor(maxWidth / (this.game.gridCols - 1));
         const cellSizeHeight = Math.floor(maxHeight / (this.game.gridRows - 1));
         const cellSize = Math.min(cellSizeWidth, cellSizeHeight);
+        const maxBoardDim = Math.max(this.game.gridCols, this.game.gridRows);
+        const adaptiveMax =
+            maxBoardDim <= 5 && Math.min(maxWidth, maxHeight) >= 420
+                ? Math.max(
+                      GAME_CONSTANTS.CELL_SIZE_MAX,
+                      Math.min(116, Math.floor(Math.min(maxWidth, maxHeight) * 0.28))
+                  )
+                : GAME_CONSTANTS.CELL_SIZE_MAX;
+        this.game.cellSize = Math.max(GAME_CONSTANTS.CELL_SIZE_MIN, Math.min(cellSize, adaptiveMax));
 
         this.game.cellSize = Math.max(
             GAME_CONSTANTS.CELL_SIZE_MIN,

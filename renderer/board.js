@@ -2,11 +2,61 @@ import { GAME_CONSTANTS } from '../constants.js';
 import { isMineMultiplier } from '../effect-system/mines.js';
 import { easeOutQuad, formatHexAlpha, lerp } from '../utils.js';
 
-function getPlayerColor(game, player) {
+function isDarkTheme() {
+    return typeof document === 'undefined' ||
+        document.documentElement?.getAttribute?.('data-theme') !== 'light';
+}
+
+export function resolveBoardColor(hex, dark = isDarkTheme()) {
+    if (!dark) {
+        const lower = typeof hex === 'string' ? hex.toLowerCase() : '';
+        if (lower === '#20e7ed' || lower === '#00f0ff') return '#047181';
+        if (lower === '#ea63e8' || lower === '#e000ff') return '#a81092';
+    }
+    return hex;
+}
+
+export function getPlayerColor(game, player) {
     if (player === GAME_CONSTANTS.POPULATE_PLAYER_ID) {
         return game.populateColor;
     }
-    return game.playerColors?.[player] ?? (player === 1 ? game.player1Color : game.player2Color);
+    const raw =
+        game.playerColors?.[player] ?? (player === 1 ? game.player1Color : game.player2Color);
+    return resolveBoardColor(raw);
+}
+
+export function drawBoardFrame(game) {
+    const ctx = game.ctx;
+    if (
+        !ctx ||
+        typeof ctx.beginPath !== 'function' ||
+        typeof ctx.roundRect !== 'function' ||
+        game.offsetX == null ||
+        game.offsetY == null ||
+        !game.gridCols ||
+        !game.gridRows
+    ) {
+        return;
+    }
+
+    const dark = isDarkTheme();
+    const pad = Math.max(18, Math.min(32, game.cellSize * 0.34));
+    const boardW = (game.gridCols - 1) * game.cellSize;
+    const boardH = (game.gridRows - 1) * game.cellSize;
+    const x = game.offsetX - pad;
+    const y = game.offsetY - pad;
+    const w = boardW + pad * 2;
+    const h = boardH + pad * 2;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 18);
+    ctx.fillStyle = dark ? 'rgba(10, 16, 31, 0.72)' : 'rgba(250, 250, 254, 0.78)';
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = dark ? 'rgba(232, 244, 255, 0.12)' : 'rgba(19, 26, 46, 0.12)';
+    ctx.stroke();
+    ctx.restore();
 }
 
 export function drawLines(game) {
@@ -29,26 +79,37 @@ export function drawLines(game) {
         const isGhostLine = game.ghostLines && game.ghostLines.has(lineKey);
 
         const lineColor = getPlayerColor(game, player);
+        const coreWidth =
+            lineType === 'diagonal' ? GAME_CONSTANTS.LINE_WIDTH * 0.5 : GAME_CONSTANTS.LINE_WIDTH;
+        const x1 = game.offsetX + start.col * game.cellSize;
+        const y1 = game.offsetY + start.row * game.cellSize;
+        const x2 = game.offsetX + end.col * game.cellSize;
+        const y2 = game.offsetY + end.row * game.cellSize;
 
         if (isGhostLine) {
             game.ctx.save();
             game.ctx.globalAlpha = GAME_CONSTANTS.GHOST_LINE_OPACITY;
             game.ctx.setLineDash([5, 5]);
+        } else {
+            // Soft outer halo pass (no shadowBlur loop)
+            game.ctx.save();
+            game.ctx.globalAlpha = 0.22;
+            game.ctx.strokeStyle = lineColor;
+            game.ctx.lineWidth = coreWidth * 1.9;
+            game.ctx.lineCap = 'round';
+            game.ctx.beginPath();
+            game.ctx.moveTo(x1, y1);
+            game.ctx.lineTo(x2, y2);
+            game.ctx.stroke();
+            game.ctx.restore();
         }
 
         game.ctx.strokeStyle = lineColor;
-        game.ctx.lineWidth =
-            lineType === 'diagonal' ? GAME_CONSTANTS.LINE_WIDTH * 0.5 : GAME_CONSTANTS.LINE_WIDTH;
+        game.ctx.lineWidth = coreWidth;
         game.ctx.lineCap = 'round';
         game.ctx.beginPath();
-        game.ctx.moveTo(
-            game.offsetX + start.col * game.cellSize,
-            game.offsetY + start.row * game.cellSize
-        );
-        game.ctx.lineTo(
-            game.offsetX + end.col * game.cellSize,
-            game.offsetY + end.row * game.cellSize
-        );
+        game.ctx.moveTo(x1, y1);
+        game.ctx.lineTo(x2, y2);
         game.ctx.stroke();
 
         if (isGhostLine) {
@@ -109,27 +170,31 @@ export function drawInvalidLineFlash(game) {
 }
 
 export function drawSquares(game) {
+    const dark = isDarkTheme();
+    const inset = Math.max(2, game.cellSize * 0.08);
+    const tileSize = Math.max(4, game.cellSize - inset * 2);
+    const radius = Math.max(4, Math.min(10, game.cellSize * 0.14));
+
     for (const [squareKey, player] of Object.entries(game.squares)) {
         const { row, col } = game.gameLogic.parseSquareKey(squareKey);
         const x = game.offsetX + col * game.cellSize;
         const y = game.offsetY + row * game.cellSize;
-        // A fired mine also draws a bomb in the lower-left of the box, so its
-        // owner number shrinks to keep the two glyphs from colliding on the
-        // 38 px cells a level-100 board gets on a phone.
-        const isMine =
-            game.revealedMultipliers?.has(squareKey) &&
-            isMineMultiplier(game.squareMultipliers?.[squareKey]);
+        const color = getPlayerColor(game, player);
 
-        game.ctx.fillStyle = player === 1 ? game.player1Color + '40' : game.player2Color + '40';
-        game.ctx.fillRect(x, y, game.cellSize, game.cellSize);
-        game.ctx.fillStyle = player === 1 ? game.player1Color : game.player2Color;
-        game.ctx.font = `bold ${Math.max(
-            8,
-            Math.min(game.cellSize / (isMine ? 3.4 : 2), 20)
-        )}px Arial`;
-        game.ctx.textAlign = 'center';
-        game.ctx.textBaseline = 'middle';
-        game.ctx.fillText(player.toString(), x + game.cellSize / 2, y + game.cellSize / 2);
+        if (typeof game.ctx.beginPath === 'function' && typeof game.ctx.roundRect === 'function') {
+            game.ctx.save();
+            game.ctx.beginPath();
+            game.ctx.roundRect(x + inset, y + inset, tileSize, tileSize, radius);
+            game.ctx.fillStyle = formatHexAlpha(color, dark ? 0.22 : 0.18);
+            game.ctx.fill();
+            game.ctx.lineWidth = 1;
+            game.ctx.strokeStyle = formatHexAlpha(color, dark ? 0.48 : 0.4);
+            game.ctx.stroke();
+            game.ctx.restore();
+        } else {
+            game.ctx.fillStyle = formatHexAlpha(color, dark ? 0.22 : 0.18);
+            game.ctx.fillRect(x, y, game.cellSize, game.cellSize);
+        }
     }
 }
 
@@ -143,9 +208,11 @@ export function drawSquaresWithAnimations(game) {
         animationBySquare.set(item.squareKey, item);
     }
 
+    const dark = isDarkTheme();
+
     for (const squareKey in game.squares) {
         const player = game.squares[squareKey];
-        const color = player === 1 ? game.player1Color : game.player2Color;
+        const color = getPlayerColor(game, player);
         const { row, col } = game.gameLogic.parseSquareKey(squareKey);
         const x = game.offsetX + col * game.cellSize;
         const y = game.offsetY + row * game.cellSize;
@@ -157,50 +224,46 @@ export function drawSquaresWithAnimations(game) {
             const easeProgress = easeOutQuad(progress);
             const scale = 0.3 + easeProgress * 0.7;
             const alpha = Math.min(progress * 2, 1);
-            const glowIntensity = Math.sin(progress * Math.PI) * 0.5;
 
-            game.ctx.shadowColor = color;
-            game.ctx.shadowBlur = 20 * glowIntensity;
             game.ctx.save();
             game.ctx.translate(animation.centerX, animation.centerY);
             game.ctx.scale(scale, scale);
             game.ctx.translate(-animation.centerX, -animation.centerY);
-            game.ctx.fillStyle = formatHexAlpha(color, alpha * 0.25);
+            game.ctx.fillStyle = formatHexAlpha(color, alpha * 0.22);
             game.ctx.fillRect(x, y, game.cellSize, game.cellSize);
             game.ctx.restore();
-            game.ctx.shadowBlur = 0;
         }
 
         const multiplierData = game.squareMultipliers?.[squareKey];
         const isMine = game.revealedMultipliers?.has(squareKey) && isMineMultiplier(multiplierData);
 
         game.ctx.fillStyle = color;
-        // Keep the owner number clear of the bomb on small boards.
-        game.ctx.font = `bold ${game.cellSize * (isMine ? 0.28 : 0.4)}px Arial`;
+        // Single crisp owner numeral pass in Space Grotesk (fixes double-drawn ghosted Arial).
+        game.ctx.font = `700 ${Math.max(10, Math.round(game.cellSize * (isMine ? 0.28 : 0.36)))}px "Space Grotesk", sans-serif`;
         game.ctx.textAlign = 'center';
         game.ctx.textBaseline = 'middle';
-        game.ctx.fillText(player, x + game.cellSize / 2, y + game.cellSize / 2);
+        game.ctx.fillText(String(player), x + game.cellSize / 2, y + game.cellSize / 2);
 
         if (isMine) {
             // A fired mine keeps a permanent 💣 so the box reads as
             // "this one was mined" instead of "I did something wrong".
             const bombSize = Math.max(10, Math.min(game.cellSize * 0.26, 26));
-            game.ctx.font = `${bombSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", Arial`;
+            game.ctx.font = `${bombSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
             game.ctx.textAlign = 'center';
             game.ctx.textBaseline = 'middle';
             game.ctx.fillText('💣', x + game.cellSize * 0.22, y + game.cellSize * 0.74);
 
             // Keep the penalty value readable without stealing the box.
-            game.ctx.font = `bold ${Math.max(7, game.cellSize * 0.16)}px Arial`;
-            game.ctx.fillStyle = '#FFD700';
+            game.ctx.font = `700 ${Math.max(7, Math.round(game.cellSize * 0.16))}px "Space Mono", monospace`;
+            game.ctx.fillStyle = dark ? '#fdcf64' : '#7c4912';
             game.ctx.textAlign = 'right';
             game.ctx.textBaseline = 'top';
             game.ctx.fillText('×0.2', x + game.cellSize - 3, y + 3);
             game.ctx.textAlign = 'center';
             game.ctx.textBaseline = 'middle';
         } else if (multiplierData && multiplierData.type === 'multiplier') {
-            game.ctx.font = `bold ${game.cellSize * 0.25}px Arial`;
-            game.ctx.fillStyle = '#FFD700';
+            game.ctx.font = `700 ${Math.max(9, Math.round(game.cellSize * 0.24))}px "Space Mono", monospace`;
+            game.ctx.fillStyle = dark ? '#fdcf64' : '#7c4912';
             game.ctx.fillText(
                 `x${multiplierData.value}`,
                 x + game.cellSize / 2,

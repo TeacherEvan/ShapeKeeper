@@ -7,6 +7,7 @@
  */
 
 import {
+    drawBoardFrame,
     drawInvalidLineFlash,
     drawLineAnimations,
     drawLines,
@@ -43,6 +44,7 @@ export class Renderer {
 
         this.drawDynamicBackground();
         this.drawAmbientParticles();
+        drawBoardFrame(this.game);
         this.drawLavaTimerLayer();
 
         this.game.ctx.save();

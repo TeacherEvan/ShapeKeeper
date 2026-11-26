@@ -77,6 +77,7 @@ function selectDot(handler, dot) {
     }
 
     handler.game.selectedDot = dot;
+    handler.game.showKeyboardFocusRing = false;
     handler.touchStartDot = dot;
     handler.game.touchStartDot = dot;
     handler.selectionLocked = true;
@@ -122,6 +123,7 @@ function tryDrawFromSelection(handler, dot, { sameDotClears = true } = {}) {
         handler.game.cellSize
     );
     handler.game.selectedDot = dot;
+    handler.game.showKeyboardFocusRing = false;
     handler.touchStartDot = dot;
     handler.game.touchStartDot = dot;
     handler.selectionLocked = true;

@@ -379,7 +379,7 @@ export function drawMultiplierAnimations(game) {
         game.ctx.shadowColor = '#FFD700';
         game.ctx.shadowBlur = 20;
         game.ctx.fillStyle = '#FFD700';
-        game.ctx.font = `bold ${game.cellSize * scale}px Arial`;
+        game.ctx.font = `700 ${game.cellSize * scale}px "Space Mono", monospace`;
         game.ctx.textAlign = 'center';
         game.ctx.textBaseline = 'middle';
         game.ctx.fillText(`x${animation.value}`, animation.centerX, animation.centerY + yOffset);
