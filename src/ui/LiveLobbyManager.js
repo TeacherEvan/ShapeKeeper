@@ -63,10 +63,17 @@ export class LiveLobbyManager {
                     isReady: p.isReady,
                     isConnected: p.isConnected,
                     playerIndex: p.playerIndex,
-                    isHost: p.sessionId === this.hostSessionId,
+                    isYou: Boolean(
+                        p.isYou || (this.mySessionId && p.sessionId === this.mySessionId)
+                    ),
+                    isHost: Boolean(
+                        p.isHost || (this.hostSessionId && p.sessionId === this.hostSessionId)
+                    ),
                 }));
-            const me = this.players.find((p) => p.sessionId === this.mySessionId);
-            this.isHost = me ? me.isHost : false;
+            const me = this.players.find(
+                (p) => p.isYou || (this.mySessionId && p.sessionId === this.mySessionId)
+            );
+            this.isHost = typeof room?.isHost === 'boolean' ? room.isHost : Boolean(me?.isHost);
         }
     }
 
@@ -159,12 +166,16 @@ export class LiveLobbyManager {
     }
 
     updateMyName(name) {
-        const me = this.players.find((p) => p.sessionId === this.mySessionId);
+        const me = this.players.find(
+            (p) => p.isYou || (this.mySessionId && p.sessionId === this.mySessionId)
+        );
         if (me && typeof name === 'string') me.name = name;
     }
 
     updateMyColor(color) {
-        const me = this.players.find((p) => p.sessionId === this.mySessionId);
+        const me = this.players.find(
+            (p) => p.isYou || (this.mySessionId && p.sessionId === this.mySessionId)
+        );
         if (me && typeof color === 'string') me.color = color;
     }
 }

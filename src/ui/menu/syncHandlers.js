@@ -339,6 +339,9 @@ export function handleAuthoritativeGameState(gameState, deps) {
     game.uiManager.updateUI();
 
     if (isFirstAuthoritativeState) {
+        if (game.options) {
+            game.options.deferInitialReady = false;
+        }
         game.uiManager.displayLoadingSkeleton(false);
         setStartupState(STARTUP_STATES.IN_MATCH, { visible: false });
         showToast('Live match synchronized!', 'success', 2000);
