@@ -47,10 +47,8 @@ export async function checkRateLimit(ctx, action, sessionId, opts = {}) {
     const key = `${action}:${sessionId}`;
     const now = Date.now();
 
-    const existing = await ctx.db
-        .query('rateLimits')
-        .withIndex('by_key', (q) => q.eq('key', key))
-        .unique();
+    const query = ctx.db.query('rateLimits').withIndex('by_key', (q) => q.eq('key', key));
+    const existing = typeof query.first === 'function' ? await query.first() : await query.unique();
 
     if (!existing) {
         await ctx.db.insert('rateLimits', {
@@ -85,3 +83,21 @@ export async function checkRateLimit(ctx, action, sessionId, opts = {}) {
 }
 
 export const RATE_LIMIT_ACTIONS = Object.freeze(Object.keys(DEFAULT_WINDOWS));
+
+/**
+ * Prune expired rate-limit buckets older than `maxAgeMs` (default 15 minutes).
+ * Invoked by the periodic sweep cron so `rateLimits` never grows unboundedly.
+ */
+export async function pruneExpiredRateLimits(ctx, now = Date.now(), maxAgeMs = 15 * 60 * 1000) {
+    const cutoff = now - maxAgeMs;
+    const query = ctx.db.query('rateLimits');
+    const rows = typeof query.take === 'function' ? await query.take(200) : await query.collect();
+    let pruned = 0;
+    for (const row of rows) {
+        if ((row.windowStart ?? 0) < cutoff) {
+            await ctx.db.delete(row._id);
+            pruned += 1;
+        }
+    }
+    return { pruned };
+}

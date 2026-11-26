@@ -1,5 +1,6 @@
 import { internalMutation } from '../_generated/server';
 import { log } from '../log';
+import { pruneExpiredRateLimits } from '../rate_limit';
 
 /**
  * Reap abandoned lobbies.
@@ -67,6 +68,8 @@ export const sweepStaleLobbies = internalMutation({
         idleMs: Date.now() - (room.updatedAt ?? 0),
       });
     }
+
+    await pruneExpiredRateLimits(ctx);
 
     return { swept };
   },

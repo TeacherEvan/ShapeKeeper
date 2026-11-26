@@ -19,7 +19,10 @@ import { ALLOWED_ORIGINS, isAllowedOrigin, paymentMatchesOrder, timingSafeHexEqu
 // Convex runs actions on Node; read env via globalThis so no @types/node is needed.
 const env = (globalThis as any).process?.env ?? {};
 const SECRET = () => env.PAYSTACK_SECRET_KEY ?? '';
-const EXPECTED_KOBO = () => Number(env.PAYSTACK_AMOUNT_KOBO ?? '1800');
+const EXPECTED_KOBO = () => {
+    const parsed = Number(env.PAYSTACK_AMOUNT_KOBO);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : 1800;
+};
 // Amount alone is not enough: 1800 kobo and 1800 subunits of a cheaper currency
 // are very different prices. Both server paths must check the currency too.
 const EXPECTED_CURRENCY = () => String(env.PAYSTACK_CURRENCY || 'ZAR').toUpperCase();
@@ -95,9 +98,13 @@ async function mintLicence(
         reference,
         email,
         amountKobo,
-    })) as { refunded?: boolean; key?: string; created?: boolean };
+    })) as { refunded?: boolean; key?: string; created?: boolean; status?: 'active' | 'revoked' };
     if (r.refunded) return { key: '', created: false, status: 'refunded' as const };
-    return { key: r.key ?? '', created: r.created ?? false, status: 'active' as const };
+    return {
+        key: r.key ?? '',
+        created: r.created ?? false,
+        status: r.status === 'revoked' ? ('revoked' as const) : ('active' as const),
+    };
 }
 
 /* -------------------------------------------------------------------------- */

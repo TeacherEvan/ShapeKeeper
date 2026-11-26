@@ -38,7 +38,12 @@ export const issue = internalMutation({
             .first();
 
         if (existing) {
-            return { key: existing.key, created: false, reference: args.reference };
+            return {
+                key: existing.key,
+                created: false,
+                reference: args.reference,
+                status: existing.status,
+            };
         }
 
         const id = await ctx.db.insert('paystackLicences', {

@@ -35,6 +35,26 @@ describe('convex/games/turnTimer', () => {
             });
         });
 
+        it('cancels prior turnTimerJobId before scheduling a new turn', async () => {
+            const patch = vi.fn();
+            const cancel = vi.fn();
+            const runAt = vi.fn(async () => 'job_new');
+            const ctx: any = { db: { patch }, scheduler: { cancel, runAt } };
+
+            await armTurnTimer(
+                ctx,
+                'room1',
+                { turnDurationMs: 15000, turnTimerJobId: 'job_old' },
+                1000
+            );
+
+            expect(cancel).toHaveBeenCalledWith('job_old');
+            expect(patch).toHaveBeenCalledWith(
+                'room1',
+                expect.objectContaining({ turnTimerJobId: 'job_new' })
+            );
+        });
+
         it('clears turnStartTime and turnEndTime and schedules nothing when duration is 0 or undefined', async () => {
             const patch = vi.fn();
             const runAt = vi.fn();

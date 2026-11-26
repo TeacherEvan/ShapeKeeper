@@ -20,17 +20,36 @@ export async function armTurnTimer(
     now: number,
     extraPatch: Record<string, unknown> = {}
 ): Promise<void> {
+    if (room?.turnTimerJobId && typeof ctx.scheduler?.cancel === 'function') {
+        try {
+            await ctx.scheduler.cancel(room.turnTimerJobId);
+        } catch {
+            // Job already fired or cancelled
+        }
+    }
     const duration = normalizeTurnDuration(room.turnDurationMs);
     if (duration === 0) {
-        await ctx.db.patch(roomId, { ...extraPatch, turnStartTime: undefined, turnEndTime: undefined });
+        const clearPatch: Record<string, unknown> = {
+            ...extraPatch,
+            turnStartTime: undefined,
+            turnEndTime: undefined,
+        };
+        if (room?.turnTimerJobId) clearPatch.turnTimerJobId = undefined;
+        await ctx.db.patch(roomId, clearPatch);
         return;
     }
     const turnEndTime = now + duration;
-    await ctx.db.patch(roomId, { ...extraPatch, turnStartTime: now, turnEndTime });
-    await ctx.scheduler.runAt(turnEndTime, internal.games.expireTurn, {
+    const jobId = await ctx.scheduler.runAt(turnEndTime, internal.games.expireTurn, {
         roomId,
         expectedTurnEndTime: turnEndTime,
     });
+    const patchData: Record<string, unknown> = {
+        ...extraPatch,
+        turnStartTime: now,
+        turnEndTime,
+    };
+    if (jobId !== undefined) patchData.turnTimerJobId = jobId;
+    await ctx.db.patch(roomId, patchData);
 }
 
 /** Scheduled at turnEndTime. No-op if the turn already moved on (stale schedule). */
