@@ -7,6 +7,7 @@
  */
 
 import { announceStatus } from './src/ui/AccessibilityAnnouncer.js';
+import { expDecay } from './utils.js';
 import {
     hideGameOverSplash,
     showGameOverSplash,
@@ -64,25 +65,36 @@ export class UIManager {
         if (now - this.game.lastUIUpdate < this.game.uiUpdateInterval) {
             return;
         }
+        const dt = this.game.lastUIUpdate > 0 ? (now - this.game.lastUIUpdate) / 1000 : 0.016;
         this.game.lastUIUpdate = now;
 
         const { player1Score, player2Score, player1Info, player2Info, turnIndicator } =
             this.domCache;
 
-        // Animate score counting
+        // Frame-rate independent score counting via expDecay
         const player1ScoreDiff = this.game.scores[1] - this.game.displayedScores[1];
         const player2ScoreDiff = this.game.scores[2] - this.game.displayedScores[2];
 
-        if (Math.abs(player1ScoreDiff) > 0.1) {
-            this.game.displayedScores[1] += player1ScoreDiff * this.game.scoreAnimationSpeed;
-        } else {
+        if (this.game.scoreAnimationSpeed >= 1 || Math.abs(player1ScoreDiff) <= 0.1) {
             this.game.displayedScores[1] = this.game.scores[1];
+        } else {
+            this.game.displayedScores[1] = expDecay(
+                this.game.displayedScores[1],
+                this.game.scores[1],
+                10,
+                dt
+            );
         }
 
-        if (Math.abs(player2ScoreDiff) > 0.1) {
-            this.game.displayedScores[2] += player2ScoreDiff * this.game.scoreAnimationSpeed;
-        } else {
+        if (this.game.scoreAnimationSpeed >= 1 || Math.abs(player2ScoreDiff) <= 0.1) {
             this.game.displayedScores[2] = this.game.scores[2];
+        } else {
+            this.game.displayedScores[2] = expDecay(
+                this.game.displayedScores[2],
+                this.game.scores[2],
+                10,
+                dt
+            );
         }
 
         const p1Target = this.game.scores[1];
