@@ -69,6 +69,14 @@ export class AnimationSystem {
             );
         }
 
+        if (this.effectAnimations?.length > 0) {
+            compactAnimationArray(
+                this.effectAnimations,
+                now,
+                (item) => now - item.startTime < item.duration
+            );
+        }
+
         // Clean up invalid line flash
         if (
             this.invalidLineFlash &&

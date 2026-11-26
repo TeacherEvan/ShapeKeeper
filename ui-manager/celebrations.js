@@ -289,40 +289,65 @@ export function launchFireworks(accentColor) {
     document.body.appendChild(canvas);
 
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const logicalWidth = window.innerWidth;
+    const logicalHeight = window.innerHeight;
+    canvas.width = logicalWidth * dpr;
+    canvas.height = logicalHeight * dpr;
+    if (typeof ctx.setTransform === 'function') {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
 
     const fireworks = [];
     const particles = [];
     const colors = [accentColor, '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1'];
 
-    let launchCount = 0;
-    activeFireworksInterval = setInterval(() => {
-        if (launchCount >= 8) {
-            clearInterval(activeFireworksInterval);
-            activeFireworksInterval = null;
-            return;
-        }
-
+    const spawnRocket = () => {
         fireworks.push({
-            x: canvas.width * (0.2 + Math.random() * 0.6),
-            y: canvas.height,
-            targetY: canvas.height * (0.2 + Math.random() * 0.3),
+            x: logicalWidth * (0.2 + Math.random() * 0.6),
+            y: logicalHeight,
+            targetY: logicalHeight * (0.2 + Math.random() * 0.3),
             vy: -12 - Math.random() * 4,
             color: colors[Math.floor(Math.random() * colors.length)],
             exploded: false,
         });
+    };
+
+    let launchCount = 0;
+    let spawnerActive = true;
+    spawnRocket();
+    launchCount += 1;
+
+    activeFireworksInterval = setInterval(() => {
+        if (launchCount >= 8) {
+            clearInterval(activeFireworksInterval);
+            activeFireworksInterval = null;
+            spawnerActive = false;
+            return;
+        }
+
+        spawnRocket();
         launchCount += 1;
     }, 400);
 
-    const animate = () => {
+    let lastTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const animate = (nowArg) => {
+        const now =
+            typeof nowArg === 'number'
+                ? nowArg
+                : typeof performance !== 'undefined'
+                  ? performance.now()
+                  : Date.now();
+        const dtScale = Math.min(0.05, Math.max(0.001, (now - lastTime) / 1000)) * 60;
+        lastTime = now;
+
         ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, logicalWidth, logicalHeight);
 
         fireworks.forEach((firework) => {
             if (!firework.exploded) {
-                firework.y += firework.vy;
-                firework.vy += 0.2;
+                firework.y += firework.vy * dtScale;
+                firework.vy += 0.2 * dtScale;
 
                 ctx.beginPath();
                 ctx.arc(firework.x, firework.y, 3, 0, Math.PI * 2);
@@ -351,11 +376,11 @@ export function launchFireworks(accentColor) {
 
         for (let index = particles.length - 1; index >= 0; index -= 1) {
             const particle = particles[index];
-            particle.x += particle.vx;
-            particle.y += particle.vy;
-            particle.vy += 0.08;
-            particle.vx *= 0.98;
-            particle.life -= particle.decay;
+            particle.x += particle.vx * dtScale;
+            particle.y += particle.vy * dtScale;
+            particle.vy += 0.08 * dtScale;
+            particle.vx *= Math.pow(0.98, dtScale);
+            particle.life -= particle.decay * dtScale;
 
             if (particle.life > 0) {
                 ctx.beginPath();
@@ -368,7 +393,11 @@ export function launchFireworks(accentColor) {
             particles.splice(index, 1);
         }
 
-        if (particles.length > 0 || fireworks.some((firework) => !firework.exploded)) {
+        if (
+            spawnerActive ||
+            particles.length > 0 ||
+            fireworks.some((firework) => !firework.exploded)
+        ) {
             activeFireworksAnim = requestAnimationFrame(animate);
             return;
         }
