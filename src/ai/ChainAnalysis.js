@@ -155,6 +155,13 @@ export function findCapturableChains(
             cur = nextCell;
         }
 
+        if (currentChainCells.length >= 4) {
+            const lastCell = currentChainCells[currentChainCells.length - 1];
+            if (lastCell.neighbors.includes(startCell.key)) {
+                isLoop = true;
+            }
+        }
+
         if (currentChainCells.length > 0) {
             chains.push({
                 length: currentChainCells.length,

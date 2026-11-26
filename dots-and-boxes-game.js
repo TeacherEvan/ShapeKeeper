@@ -823,13 +823,16 @@ export class DotsAndBoxesGame {
     // variety so AI-vs-AI and AI-vs-human games are not byte-identical.
     pickRandomAmongBest(lines, scoreFn) {
         let bestScore = -Infinity;
+        let bestLines = [];
         for (const lineKey of lines) {
             const score = scoreFn(lineKey);
             if (score > bestScore) {
                 bestScore = score;
+                bestLines = [lineKey];
+            } else if (score === bestScore) {
+                bestLines.push(lineKey);
             }
         }
-        const bestLines = lines.filter((l) => scoreFn(l) === bestScore);
         return bestLines[Math.floor(Math.random() * bestLines.length)] || null;
     }
 
