@@ -9,12 +9,12 @@
  */
 import { expect, test } from '@playwright/test';
 
-import { closeGameControls, openGameControls } from './helpers/bootstrap.js';
+import { closeGameControls, openGameControls, openLocalSetupScreen } from './helpers/bootstrap.js';
 
 /** Start a local game on a 5x5 board; used by every test in this file. */
 async function startLocalGameAt5x5(page) {
     await page.goto('/');
-    await page.locator('#localPlayBtn').click();
+    await openLocalSetupScreen(page);
     await expect(page.locator('#localSetupScreen')).toHaveClass(/active/);
     await page.locator('.local-grid-btn[data-size="5"]').click();
     await expect(page.locator('#startLocalGame')).toBeEnabled();

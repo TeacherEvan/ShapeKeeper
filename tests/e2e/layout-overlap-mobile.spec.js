@@ -10,7 +10,7 @@
 // compatibilitySpecPatterns in playwright.config.js.
 
 import { expect, test } from '@playwright/test';
-import { gotoApp, installMockMultiplayer } from './helpers/bootstrap.js';
+import { gotoApp, installMockMultiplayer, openLocalSetupScreen } from './helpers/bootstrap.js';
 
 // Interactive elements that must never overlap one another. #gameCanvas is
 // included specifically so the board is checked against the header/footer.
@@ -32,14 +32,14 @@ const SCREENS = [
         name: 'local setup',
         locator: '#localSetupScreen',
         reach: async (page) => {
-            await page.locator('#localPlayBtn').click();
+            await openLocalSetupScreen(page);
         },
     },
     {
         name: 'game',
         locator: '#gameScreen',
         reach: async (page) => {
-            await page.locator('#localPlayBtn').click();
+            await openLocalSetupScreen(page);
             await page.locator('.local-grid-btn[data-size="5"]').click();
             await page.locator('#startLocalGame').click();
         },

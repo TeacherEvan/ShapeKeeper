@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { gotoApp, openGameControls } from './helpers/bootstrap.js';
+import { gotoApp, openGameControls, openLocalSetupScreen } from './helpers/bootstrap.js';
 
 async function selectLocalGridSize(page, size) {
     await expect(page.locator('#localSetupScreen')).toHaveClass(/active/);
@@ -18,7 +18,7 @@ async function selectLocalGridSize(page, size) {
 async function startLocalGame(page) {
     await gotoApp(page);
 
-    await page.locator('#localPlayBtn').click();
+    await openLocalSetupScreen(page);
     await selectLocalGridSize(page, 5);
     await page.locator('#startLocalGame').click();
 
@@ -29,7 +29,7 @@ async function startLocalGame(page) {
 
 async function startLocalAIGame(page, { difficulty = 'medium' } = {}) {
     await gotoApp(page);
-    await page.locator('#localPlayBtn').click();
+    await openLocalSetupScreen(page);
     await selectLocalGridSize(page, 5);
     await page.getByTestId('local-opponent-type').selectOption('ai');
     await page.getByTestId('local-ai-difficulty').selectOption(difficulty);
@@ -225,7 +225,7 @@ test.describe('local gameplay canvas input', () => {
 
     test('allows selecting AI opponent and difficulty in local setup', async ({ page }) => {
         await gotoApp(page);
-        await page.locator('#localPlayBtn').click();
+        await openLocalSetupScreen(page);
 
         await expect(page.getByTestId('local-opponent-type')).toHaveValue('human');
         await expect(page.getByTestId('local-ai-difficulty')).toBeDisabled();
@@ -331,7 +331,7 @@ test.describe('local gameplay canvas input', () => {
             .toBe(1);
 
         await page.locator('#exitGame').click();
-        await page.locator('#localPlayBtn').click();
+        await openLocalSetupScreen(page);
         await page.locator('#loadLocalGame').click();
 
         await expect(page.getByTestId('game-screen')).toHaveClass(/active/);

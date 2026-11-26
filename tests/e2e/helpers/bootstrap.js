@@ -5,3 +5,11 @@ export {
     createSharedMockMultiplayerPages,
     installSharedMockMultiplayer,
 } from './bootstrap-shared-multiplayer.js';
+
+export async function openLocalSetupScreen(page) {
+    await page.evaluate(async () => {
+        const { showScreen } = await import('/src/ui/ScreenTransition.js');
+        showScreen('localSetupScreen');
+    });
+    await page.locator('#localSetupScreen').waitFor({ state: 'visible' });
+}

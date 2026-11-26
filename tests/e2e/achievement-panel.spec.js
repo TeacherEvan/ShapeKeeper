@@ -1,10 +1,11 @@
+import { openLocalSetupScreen } from './helpers/bootstrap.js';
 import { test, expect } from '@playwright/test';
 import { gotoApp } from './helpers/bootstrap-app.js';
 import { ACHIEVEMENT_DEFINITIONS } from '../../achievement-system.js';
 
 async function startLocalGame(page) {
     await gotoApp(page);
-    await page.locator('#localPlayBtn').click();
+    await openLocalSetupScreen(page);
     await page.locator('.local-grid-btn[data-size="5"]').click();
     await page.locator('#startLocalGame').click();
     await expect(page.getByTestId('game-screen')).toHaveClass(/active/);

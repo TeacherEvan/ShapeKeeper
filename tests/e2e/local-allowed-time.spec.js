@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { gotoApp } from './helpers/bootstrap.js';
+import { gotoApp, openLocalSetupScreen } from './helpers/bootstrap.js';
 
 /**
  * Local Allowed Time — the lava-timer countdown for hot-seat (friends on one
@@ -9,7 +9,7 @@ import { gotoApp } from './helpers/bootstrap.js';
 
 async function openLocalSetup(page) {
     await gotoApp(page);
-    await page.locator('#localPlayBtn').click();
+    await openLocalSetupScreen(page);
     await expect(page.locator('#localSetupScreen')).toHaveClass(/active/);
 }
 

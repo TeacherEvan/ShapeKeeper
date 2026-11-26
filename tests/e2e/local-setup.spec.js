@@ -1,9 +1,10 @@
+import { openLocalSetupScreen } from './helpers/bootstrap.js';
 import { test, expect } from '@playwright/test';
 import { gotoApp } from './helpers/bootstrap-app.js';
 
 async function openLocalSetup(page) {
     await gotoApp(page);
-    await page.locator('#localPlayBtn').click();
+    await openLocalSetupScreen(page);
     await expect(page.locator('#localSetupScreen')).toHaveClass(/active/);
 }
 

@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { gotoApp } from './helpers/bootstrap.js';
+import { gotoApp, openLocalSetupScreen } from './helpers/bootstrap.js';
 
 test.describe('Local turn timer', () => {
     test('configurable turn timer counts down and advances turn on expiry', async ({ page }) => {
         await page.clock.install();
         await gotoApp(page);
 
-        await page.locator('#localPlayBtn').click();
+        await openLocalSetupScreen(page);
         await expect(page.locator('#localSetupScreen')).toHaveClass(/active/);
 
         const timerSection = page.locator('#localTurnTimerSection');
@@ -32,7 +32,7 @@ test.describe('Local turn timer', () => {
         await page.clock.install();
         await gotoApp(page);
 
-        await page.locator('#localPlayBtn').click();
+        await openLocalSetupScreen(page);
         await expect(page.locator('#localSetupScreen')).toHaveClass(/active/);
 
         const timerSelect = page.getByTestId('local-turn-timer');

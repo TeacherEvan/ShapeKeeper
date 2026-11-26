@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
 
-import { gotoApp } from './helpers/bootstrap.js';
+import { gotoApp, openLocalSetupScreen } from './helpers/bootstrap.js';
 
 async function startTutorial(page) {
     await gotoApp(page);
-    await page.getByTestId('local-play-button').click();
+    await openLocalSetupScreen(page);
     await page.locator('.local-grid-btn[data-size="5"]').click();
     await page.getByTestId('local-tutorial-toggle').check();
     await page.locator('#startLocalGame').click();

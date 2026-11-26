@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { gotoApp } from './helpers/bootstrap-app.js';
-import { openGameControls } from './helpers/bootstrap.js';
+import { openGameControls, openLocalSetupScreen } from './helpers/bootstrap.js';
 
 test.describe('Settings: theme and sound toggles', () => {
     test('theme toggle switches between light and dark and persists to localStorage', async ({
@@ -30,7 +30,7 @@ test.describe('Settings: theme and sound toggles', () => {
     test('sound toggle flips muted state and icon', async ({ page }) => {
         // soundToggle lives in the in-game HUD, so start a local game first
         await gotoApp(page);
-        await page.locator('#localPlayBtn').click();
+        await openLocalSetupScreen(page);
         await expect(page.locator('#localSetupScreen')).toHaveClass(/active/);
         await page.locator('.local-grid-btn[data-size="5"]').click();
         await page.locator('#startLocalGame').click();

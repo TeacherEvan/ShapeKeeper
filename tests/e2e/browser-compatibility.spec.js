@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-import { gotoApp } from './helpers/bootstrap.js';
+import { gotoApp, openLocalSetupScreen } from './helpers/bootstrap.js';
 
-const MAIN_MENU_BUTTON_TEST_IDS = ['create-game-button', 'join-game-button'];
+const MAIN_MENU_BUTTON_TEST_IDS = ['levels-menu-button', 'create-game-button', 'join-game-button'];
 
 test.describe('browser compatibility matrix', () => {
     test('boots to the main menu with stable core controls for the active profile', async ({
@@ -16,7 +16,7 @@ test.describe('browser compatibility matrix', () => {
             await expect(page.getByTestId(testId)).toBeVisible();
         }
 
-        await expect(page.locator('#localPlayBtn')).toBeVisible();
+        await expect(page.getByTestId('levels-menu-button')).toBeVisible();
         await expect(page.locator('meta[name="viewport"]')).toHaveAttribute(
             'content',
             /viewport-fit=cover/
@@ -31,9 +31,9 @@ test.describe('browser compatibility matrix', () => {
         await gotoApp(page);
 
         const controls = [
+            page.getByTestId('levels-menu-button'),
             page.getByTestId('create-game-button'),
             page.getByTestId('join-game-button'),
-            page.locator('#localPlayBtn'),
         ];
 
         for (const control of controls) {
@@ -63,7 +63,7 @@ test.describe('browser compatibility matrix', () => {
     test('keeps Party Mode hidden in local and lobby setup flows', async ({ page }) => {
         await gotoApp(page);
 
-        await page.locator('#localPlayBtn').click();
+        await openLocalSetupScreen(page);
         await expect(page.locator('#partyModeToggle')).toHaveCount(0);
 
         await page.locator('#backToMenuFromLocal').click();

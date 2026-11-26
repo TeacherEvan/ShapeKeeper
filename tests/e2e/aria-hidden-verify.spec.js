@@ -4,7 +4,7 @@
 // exitGame -> menu) and asserts the warning never appears in the console.
 import { expect, test } from '@playwright/test';
 
-import { gotoApp } from './helpers/bootstrap.js';
+import { gotoApp, openLocalSetupScreen } from './helpers/bootstrap.js';
 
 test('no aria-hidden focus warning on menu -> game transition', async ({ page }) => {
     const warnings = [];
@@ -15,8 +15,8 @@ test('no aria-hidden focus warning on menu -> game transition', async ({ page })
     });
 
     await gotoApp(page);
-    await expect(page.locator('#localPlayBtn')).toBeVisible();
-    await page.locator('#localPlayBtn').click();
+    await expect(page.getByTestId('levels-menu-button')).toBeVisible();
+    await openLocalSetupScreen(page);
 
     await expect(page.locator('#localSetupScreen')).toHaveClass(/active/);
     await page.locator('#localSetupScreen .local-grid-btn[data-size="5"]').click();
@@ -35,7 +35,7 @@ test('no aria-hidden focus warning on exitGame -> menu transition', async ({ pag
     });
 
     await gotoApp(page);
-    await page.locator('#localPlayBtn').click();
+    await openLocalSetupScreen(page);
     await page.locator('#localSetupScreen .local-grid-btn[data-size="5"]').click();
     await page.locator('#startLocalGame').click();
     await expect(page.getByTestId('game-screen')).toHaveClass(/active/);
