@@ -91,14 +91,8 @@
 
 .skeleton-dot,
 .skeleton-text {
-    background: linear-gradient(
-        90deg,
-        var(--bg-tertiary) 25%,
-        var(--bg-secondary) 50%,
-        var(--bg-tertiary) 75%
-    );
-    background-size: 200% 100%;
-    animation: skeletonShimmer 1.5s infinite;
+    background: var(--bg-tertiary);
+    animation: skeletonPulse 1.5s ease-in-out infinite;
 }
 
 .skeleton-dot {
@@ -111,15 +105,6 @@
     height: 20px;
     width: 150px;
     border-radius: 4px;
-}
-
-@keyframes skeletonShimmer {
-    0% {
-        background-position: 200% 0;
-    }
-    100% {
-        background-position: -200% 0;
-    }
 }
 
 .skeleton-pulse {

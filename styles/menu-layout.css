@@ -37,7 +37,6 @@
     z-index: 1;
     width: 100%;
     min-height: 100vh;
-    height: 100dvh;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
@@ -78,7 +77,10 @@
     background: transparent;
     cursor: pointer;
     padding: 0;
-    transition: all 0.25s ease;
+    transition:
+        transform 0.25s ease,
+        opacity 0.25s ease,
+        background-color 0.25s ease;
     opacity: 0.45;
 }
 
@@ -129,7 +131,6 @@
     padding: clamp(1.5rem, 3vw, 2.5rem);
     text-align: center;
     min-height: 100vh;
-    height: 100dvh;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
@@ -325,8 +326,8 @@ input[type='color']:focus {
 }
 
 .checkbox-setting input[type='checkbox'] {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     cursor: pointer;
     accent-color: var(--accent-primary);
     transition: transform var(--transition-fast) var(--easing-smooth);

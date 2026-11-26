@@ -126,8 +126,17 @@
 
 #appRoot {
     min-height: 100vh;
-    height: 100dvh;
     min-height: 100dvh;
+}
+
+button,
+a,
+input,
+select,
+[tabindex],
+.setup-section,
+.level-btn {
+    scroll-margin-top: 84px;
 }
 
 body {
@@ -172,11 +181,13 @@ body {
     box-shadow: var(--shadow-soft);
 }
 
-.theme-toggle:hover {
-    background: var(--bg-secondary);
-    border-color: var(--border-strong);
-    transform: scale(1.05);
-    box-shadow: var(--shadow-medium);
+@media (hover: hover) and (pointer: fine) {
+    .theme-toggle:hover {
+        background: var(--bg-secondary);
+        border-color: var(--border-strong);
+        transform: scale(1.05);
+        box-shadow: var(--shadow-medium);
+    }
 }
 
 .theme-toggle:active {

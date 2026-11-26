@@ -20,7 +20,6 @@
     margin: auto;
     padding: clamp(20px, 4vw, 32px);
     min-height: 100vh;
-    height: 100dvh;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;

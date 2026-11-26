@@ -1,33 +1,24 @@
-@keyframes focusPulse {
-    0%,
-    100% {
-        outline-offset: 4px;
-    }
-    50% {
-        outline-offset: 6px;
-    }
-}
-
 .menu-btn::before,
 .ready-btn::before {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
+    inset: 0;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: inherit;
+    transform: scale(0.85);
+    opacity: 0;
+    pointer-events: none;
     transition:
-        width 0.5s ease,
-        height 0.5s ease;
+        transform 0.25s var(--easing-smooth),
+        opacity 0.25s var(--easing-smooth);
 }
 
-.menu-btn:hover::before,
-.ready-btn:hover::before {
-    width: 300%;
-    height: 300%;
+@media (hover: hover) and (pointer: fine) {
+    .menu-btn:hover::before,
+    .ready-btn:hover::before {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .menu-btn:focus-visible,
@@ -36,6 +27,7 @@
 .ready-btn:focus-visible,
 .back-btn:focus-visible,
 .copy-btn:focus-visible,
+.copy-invite-btn:focus-visible,
 .leave-btn:focus-visible,
 .sound-btn:focus-visible,
 .populate-btn:focus-visible,
@@ -44,8 +36,7 @@
 .name-input:focus-visible,
 .room-code-input:focus-visible {
     outline: 3px solid var(--accent-primary);
-    outline-offset: 4px;
-    animation: focusPulse 1.5s ease-in-out infinite;
+    outline-offset: 3px;
 }
 
 .btn-loading {
@@ -100,6 +91,19 @@
     .menu-btn,
     .start-btn {
         border-width: 3px;
+    }
+}
+
+@media (any-pointer: coarse) {
+    .menu-btn,
+    .start-btn,
+    .back-btn,
+    .ready-btn,
+    .grid-btn,
+    .copy-invite-btn,
+    .exit-btn,
+    .populate-btn {
+        min-height: 44px;
     }
 }
 
