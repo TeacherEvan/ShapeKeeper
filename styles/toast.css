@@ -1,19 +1,23 @@
 .toast-notification {
     position: fixed;
-    top: 20px;
+    top: calc(78px + env(safe-area-inset-top));
     left: 50%;
     transform: translateX(-50%) translateY(-100px);
     max-width: 90%;
     min-width: 300px;
-    padding: 15px 20px;
-    background: var(--bg-secondary);
+    padding: 12px 16px;
+    background: var(--surface-layer-2);
     color: var(--text-primary);
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-default);
+    border-left: 4px solid var(--toast-accent, var(--accent-primary));
+    border-radius: 12px;
+    box-shadow: var(--specular-top), var(--shadow-elevated);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 10000;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     opacity: 0;
     transition:
         transform 0.3s ease,
@@ -47,8 +51,8 @@
     transition: opacity 0.2s;
     padding: 0;
     line-height: 1;
-    min-width: 32px;
-    min-height: 32px;
+    min-width: 44px;
+    min-height: 44px;
 }
 
 .toast-close:hover {
@@ -56,23 +60,19 @@
 }
 
 .toast-info {
-    background: var(--accent-secondary);
-    color: #fff;
+    --toast-accent: var(--accent-secondary);
 }
 
 .toast-success {
-    background: var(--accent-primary);
-    color: #fff;
+    --toast-accent: var(--accent-primary);
 }
 
 .toast-warning {
-    background: var(--accent-warning);
-    color: #fff;
+    --toast-accent: var(--accent-warning);
 }
 
 .toast-error {
-    background: var(--accent-danger);
-    color: #fff;
+    --toast-accent: var(--accent-danger);
 }
 
 @keyframes toastSlideIn {
@@ -100,11 +100,18 @@
 @media screen and (max-width: 768px) {
     .toast-notification {
         min-width: 250px;
-        top: 10px;
-        padding: 12px 15px;
+        top: calc(68px + env(safe-area-inset-top));
+        padding: 10px 14px;
     }
 
     .toast-message {
         font-size: 0.85rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toast-notification,
+    .toast-notification:not(.show) {
+        animation: none;
     }
 }

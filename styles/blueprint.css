@@ -299,7 +299,22 @@ input[type='color']:focus {
    Game header → horizontal snap-rail of player chips.
    Game footer → turn pill + thumb-scrollable action bar, safe-area aware. */
 @media screen and (max-width: 768px) {
-    .game-header {
+    .game-header:not(.multi-player) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        overflow: visible;
+    }
+
+    .game-header:not(.multi-player) .player-info {
+        width: 100%;
+        min-width: 0;
+        padding: 6px 10px;
+    }
+
+    .game-header.multi-player {
         flex-wrap: nowrap;
         overflow-x: auto;
         justify-content: flex-start;
@@ -309,7 +324,7 @@ input[type='color']:focus {
         -webkit-overflow-scrolling: touch;
     }
 
-    .game-header .player-info {
+    .game-header.multi-player .player-info {
         flex: 0 0 auto;
         min-width: 74px;
         padding: 6px 10px;
@@ -317,7 +332,7 @@ input[type='color']:focus {
     }
 
     .game-header .exit-btn {
-        margin-right: 2px;
+        margin-right: 0;
         flex: 0 0 auto;
     }
 

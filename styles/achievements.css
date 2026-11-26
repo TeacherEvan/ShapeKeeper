@@ -1,24 +1,36 @@
 .achievement-panel {
+    position: relative;
     margin-left: auto;
-    min-width: 220px;
-    max-width: 300px;
     font-size: 0.82rem;
 }
 
 .achievement-panel-summary {
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--surface-layer-1);
+    border: 1px solid var(--border-subtle);
     font-weight: 600;
+    font-variant-numeric: tabular-nums;
     color: var(--text-secondary);
 }
 
 .achievement-list {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    right: 0;
+    width: min(300px, calc(100vw - 24px));
+    z-index: 80;
     list-style: none;
-    margin-top: 6px;
-    padding: 8px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--bg-primary);
-    max-height: 140px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-default);
+    border-radius: 14px;
+    background: var(--surface-layer-2);
+    box-shadow: var(--specular-top), var(--shadow-elevated);
+    max-height: 220px;
     overflow-y: auto;
 }
 

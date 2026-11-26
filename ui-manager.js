@@ -113,12 +113,12 @@ export class UIManager {
         }
 
         if (this.lastRenderedState.player1Color !== this.game.player1Color) {
-            player1Info.style.color = this.game.player1Color;
+            player1Info.style.setProperty('--player-swatch', this.game.player1Color);
             this.lastRenderedState.player1Color = this.game.player1Color;
         }
 
         if (this.lastRenderedState.player2Color !== this.game.player2Color) {
-            player2Info.style.color = this.game.player2Color;
+            player2Info.style.setProperty('--player-swatch', this.game.player2Color);
             this.lastRenderedState.player2Color = this.game.player2Color;
         }
 
@@ -144,7 +144,7 @@ export class UIManager {
             const turnColor =
                 this.game.currentPlayer === 1 ? this.game.player1Color : this.game.player2Color;
             if (this.lastRenderedState.turnColor !== turnColor) {
-                turnIndicator.style.color = turnColor;
+                turnIndicator.style.setProperty('--turn-color', turnColor);
                 this.lastRenderedState.turnColor = turnColor;
             }
         }
