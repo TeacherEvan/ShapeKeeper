@@ -1,7 +1,7 @@
 (function initializeShapeKeeperConvexShared(windowObject) {
     'use strict';
 
-    const CONVEX_URL = windowObject.CONVEX_URL || 'https://oceanic-antelope-781.convex.cloud';
+    const CONVEX_URL = windowObject.CONVEX_URL || '';
     const ConvexClient = windowObject.convex ? windowObject.convex.ConvexClient : null;
     const api = windowObject.convex ? windowObject.convex.anyApi : null;
     const CONVEX_CONNECTION_ERROR = 'Convex backend not available. Please check your connection.';

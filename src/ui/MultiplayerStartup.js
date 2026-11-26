@@ -41,7 +41,7 @@ export const STARTUP_COPY = {
         hint: 'Re-subscribing and requesting the latest board state.',
     },
     [STARTUP_STATES.DESYNCED]: {
-        message: 'Match sync interrupted (grid-lock + lobby sync check needed).',
+        message: 'Connection interrupted. Reconnecting to match...',
         hint: 'Trying to recover the authoritative board state.',
     },
     [STARTUP_STATES.FATAL_STARTUP_FAILURE]: {
