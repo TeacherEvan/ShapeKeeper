@@ -795,14 +795,12 @@ export class WelcomeAnimation {
     }
 
     renderParticles() {
-        const baseBg = this.themedInk(this.canvasTint);
-        const fadeAlpha = this.isDimmed ? 0.25 : 0.08;
-        const bgColor = `rgba(${baseBg}, ${fadeAlpha})`;
-        this.ctx.fillStyle = bgColor;
-        // Logical units: the context is already scaled by devicePixelRatio, so
-        // canvas.width/height (device px) would over-cover and put the motion
-        // blur trail out of phase with the sprites.
-        this.ctx.fillRect(0, 0, this.logicalWidth, this.logicalHeight);
+        // Clear cleanly so the CSS radial cosmic nebula shines through in both
+        // Dark Void and Dawn Light themes; SpriteTrail already renders tapered
+        // motion trails via drawTrails().
+        if (typeof this.ctx.clearRect === 'function') {
+            this.ctx.clearRect(0, 0, this.logicalWidth, this.logicalHeight);
+        }
 
         const particleAlpha = this.isDimmed ? 0.25 : 0.85;
 

@@ -70,31 +70,45 @@
 }
 
 .pager-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 2px solid var(--accent-primary, #00f0ff);
+    position: relative;
+    min-width: 44px;
+    min-height: 44px;
+    border: 0;
     background: transparent;
     cursor: pointer;
     padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pager-dot::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    border: 1.5px solid var(--accent-primary);
+    background: transparent;
+    opacity: 0.55;
     transition:
-        transform 0.25s ease,
-        opacity 0.25s ease,
-        background-color 0.25s ease;
-    opacity: 0.45;
+        width 220ms var(--easing-smooth),
+        transform 220ms var(--easing-smooth),
+        opacity 220ms var(--easing-smooth),
+        background-color 220ms var(--easing-smooth);
 }
 
-.pager-dot:hover {
-    opacity: 0.85;
-    transform: scale(1.2);
+@media (hover: hover) and (pointer: fine) {
+    .pager-dot:hover::after {
+        opacity: 0.9;
+        transform: scale(1.18);
+    }
 }
 
-.pager-dot.active {
+.pager-dot.active::after {
     width: 26px;
-    border-radius: 12px;
-    background: var(--accent-primary, #00f0ff);
+    background: var(--accent-primary);
     opacity: 1;
-    box-shadow: 0 0 10px var(--accent-primary, #00f0ff);
+    box-shadow: 0 0 10px rgba(var(--accent-primary-rgb), 0.55);
 }
 
 .side-screen-return-btn {
@@ -103,24 +117,27 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: 10;
+    min-height: 44px;
     padding: 8px 20px;
-    border-radius: 20px;
-    background: rgba(17, 20, 36, 0.85);
-    border: 1px solid var(--accent-primary, #00f0ff);
-    color: #ffffff;
+    border-radius: 999px;
+    background: var(--surface-layer-2);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.45);
+    color: var(--text-primary);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 12px rgba(0, 240, 255, 0.25);
-    transition: opacity 0.3s ease, transform 0.2s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: var(--specular-top), var(--shadow-card);
+    transition: opacity 0.3s ease, transform 0.2s ease, border-color 0.2s ease;
     pointer-events: auto;
 }
 
-.side-screen-return-btn:hover {
-    background: rgba(0, 240, 255, 0.25);
-    transform: translateX(-50%) scale(1.05);
+@media (hover: hover) and (pointer: fine) {
+    .side-screen-return-btn:hover {
+        border-color: var(--accent-primary);
+        transform: translateX(-50%) translateY(-1px);
+    }
 }
 
 .welcome-container {

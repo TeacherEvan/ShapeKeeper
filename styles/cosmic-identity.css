@@ -266,7 +266,10 @@
 .welcome-container h1::after,
 .lobby-header h1::after,
 .winner-container h1::after {
+    flex: 0 0 100%;
+    width: 100%;
     height: 3px;
+    margin: 12px auto 0;
     border-radius: 2px;
     background-image: linear-gradient(90deg, var(--wordmark-a-from), var(--wordmark-b-from));
     background-size: 96px 3px;
@@ -275,44 +278,86 @@
     box-shadow: 0 0 12px rgba(var(--accent-secondary-rgb), 0.4);
 }
 
-/* ───────────────────────── ACTION INK ───────────────────────── */
+/* ───────────────────────── 3-TIER TACTILE CTA HIERARCHY ───────────────────────── */
 .menu-btn,
 .start-btn {
     background-image: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-strong));
+    color: var(--text-inverse);
     letter-spacing: 0.06em;
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.45);
     box-shadow:
-        0 6px 20px rgba(var(--accent-primary-rgb), 0.28),
-        0 0 0 1px rgba(var(--accent-primary-rgb), 0.35) inset;
+        var(--specular-top),
+        0 6px 20px rgba(var(--accent-primary-rgb), 0.28);
 }
 
-.menu-btn:hover,
-.start-btn:hover:not(:disabled) {
-    background-image: linear-gradient(135deg, var(--accent-primary-strong), var(--accent-primary));
-    box-shadow:
-        0 10px 30px rgba(var(--accent-primary-rgb), 0.34),
-        0 0 0 1px rgba(var(--accent-primary-rgb), 0.5) inset;
+@media (hover: hover) and (pointer: fine) {
+    .menu-btn:hover,
+    .start-btn:hover:not(:disabled) {
+        background-image: linear-gradient(135deg, var(--accent-primary-strong), var(--accent-primary));
+        transform: translateY(-2px);
+        box-shadow:
+            var(--specular-top),
+            0 10px 30px rgba(var(--accent-primary-rgb), 0.36);
+    }
 }
 
+.menu-btn:active,
+.start-btn:active:not(:disabled) {
+    transform: translateY(1px) scale(0.985);
+}
+
+.menu-btn:disabled,
+.start-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Tier 2 Secondary: tinted glass with cyan-violet specular hairline */
 .menu-btn.secondary {
-    background-image: linear-gradient(
-        135deg,
-        var(--accent-secondary),
-        var(--accent-secondary-strong)
-    );
+    background-color: var(--surface-layer-2);
+    background-image: none;
+    color: var(--text-primary);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.36);
     box-shadow:
-        0 6px 20px rgba(var(--accent-secondary-rgb), 0.3),
-        0 0 0 1px rgba(var(--accent-secondary-rgb), 0.35) inset;
+        var(--specular-top),
+        var(--shadow-card);
 }
 
-.menu-btn.secondary:hover {
-    background-image: linear-gradient(
-        135deg,
-        var(--accent-secondary-strong),
-        var(--accent-secondary)
-    );
-    box-shadow:
-        0 10px 30px rgba(var(--accent-secondary-rgb), 0.36),
-        0 0 0 1px rgba(var(--accent-secondary-rgb), 0.5) inset;
+@media (hover: hover) and (pointer: fine) {
+    .menu-btn.secondary:hover {
+        background-color: var(--surface-layer-3);
+        background-image: none;
+        border-color: rgba(var(--accent-primary-rgb), 0.65);
+        box-shadow:
+            var(--specular-top),
+            var(--shadow-elevated);
+    }
+}
+
+/* Tier 3 Ghost: quietest translucent surface for Join Lobby */
+#joinGameBtn.menu-btn.secondary {
+    background-color: var(--surface-layer-1);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--specular-top);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    #joinGameBtn.menu-btn.secondary:hover {
+        background-color: var(--surface-layer-2);
+        color: var(--text-primary);
+        border-color: var(--border-strong);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .menu-btn:hover,
+    .menu-btn:active,
+    .start-btn:hover:not(:disabled),
+    .start-btn:active:not(:disabled) {
+        transform: none;
+    }
 }
 
 /* ───────────────────────── KEEPER PANELS ───────────────────────── */
