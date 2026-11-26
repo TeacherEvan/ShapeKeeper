@@ -88,4 +88,25 @@ describe('rooms.createRoom', () => {
       resetMs: expect.any(Number),
     });
   });
+
+  it('rejects invalid gridSize and sets isOpen: true by default', async () => {
+    const db = makeDb();
+    const ctx: any = { db };
+
+    const bad = await (createRoom as any)._handler(ctx, {
+      sessionId: 'sess-bad',
+      playerName: 'Evan',
+      gridSize: 99,
+    });
+    expect(bad).toEqual({ error: 'Invalid grid size' });
+
+    const ok = await (createRoom as any)._handler(ctx, {
+      sessionId: 'sess-open',
+      playerName: 'Evan',
+      gridSize: 5,
+    });
+    expect(ok.error).toBeUndefined();
+    const roomInsert = db.__calls.inserts.find((i: any) => i.table === 'rooms');
+    expect(roomInsert.doc.isOpen).toBe(true);
+  });
 });

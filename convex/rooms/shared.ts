@@ -1,5 +1,3 @@
-import { log, errorLog, warn } from '../log';
-
 // re-export the .js implementation so the .ts importers (and Convex
 // tsc) use the same crypto-strong generator the Vitest suite exercises.
 export {
@@ -47,9 +45,18 @@ export const ANIMALS = [
  * No numbers, no separators, no human names. Generated on the server per lobby
  * and never persisted in env, config, or any static file.
  */
+function cryptoRandomIndex(max: number): number {
+    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+        const buf = new Uint32Array(1);
+        crypto.getRandomValues(buf);
+        return buf[0] % max;
+    }
+    return Math.floor(Math.random() * max);
+}
+
 export function generateSillyPasscode(): string {
-    const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-    const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+    const adj = ADJECTIVES[cryptoRandomIndex(ADJECTIVES.length)];
+    const animal = ANIMALS[cryptoRandomIndex(ANIMALS.length)];
     const cap = (w: string): string => w.charAt(0).toUpperCase() + w.slice(1);
     return cap(adj) + cap(animal);
 }

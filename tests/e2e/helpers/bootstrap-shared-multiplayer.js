@@ -483,6 +483,7 @@ export async function installSharedMockMultiplayer(
                         roomId,
                         roomCode: normalizedCode,
                         passcode: generatedPasscode,
+                        isOpen: true,
                         gridSize: requestedGridSize || initialGridSize,
                         hostPlayerId: initialSessionId,
                         partyMode: requestedPartyMode ?? initialPartyMode,
@@ -523,10 +524,13 @@ export async function installSharedMockMultiplayer(
                     const room = getRoomByCode(sharedState, joinCode);
                     if (!room) return { error: 'Room not found' };
 
-                    // Open-lobby model: joining never requires a passcode. The
-                    // room may still carry a legacy passcode field, but it is
-                    // not enforced (matches the real server, which no longer
-                    // issues passcodes on new rooms).
+                    const requiresPasscode =
+                        Boolean(room.passcode) &&
+                        room.isOpen !== true &&
+                        joinCode.toUpperCase() !== 'LOBBY';
+                    if (requiresPasscode && _suppliedPasscode !== room.passcode) {
+                        return { error: 'Incorrect passcode. Check the link or ask the host.' };
+                    }
 
                     const existingPlayer = room.players.find(
                         (player) => player.sessionId === initialSessionId

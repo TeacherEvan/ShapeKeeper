@@ -166,4 +166,22 @@ describe('mutations/joinRoom', () => {
         expect(correct.roomId).toBe('room-1');
         expect(correct.playerId).toBeDefined();
     });
+
+    it('allows joining an open lobby (isOpen: true) without passcode', async () => {
+        const room: any = {
+            _id: 'room-open',
+            roomCode: 'OPEN01',
+            status: 'lobby',
+            isOpen: true,
+            passcode: 'EasterPig',
+        };
+        const db = makeDb({ room, players: [] });
+        const res = await (joinRoom as any)._handler({ db }, {
+            roomCode: 'OPEN01',
+            sessionId: 's-open',
+            playerName: 'Guest',
+        });
+        expect(res.roomId).toBe('room-open');
+        expect(res.playerId).toBeDefined();
+    });
 });

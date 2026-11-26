@@ -16,6 +16,7 @@ export const joinRoom = mutation({
     if (!rl.allowed) return { error: 'Rate limit exceeded', resetMs: rl.resetMs };
 
     const normalizedCode = args.roomCode.toUpperCase();
+    const sanitizedName = String(args.playerName ?? '').trim().slice(0, 24) || 'Player';
     let room: any = null;
 
     if (normalizedCode === 'LOBBY') {
@@ -23,8 +24,9 @@ export const joinRoom = mutation({
         .query('rooms')
         .withIndex('by_status', (q: any) => q.eq('status', 'lobby'))
         .collect();
-      openRooms.sort((a: any, b: any) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
-      room = openRooms[0] || null;
+      const joinable = openRooms.filter((r: any) => r.isOpen !== false);
+      joinable.sort((a: any, b: any) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+      room = joinable[0] || null;
     } else {
       room = await ctx.db
         .query('rooms')
@@ -35,8 +37,11 @@ export const joinRoom = mutation({
     if (!room) return { error: 'Room not found' };
     if (room.status !== 'lobby') return { error: 'Game already in progress' };
 
-    // Validate passcode if room has one
-    if (room.passcode) {
+    // Open lobbies (isOpen: true or LOBBY code) do not require a passcode;
+    // private / legacy rooms with a passcode still enforce it.
+    const requiresPasscode =
+      Boolean(room.passcode) && room.isOpen !== true && normalizedCode !== 'LOBBY';
+    if (requiresPasscode) {
       if (!args.passcode) {
         return { error: 'This lobby requires a passcode. Ask the host to share it.' };
       }
@@ -51,7 +56,7 @@ export const joinRoom = mutation({
       .first();
 
     if (existingPlayer) {
-      await ctx.db.patch(existingPlayer._id, { isConnected: true, name: args.playerName });
+      await ctx.db.patch(existingPlayer._id, { isConnected: true, name: sanitizedName });
       return { roomId: room._id, playerId: existingPlayer._id, rejoined: true };
     }
 
@@ -65,7 +70,7 @@ export const joinRoom = mutation({
     const playerId = await ctx.db.insert('players', {
       roomId: room._id,
       sessionId: args.sessionId,
-      name: args.playerName,
+      name: sanitizedName,
       color: availableColor,
       score: 0,
       isReady: false,

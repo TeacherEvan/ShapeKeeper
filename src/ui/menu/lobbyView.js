@@ -73,4 +73,24 @@ export function updateLobbyUI(lobbyManager) {
     if (readyBtn) {
         readyBtn.setAttribute('aria-pressed', String(Boolean(lobbyManager.isReady)));
     }
+
+    const inviteBar = document.getElementById('lobbyInviteBar');
+    const codeEl = document.getElementById('lobbyRoomCodeValue');
+    const passcodeEl = document.getElementById('lobbyPasscodeValue');
+    if (inviteBar && codeEl) {
+        if (lobbyManager.roomCode) {
+            inviteBar.hidden = false;
+            codeEl.textContent = `Code: ${lobbyManager.roomCode}`;
+            if (passcodeEl) {
+                if (lobbyManager.passcode) {
+                    passcodeEl.hidden = false;
+                    passcodeEl.textContent = `Passcode: ${lobbyManager.passcode}`;
+                } else {
+                    passcodeEl.hidden = true;
+                }
+            }
+        } else {
+            inviteBar.hidden = true;
+        }
+    }
 }

@@ -59,10 +59,12 @@ export const getRoom = query({
 export const listOpenLobbies = query({
   args: {},
   handler: async (ctx) => {
-    const openRooms = await ctx.db
-      .query('rooms')
-      .withIndex('by_status', (q: any) => q.eq('status', 'lobby'))
-      .collect();
+    const openRooms = (
+      await ctx.db
+        .query('rooms')
+        .withIndex('by_status', (q: any) => q.eq('status', 'lobby'))
+        .collect()
+    ).filter((r: any) => r.isOpen !== false);
     openRooms.sort((a: any, b: any) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
 
     return Promise.all(

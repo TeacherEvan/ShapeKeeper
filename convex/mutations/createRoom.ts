@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
-import { DEFAULT_COLORS, generateRoomCode, getHostTokenHash } from '../utils/roomUtils';
-import { generateSillyPasscode } from '../rooms/shared';
+import { DEFAULT_COLORS, getHostTokenHash } from '../utils/roomUtils';
+import { generateSecureRoomCode, generateSillyPasscode } from '../rooms/shared';
 import { DEFAULT_TURN_DURATION_MS } from '../games/turnTimer';
 import { checkRateLimit } from '../rateLimit';
 
@@ -10,6 +10,7 @@ export const createRoom = mutation({
     sessionId: v.string(),
     playerName: v.string(),
     gridSize: v.number(),
+    isPrivate: v.optional(v.boolean()),
     // DEPRECATED: Party Mode removed; accepted and ignored for backward compatibility. Do not use.
     partyMode: v.optional(v.boolean()),
   },
@@ -17,21 +18,29 @@ export const createRoom = mutation({
     const rl = await checkRateLimit(ctx, 'createRoom', args.sessionId);
     if (!rl.allowed) return { error: 'Rate limit exceeded', resetMs: rl.resetMs };
 
-    // Generate unique room code
-    let roomCode = generateRoomCode();
+    if (!Number.isInteger(args.gridSize) || args.gridSize < 3 || args.gridSize > 30) {
+      return { error: 'Invalid grid size' };
+    }
+    const sanitizedName = String(args.playerName ?? '').trim().slice(0, 24) || 'Host';
+
+    // Generate unique room code with bounded collision retries
+    let roomCode = generateSecureRoomCode();
     let existingRoom = await ctx.db
       .query('rooms')
       .withIndex('by_code', (q: any) => q.eq('roomCode', roomCode))
       .first();
 
     let collisionCount = 0;
-    while (existingRoom) {
+    while (existingRoom && collisionCount < 20) {
       collisionCount++;
-      roomCode = generateRoomCode();
+      roomCode = generateSecureRoomCode();
       existingRoom = await ctx.db
         .query('rooms')
         .withIndex('by_code', (q: any) => q.eq('roomCode', roomCode))
         .first();
+    }
+    if (existingRoom) {
+      return { error: 'Could not allocate room code, please retry' };
     }
 
     // Generate silly passcode [Adjective][Animal] with live by_passcode collision check
@@ -60,6 +69,7 @@ export const createRoom = mutation({
     const roomId = await ctx.db.insert('rooms', {
       roomCode,
       passcode,
+      isOpen: !args.isPrivate,
       hostPlayerId: args.sessionId,
       hostTokenHash,
       gridSize: args.gridSize,
@@ -74,7 +84,7 @@ export const createRoom = mutation({
     await ctx.db.insert('players', {
       roomId,
       sessionId: args.sessionId,
-      name: args.playerName,
+      name: sanitizedName,
       color: DEFAULT_COLORS[0],
       score: 0,
       isReady: false,

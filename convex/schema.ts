@@ -6,6 +6,7 @@ export default defineSchema({
     rooms: defineTable({
         roomCode: v.string(), // 6-character code for joining
         passcode: v.optional(v.string()), // silly [Adjective][Animal] (e.g. "EasterPig"). Optional for pre-migration rooms.
+        isOpen: v.optional(v.boolean()), // true = open lobby (no passcode required on join); false = private room requiring passcode
         hostPlayerId: v.string(), // Session ID of the host
         // SHA-256 of the server-issued hostToken. Created in createRoom and
         // required by every host-gated mutation. Optional only because rooms
