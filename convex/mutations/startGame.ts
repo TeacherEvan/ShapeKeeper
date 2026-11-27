@@ -2,6 +2,8 @@ import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
 import { armTurnTimer } from '../games/turnTimer';
 import { getHostTokenHash } from '../utils/roomUtils';
+import { timingSafeEqual } from '../auth/token';
+import { checkRateLimit } from '../rateLimit';
 
 // Start the game (host only). Arms the first turn's countdown via armTurnTimer.
 export const startGame = mutation({
@@ -11,6 +13,9 @@ export const startGame = mutation({
         hostToken: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
+        const rl = await checkRateLimit(ctx, 'startGame', args.sessionId);
+        if (!rl.allowed) return { error: 'Rate limit exceeded', resetMs: rl.resetMs };
+
         const room = await ctx.db.get(args.roomId);
         if (!room) return { error: 'Room not found' };
         if (room.hostPlayerId !== args.sessionId) return { error: 'Only the host can start the game' };
@@ -18,7 +23,7 @@ export const startGame = mutation({
         if (room.hostTokenHash) {
             if (!args.hostToken) return { error: 'Host token required' };
             const providedHash = await getHostTokenHash(args.hostToken);
-            if (providedHash !== room.hostTokenHash) return { error: 'Invalid host token' };
+            if (!timingSafeEqual(providedHash, room.hostTokenHash)) return { error: 'Invalid host token' };
         }
 
         if (room.status !== 'lobby') return { error: 'Game already started' };
@@ -34,6 +39,7 @@ export const startGame = mutation({
         await armTurnTimer(ctx, args.roomId, room, startedAt, {
             status: 'playing',
             currentPlayerIndex: 0,
+            completedSquareCount: 0,
             updatedAt: startedAt,
         });
 

@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { internalMutation, internalQuery } from './_generated/server';
+import { checkRateLimit } from './rateLimit';
 
 /**
  * Paystack unlock licences — internal-only ledger.
@@ -123,5 +124,13 @@ export const isRefunded = internalQuery({
             .withIndex('by_reference', (q) => q.eq('reference', args.reference))
             .first();
         return row !== null;
+    },
+});
+
+/** Sliding-window rate-limit check callable from HTTP actions (e.g. /paystack/verify). */
+export const consumeHttpRateLimit = internalMutation({
+    args: { action: v.string(), key: v.string() },
+    handler: async (ctx, args) => {
+        return await checkRateLimit(ctx, args.action, args.key);
     },
 });

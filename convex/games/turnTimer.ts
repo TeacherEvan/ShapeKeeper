@@ -12,6 +12,17 @@ export function normalizeTurnDuration(value: unknown): number {
         : 0;
 }
 
+/** Cancel any previously scheduled turn-expiry job for a room. */
+export async function cancelTurnTimer(ctx: any, room: any): Promise<void> {
+    if (room?.turnTimerJobId && typeof ctx.scheduler?.cancel === 'function') {
+        try {
+            await ctx.scheduler.cancel(room.turnTimerJobId);
+        } catch {
+            // Job already fired or cancelled
+        }
+    }
+}
+
 /** Patch the room and (re)arm the deadline + scheduled expiry. Duration 0 clears both. */
 export async function armTurnTimer(
     ctx: any,
@@ -20,13 +31,7 @@ export async function armTurnTimer(
     now: number,
     extraPatch: Record<string, unknown> = {}
 ): Promise<void> {
-    if (room?.turnTimerJobId && typeof ctx.scheduler?.cancel === 'function') {
-        try {
-            await ctx.scheduler.cancel(room.turnTimerJobId);
-        } catch {
-            // Job already fired or cancelled
-        }
-    }
+    await cancelTurnTimer(ctx, room);
     const duration = normalizeTurnDuration(room.turnDurationMs);
     if (duration === 0) {
         const clearPatch: Record<string, unknown> = {
@@ -87,10 +92,14 @@ export async function expireTurnHandler(ctx: any, args: any): Promise<void> {
     if (chosenLine) {
         await applyLineForPlayer(ctx, room, currentPlayer, players, chosenLine);
     } else {
-        const now = Date.now();
-        await armTurnTimer(ctx, args.roomId, room, now, {
-            currentPlayerIndex: (room.currentPlayerIndex + 1) % players.length,
-            updatedAt: now,
+        // Board has no free lines left — finish cleanly instead of re-arming infinitely.
+        await cancelTurnTimer(ctx, room);
+        await ctx.db.patch(args.roomId, {
+            status: 'finished',
+            turnStartTime: undefined,
+            turnEndTime: undefined,
+            turnTimerJobId: undefined,
+            updatedAt: Date.now(),
         });
     }
 }

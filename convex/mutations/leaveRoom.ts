@@ -1,5 +1,7 @@
 import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
+import { cancelTurnTimer } from '../games/turnTimer';
+import { log } from '../log';
 
 export const leaveRoom = mutation({
   args: {
@@ -43,6 +45,7 @@ export const leaveRoom = mutation({
         await ctx.db.delete(square._id);
       }
 
+      await cancelTurnTimer(ctx, room);
       await ctx.db.delete(args.roomId);
       return { success: true, roomDeleted: true };
     }
@@ -55,6 +58,10 @@ export const leaveRoom = mutation({
 
     if (room.hostPlayerId === args.sessionId) {
       const newHost = remainingPlayers[0];
+      log('[leaveRoom] Host transferred in lobby', {
+        roomId: args.roomId,
+        newHostIndex: newHost.playerIndex,
+      });
       await ctx.db.patch(args.roomId, {
         hostPlayerId: newHost.sessionId,
         hostTokenHash: undefined,

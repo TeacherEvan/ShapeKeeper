@@ -8,7 +8,11 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { checkRateLimit, RATE_LIMIT_ACTIONS } from '../convex/rate_limit.js';
+import {
+    checkRateLimit,
+    pruneExpiredRateLimits,
+    RATE_LIMIT_ACTIONS,
+} from '../convex/rate_limit.js';
 
 function makeMockCtx() {
     const store = new Map();
@@ -176,5 +180,45 @@ describe('checkRateLimit (N9 follow-up)', () => {
         expect(allowedAgain.allowed).toBe(true);
         const blocked = await checkRateLimit(ctx, 'drawLine', session);
         expect(blocked.allowed).toBe(false);
+    });
+
+    it('pruneExpiredRateLimits uses by_window_start index so expired buckets are not starved behind 200 active ones', async () => {
+        const now = 1_000_000_000;
+        const rows = [];
+        for (let i = 0; i < 200; i++) {
+            rows.push({ _id: `active_${i}`, key: `drawLine:a_${i}`, windowStart: now - 1000 });
+        }
+        for (let i = 0; i < 5; i++) {
+            rows.push({
+                _id: `expired_${i}`,
+                key: `drawLine:e_${i}`,
+                windowStart: now - 20 * 60 * 1000,
+            });
+        }
+        const deleted = [];
+        const indexedCtx = {
+            db: {
+                query: () => ({
+                    withIndex: (idx, build) => {
+                        expect(idx).toBe('by_window_start');
+                        let cutoff = Infinity;
+                        build({
+                            lt: (_f, val) => {
+                                cutoff = val;
+                            },
+                        });
+                        const matching = rows.filter((r) => r.windowStart < cutoff);
+                        return { take: async (n) => matching.slice(0, n) };
+                    },
+                }),
+                delete: async (id) => {
+                    deleted.push(id);
+                },
+            },
+        };
+
+        const res = await pruneExpiredRateLimits(indexedCtx, now, 15 * 60 * 1000);
+        expect(res.pruned).toBe(5);
+        expect(deleted).toEqual(['expired_0', 'expired_1', 'expired_2', 'expired_3', 'expired_4']);
     });
 });

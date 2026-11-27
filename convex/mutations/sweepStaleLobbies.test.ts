@@ -78,17 +78,18 @@ describe('sweepStaleLobbies', () => {
         expect(deleted.rooms).toEqual([]);
     });
 
-    it('never touches in-progress matches, however old', async () => {
+    it('keeps matches idle under 24h, but reaps abandoned playing/finished rooms older than 24h', async () => {
         const rooms = [
-            { _id: 'room_old_match', roomCode: 'PLAY01', status: 'playing', updatedAt: Date.now() - 10 * HOUR },
-            { _id: 'room_finished', roomCode: 'DONE01', status: 'finished', updatedAt: Date.now() - 10 * HOUR },
+            { _id: 'room_recent_match', roomCode: 'PLAY01', status: 'playing', updatedAt: Date.now() - 10 * HOUR },
+            { _id: 'room_old_playing', roomCode: 'DEAD02', status: 'playing', updatedAt: Date.now() - 30 * HOUR },
+            { _id: 'room_old_finished', roomCode: 'DONE02', status: 'finished', updatedAt: Date.now() - 30 * HOUR },
         ];
         const { db, deleted } = makeDb(rooms);
 
         const res = await (sweepStaleLobbies as any)._handler({ db }, {});
 
-        expect(res.swept).toBe(0);
-        expect(deleted.rooms).toEqual([]);
+        expect(res.swept).toBe(2);
+        expect(deleted.rooms).toEqual(['room_old_playing', 'room_old_finished']);
     });
 
     it('returns a zero count when there is nothing to sweep', async () => {

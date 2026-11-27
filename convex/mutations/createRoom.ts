@@ -59,6 +59,9 @@ export const createRoom = mutation({
         .withIndex('by_passcode', (q: any) => q.eq('passcode', passcode))
         .first();
     }
+    if (existingPasscodeRoom) {
+      return { error: 'Could not allocate unique passcode, please retry' };
+    }
 
     // Generate host token for this room
     const hostToken = crypto.randomUUID();

@@ -19,12 +19,44 @@ interface MakeDbOptions {
 
 function makeDb(options: MakeDbOptions = {}) {
     const { room = null, players = [] } = options;
+    const rateStore = new Map<string, any>();
     return {
         get: async (_id: string) => room,
-        query: vi.fn((_tableName: string) => ({
-            withIndex: () => ({ collect: async () => players }),
-        })),
-        patch: vi.fn(async () => true),
+        query: vi.fn((tableName: string) => {
+            if (tableName === 'rateLimits') {
+                return {
+                    withIndex: (_idx: string, buildFilter: any) => {
+                        const filterArgs: any = {};
+                        buildFilter({
+                            eq: (k: string, v: any) => {
+                                filterArgs[k] = v;
+                            },
+                        });
+                        return {
+                            first: async () => {
+                                for (const row of rateStore.values()) {
+                                    if (row.key === filterArgs.key) return row;
+                                }
+                                return null;
+                            },
+                        };
+                    },
+                };
+            }
+            return {
+                withIndex: () => ({ collect: async () => players }),
+            };
+        }),
+        insert: vi.fn(async (_table: string, doc: any) => {
+            const id = `rl_${rateStore.size + 1}`;
+            rateStore.set(id, { _id: id, ...doc });
+            return id;
+        }),
+        patch: vi.fn(async (id: string, patch: any) => {
+            const row = rateStore.get(id);
+            if (row) Object.assign(row, patch);
+            return true;
+        }),
     } as any;
 }
 

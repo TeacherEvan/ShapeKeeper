@@ -237,5 +237,54 @@ describe('convex/games/turnTimer', () => {
                 })
             );
         });
+
+        it('finishes the room instead of re-arming infinitely when the board has no free lines', async () => {
+            const room = {
+                _id: 'r1',
+                status: 'playing',
+                turnEndTime: 15000,
+                turnDurationMs: 15000,
+                turnTimerJobId: 'job_full',
+                currentPlayerIndex: 0,
+                gridSize: 2, // 4 total lines
+            };
+            const players = [
+                { _id: 'p1', playerIndex: 0, name: 'A', score: 0 },
+                { _id: 'p2', playerIndex: 1, name: 'B', score: 1 },
+            ];
+            const allFourLines = [
+                { lineKey: '0,0-0,1' },
+                { lineKey: '1,0-1,1' },
+                { lineKey: '0,0-1,0' },
+                { lineKey: '0,1-1,1' },
+            ];
+            const patch = vi.fn();
+            const cancel = vi.fn();
+            const runAt = vi.fn();
+            const ctx: any = {
+                db: {
+                    get: vi.fn(async () => room),
+                    query: (table: string) => ({
+                        withIndex: () => ({
+                            collect: vi.fn(async () => (table === 'players' ? players : allFourLines)),
+                        }),
+                    }),
+                    patch,
+                },
+                scheduler: { cancel, runAt },
+            };
+
+            await expireTurnHandler(ctx, { roomId: 'r1', expectedTurnEndTime: 15000 });
+
+            expect(cancel).toHaveBeenCalledWith('job_full');
+            expect(runAt).not.toHaveBeenCalled();
+            expect(patch).toHaveBeenCalledWith(
+                'r1',
+                expect.objectContaining({
+                    status: 'finished',
+                    turnEndTime: undefined,
+                })
+            );
+        });
     });
 });

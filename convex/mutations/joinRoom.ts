@@ -26,7 +26,19 @@ export const joinRoom = mutation({
         .collect();
       const joinable = openRooms.filter((r: any) => r.isOpen !== false);
       joinable.sort((a: any, b: any) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
-      room = joinable[0] || null;
+      for (const candidate of joinable) {
+        const candidatePlayers = await ctx.db
+          .query('players')
+          .withIndex('by_room', (q: any) => q.eq('roomId', candidate._id))
+          .collect();
+        if (
+          candidatePlayers.length < 6 ||
+          candidatePlayers.some((p: any) => p.sessionId === args.sessionId)
+        ) {
+          room = candidate;
+          break;
+        }
+      }
     } else {
       room = await ctx.db
         .query('rooms')

@@ -19,10 +19,22 @@ import { ALLOWED_ORIGINS, isAllowedOrigin, paymentMatchesOrder, timingSafeHexEqu
 // Convex runs actions on Node; read env via globalThis so no @types/node is needed.
 const env = (globalThis as any).process?.env ?? {};
 const SECRET = () => env.PAYSTACK_SECRET_KEY ?? '';
-const EXPECTED_KOBO = () => {
-    const parsed = Number(env.PAYSTACK_AMOUNT_KOBO);
-    return Number.isInteger(parsed) && parsed > 0 ? parsed : 1800;
+const EXPECTED_KOBO = (): number | null => {
+    const raw = env.PAYSTACK_AMOUNT_KOBO;
+    if (raw === undefined || raw === null || String(raw).trim() === '') return 1800;
+    const parsed = Number(raw);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 };
+const MAX_VERIFY_BODY_BYTES = 4096;
+const MAX_WEBHOOK_BODY_BYTES = 65536;
+
+function clientIpKey(request: Request): string {
+    const cfIp = request.headers.get('cf-connecting-ip');
+    if (cfIp && cfIp.trim()) return cfIp.trim().slice(0, 64);
+    const xff = request.headers.get('x-forwarded-for');
+    if (xff && xff.trim()) return xff.split(',')[0].trim().slice(0, 64);
+    return 'unknown';
+}
 // Amount alone is not enough: 1800 kobo and 1800 subunits of a cheaper currency
 // are very different prices. Both server paths must check the currency too.
 const EXPECTED_CURRENCY = () => String(env.PAYSTACK_CURRENCY || 'ZAR').toUpperCase();
@@ -110,13 +122,34 @@ async function mintLicence(
 /* -------------------------------------------------------------------------- */
 /* POST /license/validate — called by UnlockGate.js                            */
 /* -------------------------------------------------------------------------- */
-const validateLicense = httpAction(async (ctx, request) => {
+export async function validateLicenseHandler(ctx: any, request: Request): Promise<Response> {
     const origin = allowedOrigin(request);
     if (!origin) return json({ valid: false, reason: 'Origin not allowed' }, 403, null);
+
+    if (typeof ctx.runMutation === 'function') {
+        const rl = (await ctx.runMutation(internal.licences.consumeHttpRateLimit, {
+            action: 'httpValidateLicense',
+            key: clientIpKey(request),
+        })) as { allowed: boolean; resetMs?: number };
+        if (rl && !rl.allowed) {
+            const retryAfter = String(Math.max(1, Math.ceil((rl.resetMs ?? 60000) / 1000)));
+            return new Response(JSON.stringify({ valid: false, reason: 'Too many requests' }), {
+                status: 429,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Retry-After': retryAfter,
+                    ...cors(origin),
+                },
+            });
+        }
+    }
 
     let key = '';
     try {
         const body = await request.text();
+        if (body.length > MAX_VERIFY_BODY_BYTES) {
+            return json({ valid: false, reason: 'Request too large' }, 413, origin);
+        }
         const contentType = request.headers.get('content-type') ?? '';
         if (contentType.includes('application/json')) {
             const parsed = JSON.parse(body);
@@ -133,24 +166,52 @@ const validateLicense = httpAction(async (ctx, request) => {
         keyHash: await sha256Hex(key),
     });
     return json(result, 200, origin);
-});
+}
+const validateLicense = httpAction(validateLicenseHandler);
 
 /* -------------------------------------------------------------------------- */
 /* POST /paystack/verify — checkout page after Paystack redirects back          */
 /* -------------------------------------------------------------------------- */
-const verifyPayment = httpAction(async (ctx, request) => {
+export async function verifyPaymentHandler(ctx: any, request: Request): Promise<Response> {
     const origin = allowedOrigin(request);
     if (!origin) return json({ ok: false, reason: 'Origin not allowed' }, 403, null);
 
+    if (typeof ctx.runMutation === 'function') {
+        const rl = (await ctx.runMutation(internal.licences.consumeHttpRateLimit, {
+            action: 'httpVerifyPayment',
+            key: clientIpKey(request),
+        })) as { allowed: boolean; resetMs?: number };
+        if (rl && !rl.allowed) {
+            const retryAfter = String(Math.max(1, Math.ceil((rl.resetMs ?? 60000) / 1000)));
+            return new Response(JSON.stringify({ ok: false, reason: 'Too many requests' }), {
+                status: 429,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Retry-After': retryAfter,
+                    ...cors(origin),
+                },
+            });
+        }
+    }
+
     let reference = '';
     try {
-        const body = await request.json();
+        const rawBody = await request.text();
+        if (rawBody.length > MAX_VERIFY_BODY_BYTES) {
+            return json({ ok: false, reason: 'Request too large' }, 413, origin);
+        }
+        const body = JSON.parse(rawBody);
         reference = typeof body.reference === 'string' ? body.reference.trim() : '';
     } catch {
         return json({ ok: false, reason: 'Malformed request' }, 400, origin);
     }
     if (!reference || !/^[A-Za-z0-9_-]{6,64}$/.test(reference)) {
         return json({ ok: false, reason: 'Invalid payment reference' }, 400, origin);
+    }
+
+    const expectedKobo = EXPECTED_KOBO();
+    if (expectedKobo === null) {
+        return json({ ok: false, reason: 'Payments misconfigured' }, 503, origin);
     }
 
     const secret = SECRET();
@@ -175,7 +236,7 @@ const verifyPayment = httpAction(async (ctx, request) => {
     }
 
     // Never trust the browser: status, amount AND currency come from Paystack's API.
-    if (!paymentMatchesOrder(data, EXPECTED_KOBO(), EXPECTED_CURRENCY())) {
+    if (!paymentMatchesOrder(data, expectedKobo, EXPECTED_CURRENCY())) {
         return json({ ok: false, reason: 'Payment did not match the order' }, 402, origin);
     }
 
@@ -193,13 +254,21 @@ const verifyPayment = httpAction(async (ctx, request) => {
         return json({ ok: false, reason }, 402, origin);
     }
     return json({ ok: true, key: minted.key, created: minted.created }, 200, origin);
-});
+}
+const verifyPayment = httpAction(verifyPaymentHandler);
 
 /* -------------------------------------------------------------------------- */
 /* POST /paystack/webhook — authoritative refund + success relay               */
 /* -------------------------------------------------------------------------- */
-const paystackWebhook = httpAction(async (ctx, request) => {
+export async function paystackWebhookHandler(ctx: any, request: Request): Promise<Response> {
+    const contentLength = Number(request.headers.get('content-length') ?? '0');
+    if (Number.isFinite(contentLength) && contentLength > MAX_WEBHOOK_BODY_BYTES) {
+        return new Response('Payload too large', { status: 413 });
+    }
     const raw = await request.text();
+    if (raw.length > MAX_WEBHOOK_BODY_BYTES) {
+        return new Response('Payload too large', { status: 413 });
+    }
     const secret = SECRET();
     const signature = request.headers.get('x-paystack-signature') ?? '';
 
@@ -241,9 +310,11 @@ const paystackWebhook = httpAction(async (ctx, request) => {
         return new Response('ok', { status: 200 });
     }
 
+    const expectedKobo = EXPECTED_KOBO();
     if (
         event.event === 'charge.success' &&
-        paymentMatchesOrder(data, EXPECTED_KOBO(), EXPECTED_CURRENCY())
+        expectedKobo !== null &&
+        paymentMatchesOrder(data, expectedKobo, EXPECTED_CURRENCY())
     ) {
         await mintLicence(
             ctx,
@@ -258,7 +329,8 @@ const paystackWebhook = httpAction(async (ctx, request) => {
     }
 
     return new Response('ok', { status: 200 });
-});
+}
+const paystackWebhook = httpAction(paystackWebhookHandler);
 
 const http = httpRouter();
 http.route({ path: '/license/validate', method: 'POST', handler: validateLicense });

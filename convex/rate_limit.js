@@ -34,6 +34,9 @@ const DEFAULT_WINDOWS = {
     toggleReady: { max: 10, windowMs: 5000 },
     updatePlayer: { max: 10, windowMs: 5000 },
     updateTurnDuration: { max: 6, windowMs: 5000 },
+    startGame: { max: 6, windowMs: 10000 },
+    httpVerifyPayment: { max: 10, windowMs: 60000 },
+    httpValidateLicense: { max: 20, windowMs: 60000 },
 };
 
 export async function checkRateLimit(ctx, action, sessionId, opts = {}) {
@@ -90,8 +93,25 @@ export const RATE_LIMIT_ACTIONS = Object.freeze(Object.keys(DEFAULT_WINDOWS));
  */
 export async function pruneExpiredRateLimits(ctx, now = Date.now(), maxAgeMs = 15 * 60 * 1000) {
     const cutoff = now - maxAgeMs;
-    const query = ctx.db.query('rateLimits');
-    const rows = typeof query.take === 'function' ? await query.take(200) : await query.collect();
+    const baseQuery = ctx.db.query('rateLimits');
+    let rows;
+    if (typeof baseQuery.withIndex === 'function') {
+        let indexed;
+        try {
+            indexed = baseQuery.withIndex('by_window_start', (q) =>
+                typeof q.lt === 'function' ? q.lt('windowStart', cutoff) : q
+            );
+        } catch {
+            indexed = baseQuery;
+        }
+        rows =
+            typeof indexed.take === 'function' ? await indexed.take(200) : await indexed.collect();
+    } else {
+        rows =
+            typeof baseQuery.take === 'function'
+                ? await baseQuery.take(200)
+                : await baseQuery.collect();
+    }
     let pruned = 0;
     for (const row of rows) {
         if ((row.windowStart ?? 0) < cutoff) {

@@ -1,6 +1,7 @@
 import { isAuthorisedHostAsync, projectPlayersForClient, projectRoomForClient } from '../auth/token';
 import { POPULATE_PLAYER_INDEX, normalizeLineKey } from './shared';
 import { validateLineKey } from './lineValidation';
+import { cancelTurnTimer } from './turnTimer';
 import { log, errorLog, warn } from '../log';
 import { checkRateLimit } from '../rate_limit';
 
@@ -203,9 +204,8 @@ export async function tapSquareHandler(ctx: any, args: any) {
         return { error: 'Rate limit exceeded', resetMs: rl.resetMs };
     }
 
-    console.log('[tapSquare] Tap request', {
+    log('[tapSquare] Tap request', {
         roomId: args.roomId,
-        sessionId: args.sessionId,
         squareKey: args.squareKey,
     });
 
@@ -250,7 +250,11 @@ export async function tapSquareHandler(ctx: any, args: any) {
         return { error: 'Multiplier already revealed' };
     }
 
-    if (square.multiplier && square.multiplier.type === 'truthOrDare') {
+    if (!square.multiplier) {
+        return { error: 'No multiplier on this square' };
+    }
+
+    if (square.multiplier.type === 'truthOrDare') {
         return { error: 'Truth-or-dare squares cannot be tapped' };
     }
 
@@ -265,9 +269,8 @@ export async function tapSquareHandler(ctx: any, args: any) {
         updatedAt: Date.now(),
     });
 
-    console.log('[tapSquare] Tap recorded', {
+    log('[tapSquare] Tap recorded', {
         squareKey: args.squareKey,
-        sessionId: args.sessionId,
         previousTaps: square.taps ?? 0,
         nextTaps,
         rawMultiplier: square.multiplier,
@@ -299,12 +302,15 @@ export async function endGameHandler(ctx: any, args: any) {
         return { error: 'Unauthorized' };
     }
 
-    await ctx.db.patch(args.roomId, {
+    await cancelTurnTimer(ctx, room);
+    const endPatch: Record<string, unknown> = {
         status: 'finished',
         turnStartTime: undefined,
         turnEndTime: undefined,
         updatedAt: Date.now(),
-    });
+    };
+    if (room.turnTimerJobId) endPatch.turnTimerJobId = undefined;
+    await ctx.db.patch(args.roomId, endPatch);
 
     return { success: true };
 }
@@ -367,13 +373,17 @@ export async function resetGameHandler(ctx: any, args: any) {
         resetReady: true,
     });
 
-    await ctx.db.patch(args.roomId, {
+    await cancelTurnTimer(ctx, room);
+    const resetPatch: Record<string, unknown> = {
         status: 'lobby',
         currentPlayerIndex: 0,
+        completedSquareCount: 0,
         turnStartTime: undefined,
         turnEndTime: undefined,
         updatedAt: Date.now(),
-    });
+    };
+    if (room.turnTimerJobId) resetPatch.turnTimerJobId = undefined;
+    await ctx.db.patch(args.roomId, resetPatch);
 
     log('[resetGame] Game reset complete', {
         roomId: args.roomId,

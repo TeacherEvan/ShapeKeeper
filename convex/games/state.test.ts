@@ -186,4 +186,51 @@ describe('tapSquareHandler membership gate', () => {
 
         expect(res).toEqual({ error: 'Not a member of this room' });
     });
+
+    it('rejects tapping a square that has no multiplier without patching', async () => {
+        let patched = false;
+        const db: any = {
+            query: (table: string) => {
+                if (table === 'rateLimits') {
+                    return { withIndex: () => ({ unique: async () => null }) };
+                }
+                if (table === 'players') {
+                    return { withIndex: () => ({ first: async () => ({ _id: 'p2', sessionId: 'opponent' }) }) };
+                }
+                if (table === 'squares') {
+                    return {
+                        withIndex: () => ({
+                            first: async () => ({
+                                _id: 'sq1',
+                                roomId: 'r1',
+                                squareKey: '0,0',
+                                playerId: 'p1',
+                                multiplier: undefined,
+                            }),
+                        }),
+                    };
+                }
+                return { withIndex: () => ({ first: async () => null }) };
+            },
+            insert: async () => 'rl_1',
+            patch: async () => {
+                patched = true;
+                return true;
+            },
+            get: async (id: string) => {
+                if (id === 'r1') return { _id: 'r1', status: 'playing' };
+                if (id === 'p1') return { _id: 'p1', sessionId: 'real-owner' };
+                return null;
+            },
+        };
+
+        const res = await tapSquareHandler({ db } as any, {
+            roomId: 'r1',
+            sessionId: 'opponent',
+            squareKey: '0,0',
+        });
+
+        expect(res).toEqual({ error: 'No multiplier on this square' });
+        expect(patched).toBe(false);
+    });
 });

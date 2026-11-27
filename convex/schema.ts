@@ -33,6 +33,7 @@ export default defineSchema({
         rematchVotes: v.optional(v.array(v.string())), // sessionIds that asked for a rematch
         lastTurnClientSentAt: v.optional(v.number()), // client send timestamp of last move
         lastTurnServerReceivedAt: v.optional(v.number()), // server receipt timestamp of last move
+        completedSquareCount: v.optional(v.number()), // denormalized completed square count (avoids per-move squares.collect())
         securityVersion: v.optional(v.number()), // legacy field on pre-existing production room documents
     })
         .index('by_code', ['roomCode'])
@@ -105,7 +106,9 @@ export default defineSchema({
         key: v.string(), // e.g. "drawLine:session_abc"
         windowStart: v.number(), // server epoch (ms) when the current window began
         count: v.number(), // requests consumed in the current window
-    }).index('by_key', ['key']),
+    })
+        .index('by_key', ['key'])
+        .index('by_window_start', ['windowStart']),
     // Purchased entitlements (Lemon Squeezy). The licence key itself is never
     // stored — only its SHA-256 hash, computed by the webhook relay, plus the
     // instance id LS issues per activation. checkEntitlement returns no PII, so

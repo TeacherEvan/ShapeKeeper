@@ -1,7 +1,7 @@
 import { checkForCompletedSquares } from './squares';
 import { validateLineKey } from './line_validation';
 import { isTurnExpired } from './turn_deadline';
-import { armTurnTimer, normalizeTurnDuration } from './turnTimer';
+import { armTurnTimer, cancelTurnTimer, normalizeTurnDuration } from './turnTimer';
 import { getAllLineKeys, pickRandomFreeLine } from './shared';
 import { log, errorLog, warn } from '../log';
 import { checkRateLimit } from '../rateLimit';
@@ -56,24 +56,36 @@ export async function applyLineForPlayer(
     }
 
     const totalSquares = (room.gridSize - 1) * (room.gridSize - 1);
-    const allSquares = await ctx.db
-        .query('squares')
-        .withIndex('by_room', (q: any) => q.eq('roomId', room._id))
-        .collect();
+    let completedSquareCount: number;
+    if (typeof room.completedSquareCount === 'number') {
+        completedSquareCount = room.completedSquareCount + completedSquares.length;
+    } else {
+        const allSquares = await ctx.db
+            .query('squares')
+            .withIndex('by_room', (q: any) => q.eq('roomId', room._id))
+            .collect();
+        completedSquareCount = allSquares.length;
+    }
 
-    const isGameOver = allSquares.length >= totalSquares;
+    const isGameOver = completedSquareCount >= totalSquares;
 
     log('[applyLineForPlayer] Game progress', {
-        completedSquares: allSquares.length,
+        completedSquares: completedSquareCount,
         totalSquares,
         isGameOver,
     });
 
     if (isGameOver) {
-        await ctx.db.patch(room._id, {
+        await cancelTurnTimer(ctx, room);
+        const finishPatch: Record<string, unknown> = {
             status: 'finished',
+            completedSquareCount,
+            turnStartTime: undefined,
+            turnEndTime: undefined,
             updatedAt: Date.now(),
-        });
+        };
+        if (room.turnTimerJobId) finishPatch.turnTimerJobId = undefined;
+        await ctx.db.patch(room._id, finishPatch);
         log('[applyLineForPlayer] Game over', {
             roomId: room._id,
             finalScores: sortedPlayers.map((player: any) => ({
@@ -92,6 +104,7 @@ export async function applyLineForPlayer(
     const serverReceivedAt = Date.now();
     const timingPatch: any = {
         lastTurnServerReceivedAt: serverReceivedAt,
+        completedSquareCount,
         updatedAt: serverReceivedAt,
     };
     // `rooms.lastTurnClientSentAt` is v.optional(v.number()): Convex accepts a
