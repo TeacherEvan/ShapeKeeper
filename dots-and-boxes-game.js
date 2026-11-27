@@ -20,7 +20,19 @@ import { announceAlert, announceStatus } from './src/ui/AccessibilityAnnouncer.j
 import { notifyAchievementUnlock, renderAchievementPanel } from './src/ui/AchievementPanel.js';
 import { getDotRenderRadius, expDecay, prefersReducedMotion } from './utils.js';
 import { TutorialSystem } from './tutorial-system.js';
-import { findOptimalMinimaxMove } from './src/ai/MinimaxEngine.js';
+import {
+    chooseAIMove as selectAIMove,
+    countSquareEdges as computeSquareEdges,
+    evaluateImmediateSquareGain as evalImmediateSquareGain,
+    evaluateSafeLineStrength as evalSafeLineStrength,
+    isPotentialSquareComplete as checkPotentialSquareComplete,
+    opponentBestGainAfter as evalOpponentBestGainAfter,
+    pickBestSafeLine as selectBestSafeLine,
+    pickBestScoringLine as selectBestScoringLine,
+    pickHardSafeLine as selectHardSafeLine,
+    pickRandomAmongBest as selectRandomAmongBest,
+    pickRandomLine as selectRandomLine,
+} from './src/ai/LocalAIController.js';
 import { DisposableRegistry } from './src/lifecycle/DisposableRegistry.js';
 import { AccessibleGridTree } from './src/a11y/AccessibleGridTree.js';
 import { createLocalTurnTimer } from './src/timing/local-turn-timer.js';
@@ -640,12 +652,19 @@ export class DotsAndBoxesGame {
             this.selectionRibbon = null;
 
             if (!this.isMultiplayer) {
+                const MAX_MOVE_HISTORY = 200;
                 this.moveHistory.push({
                     before: preMoveSnapshot,
                     lineKey,
                     player: actingPlayer,
                     after: this.captureMoveSnapshot(),
                 });
+                if (this.moveHistory.length > MAX_MOVE_HISTORY) {
+                    const evicted = this.moveHistory.shift();
+                    if (evicted?.after) {
+                        this.initialLocalSnapshot = evicted.after;
+                    }
+                }
                 this.redoHistory = [];
                 this.replayIndex = this.moveHistory.length;
                 this.uiManager.updateUndoRedoControls();
@@ -740,210 +759,47 @@ export class DotsAndBoxesGame {
     }
 
     chooseAIMove() {
-        const availableLines = this.gameLogic
-            .getAllPossibleLines()
-            .filter((lineKey) => !this.lines.has(lineKey));
-        if (availableLines.length === 0) {
-            return null;
-        }
-
-        const scoringLines = [];
-        const safeLines = [];
-        for (const lineKey of availableLines) {
-            if (this.gameLogic.wouldCompleteSquare(lineKey)) {
-                scoringLines.push(lineKey);
-            } else {
-                safeLines.push(lineKey);
-            }
-        }
-
-        // Easy mode kept for backward compatibility if explicitly requested.
-        if (this.aiDifficulty === 'easy') {
-            if (scoringLines.length > 0 && Math.random() > 0.35) {
-                return this.pickRandomLine(scoringLines);
-            }
-            if (safeLines.length > 0) {
-                return this.pickRandomLine(safeLines);
-            }
-            return this.pickRandomLine(availableLines);
-        }
-
-        // Strong default AI: always take immediate scoring lines.
-        if (scoringLines.length > 0) {
-            return this.pickBestScoringLine(scoringLines);
-        }
-
-        // No immediate capture available: choose a safe line.
-        const candidateSafe = safeLines.length > 0 ? safeLines : availableLines;
-
-        // Enhanced adaptive depth: depth 4 on small boards/late game, depth 3 mid-game, depth 2 early on large boards.
-        const searchDepth = availableLines.length <= 14 ? 4 : availableLines.length <= 22 ? 3 : 2;
-        const bestMinimaxMove = findOptimalMinimaxMove(
-            this.gameLogic,
-            this.lines,
-            this.gridRows,
-            this.gridCols,
-            searchDepth
-        );
-        if (bestMinimaxMove) {
-            return bestMinimaxMove;
-        }
-
-        return this.pickHardSafeLine(candidateSafe);
+        return selectAIMove(this);
     }
 
     pickHardSafeLine(lines) {
-        return this.pickRandomAmongBest(lines, (lineKey) => {
-            const ownStrength = this.evaluateSafeLineStrength(lineKey);
-            const opponentGain = this.opponentBestGainAfter(lineKey);
-            return ownStrength - opponentGain * 4;
-        });
+        return selectHardSafeLine(this, lines);
     }
 
-    // Simulates drawing lineKey, then measures how many squares the opponent
-    // could immediately complete on their following move. Restores line state.
     opponentBestGainAfter(lineKey) {
-        const alreadyPresent = this.lines.has(lineKey);
-        this.lines.add(lineKey);
-
-        let maxGain = 0;
-        const opponentLines = this.gameLogic
-            .getAllPossibleLines()
-            .filter((l) => !this.lines.has(l));
-        for (const l of opponentLines) {
-            if (this.gameLogic.wouldCompleteSquare(l)) {
-                const gain = this.evaluateImmediateSquareGain(l);
-                if (gain > maxGain) {
-                    maxGain = gain;
-                }
-            }
-        }
-
-        if (!alreadyPresent) {
-            this.lines.delete(lineKey);
-        }
-        return maxGain;
+        return evalOpponentBestGainAfter(this, lineKey);
     }
 
     pickRandomLine(lines) {
-        return lines[Math.floor(Math.random() * lines.length)] || null;
+        return selectRandomLine(lines);
     }
 
-    // Randomly choose among the highest-scoring lines. Keeps the heuristic
-    // strength (only the best moves are ever picked) while restoring move
-    // variety so AI-vs-AI and AI-vs-human games are not byte-identical.
     pickRandomAmongBest(lines, scoreFn) {
-        let bestScore = -Infinity;
-        let bestLines = [];
-        for (const lineKey of lines) {
-            const score = scoreFn(lineKey);
-            if (score > bestScore) {
-                bestScore = score;
-                bestLines = [lineKey];
-            } else if (score === bestScore) {
-                bestLines.push(lineKey);
-            }
-        }
-        return bestLines[Math.floor(Math.random() * bestLines.length)] || null;
+        return selectRandomAmongBest(lines, scoreFn);
     }
 
     pickBestScoringLine(lines) {
-        return this.pickRandomAmongBest(lines, (l) => this.evaluateImmediateSquareGain(l));
+        return selectBestScoringLine(this, lines);
     }
 
     pickBestSafeLine(lines) {
-        return this.pickRandomAmongBest(lines, (l) => this.evaluateSafeLineStrength(l));
+        return selectBestSafeLine(this, lines);
     }
 
     evaluateImmediateSquareGain(lineKey) {
-        const [start, end] = this.parseLineKey(lineKey);
-        const isHorizontal = start.row === end.row;
-        let completedSquares = 0;
-
-        if (isHorizontal) {
-            if (
-                start.row > 0 &&
-                this.isPotentialSquareComplete(start.row - 1, Math.min(start.col, end.col), lineKey)
-            ) {
-                completedSquares += 1;
-            }
-            if (
-                start.row < this.gridRows - 1 &&
-                this.isPotentialSquareComplete(start.row, Math.min(start.col, end.col), lineKey)
-            ) {
-                completedSquares += 1;
-            }
-            return completedSquares;
-        }
-
-        if (
-            start.col > 0 &&
-            this.isPotentialSquareComplete(Math.min(start.row, end.row), start.col - 1, lineKey)
-        ) {
-            completedSquares += 1;
-        }
-        if (
-            start.col < this.gridCols - 1 &&
-            this.isPotentialSquareComplete(Math.min(start.row, end.row), start.col, lineKey)
-        ) {
-            completedSquares += 1;
-        }
-        return completedSquares;
+        return evalImmediateSquareGain(this, lineKey);
     }
 
     evaluateSafeLineStrength(lineKey) {
-        const [start, end] = this.parseLineKey(lineKey);
-        const isHorizontal = start.row === end.row;
-        const neighbors = [];
-
-        if (isHorizontal) {
-            if (start.row > 0) {
-                neighbors.push({ row: start.row - 1, col: Math.min(start.col, end.col) });
-            }
-            if (start.row < this.gridRows - 1) {
-                neighbors.push({ row: start.row, col: Math.min(start.col, end.col) });
-            }
-        } else {
-            if (start.col > 0) {
-                neighbors.push({ row: Math.min(start.row, end.row), col: start.col - 1 });
-            }
-            if (start.col < this.gridCols - 1) {
-                neighbors.push({ row: Math.min(start.row, end.row), col: start.col });
-            }
-        }
-
-        let score = 0;
-        for (const { row, col } of neighbors) {
-            const edgeCount = this.countSquareEdges(row, col, lineKey);
-            score += edgeCount <= 2 ? 2 : -3;
-        }
-        return score;
+        return evalSafeLineStrength(this, lineKey);
     }
 
     countSquareEdges(row, col, prospectiveLineKey) {
-        const top = this.getLineKey({ row, col }, { row, col: col + 1 });
-        const bottom = this.getLineKey({ row: row + 1, col }, { row: row + 1, col: col + 1 });
-        const left = this.getLineKey({ row, col }, { row: row + 1, col });
-        const right = this.getLineKey({ row, col: col + 1 }, { row: row + 1, col: col + 1 });
-        const squareLines = [top, bottom, left, right];
-        return squareLines.reduce(
-            (count, key) => count + (key === prospectiveLineKey || this.lines.has(key) ? 1 : 0),
-            0
-        );
+        return computeSquareEdges(this, row, col, prospectiveLineKey);
     }
 
     isPotentialSquareComplete(row, col, prospectiveLineKey) {
-        if (this.claimedCells.has(`${row},${col}`) || this.squares[`${row},${col}`]) {
-            return false;
-        }
-
-        const top = this.getLineKey({ row, col }, { row, col: col + 1 });
-        const bottom = this.getLineKey({ row: row + 1, col }, { row: row + 1, col: col + 1 });
-        const left = this.getLineKey({ row, col }, { row: row + 1, col });
-        const right = this.getLineKey({ row, col: col + 1 }, { row: row + 1, col: col + 1 });
-        return [top, bottom, left, right].every(
-            (key) => key === prospectiveLineKey || this.lines.has(key)
-        );
+        return checkPotentialSquareComplete(this, row, col, prospectiveLineKey);
     }
 
     captureMoveSnapshot() {
@@ -1519,6 +1375,10 @@ export class DotsAndBoxesGame {
 
         if (this.disposables) {
             this.disposables.dispose();
+        }
+
+        if (this.tutorialSystem && typeof this.tutorialSystem.destroy === 'function') {
+            this.tutorialSystem.destroy();
         }
 
         if (this.soundManager && typeof this.soundManager.destroy === 'function') {
