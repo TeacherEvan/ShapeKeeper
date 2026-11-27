@@ -1,5 +1,7 @@
 docs/
 tests/
+media/
+audit/
 *.test.js
 *.test.ts
 *.spec.js
@@ -10,4 +12,9 @@ test-results/
 test-connection-pooling.html
 myenv/
 ShapeKeeper/
+.venv/
+.cursor/
+.roo/
+.kilo/
+.qodo/
 .git/

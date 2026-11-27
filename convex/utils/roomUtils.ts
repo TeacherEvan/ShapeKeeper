@@ -1,12 +1,12 @@
 // Utilities used by room mutations/queries
 
 export const DEFAULT_COLORS = [
-  '#FF0000', // Red
-  '#0000FF', // Blue
-  '#00FF00', // Green
-  '#FF8C00', // Orange
-  '#8B00FF', // Purple
-  '#00FFFF', // Cyan
+  '#FF5C5C', // Coral Red
+  '#3B82F6', // Royal Blue
+  '#10B981', // Emerald Green
+  '#F59E0B', // Amber Gold
+  '#A855F7', // Violet
+  '#EC4899', // Magenta Pink
 ];
 
 export function generateRoomCode(): string {

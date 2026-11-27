@@ -30,12 +30,17 @@ jobs:
             - name: Lint
               run: npm run lint
 
+            - name: Convex typecheck
+              run: npx convex typecheck
+
             - name: Unit tests
               run: npm run test
 
-            # E2E (Playwright) requires a live server and a Convex backend, so it
-            # is intentionally NOT wired into this required CI gate. Run locally with:
-            #   npm run serve &   # or: npm run dev
-            #   npx playwright install --with-deps
-            #   npm run test:e2e
-            # See tests/e2e/ for the full suite.
+            - name: Build check
+              run: npm run build
+
+            - name: Install Playwright Chromium
+              run: npx playwright install --with-deps chromium
+
+            - name: E2E Smoke tests
+              run: npm run test:e2e:smoke

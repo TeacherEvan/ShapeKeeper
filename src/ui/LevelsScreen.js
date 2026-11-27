@@ -165,11 +165,16 @@ export function renderLevelsGrid(deps) {
             // Show the mine count up front: walking into a mined board without
             // warning is what made players read the penalty as their own error.
             const mineLabel = mineCount > 0 ? ` · 💣 ${mineCount}` : '';
-            btn.innerHTML = `
-                <span class="level-num">Level ${lvl}</span>
-                <span class="level-grid-label">${cols}×${rows}${mineLabel}</span>
-                <span class="level-status-icon">${isCompleted ? '★' : isUnlocked ? '▶' : '🔒'}</span>
-            `;
+            const numSpan = document.createElement('span');
+            numSpan.className = 'level-num';
+            numSpan.textContent = `Level ${lvl}`;
+            const gridSpan = document.createElement('span');
+            gridSpan.className = 'level-grid-label';
+            gridSpan.textContent = `${cols}×${rows}${mineLabel}`;
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'level-status-icon';
+            iconSpan.textContent = isCompleted ? '★' : isUnlocked ? '▶' : '🔒';
+            btn.append(numSpan, gridSpan, iconSpan);
 
             if (isUnlocked) {
                 btn.addEventListener('click', () => {
@@ -187,8 +192,16 @@ export function renderLevelsGrid(deps) {
 
     const targetBtn = container.querySelector(`[data-level="${state.unlockedLevel}"]`);
     if (targetBtn && typeof targetBtn.scrollIntoView === 'function') {
-        setTimeout(() => {
-            targetBtn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        if (renderLevelsGrid._scrollTimer) {
+            clearTimeout(renderLevelsGrid._scrollTimer);
+        }
+        const reduced =
+            typeof window !== 'undefined' &&
+            typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-reduced-motion: reduce)')?.matches;
+        renderLevelsGrid._scrollTimer = setTimeout(() => {
+            renderLevelsGrid._scrollTimer = null;
+            targetBtn.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
         }, 50);
     }
 }
