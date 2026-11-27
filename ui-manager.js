@@ -118,13 +118,13 @@ export class UIManager {
                         nameSpan.className = 'player-name';
                         nameSpan.id = `player${pNum}Name`;
                         const scoreSpan = document.createElement('span');
-                        scoreSpan.className = 'score';
+                        scoreSpan.className = 'player-score score';
                         scoreSpan.id = `player${pNum}Score`;
                         card.append(nameSpan, scoreSpan);
                         header.appendChild(card);
                     }
                     const nameEl = card.querySelector('.player-name');
-                    const scoreEl = card.querySelector('.score');
+                    const scoreEl = card.querySelector('.player-score');
                     if (nameEl) nameEl.textContent = getPlayerName(this.game, pNum);
                     if (scoreEl) scoreEl.textContent = String(formatScore(pNum));
                     card.classList.toggle('active', this.game.currentPlayer === pNum);

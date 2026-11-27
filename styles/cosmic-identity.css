@@ -153,6 +153,7 @@
     background-image:
         radial-gradient(120% 80% at 8% -12%, var(--nebula-1), transparent 62%),
         radial-gradient(110% 75% at 96% -6%, var(--nebula-2), transparent 64%),
+        radial-gradient(85% 65% at 50% 42%, rgba(var(--accent-secondary-rgb), 0.06), transparent 70%),
         radial-gradient(140% 90% at 50% 118%, var(--nebula-3), transparent 66%);
     background-repeat: no-repeat;
 }
@@ -192,13 +193,21 @@
        carries its own title + PICKABOO lockup below y=225). */
     height: auto;
     aspect-ratio: 16 / 9;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.36);
     border-radius: 18px;
     background: var(--cosmic-void);
     box-shadow:
-        var(--shadow-strong),
-        0 0 34px rgba(var(--accent-primary-rgb), 0.18);
-    filter: saturate(1.06) contrast(1.04);
+        0 20px 52px rgba(0, 0, 0, 0.38),
+        0 0 42px rgba(var(--accent-primary-rgb), 0.22),
+        0 0 72px rgba(var(--accent-secondary-rgb), 0.14);
+    filter: saturate(1.08) contrast(1.05);
+}
+
+[data-theme='dark'] .brand-plate {
+    box-shadow:
+        0 22px 58px rgba(0, 0, 0, 0.68),
+        0 0 44px rgba(var(--accent-primary-rgb), 0.24),
+        0 0 76px rgba(var(--accent-secondary-rgb), 0.16);
 }
 
 @keyframes plateRise {
@@ -228,9 +237,9 @@
 /* ───────────────────────── SHAPE KEEPER WORDMARK ───────────────────────── */
 .welcome-container h1 {
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1.08;
-    letter-spacing: 0.055em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--text-primary);
     display: flex;
@@ -273,29 +282,60 @@
     background-size: 96px 3px;
     background-position: center;
     background-repeat: no-repeat;
-    box-shadow: 0 0 12px rgba(var(--accent-secondary-rgb), 0.4);
+    box-shadow: none;
 }
 
 /* ───────────────────────── 3-TIER TACTILE CTA HIERARCHY ───────────────────────── */
-.menu-btn,
-.start-btn {
-    background-image: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-strong));
+.menu-btn:not(.secondary),
+.start-btn:not(.secondary) {
+    background-color: var(--accent-primary);
+    background-image: linear-gradient(180deg, #a66706 0%, #8c5500 56%, #6e4200 100%);
     color: var(--text-inverse);
     letter-spacing: 0.06em;
-    border: 1px solid rgba(var(--accent-primary-rgb), 0.45);
+    border: 1px solid rgba(110, 66, 0, 0.55);
     box-shadow:
-        var(--specular-top),
-        0 6px 20px rgba(var(--accent-primary-rgb), 0.28);
+        inset 0 1px 0 rgba(255, 236, 190, 0.45),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.22),
+        0 8px 24px rgba(140, 85, 0, 0.26);
+}
+
+[data-theme='dark'] .menu-btn:not(.secondary),
+[data-theme='dark'] .start-btn:not(.secondary) {
+    background-image: linear-gradient(180deg, #ffde7a 0%, #f5b727 52%, #d4900b 100%);
+    border-color: rgba(255, 222, 122, 0.55);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.58),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.24),
+        0 8px 28px rgba(245, 183, 39, 0.34);
+}
+
+.menu-btn::before {
+    background: linear-gradient(
+        115deg,
+        transparent 20%,
+        rgba(255, 255, 255, 0.28) 50%,
+        transparent 80%
+    );
+    transform: translateX(-110%);
+    opacity: 0;
+    transition:
+        transform 420ms var(--easing-emphasis),
+        opacity 220ms var(--easing-smooth);
 }
 
 @media (hover: hover) and (pointer: fine) {
-    .menu-btn:hover,
-    .start-btn:hover:not(:disabled) {
-        background-image: linear-gradient(135deg, var(--accent-primary-strong), var(--accent-primary));
+    .menu-btn:not(.secondary):hover,
+    .start-btn:not(.secondary):hover:not(:disabled) {
         transform: translateY(-2px);
         box-shadow:
-            var(--specular-top),
-            0 10px 30px rgba(var(--accent-primary-rgb), 0.36);
+            inset 0 1px 0 rgba(255, 255, 255, 0.65),
+            inset 0 -2px 0 rgba(0, 0, 0, 0.22),
+            0 12px 32px rgba(var(--accent-primary-rgb), 0.42);
+    }
+
+    .menu-btn:hover::before {
+        transform: translateX(110%);
+        opacity: 1;
     }
 }
 
@@ -311,41 +351,84 @@
     box-shadow: none;
 }
 
-/* Tier 2 Secondary: tinted glass with cyan-violet specular hairline */
+/* Tier 2 Secondary: machined glass bevel with luminous hairline */
 .menu-btn.secondary {
-    background-color: var(--surface-layer-2);
-    background-image: none;
+    background-color: var(--bg-elevated);
+    background-image: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.7),
+        rgba(255, 255, 255, 0)
+    );
     color: var(--text-primary);
-    border: 1px solid rgba(var(--accent-primary-rgb), 0.36);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.42);
+    box-shadow:
+        var(--specular-top),
+        var(--shadow-card);
+}
+
+[data-theme='dark'] .menu-btn.secondary {
+    background-color: var(--surface-layer-2);
+    background-image: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.06),
+        rgba(255, 255, 255, 0.01)
+    );
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .menu-btn.secondary:hover {
+        background-color: var(--surface-layer-2);
+        border-color: rgba(var(--accent-primary-rgb), 0.72);
+        box-shadow:
+            var(--specular-top),
+            var(--shadow-elevated);
+    }
+
+    [data-theme='dark'] .menu-btn.secondary:hover {
+        background-color: var(--surface-layer-3);
+    }
+}
+
+.start-btn.secondary {
+    background-color: var(--surface-layer-2);
+    background-image: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.05),
+        rgba(255, 255, 255, 0.01)
+    );
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
     box-shadow:
         var(--specular-top),
         var(--shadow-card);
 }
 
 @media (hover: hover) and (pointer: fine) {
-    .menu-btn.secondary:hover {
+    .start-btn.secondary:hover:not(:disabled) {
         background-color: var(--surface-layer-3);
-        background-image: none;
-        border-color: rgba(var(--accent-primary-rgb), 0.65);
+        border-color: var(--accent-primary);
+        transform: translateY(-2px);
         box-shadow:
             var(--specular-top),
             var(--shadow-elevated);
     }
 }
 
-/* Tier 3 Ghost: quietest translucent surface for Join Lobby */
+/* Tier 3 Ghost: smoked translucent slot for Join Lobby */
 #joinGameBtn.menu-btn.secondary {
-    background-color: var(--surface-layer-1);
-    color: var(--text-secondary);
+    background-color: rgba(var(--text-ink-rgb), 0.03);
+    background-image: none;
+    color: var(--text-primary);
     border: 1px solid var(--border-default);
-    box-shadow: var(--specular-top);
+    box-shadow: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
     #joinGameBtn.menu-btn.secondary:hover {
-        background-color: var(--surface-layer-2);
+        background-color: rgba(var(--text-ink-rgb), 0.07);
         color: var(--text-primary);
         border-color: var(--border-strong);
+        box-shadow: var(--specular-top);
     }
 }
 
@@ -356,6 +439,12 @@
     .start-btn:active:not(:disabled) {
         transform: none;
     }
+
+    .menu-btn::before {
+        transition: none;
+        transform: none;
+        opacity: 0;
+    }
 }
 
 /* ───────────────────────── KEEPER PANELS ───────────────────────── */
@@ -364,14 +453,12 @@
 .players-section,
 .your-settings,
 .room-code-section,
-.winner-container,
-.final-score-entry,
 .checkbox-setting {
-    background: rgba(var(--text-ink-rgb), 0.03);
-    border-color: var(--border-color);
+    background: var(--surface-layer-1);
+    border-color: var(--border-default);
     box-shadow:
-        var(--shadow-soft),
-        0 0 26px rgba(var(--accent-primary-rgb), 0.06);
+        var(--specular-top),
+        var(--shadow-card);
 }
 
 .theme-toggle {

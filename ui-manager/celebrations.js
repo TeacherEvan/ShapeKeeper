@@ -455,8 +455,18 @@ export function launchFireworks(accentColor) {
 
             if (particle.life > 0) {
                 ctx.beginPath();
-                ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
+                ctx.arc(particle.x, particle.y, 4.2, 0, Math.PI * 2);
+                ctx.fillStyle = formatHexAlpha(particle.color, particle.life * 0.28);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, 2.2, 0, Math.PI * 2);
                 ctx.fillStyle = formatHexAlpha(particle.color, particle.life);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, 1, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, particle.life * 0.9)})`;
                 ctx.fill();
                 continue;
             }

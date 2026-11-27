@@ -72,6 +72,7 @@ export class WelcomeAnimation {
         this._nextParticleId = 0;
         this._neighborBuffer = [];
         this._boundListeners = [];
+        this.celestialStars = [];
         this.isPaused = false;
         this.isScreenPaused = false;
         this.isDestroyed = false;
@@ -173,7 +174,118 @@ export class WelcomeAnimation {
         }
         this.logicalWidth = window.innerWidth;
         this.logicalHeight = window.innerHeight;
+        this.initCelestialStars();
         this.initializeSpatialPartitioning();
+    }
+
+    /**
+     * Seed 48 deterministic pinprick starlight points for the celestial stage.
+     * Allocated only on init/resize so the render loop pays zero GC cost.
+     */
+    initCelestialStars() {
+        const w = this.logicalWidth || 800;
+        const h = this.logicalHeight || 600;
+        let seed = ((Math.round(w) * 73856093) ^ (Math.round(h) * 19349663)) >>> 0 || 1337;
+        const rand = () => {
+            seed = (seed * 1664525 + 1013904223) >>> 0;
+            return seed / 4294967296;
+        };
+
+        this.celestialStars = [];
+        for (let i = 0; i < 48; i++) {
+            this.celestialStars.push({
+                x: rand() * w,
+                y: rand() * h,
+                r: 0.6 + rand() * 0.9,
+                alpha: 0.08 + rand() * 0.24,
+                phase: rand() * Math.PI * 2,
+                gold: i % 5 === 0,
+            });
+        }
+    }
+
+    /**
+     * Draw subtle ambient starlight and two concentric rotating astrolabe rings
+     * centered on the stage. Uses short ticks only (<= 8px) and respects
+     * prefers-reduced-motion as well as the dimmed gameplay canvas state.
+     */
+    drawCelestialStage(ctx) {
+        const w = this.logicalWidth;
+        const h = this.logicalHeight;
+        if (!(w > 0) || !(h > 0) || !ctx) return;
+
+        const dark = this.isDarkTheme();
+        const dimScale = this.isDimmed ? 0.6 : 1;
+        const t = this.reducedMotion ? 0 : (this.lastFrameTime || 0) * 0.001;
+        const goldRgb = dark ? '245, 183, 39' : '140, 85, 0';
+        const cobaltRgb = dark ? '92, 155, 255' : '29, 78, 216';
+
+        for (let i = 0; i < this.celestialStars.length; i++) {
+            const s = this.celestialStars[i];
+            const twinkle = this.reducedMotion ? 1 : 0.72 + 0.28 * Math.sin(t * 1.4 + s.phase);
+            const a = s.alpha * twinkle * dimScale * (dark ? 1 : 0.65);
+            ctx.fillStyle = s.gold
+                ? `rgba(${goldRgb}, ${a})`
+                : dark
+                  ? `rgba(226, 232, 240, ${a})`
+                  : `rgba(${cobaltRgb}, ${a * 0.85})`;
+            ctx.beginPath?.();
+            ctx.arc?.(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fill?.();
+        }
+
+        const cx = w * 0.5;
+        const cy = h * 0.5;
+        const minDim = Math.min(w, h);
+        const rOuter = minDim * 0.44;
+        const rInner = minDim * 0.3;
+        const angle = this.reducedMotion ? 0 : (this.lastFrameTime || 0) * 0.000045;
+
+        ctx.save?.();
+        ctx.translate?.(cx, cy);
+
+        ctx.fillStyle = `rgba(${cobaltRgb}, ${(dark ? 0.035 : 0.03) * dimScale})`;
+        ctx.beginPath?.();
+        ctx.arc?.(0, 0, rInner * 1.08, 0, Math.PI * 2);
+        ctx.fill?.();
+
+        ctx.save?.();
+        ctx.rotate?.(angle);
+        ctx.setLineDash?.([3, 9]);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = `rgba(${goldRgb}, ${(dark ? 0.12 : 0.13) * dimScale})`;
+        ctx.beginPath?.();
+        ctx.arc?.(0, 0, rOuter, 0, Math.PI * 2);
+        ctx.stroke?.();
+        ctx.setLineDash?.([]);
+        ctx.restore?.();
+
+        ctx.save?.();
+        ctx.rotate?.(-angle * 1.4);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = `rgba(${cobaltRgb}, ${(dark ? 0.11 : 0.11) * dimScale})`;
+        ctx.beginPath?.();
+        ctx.arc?.(0, 0, rInner, 0, Math.PI * 2);
+        ctx.stroke?.();
+
+        for (let k = 0; k < 6; k++) {
+            const theta = (k * Math.PI) / 3;
+            const cos = Math.cos(theta);
+            const sin = Math.sin(theta);
+            ctx.strokeStyle = `rgba(${goldRgb}, ${(dark ? 0.18 : 0.16) * dimScale})`;
+            ctx.beginPath?.();
+            ctx.moveTo?.(cos * (rInner - 4), sin * (rInner - 4));
+            ctx.lineTo?.(cos * (rInner + 4), sin * (rInner + 4));
+            ctx.stroke?.();
+
+            ctx.fillStyle = `rgba(${k % 2 === 0 ? goldRgb : cobaltRgb}, ${(dark ? 0.24 : 0.22) * dimScale})`;
+            ctx.beginPath?.();
+            ctx.arc?.(cos * rInner, sin * rInner, 2.2, 0, Math.PI * 2);
+            ctx.fill?.();
+        }
+        ctx.restore?.();
+
+        ctx.restore?.();
     }
 
     clearAllParticleTrails() {
@@ -924,6 +1036,8 @@ export class WelcomeAnimation {
         if (typeof this.ctx.clearRect === 'function') {
             this.ctx.clearRect(0, 0, this.logicalWidth, this.logicalHeight);
         }
+
+        this.drawCelestialStage(this.ctx);
 
         // The sprite playground is the home screen and both side screens. On
         // the game canvas even a dimmed sprite read as a stray coloured pixel,

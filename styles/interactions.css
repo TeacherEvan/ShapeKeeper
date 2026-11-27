@@ -32,11 +32,16 @@
 .sound-btn:focus-visible,
 .populate-btn:focus-visible,
 .theme-toggle:focus-visible,
-.loading-action-btn:focus-visible,
-.name-input:focus-visible,
-.room-code-input:focus-visible {
+.loading-action-btn:focus-visible {
     outline: 3px solid var(--accent-primary);
     outline-offset: 3px;
+}
+
+.name-input:focus-visible,
+.room-code-input:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+    box-shadow: none;
 }
 
 .btn-loading {

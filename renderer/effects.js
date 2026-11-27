@@ -31,13 +31,14 @@ export function drawDynamicBackground(game) {
     );
 
     if (isDark) {
-        gradient.addColorStop(0, `hsla(${game.backgroundHue}, 95%, 50%, 0.3)`);
-        gradient.addColorStop(0.4, `hsla(${game.backgroundHue + 20}, 90%, 45%, 0.2)`);
-        gradient.addColorStop(1, `hsla(${game.backgroundHue + 40}, 85%, 38%, 0.15)`);
+        gradient.addColorStop(0, `hsla(${game.backgroundHue}, 65%, 45%, 0.10)`);
+        gradient.addColorStop(0.5, `hsla(${game.backgroundHue + 20}, 60%, 40%, 0.05)`);
+        gradient.addColorStop(1, `hsla(${game.backgroundHue + 40}, 55%, 35%, 0)`);
     } else {
-        gradient.addColorStop(0, `hsla(${game.backgroundHue}, 92%, 62%, 0.3)`);
-        gradient.addColorStop(0.4, `hsla(${game.backgroundHue + 20}, 88%, 58%, 0.2)`);
-        gradient.addColorStop(1, `hsla(${game.backgroundHue + 40}, 85%, 55%, 0.15)`);
+        const warmHue = 42 + (game.backgroundHue - 220) * 0.25;
+        gradient.addColorStop(0, `hsla(${warmHue}, 55%, 65%, 0.09)`);
+        gradient.addColorStop(0.5, `hsla(${warmHue + 12}, 50%, 60%, 0.04)`);
+        gradient.addColorStop(1, `hsla(${warmHue + 24}, 45%, 55%, 0)`);
     }
 
     game.ctx.fillStyle = gradient;
@@ -229,16 +230,30 @@ export function drawHoverPreview(game) {
     const playerColor = getPlayerColor(game, game.currentPlayer);
 
     game.ctx.save();
-    game.ctx.strokeStyle = formatHexAlpha(playerColor, 0.25);
-    game.ctx.lineWidth = GAME_CONSTANTS.LINE_WIDTH;
     game.ctx.lineCap = 'round';
-    game.ctx.setLineDash([10, 10]);
-    game.ctx.lineDashOffset = -((Date.now() / 50) % 20);
+    game.ctx.strokeStyle = formatHexAlpha(playerColor, 0.16);
+    game.ctx.lineWidth = GAME_CONSTANTS.LINE_WIDTH * 1.9;
+    game.ctx.beginPath();
+    game.ctx.moveTo(x1, y1);
+    game.ctx.lineTo(x2, y2);
+    game.ctx.stroke();
+
+    game.ctx.strokeStyle = formatHexAlpha(playerColor, 0.55);
+    game.ctx.lineWidth = GAME_CONSTANTS.LINE_WIDTH * 0.85;
+    game.ctx.setLineDash([8, 8]);
+    game.ctx.lineDashOffset = -((Date.now() / 45) % 16);
     game.ctx.beginPath();
     game.ctx.moveTo(x1, y1);
     game.ctx.lineTo(x2, y2);
     game.ctx.stroke();
     game.ctx.setLineDash([]);
+
+    // Magnetic target ring around the hovered destination dot
+    game.ctx.strokeStyle = formatHexAlpha(playerColor, 0.65);
+    game.ctx.lineWidth = 2;
+    game.ctx.beginPath();
+    game.ctx.arc(x2, y2, 9, 0, Math.PI * 2);
+    game.ctx.stroke();
     game.ctx.restore();
 }
 

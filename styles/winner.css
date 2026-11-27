@@ -24,20 +24,20 @@
     z-index: 1; /* stays above the z-index:0 fireworks canvas */
     max-width: 600px;
     margin: auto;
-    padding: 40px;
+    padding: 42px 36px;
     text-align: center;
     background-color: var(--surface-layer-1);
     background-image:
-        radial-gradient(120% 70% at 50% -12%, rgba(var(--accent-primary-rgb), 0.2), transparent 62%),
+        radial-gradient(120% 70% at 50% -12%, rgba(var(--accent-primary-rgb), 0.24), transparent 62%),
         radial-gradient(90% 65% at 50% 118%, var(--nebula-2), transparent 70%);
     border: 1px solid var(--border-default);
-    border-radius: 24px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    border-radius: 26px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     box-shadow:
         var(--specular-top),
         var(--shadow-elevated),
-        0 0 60px rgba(var(--accent-primary-rgb), 0.18);
+        0 0 72px rgba(var(--accent-primary-rgb), 0.22);
     animation: winnerAppear 280ms var(--easing-smooth);
 }
 
@@ -91,21 +91,25 @@
     letter-spacing: 0.02em;
     margin-bottom: 24px;
     color: var(--text-secondary);
-    /* `showWinner()` owns the semantic ink via an inline colour; a glow that
-     * inherits currentColor keeps that cue while giving the headline presence. */
-    text-shadow: 0 0 20px currentColor;
+    /* `showWinner()` owns the semantic ink via an inline colour; a soft glow in
+     * dark mode keeps presence without blurring crisp light-paper typography. */
+    text-shadow: 0 0 14px rgba(var(--accent-primary-rgb), 0.24);
     animation: slideUp 240ms var(--easing-smooth) 80ms both;
+}
+
+[data-theme='light'] .winner-container h2 {
+    text-shadow: none;
 }
 
 .winner-reward-note {
     font-size: 0.6em;
-    color: var(--accent-primary, #38bdf8);
+    color: var(--accent-primary, #f5b727);
 }
 
 .winner-draw-note,
 .winner-egg-note {
     font-size: 0.55em;
-    color: var(--accent-gold, #f5b727);
+    color: var(--accent-primary, #f5b727);
 }
 
 .winner-loss-heading,
@@ -133,7 +137,7 @@
 
 .winner-container .start-btn {
     animation: slideUp 240ms var(--easing-smooth) 160ms both;
-    margin: 8px;
+    margin: 6px;
 }
 
 .winner-container .start-btn:active {
@@ -209,17 +213,22 @@
 .final-score-entry.winner {
     position: relative;
     /* Brand amber, not legacy #ffd700: on Void this used to render olive. */
-    background: rgba(var(--accent-primary-rgb), 0.15);
+    background:
+        linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.2), rgba(var(--accent-primary-rgb), 0.08));
     border-color: var(--accent-primary);
     box-shadow:
         var(--specular-top),
-        0 4px 20px rgba(var(--accent-primary-rgb), 0.28);
+        0 6px 26px rgba(var(--accent-primary-rgb), 0.3);
 }
 
 .final-score-rank {
     font-size: 1.65rem;
     min-width: 44px;
     text-align: center;
+}
+
+.final-score-entry.winner .final-score-rank {
+    filter: drop-shadow(0 0 10px rgba(var(--accent-primary-rgb), 0.45));
 }
 
 .final-score-color {
@@ -238,9 +247,9 @@
 }
 
 .final-score-points {
-    font-family: var(--font-mono);
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-size: 1.85rem;
+    font-weight: 800;
     font-variant-numeric: tabular-nums;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
 }

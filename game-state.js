@@ -158,20 +158,26 @@ export class GameState {
 
         const topTimerPad =
             (FEATURE_FLAGS.FEATURE_LAVA_TIMER || this.game.isLevelsMode) && maxHeight >= 220
-                ? 38
+                ? 42
                 : 0;
         const availableHeight = Math.max(64, maxHeight - topTimerPad);
         const cellSizeWidth = Math.floor(maxWidth / (this.game.gridCols - 1));
         const cellSizeHeight = Math.floor(availableHeight / (this.game.gridRows - 1));
         const cellSize = Math.min(cellSizeWidth, cellSizeHeight);
         const maxBoardDim = Math.max(this.game.gridCols, this.game.gridRows);
-        const adaptiveMax =
-            maxBoardDim <= 5 && Math.min(maxWidth, availableHeight) >= 420
-                ? Math.max(
-                      GAME_CONSTANTS.CELL_SIZE_MAX,
-                      Math.min(116, Math.floor(Math.min(maxWidth, availableHeight) * 0.28))
-                  )
-                : GAME_CONSTANTS.CELL_SIZE_MAX;
+        const minDim = Math.min(maxWidth, availableHeight);
+        let adaptiveMax = GAME_CONSTANTS.CELL_SIZE_MAX;
+        if (maxBoardDim <= 4 && minDim >= 300) {
+            adaptiveMax = Math.max(
+                GAME_CONSTANTS.CELL_SIZE_MAX,
+                Math.min(168, Math.floor(minDim * 0.42))
+            );
+        } else if (maxBoardDim === 5 && minDim >= 340) {
+            adaptiveMax = Math.max(
+                GAME_CONSTANTS.CELL_SIZE_MAX,
+                Math.min(128, Math.floor(minDim * 0.28))
+            );
+        }
         this.game.cellSize = Math.max(
             GAME_CONSTANTS.CELL_SIZE_MIN,
             Math.min(cellSize, adaptiveMax)
@@ -242,25 +248,50 @@ export class GameState {
      * Render static dots
      */
     renderStaticDots() {
-        if (!this.game.dotsCtx) return;
+        const ctx = this.game.dotsCtx;
+        if (!ctx) return;
 
-        this.game.dotsCtx.clearRect(0, 0, this.game.dotsCanvas.width, this.game.dotsCanvas.height);
+        ctx.clearRect(0, 0, this.game.dotsCanvas.width, this.game.dotsCanvas.height);
 
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        this.game.dotsCtx.fillStyle = isDark ? '#e2e8f0' : '#475569';
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
         const dotRadius = getDotRenderRadius(this.game.cellSize, this.game.isTouchDevice);
+        const shadowColor = isDark ? 'rgba(0, 0, 0, 0.42)' : 'rgba(20, 24, 33, 0.16)';
+        const collarColor = isDark ? 'rgba(245, 183, 39, 0.24)' : 'rgba(20, 24, 33, 0.14)';
+        const coreColor = isDark ? '#f8fafc' : '#182030';
+        const glintColor = isDark ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)';
 
         for (let r = 0; r < this.game.gridRows; r++) {
             for (let c = 0; c < this.game.gridCols; c++) {
-                this.game.dotsCtx.beginPath();
-                this.game.dotsCtx.arc(
-                    this.game.offsetX + c * this.game.cellSize,
-                    this.game.offsetY + r * this.game.cellSize,
-                    dotRadius,
-                    0,
-                    Math.PI * 2
-                );
-                this.game.dotsCtx.fill();
+                const x = this.game.offsetX + c * this.game.cellSize;
+                const y = this.game.offsetY + r * this.game.cellSize;
+
+                ctx.fillStyle = shadowColor;
+                ctx.beginPath();
+                ctx.arc(x, y + 1, dotRadius + 2.1, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = collarColor;
+                ctx.beginPath();
+                ctx.arc(x, y, dotRadius + 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = coreColor;
+                ctx.beginPath();
+                ctx.arc(x, y, dotRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (dotRadius >= 3) {
+                    ctx.fillStyle = glintColor;
+                    ctx.beginPath();
+                    ctx.arc(
+                        x - dotRadius * 0.28,
+                        y - dotRadius * 0.28,
+                        Math.max(0.9, dotRadius * 0.28),
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fill();
+                }
             }
         }
     }

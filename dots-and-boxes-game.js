@@ -178,6 +178,12 @@ export class DotsAndBoxesGame {
             }
         });
 
+        this.disposables.addEventListener(window, 'shapekeeper:themeChanged', () => {
+            if (this.isDestroyed) return;
+            this.gameState.renderStaticDots();
+            this.renderer.draw();
+        });
+
         // Start the game
         this.renderer.draw();
         this.uiManager.updateUI();

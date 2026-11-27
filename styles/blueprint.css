@@ -37,7 +37,7 @@
     --ink-mark: #465c66;
 
     /* Type system */
-    --font-display: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-display: 'Oxanium', 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
     --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'Space Mono', ui-monospace, 'Courier New', monospace;
 }
@@ -168,12 +168,6 @@ body {
     box-shadow: var(--specular-top), var(--shadow-card);
 }
 
-/* Keep dynamic entry backgrounds (ready/winner) intact over the crop-mark */
-.player-entry.ready,
-.final-score-entry.winner {
-    background-color: var(--status-success-surface);
-}
-
 /* ───────────────────────── REPAINT legacy hardcoded greens → cobalt ───────────────────────── */
 .menu-btn,
 .start-btn {
@@ -220,10 +214,12 @@ body {
     accent-color: var(--accent-primary);
 }
 
-.name-input:focus,
-.room-code-input:focus {
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 4px rgba(var(--accent-primary-rgb), 0.14);
+.name-input:focus-visible,
+.room-code-input:focus-visible {
+    border-color: var(--border-strong);
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+    box-shadow: none;
 }
 
 .room-code {
@@ -272,29 +268,6 @@ input[type='color']:focus {
     box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.3);
 }
 
-/* ───────────────────────── WINNER SCREEN theme-aware ───────────────────────── */
-#winnerScreen {
-    background: linear-gradient(150deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
-}
-
-.winner-container {
-    background: var(--bg-primary);
-}
-
-.winner-container .start-btn {
-    background: linear-gradient(
-        135deg,
-        var(--accent-primary) 0%,
-        var(--accent-primary-strong) 100%
-    );
-    box-shadow: 0 4px 15px rgba(var(--accent-primary-rgb), 0.4);
-}
-
-.winner-container .start-btn:hover {
-    transform: scale(1.05) translateY(-2px);
-    box-shadow: 0 8px 25px rgba(var(--accent-primary-rgb), 0.5);
-}
-
 /* ───────────────────────── MOBILE-FIRST GAME LAYOUT ─────────────────────────
    Game header → horizontal snap-rail of player chips.
    Game footer → turn pill + thumb-scrollable action bar, safe-area aware. */
@@ -337,17 +310,20 @@ input[type='color']:focus {
     }
 
     .game-footer {
-        display: block;
-        padding: 6px 10px calc(6px + env(safe-area-inset-bottom));
-        gap: 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+        gap: 8px;
     }
 
     .turn-indicator {
-        flex: 0 0 auto;
+        flex: 1 1 100%;
         width: 100%;
         text-align: center;
         font-size: 0.82rem;
-        margin-bottom: 6px;
+        margin-bottom: 0;
         padding: 6px 12px;
         background: var(--bg-tertiary);
         border-radius: 999px;

@@ -22,7 +22,7 @@
     transition:
         transform 0.3s ease,
         opacity 0.3s ease;
-    animation: toastSlideIn 0.3s var(--easing-bounce);
+    animation: toastSlideIn 0.3s var(--easing-spring);
 }
 
 .toast-notification.show {

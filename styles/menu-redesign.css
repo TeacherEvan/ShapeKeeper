@@ -20,33 +20,47 @@
         radial-gradient(42% 38% at 90% 82%, var(--nebula-3), transparent 76%);
 }
 
-/* ── HOME: chapter eyebrow above the supplied promo plate ────────────────── */
+/* ── HOME: theme toggle pinned to viewport corner & editorial hero frame ──── */
+#mainMenuScreen .welcome-container {
+    position: static;
+}
+
+#mainMenuScreen .theme-toggle {
+    top: max(16px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+}
+
 #mainMenuScreen .brand-plate-frame {
     position: relative;
-    margin: 0 auto 4px;
+    width: fit-content;
+    margin: 0 auto 10px;
 }
 
 #mainMenuScreen .brand-plate-frame::before {
-    content: 'THE SHAPE KEEPER  ·  CHAPTER I';
+    content: '◆  THE SHAPE KEEPER  ·  CHAPTER I  ◆';
     position: absolute;
-    top: -18px;
+    top: -30px;
     left: 50%;
     transform: translateX(-50%);
     white-space: nowrap;
     font-family: var(--font-mono);
     font-size: 0.68rem;
     font-weight: 700;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.2em;
     color: var(--text-tertiary);
 }
 
 #mainMenuScreen .brand-plate-frame::after {
     content: '';
     position: absolute;
-    inset: -14px -18px;
+    inset: -10px;
     z-index: -1;
-    border: 1px solid rgba(var(--accent-primary-rgb), 0.2);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.28);
     border-radius: 26px;
+    background:
+        radial-gradient(80% 60% at 20% 0%, rgba(var(--accent-primary-rgb), 0.14), transparent 70%),
+        radial-gradient(80% 60% at 85% 100%, rgba(var(--accent-secondary-rgb), 0.14), transparent 70%);
+    box-shadow: inset 0 0 0 1px rgba(var(--accent-secondary-rgb), 0.12);
     pointer-events: none;
 }
 
@@ -56,7 +70,7 @@
     align-items: center;
     justify-content: center;
     gap: 12px;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
 }
 
 #mainMenuScreen .credit::before,
@@ -77,13 +91,13 @@
 }
 
 #mainMenuScreen .menu-options::before {
-    content: 'CHOOSE YOUR PATH';
+    content: '◆ CHOOSE YOUR PATH';
     display: block;
-    margin: 0 0 2px 2px;
+    margin: 0 0 4px 2px;
     font-family: var(--font-mono);
     font-size: 0.7rem;
     font-weight: 700;
-    letter-spacing: 0.24em;
+    letter-spacing: 0.22em;
     color: var(--accent-primary);
 }
 
@@ -116,15 +130,16 @@
 @media (min-width: 900px) {
     #mainMenuScreen .welcome-container {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 430px);
         grid-template-rows: auto auto auto;
         grid-template-areas:
             'plate cta'
-            'title cta'
+            'title local'
             'credit local';
         align-content: center;
         align-items: center;
-        column-gap: clamp(36px, 7vw, 100px);
+        column-gap: clamp(40px, 6vw, 88px);
+        row-gap: 14px;
         max-width: 1120px;
         padding: 0 clamp(24px, 5vw, 72px);
         text-align: left;
@@ -132,7 +147,9 @@
 
     #mainMenuScreen .brand-plate-frame {
         grid-area: plate;
-        width: 100%;
+        justify-content: flex-start;
+        width: fit-content;
+        margin: 0 0 6px;
     }
 
     #mainMenuScreen .brand-plate {
@@ -142,31 +159,68 @@
     #mainMenuScreen h1 {
         grid-area: title;
         justify-content: flex-start;
-        font-size: clamp(3rem, 5.2vw, 5rem);
+        flex-wrap: wrap;
+        font-size: clamp(2.3rem, 3.6vw, 3.4rem);
+        margin-bottom: 0;
+    }
+
+    #mainMenuScreen .wordmark-shape,
+    #mainMenuScreen .wordmark-keeper {
+        white-space: nowrap;
+    }
+
+    #mainMenuScreen h1::after {
+        background-position: left center;
+        margin-top: 10px;
     }
 
     #mainMenuScreen .credit {
         grid-area: credit;
         justify-content: flex-start;
-        margin-bottom: 0;
+        margin: 0;
+    }
+
+    #mainMenuScreen .credit::before {
+        width: 24px;
+    }
+
+    #mainMenuScreen .credit::after {
+        display: none;
     }
 
     #mainMenuScreen .menu-options {
         grid-area: cta;
-        align-self: center;
-        justify-self: end;
+        align-self: end;
+        justify-self: stretch;
         width: 100%;
-        max-width: 460px;
+        max-width: 430px;
         margin-top: 0;
+        padding: 24px 22px 22px;
+        border-radius: 24px;
+        background: linear-gradient(
+            165deg,
+            rgba(var(--text-ink-rgb), 0.055),
+            rgba(var(--text-ink-rgb), 0.015)
+        );
+        border: 1px solid var(--border-default);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow:
+            var(--specular-top),
+            var(--shadow-elevated),
+            0 0 48px rgba(var(--accent-secondary-rgb), 0.1);
     }
 
     #mainMenuScreen .menu-tertiary-btn {
         grid-area: local;
         align-self: start;
-        justify-self: end;
+        justify-self: stretch;
         width: 100%;
-        max-width: 460px;
+        max-width: 430px;
         margin-top: 0;
+        background: rgba(var(--text-ink-rgb), 0.035);
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--specular-top);
     }
 
     #mainMenuScreen .brand-plate-frame::before {
@@ -217,12 +271,80 @@
 
 .levels-grid {
     counter-reset: chapter;
-    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
     gap: 10px;
+    max-height: clamp(320px, 58vh, 600px);
+    padding: 16px 16px 36px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--accent-primary-rgb), 0.35) transparent;
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        #000 0,
+        #000 calc(100% - 20px),
+        transparent 100%
+    );
+    mask-image: linear-gradient(
+        to bottom,
+        #000 0,
+        #000 calc(100% - 20px),
+        transparent 100%
+    );
+}
+
+.levels-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.levels-grid::-webkit-scrollbar-thumb {
+    background: rgba(var(--accent-primary-rgb), 0.35);
+    border-radius: 999px;
+}
+
+.levels-status-banner {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    gap: 8px;
 }
 
 .levels-status-banner > span {
     font-variant-numeric: tabular-nums;
+    padding: 6px 14px;
+    background: var(--surface-layer-1);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--specular-top), var(--shadow-card);
+}
+
+/* Star-Atlas Chapter accents (Tier 1..5) */
+[data-tier='1'],
+[data-tier='5'] {
+    --tier-accent: var(--accent-primary);
+    --tier-accent-rgb: var(--accent-primary-rgb);
+}
+
+[data-tier='2'] {
+    --tier-accent: var(--accent-secondary);
+    --tier-accent-rgb: var(--accent-secondary-rgb);
+}
+
+[data-tier='3'] {
+    --tier-accent: var(--accent-success);
+    --tier-accent-rgb: 4, 120, 87;
+}
+
+[data-theme='dark'] [data-tier='3'] {
+    --tier-accent-rgb: 52, 211, 153;
+}
+
+[data-tier='4'] {
+    --tier-accent: #6d28d9;
+    --tier-accent-rgb: 109, 40, 217;
+}
+
+[data-theme='dark'] [data-tier='4'] {
+    --tier-accent: #a78bfa;
+    --tier-accent-rgb: 167, 139, 250;
 }
 
 .level-tier-header {
@@ -231,9 +353,10 @@
     align-items: center;
     gap: 12px;
     font-family: var(--font-display);
-    font-size: 0.95rem;
+    font-size: 0.96rem;
     letter-spacing: 0.08em;
-    padding: 4px 2px 10px;
+    color: var(--tier-accent, var(--accent-primary));
+    padding: 6px 2px 10px;
 }
 
 .level-tier-header::before {
@@ -248,9 +371,9 @@
     font-family: var(--font-mono);
     font-size: 0.78rem;
     font-weight: 700;
-    color: var(--accent-primary);
-    background: rgba(var(--accent-primary-rgb), 0.16);
-    border: 1px solid rgba(var(--accent-primary-rgb), 0.36);
+    color: var(--tier-accent, var(--accent-primary));
+    background: rgba(var(--tier-accent-rgb, var(--accent-primary-rgb)), 0.16);
+    border: 1px solid rgba(var(--tier-accent-rgb, var(--accent-primary-rgb)), 0.38);
     box-shadow: var(--specular-top);
 }
 
@@ -258,13 +381,18 @@
     content: '';
     flex: 1 1 auto;
     height: 1px;
-    background: linear-gradient(90deg, var(--border-default), transparent);
+    background: linear-gradient(
+        90deg,
+        rgba(var(--tier-accent-rgb, var(--accent-primary-rgb)), 0.4),
+        transparent
+    );
 }
 
 .level-btn {
     min-height: 88px;
     border-radius: 16px;
     box-shadow: var(--specular-top), var(--shadow-card);
+    gap: 4px;
 }
 
 .level-btn .level-num,
@@ -273,15 +401,34 @@
 }
 
 .level-btn .level-num {
-    font-size: 0.9rem;
-    letter-spacing: 0.01em;
+    font-family: var(--font-display);
+    font-size: 0.94rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.level-btn .level-grid-label {
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(var(--text-ink-rgb), 0.06);
+    font-size: 0.68rem;
+    white-space: nowrap;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .level-btn.unlocked:hover {
+        border-color: var(--tier-accent, var(--accent-primary));
+        box-shadow:
+            var(--specular-top),
+            0 8px 20px rgba(var(--tier-accent-rgb, var(--accent-primary-rgb)), 0.24);
+    }
 }
 
 .level-btn.completed {
-    border-color: rgba(var(--accent-primary-rgb), 0.5);
+    border-color: rgba(var(--accent-primary-rgb), 0.52);
     background: linear-gradient(
         160deg,
-        rgba(var(--accent-primary-rgb), 0.18),
+        rgba(var(--accent-primary-rgb), 0.2),
         rgba(var(--accent-primary-rgb), 0.06)
     );
 }
@@ -291,40 +438,145 @@
     text-shadow: 0 0 12px rgba(var(--accent-primary-rgb), 0.5);
 }
 
-.level-btn.unlocked::before {
+.level-btn.has-mines {
+    border-color: rgba(var(--accent-danger-rgb), 0.38);
+}
+
+.level-btn.current {
+    border-color: rgba(var(--accent-secondary-rgb), 0.68);
+    background:
+        radial-gradient(
+            120% 90% at 50% 0%,
+            rgba(var(--accent-secondary-rgb), 0.22),
+            transparent 70%
+        ),
+        var(--surface-layer-2);
+    box-shadow:
+        var(--specular-top),
+        0 6px 22px rgba(var(--accent-secondary-rgb), 0.25);
+}
+
+.level-btn.current::before {
     content: '';
     position: absolute;
     left: 9px;
     top: 50%;
     width: 4px;
-    height: 18px;
+    height: 20px;
     border-radius: 2px;
     background: var(--accent-secondary);
+    box-shadow: 0 0 10px rgba(var(--accent-secondary-rgb), 0.7);
     transform: translateY(-50%);
-    opacity: 0.75;
 }
 
-/* On narrow screens the eyebrow would run under the theme toggle. */
+.level-btn.level-100 {
+    border-color: rgba(var(--accent-primary-rgb), 0.65);
+    background:
+        radial-gradient(
+            120% 90% at 15% 0%,
+            rgba(var(--accent-primary-rgb), 0.2),
+            transparent 65%
+        ),
+        radial-gradient(
+            120% 90% at 85% 100%,
+            rgba(var(--accent-secondary-rgb), 0.18),
+            transparent 65%
+        ),
+        var(--surface-layer-2);
+}
+
+@media (min-width: 520px) {
+    .level-btn.level-100 {
+        grid-column: 1 / -1;
+        min-height: 76px;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 14px 24px;
+    }
+
+    .level-btn.level-100 .level-num {
+        font-size: 1.05rem;
+        margin-bottom: 0;
+    }
+
+    .level-btn.level-100 .level-status-icon {
+        margin-top: 0;
+        font-size: 1.15rem;
+    }
+}
+
+/* On narrow screens keep the stack compact above the pager dots and clear of the theme toggle. */
 @media (max-width: 899px) {
     #mainMenuScreen .brand-plate-frame::before {
         display: none;
+    }
+
+    #mainMenuScreen .welcome-container {
+        padding: 64px 20px 84px;
+    }
+
+    #mainMenuScreen .brand-plate-frame {
+        margin: 0 auto 10px;
+    }
+
+    #mainMenuScreen .brand-plate {
+        width: min(88%, 312px);
+    }
+
+    #mainMenuScreen h1 {
+        font-size: clamp(1.95rem, 8.5vw, 2.5rem);
+        margin-bottom: 4px;
+    }
+
+    #mainMenuScreen .credit {
+        margin-bottom: 18px;
+        font-size: 0.88rem;
+    }
+
+    #mainMenuScreen .menu-options {
+        margin-top: 0;
+        gap: 10px;
+        width: 100%;
+        max-width: 22rem;
+        margin-inline: auto;
+    }
+
+    #mainMenuScreen .menu-btn {
+        min-height: 48px;
+        padding: 12px 44px 12px 24px;
+        font-size: 1rem;
+    }
+
+    #mainMenuScreen .menu-tertiary-btn {
+        margin-top: 10px;
+        width: 100%;
+        max-width: 22rem;
+        align-self: center;
     }
 }
 
 /* Landscape phones hide the plate (see cosmic-identity.css); compact the
  * remaining stack so LOCAL PLAY clears the pager rail at the bottom. */
 @media (max-height: 520px) and (orientation: landscape) {
+    #mainMenuScreen .welcome-container {
+        padding: 12px 24px 68px;
+    }
+
     #mainMenuScreen h1 {
-        font-size: 2.4rem;
+        font-size: 2.3rem;
         margin-bottom: 4px;
     }
 
     #mainMenuScreen .credit {
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
 
     #mainMenuScreen .menu-options {
-        margin-top: 12px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: none;
+        margin-top: 10px;
         gap: 10px;
     }
 
@@ -332,8 +584,13 @@
         display: none;
     }
 
+    #mainMenuScreen .menu-btn {
+        width: auto;
+        min-width: 180px;
+    }
+
     #mainMenuScreen .menu-tertiary-btn {
-        margin-top: 6px;
+        margin-top: 8px;
     }
 }
 

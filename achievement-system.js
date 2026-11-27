@@ -4,7 +4,7 @@ const ACHIEVEMENT_STORAGE_VERSION = 1;
 const ACHIEVEMENT_DEFINITIONS = [
     {
         id: 'first_square',
-        icon: '⬜',
+        icon: '💎',
         title: 'First Claim',
         description: 'Complete your first square in local play.',
     },

@@ -42,7 +42,10 @@ export function drawBoardFrame(game) {
     }
 
     const dark = isDarkTheme();
-    const pad = Math.min(GAME_CONSTANTS.GRID_OFFSET - 2, Math.max(12, game.cellSize * 0.22));
+    const pad = Math.min(
+        Math.max(8, GAME_CONSTANTS.GRID_OFFSET - 7),
+        Math.max(10, game.cellSize * 0.18)
+    );
     const boardW = (game.gridCols - 1) * game.cellSize;
     const boardH = (game.gridRows - 1) * game.cellSize;
     const x = game.offsetX - pad;
@@ -51,12 +54,84 @@ export function drawBoardFrame(game) {
     const h = boardH + pad * 2;
 
     ctx.save();
+    // Soft ambient under-glow behind the sculpted board slate
+    if (typeof ctx.createRadialGradient === 'function') {
+        const gcx = x + w / 2;
+        const gcy = y + h / 2;
+        const glow = ctx.createRadialGradient(
+            gcx,
+            gcy,
+            Math.min(w, h) * 0.2,
+            gcx,
+            gcy,
+            Math.max(w, h) * 0.85
+        );
+        glow.addColorStop(0, dark ? 'rgba(92, 155, 255, 0.08)' : 'rgba(140, 85, 0, 0.05)');
+        glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(x - 24, y - 24, w + 48, h + 48);
+    }
+
+    // Ground contact shadow
     ctx.beginPath();
-    ctx.roundRect(x, y, w, h, 18);
-    ctx.fillStyle = dark ? 'rgba(10, 16, 31, 0.72)' : 'rgba(250, 250, 254, 0.78)';
+    ctx.roundRect(x - 4, y + 1, w + 8, h + 8, 20);
+    ctx.fillStyle = dark ? 'rgba(0, 0, 0, 0.36)' : 'rgba(20, 24, 33, 0.09)';
+    ctx.fill();
+
+    // Chamfered outer relic bezel (stays strictly inside [3, logicalWidth - 3])
+    ctx.beginPath();
+    ctx.roundRect(x - 4, y - 4, w + 8, h + 8, 20);
+    ctx.fillStyle = dark ? 'rgba(11, 15, 24, 0.92)' : 'rgba(235, 229, 216, 0.86)';
     ctx.fill();
     ctx.lineWidth = 1;
-    ctx.strokeStyle = dark ? 'rgba(232, 244, 255, 0.12)' : 'rgba(19, 26, 46, 0.12)';
+    ctx.strokeStyle = dark ? 'rgba(245, 183, 39, 0.24)' : 'rgba(140, 85, 0, 0.22)';
+    ctx.stroke();
+
+    // Four burnished-gold architectural corner brackets (13px L-ticks)
+    const bx1 = x - 4;
+    const by1 = y - 4;
+    const bx2 = x + w + 4;
+    const by2 = y + h + 4;
+    const arm = 13;
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = dark ? 'rgba(245, 183, 39, 0.52)' : 'rgba(140, 85, 0, 0.44)';
+    ctx.beginPath();
+    ctx.moveTo(bx1 + 6, by1 + arm + 6);
+    ctx.lineTo(bx1 + 6, by1 + 6);
+    ctx.lineTo(bx1 + arm + 6, by1 + 6);
+    ctx.moveTo(bx2 - arm - 6, by1 + 6);
+    ctx.lineTo(bx2 - 6, by1 + 6);
+    ctx.lineTo(bx2 - 6, by1 + arm + 6);
+    ctx.moveTo(bx1 + 6, by2 - arm - 6);
+    ctx.lineTo(bx1 + 6, by2 - 6);
+    ctx.lineTo(bx1 + arm + 6, by2 - 6);
+    ctx.moveTo(bx2 - arm - 6, by2 - 6);
+    ctx.lineTo(bx2 - 6, by2 - 6);
+    ctx.lineTo(bx2 - 6, by2 - arm - 6);
+    ctx.stroke();
+
+    // Recessed inner playing basin
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 18);
+    if (typeof ctx.createLinearGradient === 'function') {
+        const basinGrad = ctx.createLinearGradient(x, y, x, y + h);
+        basinGrad.addColorStop(0, dark ? 'rgba(19, 27, 44, 0.94)' : 'rgba(255, 254, 251, 0.96)');
+        basinGrad.addColorStop(1, dark ? 'rgba(13, 19, 32, 0.94)' : 'rgba(245, 241, 231, 0.95)');
+        ctx.fillStyle = basinGrad;
+    } else {
+        ctx.fillStyle = dark ? 'rgba(17, 23, 36, 0.92)' : 'rgba(255, 253, 249, 0.95)';
+    }
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = dark ? 'rgba(246, 243, 235, 0.14)' : 'rgba(20, 24, 33, 0.14)';
+    ctx.stroke();
+
+    // Subtle specular top lip on the recessed basin
+    ctx.beginPath();
+    ctx.moveTo(x + 18, y + 1);
+    ctx.lineTo(x + w - 18, y + 1);
+    ctx.strokeStyle = dark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(255, 255, 255, 0.95)';
     ctx.stroke();
     ctx.restore();
 }
@@ -94,12 +169,20 @@ export function drawLines(game) {
             game.ctx.globalAlpha = GAME_CONSTANTS.GHOST_LINE_OPACITY;
             game.ctx.setLineDash([5, 5]);
         } else {
-            // Soft outer halo pass (no shadowBlur loop)
+            // 4-pass jewel filament stroke (no shadowBlur loop):
+            // 1) ambient bleed -> 2) luminous halo -> 3) body -> 4) specular core
             game.ctx.save();
-            game.ctx.globalAlpha = 0.3;
-            game.ctx.strokeStyle = lineColor;
-            game.ctx.lineWidth = coreWidth * 1.9;
             game.ctx.lineCap = 'round';
+            game.ctx.strokeStyle = lineColor;
+            game.ctx.globalAlpha = dark ? 0.14 : 0.1;
+            game.ctx.lineWidth = coreWidth * 2.5;
+            game.ctx.beginPath();
+            game.ctx.moveTo(x1, y1);
+            game.ctx.lineTo(x2, y2);
+            game.ctx.stroke();
+
+            game.ctx.globalAlpha = dark ? 0.34 : 0.24;
+            game.ctx.lineWidth = coreWidth * 1.55;
             game.ctx.beginPath();
             game.ctx.moveTo(x1, y1);
             game.ctx.lineTo(x2, y2);
@@ -116,16 +199,14 @@ export function drawLines(game) {
         game.ctx.stroke();
 
         if (!isGhostLine) {
-            // Hairline specular along the upper edge of the stroke: a jewel,
-            // not a flat 4px plastic strip. Three cheap passes, no shadowBlur.
             game.ctx.save();
-            game.ctx.globalAlpha = dark ? 0.26 : 0.4;
+            game.ctx.globalAlpha = dark ? 0.44 : 0.56;
             game.ctx.strokeStyle = '#ffffff';
-            game.ctx.lineWidth = Math.max(1, coreWidth * 0.2);
+            game.ctx.lineWidth = Math.max(1.2, coreWidth * 0.32);
             game.ctx.lineCap = 'round';
             game.ctx.beginPath();
-            game.ctx.moveTo(x1, y1 - coreWidth * 0.18);
-            game.ctx.lineTo(x2, y2 - coreWidth * 0.18);
+            game.ctx.moveTo(x1, y1 - coreWidth * 0.14);
+            game.ctx.lineTo(x2, y2 - coreWidth * 0.14);
             game.ctx.stroke();
             game.ctx.restore();
         }
@@ -139,6 +220,8 @@ export function drawLines(game) {
 
 export function drawLineAnimations(game) {
     const now = Date.now();
+    const dark = isDarkTheme();
+    const coreWidth = GAME_CONSTANTS.LINE_WIDTH;
 
     game.lineDrawings.forEach((animation) => {
         const age = now - animation.startTime;
@@ -146,15 +229,46 @@ export function drawLineAnimations(game) {
         const easedProgress = easeOutQuad(progress);
         const currentEndX = lerp(animation.startDot.x, animation.endDot.x, easedProgress);
         const currentEndY = lerp(animation.startDot.y, animation.endDot.y, easedProgress);
-        const player = animation.player;
+        const lineColor = getPlayerColor(game, animation.player);
 
-        game.ctx.strokeStyle = getPlayerColor(game, player);
-        game.ctx.lineWidth = GAME_CONSTANTS.LINE_WIDTH;
+        game.ctx.save();
         game.ctx.lineCap = 'round';
+        game.ctx.strokeStyle = lineColor;
+        game.ctx.globalAlpha = dark ? 0.32 : 0.22;
+        game.ctx.lineWidth = coreWidth * 1.6;
         game.ctx.beginPath();
         game.ctx.moveTo(animation.startDot.x, animation.startDot.y);
         game.ctx.lineTo(currentEndX, currentEndY);
         game.ctx.stroke();
+
+        game.ctx.globalAlpha = 1;
+        game.ctx.lineWidth = coreWidth;
+        game.ctx.beginPath();
+        game.ctx.moveTo(animation.startDot.x, animation.startDot.y);
+        game.ctx.lineTo(currentEndX, currentEndY);
+        game.ctx.stroke();
+
+        game.ctx.globalAlpha = dark ? 0.48 : 0.58;
+        game.ctx.strokeStyle = '#ffffff';
+        game.ctx.lineWidth = Math.max(1.2, coreWidth * 0.3);
+        game.ctx.beginPath();
+        game.ctx.moveTo(animation.startDot.x, animation.startDot.y - coreWidth * 0.14);
+        game.ctx.lineTo(currentEndX, currentEndY - coreWidth * 0.14);
+        game.ctx.stroke();
+
+        // Blazing comet-tip orb at the active drawing head
+        game.ctx.globalAlpha = 0.45;
+        game.ctx.fillStyle = lineColor;
+        game.ctx.beginPath();
+        game.ctx.arc(currentEndX, currentEndY, coreWidth * 1.45, 0, Math.PI * 2);
+        game.ctx.fill();
+
+        game.ctx.globalAlpha = 0.95;
+        game.ctx.fillStyle = '#ffffff';
+        game.ctx.beginPath();
+        game.ctx.arc(currentEndX, currentEndY, coreWidth * 0.52, 0, Math.PI * 2);
+        game.ctx.fill();
+        game.ctx.restore();
     });
 }
 
@@ -200,19 +314,54 @@ export function drawSquares(game) {
         const color = getPlayerColor(game, player);
 
         if (typeof game.ctx.beginPath === 'function' && typeof game.ctx.roundRect === 'function') {
+            const tx = x + inset;
+            const ty = y + inset;
             game.ctx.save();
             game.ctx.beginPath();
-            game.ctx.roundRect(x + inset, y + inset, tileSize, tileSize, radius);
-            game.ctx.fillStyle = formatHexAlpha(color, dark ? 0.22 : 0.18);
+            game.ctx.roundRect(tx, ty, tileSize, tileSize, radius);
+
+            if (typeof game.ctx.createLinearGradient === 'function') {
+                const tileGrad = game.ctx.createLinearGradient(
+                    tx,
+                    ty,
+                    tx + tileSize,
+                    ty + tileSize
+                );
+                tileGrad.addColorStop(0, formatHexAlpha(color, dark ? 0.34 : 0.24));
+                tileGrad.addColorStop(0.5, formatHexAlpha(color, dark ? 0.22 : 0.15));
+                tileGrad.addColorStop(1, formatHexAlpha(color, dark ? 0.11 : 0.1));
+                game.ctx.fillStyle = tileGrad;
+            } else {
+                game.ctx.fillStyle = formatHexAlpha(color, dark ? 0.24 : 0.18);
+            }
             game.ctx.fill();
-            game.ctx.lineWidth = 1;
-            game.ctx.strokeStyle = formatHexAlpha(color, dark ? 0.48 : 0.4);
-            game.ctx.stroke();
-            // Top-edge inset sheen gives the claimed tile a tactile lip.
-            game.ctx.strokeStyle = formatHexAlpha('#ffffff', dark ? 0.16 : 0.5);
+
+            // Faceted crystal corner glint clipped inside the rounded stained-glass tile
+            if (typeof game.ctx.clip === 'function') {
+                game.ctx.save();
+                game.ctx.clip();
+                game.ctx.beginPath();
+                game.ctx.moveTo(tx, ty);
+                game.ctx.lineTo(tx + tileSize * 0.65, ty);
+                game.ctx.lineTo(tx, ty + tileSize * 0.65);
+                game.ctx.closePath();
+                game.ctx.fillStyle = formatHexAlpha('#ffffff', dark ? 0.08 : 0.28);
+                game.ctx.fill();
+                game.ctx.restore();
+            }
+
             game.ctx.beginPath();
-            game.ctx.moveTo(x + inset + radius, y + inset + 1);
-            game.ctx.lineTo(x + inset + tileSize - radius, y + inset + 1);
+            game.ctx.roundRect(tx, ty, tileSize, tileSize, radius);
+            game.ctx.lineWidth = 1.5;
+            game.ctx.strokeStyle = formatHexAlpha(color, dark ? 0.68 : 0.54);
+            game.ctx.stroke();
+
+            // Top-edge specular sheen gives the claimed tile a tactile lip.
+            game.ctx.lineWidth = 1;
+            game.ctx.strokeStyle = formatHexAlpha('#ffffff', dark ? 0.24 : 0.62);
+            game.ctx.beginPath();
+            game.ctx.moveTo(tx + radius, ty + 1);
+            game.ctx.lineTo(tx + tileSize - radius, ty + 1);
             game.ctx.stroke();
             game.ctx.restore();
         } else {
@@ -260,13 +409,32 @@ export function drawSquaresWithAnimations(game) {
 
         const multiplierData = game.squareMultipliers?.[squareKey];
         const isMine = game.revealedMultipliers?.has(squareKey) && isMineMultiplier(multiplierData);
+        const cx = x + game.cellSize / 2;
+        const cy = y + game.cellSize / 2;
+
+        if (
+            typeof game.ctx.beginPath === 'function' &&
+            typeof game.ctx.arc === 'function' &&
+            game.cellSize >= 26
+        ) {
+            const crestR = Math.max(10, Math.min(26, game.cellSize * 0.23));
+            game.ctx.save();
+            game.ctx.beginPath();
+            game.ctx.arc(cx, cy, crestR, 0, Math.PI * 2);
+            game.ctx.fillStyle = dark ? 'rgba(11, 14, 20, 0.58)' : 'rgba(255, 253, 249, 0.84)';
+            game.ctx.fill();
+            game.ctx.lineWidth = 1.25;
+            game.ctx.strokeStyle = isMine ? '#ff6b7a' : formatHexAlpha(color, dark ? 0.72 : 0.58);
+            game.ctx.stroke();
+            game.ctx.restore();
+        }
 
         game.ctx.fillStyle = color;
-        // Single crisp owner numeral pass in Space Grotesk (fixes double-drawn ghosted Arial).
-        game.ctx.font = `700 ${Math.max(10, Math.round(game.cellSize * (isMine ? 0.28 : 0.36)))}px "Space Grotesk", sans-serif`;
+        // Single crisp owner numeral pass in Oxanium
+        game.ctx.font = `800 ${Math.max(10, Math.round(game.cellSize * (isMine ? 0.26 : 0.34)))}px "Oxanium", "Space Grotesk", sans-serif`;
         game.ctx.textAlign = 'center';
         game.ctx.textBaseline = 'middle';
-        game.ctx.fillText(String(player), x + game.cellSize / 2, y + game.cellSize / 2);
+        game.ctx.fillText(String(player), cx, cy);
 
         if (isMine) {
             // A fired mine keeps a permanent 💣 so the box reads as

@@ -7,7 +7,7 @@
     <link rel="icon" href="assets/branding/shape-keeper-mark.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@600;700;800&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { color-scheme: dark; }
         body {
@@ -27,11 +27,24 @@
         }
         .back:hover { color: #f5b727; }
         main {
+            position: relative;
+            overflow: hidden;
             padding: 32px; border-radius: 20px;
             background: #131822; border: 1px solid rgba(246, 243, 235, 0.14);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 24px 60px rgba(0, 0, 0, 0.55);
         }
-        h1 { margin: 0 0 8px; font-size: 1.6rem; letter-spacing: -0.02em; }
+        main::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 14%;
+            right: 14%;
+            height: 3px;
+            border-radius: 0 0 3px 3px;
+            background: linear-gradient(90deg, transparent, #f5b727, #5c9bff, #f5b727, transparent);
+            pointer-events: none;
+        }
+        h1 { margin: 0 0 8px; font-family: "Oxanium", "Space Grotesk", sans-serif; font-size: 1.6rem; letter-spacing: 0.03em; }
         p.lead { margin: 0 0 24px; color: #b9c2d1; }
         label { display: block; margin-bottom: 6px; font-weight: 600; }
         input[type=email] {

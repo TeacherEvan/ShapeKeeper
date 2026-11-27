@@ -212,8 +212,6 @@
         border-color var(--transition-medium) var(--easing-smooth);
 }
 
-.lobby-settings:hover,
-.your-settings:hover,
 .player-entry:hover {
     box-shadow: var(--shadow-medium);
     transform: translateY(-2px);

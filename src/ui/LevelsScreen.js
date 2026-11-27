@@ -137,9 +137,11 @@ export function renderLevelsGrid(deps) {
         cta.hidden = false;
     }
 
-    for (const tier of TIERS) {
+    for (const [tierIndex, tier] of TIERS.entries()) {
+        const tierNum = String(tierIndex + 1);
         const tierHeader = document.createElement('div');
         tierHeader.className = 'level-tier-header';
+        tierHeader.dataset.tier = tierNum;
         tierHeader.textContent = tier.label;
         container.appendChild(tierHeader);
 
@@ -155,6 +157,13 @@ export function renderLevelsGrid(deps) {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = `level-btn ${isCompleted ? 'completed' : isUnlocked ? 'unlocked' : 'locked'}`;
+            btn.dataset.tier = tierNum;
+            if (lvl === state.unlockedLevel && isUnlocked && !isCompleted) {
+                btn.classList.add('current');
+            }
+            if (mineCount > 0) {
+                btn.classList.add('has-mines');
+            }
             if (lvl === 100) {
                 btn.classList.add('level-100');
             }

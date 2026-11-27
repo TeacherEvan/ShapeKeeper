@@ -21,17 +21,53 @@
 .setting-row > input[type='checkbox'] {
     flex: 0 0 auto;
     align-self: center;
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-grid;
+    place-items: center;
     width: 24px;
     height: 24px;
     min-width: 24px;
     margin: 0;
+    border-radius: 7px;
+    border: 1.5px solid var(--border-strong);
+    background: var(--surface-layer-2);
+    box-shadow: var(--specular-top);
     accent-color: var(--accent-primary);
     cursor: pointer;
+    transition:
+        transform var(--transition-fast) var(--easing-smooth),
+        background-color var(--transition-fast) var(--easing-smooth),
+        border-color var(--transition-fast) var(--easing-smooth);
+}
+
+.setting-row > input[type='checkbox']::after {
+    content: '';
+    width: 6px;
+    height: 11px;
+    border: solid var(--text-inverse);
+    border-width: 0 2.5px 2.5px 0;
+    transform: rotate(45deg) translate(-1px, -1px) scale(0);
     transition: transform var(--transition-fast) var(--easing-smooth);
 }
 
-.setting-row > input[type='checkbox']:hover {
+.setting-row > input[type='checkbox']:checked {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.setting-row > input[type='checkbox']:checked::after {
+    transform: rotate(45deg) translate(-1px, -1px) scale(1);
+}
+
+.setting-row > input[type='checkbox']:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.setting-row > input[type='checkbox']:hover:not(:disabled) {
     transform: scale(1.06);
+    border-color: var(--accent-primary);
 }
 
 .setting-row > input[type='checkbox']:focus-visible {
@@ -40,19 +76,126 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .setting-row > input[type='checkbox']:hover {
+    .setting-row > input[type='checkbox']:hover:not(:disabled) {
         transform: none;
     }
 }
 
-/* ── Colour wells: a jewelled swatch inside an inset plate ───────────────── */
+/* ── Select controls & Local Play / Lobby Browser cards ─────────────────── */
+select.name-input {
+    background-color: var(--surface-layer-2);
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    box-shadow: var(--specular-top);
+    cursor: pointer;
+}
+
+#localSetupScreen .welcome-container {
+    max-width: 52rem;
+    padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+#localSetupScreen .credit {
+    margin-bottom: 12px;
+}
+
+#localSetupScreen .setup-section,
+#lobbyBrowserScreen .setup-section {
+    background: var(--surface-layer-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin: 0;
+    box-shadow: var(--specular-top), var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+#lobbyBrowserScreen .setup-section {
+    margin: 14px 0;
+}
+
+#localSetupScreen .setup-section:nth-of-type(4) {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 2px 0;
+}
+
+#localSetupScreen .start-btn.secondary {
+    margin-top: 0;
+}
+
+#localSetupScreen .setup-section h2 {
+    margin-bottom: 4px;
+}
+
+#localSetupScreen .setup-section .field-label {
+    margin-bottom: 2px;
+}
+
+#localSetupScreen .setup-section .setting-row {
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0;
+    width: 100%;
+}
+
+#localSetupScreen .setting-hint {
+    max-width: 34ch;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: var(--text-tertiary);
+}
+
+#localSetupScreen .button-row {
+    margin-top: 8px;
+    align-items: center;
+}
+
+#localSetupScreen #startLocalGame {
+    margin-top: 0;
+}
+
+@media (min-width: 720px) {
+    #localSetupScreen .welcome-container {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    #localSetupScreen .welcome-container > h1,
+    #localSetupScreen .welcome-container > .credit,
+    #localSetupScreen .setup-section:nth-of-type(1),
+    #localSetupScreen .setup-section:nth-of-type(4),
+    #localSetupScreen .button-row {
+        grid-column: 1 / -1;
+    }
+}
+
+#openLobbiesEmpty {
+    width: 100%;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px dashed var(--border-default);
+    background: rgba(var(--text-ink-rgb), 0.02);
+    color: var(--text-secondary);
+}
+
+/* ── Colour wells: a jewelled swatch inside a recessed metallic bezel ─────── */
 input[type='color'] {
     -webkit-appearance: none;
     appearance: none;
     overflow: hidden;
     padding: 4px;
-    border: 1px solid var(--border-strong);
-    background: var(--surface-layer-1);
+    border: 1.5px solid var(--border-strong);
+    border-radius: 13px;
+    background: var(--surface-layer-2);
     box-shadow: var(--specular-top), var(--shadow-card);
 }
 
@@ -61,13 +204,37 @@ input[type='color']::-webkit-color-swatch-wrapper {
 }
 
 input[type='color']::-webkit-color-swatch {
-    border: 1px solid rgba(0, 0, 0, 0.18);
-    border-radius: 9px;
+    border: 1px solid rgba(0, 0, 0, 0.22);
+    border-radius: 8px;
 }
 
 input[type='color']::-moz-color-swatch {
-    border: 1px solid rgba(0, 0, 0, 0.18);
-    border-radius: 9px;
+    border: 1px solid rgba(0, 0, 0, 0.22);
+    border-radius: 8px;
+}
+
+/* ── Grid size pills: chamfered numerals & forged active state ───────────── */
+.grid-btn {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.03em;
+    background: var(--surface-layer-2);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--specular-top), var(--shadow-card);
+}
+
+.grid-btn.selected {
+    background-image: linear-gradient(180deg, #ffde7a 0%, #f5b727 56%, #d4900b 100%);
+    color: var(--text-inverse);
+    border-color: rgba(255, 222, 122, 0.55);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        0 6px 20px rgba(var(--accent-primary-rgb), 0.34);
+}
+
+[data-theme='light'] .grid-btn.selected {
+    background-image: linear-gradient(180deg, #a66706 0%, #8c5500 56%, #6e4200 100%);
+    border-color: rgba(110, 66, 0, 0.55);
 }
 
 /* ── Lobby toast: clear of the invite/copy controls ──────────────────────── */
@@ -88,15 +255,19 @@ body:has(#lobbyScreen.active) .toast-notification {
  * `--status-success-surface`; that is why the victory row used to render olive
  * on Void. This sheet loads after blueprint, so the amber cue wins. */
 .final-scores .final-score-entry {
-    background-color: var(--surface-layer-2);
+    background-color: var(--surface-layer-1);
     border: 1px solid var(--border-default);
-    box-shadow: var(--specular-top);
+    box-shadow: var(--specular-top), var(--shadow-card);
+}
+
+[data-theme='dark'] .final-scores .final-score-entry {
+    background-color: var(--surface-layer-2);
 }
 
 .final-scores .final-score-entry.winner {
-    background-color: rgba(var(--accent-primary-rgb), 0.16);
-    border-color: var(--accent-primary);
-    box-shadow: var(--specular-top), 0 4px 20px rgba(var(--accent-primary-rgb), 0.28);
+    background-color: rgba(var(--accent-primary-rgb), 0.14);
+    border: 1.5px solid var(--accent-primary);
+    box-shadow: var(--specular-top), 0 4px 20px rgba(var(--accent-primary-rgb), 0.24);
 }
 
 /* ── In-game utility pills: tonal surfaces, not a saturated blue slab ─────── */
