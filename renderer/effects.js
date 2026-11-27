@@ -433,7 +433,7 @@ export function drawPenaltyBoxAnimations(game) {
 
         // Draw deflating penalty box outline & fill
         game.ctx.fillStyle =
-            progress < 0.5 ? 'rgba(255, 30, 80, 0.4)' : playerColor || 'rgba(0, 240, 255, 0.3)';
+            progress < 0.5 ? 'rgba(255, 30, 80, 0.4)' : playerColor || 'rgba(245, 183, 39, 0.35)';
         game.ctx.strokeStyle = '#ff0055';
         game.ctx.lineWidth = 4 / Math.max(0.1, scale);
         game.ctx.shadowColor = '#ff0055';

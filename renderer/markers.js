@@ -91,7 +91,7 @@ export function drawKeyboardFocusDot(game) {
     const pulseScale = 1 + Math.sin(Date.now() / 180) * 0.12;
 
     game.ctx.save();
-    game.ctx.strokeStyle = isDark ? 'rgba(0, 240, 255, 0.92)' : 'rgba(10, 109, 149, 0.92)';
+    game.ctx.strokeStyle = isDark ? 'rgba(245, 183, 39, 0.95)' : 'rgba(29, 78, 216, 0.92)';
     game.ctx.lineWidth = 3;
     game.ctx.setLineDash([6, 4]);
     game.ctx.beginPath();

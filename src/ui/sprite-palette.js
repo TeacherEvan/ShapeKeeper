@@ -25,29 +25,29 @@
 
 /** @type {{ light: SpriteInkSet[], dark: SpriteInkSet[] }} */
 export const SPRITE_PALETTES = {
-    // Dawn nebula backdrop (#f4f1ff): mid-tone saturated inks.
+    // Warm Ivory Paper backdrop (#f7f4ec): mid-tone saturated inks.
     light: [
-        { primary: '#0a86ad', secondary: '#096b8c', accent: '#0a8fb0' }, // cyan
-        { primary: '#b3129e', secondary: '#8f0d7f', accent: '#cf1f8f' }, // magenta
-        { primary: '#a67c00', secondary: '#8f6f00', accent: '#b07d00' }, // amber
-        { primary: '#0f8a3d', secondary: '#0b6e31', accent: '#169044' }, // green
-        { primary: '#c81e3a', secondary: '#a5162e', accent: '#e02444' }, // red
+        { primary: '#c81e32', secondary: '#9f1239', accent: '#dc2626' }, // crimson red
+        { primary: '#1d4ed8', secondary: '#1e40af', accent: '#2563eb' }, // cobalt blue
+        { primary: '#a67c00', secondary: '#8f6f00', accent: '#b07d00' }, // solar gold / amber
+        { primary: '#0f8a3d', secondary: '#0b6e31', accent: '#169044' }, // emerald green
         { primary: '#c05600', secondary: '#9c4500', accent: '#d4700a' }, // orange
-        { primary: '#1f4fd8', secondary: '#1840b0', accent: '#2f66e8' }, // blue
+        { primary: '#0a7a8c', secondary: '#08606e', accent: '#0e8ea3' }, // deep teal
         { primary: '#6d28d9', secondary: '#571fb0', accent: '#8547e8' }, // purple
-        { primary: '#c2185b', secondary: '#9e1349', accent: '#d92b6f' }, // pink
+        { primary: '#a21caf', secondary: '#86198f', accent: '#c026d3' }, // berry
+        { primary: '#c2185b', secondary: '#9e1349', accent: '#d92b6f' }, // rose
     ],
-    // Cosmic void backdrop (#030611): the neon promo-art inks.
+    // Obsidian Slate backdrop (#0b0e14): Arcade Classic inks.
     dark: [
-        { primary: '#00f0ff', secondary: '#0088ff', accent: '#7ffcff' }, // cyan
-        { primary: '#e000ff', secondary: '#8a00ff', accent: '#ff8cff' }, // magenta
-        { primary: '#ffc700', secondary: '#ff8c00', accent: '#ffe680' }, // amber
-        { primary: '#22ff00', secondary: '#7dff5c', accent: '#c8ffb0' }, // lime
-        { primary: '#ff4d6d', secondary: '#ff2e4d', accent: '#ff9aa2' }, // red
-        { primary: '#ff8a1f', secondary: '#ff6a00', accent: '#ffc28a' }, // orange
-        { primary: '#3d7bff', secondary: '#6ea8ff', accent: '#b6d0ff' }, // blue
-        { primary: '#a855f7', secondary: '#8b5cf6', accent: '#d8b4fe' }, // purple
-        { primary: '#ff5fa2', secondary: '#ff8dc2', accent: '#ffc2dd' }, // pink
+        { primary: '#ef4444', secondary: '#dc2626', accent: '#fca5a5' }, // crimson red
+        { primary: '#3b82f6', secondary: '#2563eb', accent: '#93c5fd' }, // cobalt blue
+        { primary: '#f5b727', secondary: '#d97706', accent: '#fde68a' }, // solar gold
+        { primary: '#22c55e', secondary: '#16a34a', accent: '#86efac' }, // emerald green
+        { primary: '#f97316', secondary: '#ea580c', accent: '#fdba74' }, // orange
+        { primary: '#06b6d4', secondary: '#0891b2', accent: '#67e8f9' }, // ocean teal
+        { primary: '#8b5cf6', secondary: '#7c3aed', accent: '#c4b5fd' }, // violet
+        { primary: '#c026d3', secondary: '#a21caf', accent: '#e879f9' }, // berry
+        { primary: '#fb7185', secondary: '#f43f5e', accent: '#fda4af' }, // coral-rose
     ],
 };
 

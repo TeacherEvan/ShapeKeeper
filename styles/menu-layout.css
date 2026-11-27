@@ -775,7 +775,7 @@ input[type='color']:focus {
 
 .levels-sprite-counter strong,
 .levels-progress-counter strong {
-    color: var(--accent-primary, #00f0ff);
+    color: var(--accent-primary, #f5b727);
 }
 
 .levels-grid {
@@ -810,7 +810,7 @@ input[type='color']:focus {
     grid-column: 1 / -1;
     font-size: 0.92rem;
     font-weight: 700;
-    color: var(--accent-primary, #00f0ff);
+    color: var(--accent-primary, #f5b727);
     margin: 1.15rem 0 0.25rem;
     text-align: left;
     padding: 0.35rem 0.5rem;
@@ -869,7 +869,7 @@ input[type='color']:focus {
 
 @media (hover: hover) and (pointer: fine) {
     .level-btn.unlocked:hover {
-        border-color: var(--accent-primary, #00f0ff);
+        border-color: var(--accent-primary, #f5b727);
         background: var(--surface-layer-3);
         transform: translateY(-2px);
         box-shadow: var(--specular-top), 0 6px 16px rgba(var(--accent-primary-rgb), 0.2);

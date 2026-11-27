@@ -109,7 +109,7 @@ export class SpriteFireworksManager {
         });
 
         const count = FIREWORKS_CONSTANTS.PARTICLES_PER_BURST;
-        const sparkPalette = [color, '#ffd700', '#ffffff', '#00f0ff', '#ff00ea'];
+        const sparkPalette = [color, '#ffd700', '#ffffff', '#ef4444', '#3b82f6'];
 
         for (let i = 0; i < count; i++) {
             const angle = (i / count) * Math.PI * 2 + (rng() - 0.5) * 0.4;

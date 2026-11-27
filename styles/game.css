@@ -651,7 +651,7 @@
     max-width: 380px;
     padding: 14px 18px;
     background: var(--surface-layer-2);
-    border: 2px solid var(--accent-primary, #00f0ff);
+    border: 2px solid var(--accent-primary, #f5b727);
     border-radius: 16px;
     color: var(--text-primary);
     font-family: var(--font-sans, system-ui, sans-serif);

@@ -83,12 +83,12 @@ describe('cosmic identity — stylesheet contract', () => {
         expect(imports).toContain('./styles/blueprint.css');
     });
 
-    it('declares both themes with the promo-art ink', () => {
-        expect(tokens.dark['--bg-primary']).toBe('#030611'); // cosmic void
-        expect(tokens.dark['--accent-primary']).toBe('#00f0ff'); // electric cyan
-        expect(tokens.dark['--accent-secondary']).toBe('#e000ff'); // neon magenta
-        expect(tokens.dark['--accent-warning']).toBe('#ffc700'); // solar amber
-        expect(tokens.light['--bg-primary']).toBe('#f4f1ff'); // daylight nebula
+    it('declares both themes with the Arcade Classic ink', () => {
+        expect(tokens.dark['--bg-primary']).toBe('#0b0e14'); // obsidian slate
+        expect(tokens.dark['--accent-primary']).toBe('#f5b727'); // solar gold
+        expect(tokens.dark['--accent-secondary']).toBe('#5c9bff'); // cobalt blue
+        expect(tokens.dark['--accent-warning']).toBe('#f5b727'); // solar gold
+        expect(tokens.light['--bg-primary']).toBe('#f7f4ec'); // warm ivory paper
         expect(tokens.light['--accent-primary']).not.toBe(tokens.dark['--accent-primary']);
     });
 
@@ -136,7 +136,7 @@ describe('cosmic identity — stylesheet contract', () => {
 describe('cosmic identity — shell contract', () => {
     it('ships the void theme as the document default (no flash before JS)', () => {
         expect(INDEX_HTML).toMatch(/<html lang="en" data-theme="dark">/);
-        expect(INDEX_HTML).toContain('content="#030611"');
+        expect(INDEX_HTML).toContain('content="#0b0e14"');
     });
 
     it('ships the supplied promo art in-repo and uses it on the menu + social cards', () => {
@@ -195,10 +195,10 @@ describe('cosmic identity — live canvas ink matches the stylesheet', () => {
         document.body.innerHTML = '';
     });
 
-    it('keeps the cosmic brand inks as the first four families', () => {
+    it('keeps the Arcade Classic brand inks as the first four families', () => {
         const darkInk = animation.colorPalette.dark.map((set) => set.primary);
-        expect(darkInk.slice(0, 4)).toEqual(['#00f0ff', '#e000ff', '#ffc700', '#22ff00']);
-        expect(animation.colorPalette.light[0].primary).toBe('#0a86ad');
+        expect(darkInk.slice(0, 4)).toEqual(['#ef4444', '#3b82f6', '#f5b727', '#22c55e']);
+        expect(animation.colorPalette.light[0].primary).toBe('#c81e32');
     });
 
     it('resolves the canvas clear colour to the CSS backdrop for each theme', () => {
@@ -218,8 +218,8 @@ describe('cosmic identity — live canvas ink matches the stylesheet', () => {
         expect(animation.themedInk(animation.canvasTint)).toBe(dawnRgb);
     });
 
-    it('links constellation particles in cyan, not grey', () => {
-        expect(animation.themedInk(animation.constellationInk)).toBe('0, 240, 255');
+    it('links constellation particles in solar gold, not grey', () => {
+        expect(animation.themedInk(animation.constellationInk)).toBe('245, 183, 39');
         expect(animation.themedInk(animation.constellationInk)).not.toBe('100, 100, 120');
     });
 });
@@ -294,7 +294,7 @@ describe('cosmic identity — sprite ink covers the full spectrum', () => {
     }
 
     it('parses sprite ink to canvas rgba channels without touching the hot loop', () => {
-        expect(hexToRgbChannels('#00f0ff')).toBe('0, 240, 255');
+        expect(hexToRgbChannels('#f5b727')).toBe('245, 183, 39');
         expect(hexToRgbChannels('#fff')).toBe('255, 255, 255');
         expect(hexToRgbChannels('not-a-colour')).toBe('255, 255, 255');
     });

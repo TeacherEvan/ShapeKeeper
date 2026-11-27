@@ -9,8 +9,8 @@ import { expect, test } from '@playwright/test';
 
 import { gotoApp } from './helpers/bootstrap.js';
 
-const VOID = { bg: '#030611', accent: '#00f0ff', secondary: '#e000ff', inverse: '#030611' };
-const DAWN = { bg: '#f4f1ff', accent: '#0a6d95', secondary: '#7a12d6' };
+const VOID = { bg: '#0b0e14', accent: '#f5b727', secondary: '#5c9bff', inverse: '#0b0e14' };
+const DAWN = { bg: '#f7f4ec', accent: '#8c5500', secondary: '#1d4ed8' };
 
 function readTokens(page) {
     return page.evaluate(() => {
@@ -75,8 +75,8 @@ test.describe('cosmic brand identity', () => {
             };
             return { shape: grab('.wordmark-shape'), keeper: grab('.wordmark-keeper') };
         });
-        expect(wordmark.shape.image).toContain('rgb(0, 240, 255)');
-        expect(wordmark.keeper.image).toContain('rgb(255, 92, 255)');
+        expect(wordmark.shape.image).toContain('rgb(255, 215, 106)');
+        expect(wordmark.keeper.image).toContain('rgb(106, 166, 255)');
         expect(wordmark.shape.color).toBe('rgba(0, 0, 0, 0)');
 
         // 4. Substrate is a nebula wash — no reintroduced grid lines.
@@ -106,7 +106,7 @@ test.describe('cosmic brand identity', () => {
         const keeper = await page.evaluate(
             () => getComputedStyle(document.querySelector('.wordmark-keeper')).backgroundImage
         );
-        expect(keeper).toContain('rgb(160, 26, 214)');
+        expect(keeper).toContain('rgb(29, 78, 216)');
 
         await page.locator('#themeToggle').click();
         await expect(root).toHaveAttribute('data-theme', 'dark');

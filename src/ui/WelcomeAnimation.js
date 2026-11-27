@@ -61,8 +61,8 @@ export class WelcomeAnimation {
         // Canvas clear colour + constellation link ink per theme. These mirror the
         // cosmic substrate tokens in styles/cosmic-identity.css so the animated
         // canvas never tints the page off-brand.
-        this.canvasTint = { light: '244, 241, 255', dark: '3, 6, 17' };
-        this.constellationInk = { light: '10, 109, 149', dark: '0, 240, 255' };
+        this.canvasTint = { light: '247, 244, 236', dark: '11, 14, 20' };
+        this.constellationInk = { light: '29, 78, 216', dark: '245, 183, 39' };
 
         this.activePointers = new Map();
         this.grabbedSprites = new Map();

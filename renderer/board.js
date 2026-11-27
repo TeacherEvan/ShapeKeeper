@@ -12,8 +12,8 @@ function isDarkTheme() {
 export function resolveBoardColor(hex, dark = isDarkTheme()) {
     if (!dark) {
         const lower = typeof hex === 'string' ? hex.toLowerCase() : '';
-        if (lower === '#20e7ed' || lower === '#00f0ff') return '#047181';
-        if (lower === '#ea63e8' || lower === '#e000ff') return '#a81092';
+        if (lower === '#ef4444' || lower === '#ff4d6d') return '#c81e32';
+        if (lower === '#3b82f6' || lower === '#5c9bff') return '#1d4ed8';
     }
     return hex;
 }
