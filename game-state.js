@@ -156,15 +156,20 @@ export class GameState {
             this.game.gridRows = this.game.gridSize.rows || this.game.gridSize;
         }
 
+        const topTimerPad =
+            (FEATURE_FLAGS.FEATURE_LAVA_TIMER || this.game.isLevelsMode) && maxHeight >= 220
+                ? 38
+                : 0;
+        const availableHeight = Math.max(64, maxHeight - topTimerPad);
         const cellSizeWidth = Math.floor(maxWidth / (this.game.gridCols - 1));
-        const cellSizeHeight = Math.floor(maxHeight / (this.game.gridRows - 1));
+        const cellSizeHeight = Math.floor(availableHeight / (this.game.gridRows - 1));
         const cellSize = Math.min(cellSizeWidth, cellSizeHeight);
         const maxBoardDim = Math.max(this.game.gridCols, this.game.gridRows);
         const adaptiveMax =
-            maxBoardDim <= 5 && Math.min(maxWidth, maxHeight) >= 420
+            maxBoardDim <= 5 && Math.min(maxWidth, availableHeight) >= 420
                 ? Math.max(
                       GAME_CONSTANTS.CELL_SIZE_MAX,
-                      Math.min(116, Math.floor(Math.min(maxWidth, maxHeight) * 0.28))
+                      Math.min(116, Math.floor(Math.min(maxWidth, availableHeight) * 0.28))
                   )
                 : GAME_CONSTANTS.CELL_SIZE_MAX;
         this.game.cellSize = Math.max(
@@ -172,10 +177,6 @@ export class GameState {
             Math.min(cellSize, adaptiveMax)
         );
 
-        const topTimerPad =
-            (FEATURE_FLAGS.FEATURE_LAVA_TIMER || this.game.isLevelsMode) && maxHeight >= 220
-                ? 38
-                : 0;
         const logicalWidth =
             (this.game.gridCols - 1) * this.game.cellSize + GAME_CONSTANTS.GRID_OFFSET * 2;
         const logicalHeight =
@@ -186,7 +187,7 @@ export class GameState {
         this.game.logicalWidth = logicalWidth;
         this.game.logicalHeight = logicalHeight;
 
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
         const oldCanvas = this.game.canvas;
         const hadFocus = oldCanvas === document.activeElement;

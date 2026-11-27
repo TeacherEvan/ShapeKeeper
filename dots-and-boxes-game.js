@@ -747,12 +747,15 @@ export class DotsAndBoxesGame {
             return null;
         }
 
-        const scoringLines = availableLines.filter((lineKey) =>
-            this.gameLogic.wouldCompleteSquare(lineKey)
-        );
-        const safeLines = availableLines.filter(
-            (lineKey) => !this.gameLogic.wouldCompleteSquare(lineKey)
-        );
+        const scoringLines = [];
+        const safeLines = [];
+        for (const lineKey of availableLines) {
+            if (this.gameLogic.wouldCompleteSquare(lineKey)) {
+                scoringLines.push(lineKey);
+            } else {
+                safeLines.push(lineKey);
+            }
+        }
 
         // Easy mode kept for backward compatibility if explicitly requested.
         if (this.aiDifficulty === 'easy') {

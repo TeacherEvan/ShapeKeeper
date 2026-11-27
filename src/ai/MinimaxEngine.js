@@ -90,22 +90,28 @@ function evaluatePosition(gameLogic, lines, gridRows, gridCols, isMaximizing = t
 function minimax(
     gameLogic,
     lines,
+    allLines,
     gridRows,
     gridCols,
     depth,
     alpha,
     beta,
     isMaximizing,
-    aiPlayerNumber
+    aiPlayerNumber,
+    budget
 ) {
-    if (depth === 0) {
+    budget.nodes += 1;
+    if (depth === 0 || budget.nodes >= budget.maxNodes || Date.now() >= budget.deadline) {
         return {
             score: evaluatePosition(gameLogic, lines, gridRows, gridCols, isMaximizing),
             move: null,
         };
     }
 
-    const availableLines = gameLogic.getAllPossibleLines().filter((l) => !lines.has(l));
+    const availableLines = [];
+    for (let i = 0; i < allLines.length; i += 1) {
+        if (!lines.has(allLines[i])) availableLines.push(allLines[i]);
+    }
     if (availableLines.length === 0) {
         return { score: 0, move: null };
     }
@@ -123,13 +129,17 @@ function minimax(
         }
     }
 
-    const orderedMoves = [...scoringMoves, ...otherMoves];
+    let orderedMoves = [...scoringMoves, ...otherMoves];
+    if (orderedMoves.length > budget.maxBranching) {
+        orderedMoves = orderedMoves.slice(0, budget.maxBranching);
+    }
 
     let bestMove = orderedMoves[0]?.move || null;
 
     if (isMaximizing) {
         let maxEval = -Infinity;
         for (const { move, gain } of orderedMoves) {
+            if (budget.nodes >= budget.maxNodes || Date.now() >= budget.deadline) break;
             lines.add(move);
             let evaluation;
             try {
@@ -140,25 +150,29 @@ function minimax(
                         minimax(
                             gameLogic,
                             lines,
+                            allLines,
                             gridRows,
                             gridCols,
                             depth - 1,
                             alpha,
                             beta,
                             true,
-                            aiPlayerNumber
+                            aiPlayerNumber,
+                            budget
                         ).score;
                 } else {
                     evaluation = minimax(
                         gameLogic,
                         lines,
+                        allLines,
                         gridRows,
                         gridCols,
                         depth - 1,
                         alpha,
                         beta,
                         false,
-                        aiPlayerNumber
+                        aiPlayerNumber,
+                        budget
                     ).score;
                 }
             } finally {
@@ -178,6 +192,7 @@ function minimax(
     } else {
         let minEval = Infinity;
         for (const { move, gain } of orderedMoves) {
+            if (budget.nodes >= budget.maxNodes || Date.now() >= budget.deadline) break;
             lines.add(move);
             let evaluation;
             try {
@@ -187,25 +202,29 @@ function minimax(
                         minimax(
                             gameLogic,
                             lines,
+                            allLines,
                             gridRows,
                             gridCols,
                             depth - 1,
                             alpha,
                             beta,
                             false,
-                            aiPlayerNumber
+                            aiPlayerNumber,
+                            budget
                         ).score;
                 } else {
                     evaluation = minimax(
                         gameLogic,
                         lines,
+                        allLines,
                         gridRows,
                         gridCols,
                         depth - 1,
                         alpha,
                         beta,
                         true,
-                        aiPlayerNumber
+                        aiPlayerNumber,
+                        budget
                     ).score;
                 }
             } finally {
@@ -228,8 +247,16 @@ function minimax(
 /**
  * Finds the optimal move using chain analysis and Minimax Alpha-Beta search.
  */
-export function findOptimalMinimaxMove(gameLogic, lines, gridRows, gridCols, depth = 2) {
-    const availableLines = gameLogic.getAllPossibleLines().filter((l) => !lines.has(l));
+export function findOptimalMinimaxMove(
+    gameLogic,
+    lines,
+    gridRows,
+    gridCols,
+    depth = 2,
+    options = {}
+) {
+    const allLines = gameLogic.getAllPossibleLines();
+    const availableLines = allLines.filter((l) => !lines.has(l));
     if (availableLines.length === 0) {
         return null;
     }
@@ -244,16 +271,27 @@ export function findOptimalMinimaxMove(gameLogic, lines, gridRows, gridCols, dep
     );
 
     if (capturableChains.length > 0) {
-        // If there's a long chain (>= 3) and no other components left to force,
-        // evaluate whether to double-cross or take all.
         const longestChain = capturableChains.reduce(
             (prev, cur) => (cur.length > prev.length ? cur : prev),
             capturableChains[0]
         );
-        const _sacEval = evaluateChainSacrifice(longestChain);
+        const sacEval = evaluateChainSacrifice(longestChain);
 
-        // If we should sacrifice (double-cross) and it's the last chain or critical phase:
-        // Returning the closing move captures the current cell.
+        // Hard-hearted handout (double-cross): on an isolated chain of length >= 3
+        // when no other chains remain, sacrifice the last 2 squares by playing the
+        // penultimate edge if available.
+        if (
+            sacEval?.shouldDoubleCross &&
+            capturableChains.length === 1 &&
+            Array.isArray(longestChain.edges) &&
+            longestChain.edges.length >= 2
+        ) {
+            const doubleCrossEdge = longestChain.edges[longestChain.edges.length - 1];
+            if (doubleCrossEdge && !lines.has(doubleCrossEdge)) {
+                return doubleCrossEdge;
+            }
+        }
+
         if (longestChain.closingMove) {
             return longestChain.closingMove;
         }
@@ -267,18 +305,31 @@ export function findOptimalMinimaxMove(gameLogic, lines, gridRows, gridCols, dep
         return scoringLines[0];
     }
 
-    // 3. Fallback to Minimax Alpha-Beta search (2-ply default)
+    // 3. Fallback to bounded Minimax Alpha-Beta search
+    const timeBudgetMs = options.timeBudgetMs ?? 45;
+    const budget = {
+        nodes: 0,
+        maxNodes: options.maxNodes ?? 4000,
+        maxBranching: options.maxBranching ?? 24,
+        deadline: Date.now() + timeBudgetMs,
+    };
+
     const result = minimax(
         gameLogic,
         lines,
+        allLines,
         gridRows,
         gridCols,
         depth,
         -Infinity,
         Infinity,
         true,
-        gameLogic.game.aiPlayerNumber || 2
+        gameLogic.game.aiPlayerNumber || 2,
+        budget
     );
+    if (options.stats) {
+        options.stats.nodes = budget.nodes;
+    }
 
     return result.move || availableLines[0];
 }

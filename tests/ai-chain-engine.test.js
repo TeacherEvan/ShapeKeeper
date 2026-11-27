@@ -267,5 +267,35 @@ describe('Nimstring & Component-Chain AI Engine', () => {
             expect(move).toBeTruthy();
             expect(mockGameLogic.getAllPossibleLines()).toContain(move);
         });
+
+        it('bounds node exploration on a 30x30 board to avoid main-thread freezes (P1-7)', () => {
+            const allLines = [];
+            for (let r = 0; r < 30; r++) {
+                for (let c = 0; c < 30; c++) {
+                    if (c < 29) allLines.push(`${r},${c}-${r},${c + 1}`);
+                    if (r < 29) allLines.push(`${r},${c}-${r + 1},${c}`);
+                }
+            }
+            const mockGameLogic = {
+                game: {
+                    gridRows: 30,
+                    gridCols: 30,
+                    lines: new Set(),
+                    squares: {},
+                    claimedCells: new Set(),
+                    aiPlayerNumber: 2,
+                },
+                getAllPossibleLines: () => allLines,
+            };
+            const stats = { nodes: 0 };
+            const move = findOptimalMinimaxMove(mockGameLogic, new Set(), 30, 30, 3, {
+                maxNodes: 4000,
+                maxBranching: 24,
+                timeBudgetMs: 1000,
+                stats,
+            });
+            expect(move).toBeTruthy();
+            expect(stats.nodes).toBeLessThanOrEqual(4000);
+        });
     });
 });
