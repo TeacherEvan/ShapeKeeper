@@ -12,10 +12,24 @@ import { showScreen } from '../ScreenTransition.js';
 import { showToast } from '../Toast.js';
 
 let openLobbiesCleanup = null;
+let playerNameDebounceTimer = null;
+let playerColorDebounceTimer = null;
 
 function stopOpenLobbiesSubscription() {
     openLobbiesCleanup?.();
     openLobbiesCleanup = null;
+}
+
+export function clearLobbyTimers() {
+    stopOpenLobbiesSubscription();
+    if (playerNameDebounceTimer) {
+        clearTimeout(playerNameDebounceTimer);
+        playerNameDebounceTimer = null;
+    }
+    if (playerColorDebounceTimer) {
+        clearTimeout(playerColorDebounceTimer);
+        playerColorDebounceTimer = null;
+    }
 }
 
 const STORAGE_KEY_NAME = 'shapekeeper.playerName';
@@ -69,39 +83,53 @@ export function bindLobbyEvents(deps) {
         }
     });
 
-    document.getElementById('createGameBtn').addEventListener('click', async () => {
-        const { lobbyManager } = getState();
-        const playerNameInput = document.getElementById('playerName');
-        const playerName = playerNameInput?.value.trim() || getStoredPlayerName() || 'Host';
-        setStoredPlayerName(playerName);
-        if (playerNameInput) playerNameInput.value = playerName;
-        const gridSize = lobbyManager.gridSize || 5;
+    let creatingRoom = false;
+    const createGameBtn = document.getElementById('createGameBtn');
+    createGameBtn.addEventListener('click', async () => {
+        if (creatingRoom) return;
+        creatingRoom = true;
+        createGameBtn.disabled = true;
+        try {
+            const { lobbyManager } = getState();
+            const playerNameInput = document.getElementById('playerName');
+            const playerName = playerNameInput?.value.trim() || getStoredPlayerName() || 'Host';
+            setStoredPlayerName(playerName);
+            if (playerNameInput) playerNameInput.value = playerName;
+            const gridSize = lobbyManager.gridSize || 5;
 
-        if (window.ShapeKeeperConvex) {
-            setStartupState(STARTUP_STATES.CREATING_OR_JOINING_ROOM, { visible: false });
-            showToast('Creating room...', 'info', 2000);
-            const result = await window.ShapeKeeperConvex.createRoom(playerName, gridSize, false);
+            if (window.ShapeKeeperConvex) {
+                setStartupState(STARTUP_STATES.CREATING_OR_JOINING_ROOM, { visible: false });
+                showToast('Creating room...', 'info', 2000);
+                const result = await window.ShapeKeeperConvex.createRoom(
+                    playerName,
+                    gridSize,
+                    false
+                );
 
-            if (result.error) {
-                showToast('Error: ' + result.error, 'error');
-                return;
+                if (result.error) {
+                    showToast('Error: ' + result.error, 'error');
+                    return;
+                }
+
+                subscribeToRoomUpdates();
+                setStartupState(STARTUP_STATES.ROOM_SUBSCRIBED, { visible: false });
+
+                lobbyManager.roomCode = result.roomCode;
+                lobbyManager.isHost = true;
+                if (result.passcode) {
+                    lobbyManager.setIdentity({ passcode: result.passcode });
+                }
+                showToast('Lobby created', 'success', 4000);
+            } else {
+                lobbyManager.createRoom(playerName);
             }
 
-            subscribeToRoomUpdates();
-            setStartupState(STARTUP_STATES.ROOM_SUBSCRIBED, { visible: false });
-
-            lobbyManager.roomCode = result.roomCode;
-            lobbyManager.isHost = true;
-            if (result.passcode) {
-                lobbyManager.setIdentity({ passcode: result.passcode });
-            }
-            showToast('Lobby created', 'success', 4000);
-        } else {
-            lobbyManager.createRoom(playerName);
+            updateLobbyUI();
+            showScreen('lobbyScreen');
+        } finally {
+            creatingRoom = false;
+            createGameBtn.disabled = false;
         }
-
-        updateLobbyUI();
-        showScreen('lobbyScreen');
     });
 
     document.getElementById('joinGameBtn').addEventListener('click', () => {
@@ -158,9 +186,6 @@ export function bindLobbyEvents(deps) {
             list.appendChild(entry);
         });
     }
-
-    let playerNameDebounceTimer = null;
-    let playerColorDebounceTimer = null;
 
     /**
      * Join a specific lobby by its (internal) room code. Used by the lobby

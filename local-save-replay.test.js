@@ -77,6 +77,32 @@ describe('local save payload validation', () => {
         expect(result.payload.moveHistory).toHaveLength(1);
     });
 
+    it('accepts POPULATE_PLAYER_ID (0) in lineOwners for populated boards', () => {
+        const initialSnapshot = {
+            ...createSnapshot(1),
+            lines: ['0,0-0,1'],
+            lineOwners: [['0,0-0,1', 0]],
+        };
+        const result = validateLocalSavePayload({
+            mode: 'local',
+            version: LOCAL_SAVE_VERSION,
+            config: {
+                gridSize: 5,
+                player1Color: '#ff0000',
+                player2Color: '#0000ff',
+                localMode: 'human',
+                aiDifficulty: 'medium',
+            },
+            replayIndex: 0,
+            state: initialSnapshot,
+            initialSnapshot,
+            moveHistory: [],
+            redoHistory: [],
+        });
+
+        expect(result.ok).toBe(true);
+    });
+
     it('rejects incompatible payload versions', () => {
         const result = validateLocalSavePayload({
             mode: 'local',

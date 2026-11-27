@@ -209,4 +209,43 @@ describe('Subscription Lifecycle Integration', () => {
         expect(window.ShapeKeeperConvexShared.state.activeSubscriptions.size).toBe(0);
         expect(unsub).toHaveBeenCalledTimes(1);
     });
+
+    it('delivers game state updates when turnEndTime or rematchVoteCount changes and preserves queued updates', () => {
+        vi.useFakeTimers();
+        try {
+            window.ShapeKeeperConvex.initConvex();
+            window.ShapeKeeperConvex.setCurrentRoomId('room_sync');
+            const received = [];
+            window.ShapeKeeperConvex.subscribeToGameState((state) => received.push(state));
+
+            const client = window.ShapeKeeperConvexShared.state.convexClient;
+            const onUpdateCb = client.onUpdate.mock.calls[0][2];
+
+            const base = {
+                room: {
+                    currentPlayerIndex: 0,
+                    status: 'playing',
+                    updatedAt: 100,
+                    turnEndTime: 1000,
+                    rematchVoteCount: 0,
+                },
+                lines: [],
+                squares: [],
+                players: [{ score: 0, isConnected: true }],
+            };
+            onUpdateCb(base);
+            vi.advanceTimersByTime(100);
+            expect(received).toHaveLength(1);
+
+            // Only turnEndTime changes -> must be delivered even if a duplicate arrives mid-debounce
+            const next = { ...base, room: { ...base.room, turnEndTime: 2000 } };
+            onUpdateCb(next);
+            onUpdateCb(base); // duplicate of last committed state must NOT cancel queued `next`
+            vi.advanceTimersByTime(100);
+            expect(received).toHaveLength(2);
+            expect(received[1].room.turnEndTime).toBe(2000);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
 });

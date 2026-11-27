@@ -17,6 +17,8 @@
         if (newRoom.currentPlayerIndex !== lastRoom.currentPlayerIndex) return true;
         if (newRoom.status !== lastRoom.status) return true;
         if (newRoom.updatedAt !== lastRoom.updatedAt) return true;
+        if (newRoom.turnEndTime !== lastRoom.turnEndTime) return true;
+        if (newRoom.rematchVoteCount !== lastRoom.rematchVoteCount) return true;
 
         const newLines = newState.lines || [];
         const lastLines = lastState.lines || [];
@@ -40,7 +42,10 @@
         }
 
         for (let index = 0; index < newPlayers.length; index++) {
-            if (newPlayers[index]?.score !== lastPlayers[index]?.score) {
+            if (
+                newPlayers[index]?.score !== lastPlayers[index]?.score ||
+                Boolean(newPlayers[index]?.isConnected) !== Boolean(lastPlayers[index]?.isConnected)
+            ) {
                 return true;
             }
         }
@@ -75,18 +80,31 @@
             }
 
             const newPlayersSig = JSON.stringify(
-                (newState.players || []).map((p) => [p._id, p.name, p.color, p.isReady, p.isHost])
+                (newState.players || []).map((p) => [
+                    p._id,
+                    p.name,
+                    p.color,
+                    p.isReady,
+                    p.isHost,
+                    p.isConnected,
+                ])
             );
             const hasChanged =
                 !shared.state.lastRoomState ||
                 newState.status !== shared.state.lastRoomState.status ||
                 newState.updatedAt !== shared.state.lastRoomState.updatedAt ||
+                newState.gridSize !== shared.state.lastRoomState.gridSize ||
+                newState.turnDurationMs !== shared.state.lastRoomState.turnDurationMs ||
+                newState.isHost !== shared.state.lastRoomState.isHost ||
                 newPlayersSig !== shared.state.lastRoomState.playersSig;
 
             if (hasChanged) {
                 shared.state.lastRoomState = {
                     status: newState.status,
                     updatedAt: newState.updatedAt,
+                    gridSize: newState.gridSize,
+                    turnDurationMs: newState.turnDurationMs,
+                    isHost: newState.isHost,
                     playersSig: newPlayersSig,
                 };
                 callback(newState);
@@ -124,17 +142,18 @@
         shared.state.lastGameState = null;
 
         const optimizedCallback = (newState) => {
-            if (shared.state.updateDebounceTimer) {
-                clearTimeout(shared.state.updateDebounceTimer);
-                shared.state.updateDebounceTimer = null;
-            }
-
             if (!stateHasChanged(newState, shared.state.lastGameState)) {
                 console.log('[Convex] Skipping duplicate game state update');
                 return;
             }
 
+            if (shared.state.updateDebounceTimer) {
+                clearTimeout(shared.state.updateDebounceTimer);
+                shared.state.updateDebounceTimer = null;
+            }
+
             shared.state.updateDebounceTimer = setTimeout(() => {
+                shared.state.updateDebounceTimer = null;
                 if (newState) {
                     shared.state.lastGameState = {
                         room: newState.room
@@ -142,6 +161,8 @@
                                   currentPlayerIndex: newState.room.currentPlayerIndex,
                                   status: newState.room.status,
                                   updatedAt: newState.room.updatedAt,
+                                  turnEndTime: newState.room.turnEndTime,
+                                  rematchVoteCount: newState.room.rematchVoteCount,
                               }
                             : null,
                         lines: { length: (newState.lines || []).length },
@@ -151,6 +172,7 @@
                         })),
                         players: (newState.players || []).map((player) => ({
                             score: player?.score || 0,
+                            isConnected: Boolean(player?.isConnected),
                         })),
                     };
                 } else {

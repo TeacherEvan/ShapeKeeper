@@ -1,7 +1,7 @@
 export const LOCAL_SAVE_STORAGE_KEY = 'shapekeeper.local.save.v1';
 export const LOCAL_SAVE_VERSION = 1;
 
-import { TIMING_CONSTANTS, TURN_TIMER_OPTIONS_MS } from './constants.js';
+import { GAME_CONSTANTS, TIMING_CONSTANTS, TURN_TIMER_OPTIONS_MS } from './constants.js';
 
 const LINE_KEY_PATTERN = /^\d+,\d+-\d+,\d+$/;
 const CELL_KEY_PATTERN = /^\d+,\d+$/;
@@ -14,6 +14,10 @@ function isPlainObject(value) {
 
 function isPlayerNumber(value) {
     return Number.isInteger(value) && value >= 1 && value <= 99;
+}
+
+function isLineOwnerId(value) {
+    return value === GAME_CONSTANTS.POPULATE_PLAYER_ID || isPlayerNumber(value);
 }
 
 function isCellKey(value) {
@@ -68,7 +72,7 @@ export function isValidSnapshot(snapshot) {
                 Array.isArray(entry) &&
                 entry.length === 2 &&
                 isLineKey(entry[0]) &&
-                isPlayerNumber(entry[1])
+                isLineOwnerId(entry[1])
         )
     ) {
         return false;

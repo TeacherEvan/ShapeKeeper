@@ -6,6 +6,7 @@
 import { DotsAndBoxesGame } from '../../dots-and-boxes-game.js';
 import { announceAlert, announceStatus } from './AccessibilityAnnouncer.js';
 import { bindMenuEventHandlers } from './menu/eventBindings.js';
+import { clearLobbyTimers } from './menu/lobbyEvents.js';
 import { updateLobbyUI as renderLobbyUI } from './menu/lobbyView.js';
 import {
     handleAuthoritativeGameState,
@@ -272,6 +273,7 @@ async function teardownMultiplayerSession({
     }
 
     lobbyManager.leaveRoom();
+    clearLobbyTimers();
     resetTurnClockController();
     setActiveGame(null);
     resetStartupState({ preserveLastRoomState });
