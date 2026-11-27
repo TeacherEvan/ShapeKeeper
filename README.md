@@ -18,11 +18,11 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 
 <p align="center">
   <a href="media/shapekeeper-gameplay-shorts.mp4">
-    <img src="media/shapekeeper-preview.gif" width="300" alt="ShapeKeeper mobile portrait gameplay trailer preview" />
+    <img src="media/shapekeeper-thumbnail.jpg" width="320" alt="ShapeKeeper 1-minute mobile portrait gameplay trailer — click to watch" />
   </a>
 </p>
 
-- **Watch Full 1080×1920 Trailer (with Voiceover):** [shapekeeper-gameplay-shorts.mp4](media/shapekeeper-gameplay-shorts.mp4) (`5.6 MB`, 9:16 portrait — ready for YouTube Shorts)
+- **Watch Full 1080×1920 Trailer (0:59 with Voiceover & Arcade Synth):** [shapekeeper-gameplay-shorts.mp4](media/shapekeeper-gameplay-shorts.mp4) (`7.90 MB`, 9:16 portrait — ready for YouTube Shorts)
 - **YouTube Shorts Publish Kit & Metadata:** [media/publish-kit.md](media/publish-kit.md) · [media/CREDITS.md](media/CREDITS.md)
 <!-- Optional: drag media/shapekeeper-gameplay-shorts.mp4 into GitHub's web README editor for inline audio playback -->
 

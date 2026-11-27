@@ -1,24 +1,29 @@
-# ShapeKeeper — YouTube Shorts & GitHub README Publish Kit
+# ShapeKeeper — YouTube Shorts & GitHub Publish Kit
 
-## YouTube Shorts Upload
-- **Video File:** `media/shapekeeper-gameplay-shorts.mp4` (`1080×1920`, 9:16, 30fps, `yuv420p`, `bt709`, `-13.0 LUFS`)
-- **Thumbnail / Cover:** `media/shapekeeper-thumbnail.jpg` (`1080×1920`)
-- **Title (<60 chars):** `Dots & Boxes Just Got Dangerous 🎮⚡ #ShapeKeeper`
+## Verified Master Specs
+- **File:** `media/shapekeeper-gameplay-shorts.mp4`
+- **Resolution / Aspect:** `1080×1920` (`9:16` mobile portrait)
+- **Duration:** `0:59.68` (`30 fps` CFR, `H.264 High@4.2`, `yuv420p`, `bt709`, `+faststart`)
+- **Audio:** `AAC 160 kbps`, `48 kHz` stereo, `-14.0 LUFS` integrated, `-1.5 dBFS` true peak
+- **Size:** `7.90 MB` (under GitHub's `10 MB` drag-and-drop limit and YouTube Shorts `60s` limit)
+
+## YouTube Shorts Upload Metadata
+- **Title:** `Dots & Boxes Just Went Arcade 🔥 ShapeKeeper (100 Free Levels)`
 - **Description:**
-  ```text
-  Think Dots and Boxes is a slow paper game? Not when the board fights back! 🔥
-
-  Connect dots, chain neon combos, beat the Lava Timer, dodge hidden mines (-80% score!), and conquer 100 free levels — or jump into 1-tap online multiplayer straight from your browser.
-
-  Play FREE now (no download, no sign-up):
-  👉 https://shape-keeper.vercel.app
-
-  #ShapeKeeper #DotsAndBoxes #BrowserGame #IndieGame #MobileGaming #Shorts
   ```
-- **Pinned Comment:** `Play all 100 levels free in your browser — no download needed: https://shape-keeper.vercel.app 🎮✨`
-- **AI Disclosure Note:** Voiceover uses synthetic neural TTS (`en-US-AndrewNeural`); select "Altered or synthetic content" in YouTube Studio if prompted.
+  Play free in your browser (no downloads): https://shape-keeper.vercel.app
 
-## GitHub README Native Video (Optional Inline Audio)
-`README.md` already embeds `media/shapekeeper-preview.webp` (instant animated preview) and links `media/shapekeeper-gameplay-shorts.mp4`. If you want GitHub's native inline `<video>` player with audio:
-1. Open `README.md` in GitHub's web editor (`Edit this file`).
-2. Drag and drop `media/shapekeeper-gameplay-shorts.mp4` (`5.6 MB` < 10 MB limit) into the editor to get a `https://github.com/user-attachments/assets/...` URL.
+  • 100 handcrafted levels (up to 10×15 Grand Finale)
+  • Lava Timer + Autopilot twists
+  • Level 15+ Hidden Mines (-80% score trap!)
+  • 1-tap open online lobbies & silly passcodes
+  • Obsidian Dark & Warm Ivory Light themes
+
+  #ShapeKeeper #DotsAndBoxes #BrowserGame #IndieGame #Arcade #Shorts
+  ```
+
+## GitHub README Native `<video>` Embed (Optional)
+GitHub renders inline HTML5 `<video>` players with audio only for `user-attachments` URLs:
+1. Open `README.md` in GitHub's web editor.
+2. Drag `media/shapekeeper-gameplay-shorts.mp4` (`7.90 MB`) directly into the editor.
+3. GitHub uploads it and inserts a native playable `<video>` link.
