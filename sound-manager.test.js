@@ -65,4 +65,28 @@ describe('SoundManager', () => {
         sm.playLineSound();
         expect(startSpy).not.toHaveBeenCalled();
     });
+
+    it('never throws when AudioContext is closed or createOscillator throws (P1-12)', () => {
+        sm.ctx = {
+            state: 'running',
+            currentTime: 0,
+            createOscillator: () => {
+                throw new Error('InvalidStateError');
+            },
+            createGain: () => {
+                throw new Error('InvalidStateError');
+            },
+        };
+        expect(() => {
+            sm.playLineSound();
+            sm.playSquareSound(2);
+            sm.playInvalidSound();
+            sm.playPenaltySound();
+            sm.playComboSound(2);
+            sm.playVictorySound();
+        }).not.toThrow();
+
+        sm.ctx.state = 'closed';
+        expect(() => sm.playLineSound()).not.toThrow();
+    });
 });

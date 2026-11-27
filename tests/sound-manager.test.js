@@ -61,8 +61,11 @@ describe('SoundManager', () => {
         created = installFakeAudioContext();
     });
 
-    it('initializes an audio context when Web Audio is available', () => {
+    it('lazy-initializes an audio context on ensureAudioContext() when Web Audio is available', () => {
         const sm = new SoundManager();
+        expect(sm.initialized).toBe(false);
+        expect(sm.ctx).toBeNull();
+        sm.ensureAudioContext();
         expect(sm.initialized).toBe(true);
         expect(sm.ctx).toBeTruthy();
         expect(sm.enabled).toBe(true);
@@ -72,12 +75,14 @@ describe('SoundManager', () => {
         delete window.AudioContext;
         delete window.webkitAudioContext;
         const sm = new SoundManager();
+        sm.ensureAudioContext();
         expect(sm.initialized).toBe(false);
         expect(sm.ctx).toBeNull();
     });
 
     it('creates oscillator/gain nodes for each gameplay sound without throwing', () => {
         const sm = new SoundManager();
+        sm.ensureAudioContext();
         expect(() => {
             sm.playLineSound();
             sm.playSquareSound(2);

@@ -255,6 +255,30 @@ describe('AmbientSoundscape', () => {
         expect(chime).toHaveBeenCalledTimes(1);
         soundscape.destroy();
     });
+    it('handles touch, singularity_start, singularity and supernova interaction types with chimes and disconnects panners', () => {
+        const pan = { setValueAtTime: vi.fn() };
+        const panner = { pan, connect: vi.fn(), disconnect: vi.fn() };
+        mockContext.createStereoPanner = vi.fn(() => panner);
+        const soundscape = new AmbientSoundscape();
+        const chimeSpy = vi.spyOn(soundscape, 'playInteractionChime');
+
+        soundscape.handleInteraction({ type: 'touch', x: 100, y: 100, speed: 1 });
+        soundscape.handleInteraction({ type: 'singularity_start', x: 150, y: 150, speed: 2 });
+        expect(chimeSpy).toHaveBeenCalledWith(100, 100, 1, 'touch');
+        expect(chimeSpy).toHaveBeenCalledWith(150, 150, 2, 'singularity');
+
+        // Trigger osc.onended cleanup -> panner.disconnect() must be called
+        const osc = mockContext.createOscillator.mock.results[0].value;
+        osc.onended?.();
+        vi.advanceTimersByTime(4000);
+        expect(panner.disconnect).toHaveBeenCalled();
+
+        soundscape.fadeOut(0.1);
+        soundscape.destroy();
+        vi.advanceTimersByTime(1000);
+        expect(mockContext.suspend).not.toHaveBeenCalled();
+    });
+
     it('handles singularity and supernova interaction types with harmonic chimes', () => {
         const soundscape = new AmbientSoundscape();
         const chimeSpy = vi.spyOn(soundscape, 'playInteractionChime');

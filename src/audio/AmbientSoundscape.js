@@ -205,6 +205,10 @@ export class AmbientSoundscape {
     }
 
     fadeIn(durationSec = 1.5) {
+        if (this.suspendTimeout) {
+            clearTimeout(this.suspendTimeout);
+            this.suspendTimeout = null;
+        }
         if (!this.ensureAudioContext() || !this.masterGain) return;
 
         this.isActive = true;
@@ -223,14 +227,27 @@ export class AmbientSoundscape {
         this.masterGain.gain.setValueAtTime(Math.max(0.0001, this.masterGain.gain.value), now);
         this.masterGain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
 
-        setTimeout(() => this.suspendWhenQuiet(), durationSec * 1000 + 50);
+        if (this.suspendTimeout) {
+            clearTimeout(this.suspendTimeout);
+        }
+        this.suspendTimeout = setTimeout(
+            () => {
+                this.suspendTimeout = null;
+                this.suspendWhenQuiet();
+            },
+            durationSec * 1000 + 50
+        );
     }
 
     /** Suspend an idle context, but never cut a chime that is still ringing. */
     suspendWhenQuiet() {
         if (this.isActive || !this.ctx || this.ctx.state !== 'running') return;
         if (this.activeChimes > 0) {
-            setTimeout(() => this.suspendWhenQuiet(), SUSPEND_RETRY_MS);
+            if (this.suspendTimeout) clearTimeout(this.suspendTimeout);
+            this.suspendTimeout = setTimeout(() => {
+                this.suspendTimeout = null;
+                this.suspendWhenQuiet();
+            }, SUSPEND_RETRY_MS);
             return;
         }
         this.ctx
@@ -322,23 +339,41 @@ export class AmbientSoundscape {
         const output = this.voiceOutput(x, width, now);
         chimeGain.connect(output);
 
+        let delaySend = null;
         if (this.delayNode && profile.echo > 0) {
             try {
-                const delaySend = this.ctx.createGain();
+                delaySend = this.ctx.createGain();
                 delaySend.gain.setValueAtTime(profile.echo, now);
                 chimeGain.connect(delaySend);
                 delaySend.connect(this.delayNode);
             } catch (_e) {
-                // Ignore delay send failure
+                delaySend = null;
             }
         }
 
+        const safeDisconnect = (node) => {
+            if (node && typeof node.disconnect === 'function') {
+                try {
+                    node.disconnect();
+                } catch (_e) {
+                    // Ignore already-disconnected nodes
+                }
+            }
+        };
+
         this.activeChimes++;
+        const hasFlingArp = type === 'fling' && speed > 2.5 && this.activeChimes < this.maxChimes;
         let released = false;
         const release = () => {
             if (released) return;
             released = true;
             this.activeChimes = Math.max(0, this.activeChimes - 1);
+            safeDisconnect(chimeGain);
+            safeDisconnect(overtoneGain);
+            safeDisconnect(delaySend);
+            if (!hasFlingArp && output !== this.chimeBus) {
+                safeDisconnect(output);
+            }
         };
         // The audio clock is authoritative; the timer is only a safety net.
         osc.onended = release;
@@ -350,7 +385,7 @@ export class AmbientSoundscape {
         overtone.stop(now + duration);
 
         // On fast fling, add an ascending harmonic shimmer note
-        if (type === 'fling' && speed > 2.5 && this.activeChimes < this.maxChimes) {
+        if (hasFlingArp) {
             const arpTime = now + 0.08;
             const arpOsc = this.ctx.createOscillator();
             const arpGain = this.ctx.createGain();
@@ -361,6 +396,21 @@ export class AmbientSoundscape {
             arpGain.gain.exponentialRampToValueAtTime(0.0001, arpTime + 1.8);
             arpOsc.connect(arpGain);
             arpGain.connect(output);
+
+            this.activeChimes++;
+            let arpReleased = false;
+            const releaseArp = () => {
+                if (arpReleased) return;
+                arpReleased = true;
+                this.activeChimes = Math.max(0, this.activeChimes - 1);
+                safeDisconnect(arpGain);
+                if (output !== this.chimeBus) {
+                    safeDisconnect(output);
+                }
+            };
+            arpOsc.onended = releaseArp;
+            setTimeout(releaseArp, 2400);
+
             arpOsc.start(arpTime);
             arpOsc.stop(arpTime + 1.8);
         }
@@ -434,8 +484,10 @@ export class AmbientSoundscape {
             type === 'fling' ||
             type === 'ripple' ||
             type === 'tap' ||
+            type === 'touch' ||
             type === 'firework' ||
             type === 'singularity' ||
+            type === 'singularity_start' ||
             type === 'supernova'
         ) {
             if (type === 'grab' || type === 'touch') {
@@ -443,7 +495,8 @@ export class AmbientSoundscape {
                 const width = typeof window !== 'undefined' ? window.innerWidth : 800;
                 this.lastGlissandoIndex = pickScaleIndex(x, width);
             }
-            this.playInteractionChime(x, y, speed, type);
+            const chimeProfile = type === 'singularity_start' ? 'singularity' : type;
+            this.playInteractionChime(x, y, speed, chimeProfile);
         } else if (type === 'drag' || type === 'swirl') {
             this.playGlissandoNote(x, y, speed, type);
         }
@@ -460,6 +513,10 @@ export class AmbientSoundscape {
         if (this.idleTimeout) {
             clearTimeout(this.idleTimeout);
             this.idleTimeout = null;
+        }
+        if (this.suspendTimeout) {
+            clearTimeout(this.suspendTimeout);
+            this.suspendTimeout = null;
         }
         if (this.lfo) {
             try {
