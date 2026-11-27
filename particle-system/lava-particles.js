@@ -30,10 +30,14 @@ function clamp(value, min, max) {
 }
 
 function createLavaParticle(bounds) {
-    const r =
+    const boardW = Math.max(1, bounds.maxX - bounds.minX);
+    const boardH = Math.max(1, bounds.maxY - bounds.minY);
+    const maxRadius = Math.max(1, Math.min(boardW, boardH) * 0.25);
+    const rawR =
         GAME_CONSTANTS.LAVA_PARTICLE_RADIUS_MIN +
         Math.random() *
             (GAME_CONSTANTS.LAVA_PARTICLE_RADIUS_MAX - GAME_CONSTANTS.LAVA_PARTICLE_RADIUS_MIN);
+    const r = Math.min(rawR, maxRadius);
     const angle = Math.random() * Math.PI * 2;
     const speed = GAME_CONSTANTS.LAVA_PARTICLE_SPEED * (0.6 + Math.random() * 0.8);
     return {
@@ -77,30 +81,57 @@ export function initializeLavaParticles(game, count = GAME_CONSTANTS.LAVA_PARTIC
  * @param {number} remainingMs - time left on the turn timer
  * @returns {Array<object>} the same array (mutated in place)
  */
-export function updateLavaParticles(particles, game, remainingMs) {
+export function updateLavaParticles(particles, game, remainingMs, dtSeconds = 1 / 60) {
     const bounds = computeBoardBounds(game);
+    const boardW = Math.max(1, bounds.maxX - bounds.minX);
+    const boardH = Math.max(1, bounds.maxY - bounds.minY);
+    const maxRadius = Math.max(1, Math.min(boardW, boardH) * 0.25);
+    const step = Math.min(Math.max(dtSeconds, 0), 0.1) * 60;
     const urgent = remainingMs <= GAME_CONSTANTS.LAVA_URGENCY_THRESHOLD_MS;
     const speedScale = urgent ? GAME_CONSTANTS.LAVA_URGENCY_SPEED_SCALE : 1;
     const buoyancy = urgent ? GAME_CONSTANTS.LAVA_URGENCY_BUOYANCY : 0;
+    const minSpeed = GAME_CONSTANTS.LAVA_PARTICLE_SPEED * 0.55;
 
     for (const p of particles) {
-        p.x += p.vx * speedScale;
-        p.y += p.vy * speedScale - buoyancy;
+        if (p.r > maxRadius) p.r = maxRadius;
+        p.x += p.vx * speedScale * step;
+        p.y += (p.vy * speedScale - buoyancy) * step;
 
+        let bounced = false;
         // Elastic boundary reflection; clamp hard so particles never leak (NFR-1).
         if (p.x - p.r < bounds.minX) {
             p.x = bounds.minX + p.r;
             p.vx = Math.abs(p.vx) * GAME_CONSTANTS.LAVA_BOUNCE_DAMPING;
+            bounced = true;
         } else if (p.x + p.r > bounds.maxX) {
             p.x = bounds.maxX - p.r;
             p.vx = -Math.abs(p.vx) * GAME_CONSTANTS.LAVA_BOUNCE_DAMPING;
+            bounced = true;
         }
         if (p.y - p.r < bounds.minY) {
             p.y = bounds.minY + p.r;
             p.vy = Math.abs(p.vy) * GAME_CONSTANTS.LAVA_BOUNCE_DAMPING;
+            bounced = true;
         } else if (p.y + p.r > bounds.maxY) {
             p.y = bounds.maxY - p.r;
             p.vy = -Math.abs(p.vy) * GAME_CONSTANTS.LAVA_BOUNCE_DAMPING;
+            bounced = true;
+        }
+
+        // Prevent kinetic energy death after repeated damped wall bounces.
+        if (bounced) {
+            const currentSpeed = Math.hypot(p.vx, p.vy);
+            if (currentSpeed < minSpeed) {
+                if (currentSpeed > 1e-4) {
+                    const boost = minSpeed / currentSpeed;
+                    p.vx *= boost;
+                    p.vy *= boost;
+                } else {
+                    const angle = Math.random() * Math.PI * 2;
+                    p.vx = Math.cos(angle) * minSpeed;
+                    p.vy = Math.sin(angle) * minSpeed;
+                }
+            }
         }
 
         // Final safety clamp (covers floating-point edge cases).

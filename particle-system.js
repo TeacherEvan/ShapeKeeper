@@ -63,8 +63,8 @@ export class ParticleSystem {
     /**
      * Update particle physics
      */
-    updateParticles(logicalWidth, logicalHeight) {
-        updateParticles(this, logicalWidth, logicalHeight);
+    updateParticles(logicalWidth, logicalHeight, dtSeconds = 1 / 60) {
+        updateParticles(this, logicalWidth, logicalHeight, dtSeconds);
     }
 
     /**

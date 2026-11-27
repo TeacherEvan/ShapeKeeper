@@ -92,7 +92,7 @@ export function drawLavaTimer(game, remainingMs) {
     if (!lava.initialized) initLavaSystem(game);
 
     if (!prefersReducedMotion()) {
-        updateLavaParticles(lava.particles, game, remaining);
+        updateLavaParticles(lava.particles, game, remaining, game.lastFrameDtSeconds ?? 1 / 60);
     }
 
     ctx.save();

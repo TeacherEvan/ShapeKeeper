@@ -89,4 +89,31 @@ describe('updateLavaParticles urgency escalation', () => {
         updateLavaParticles(particles, game, 9000); // not urgent
         expect(particles[0].y).toBeCloseTo(200, 5);
     });
+
+    it('preserves kinetic energy after 5000 ticks and keeps tiny 3x3 boards in bounds (P1-10)', () => {
+        const game = makeGame();
+        const particles = initializeLavaParticles(game);
+        for (let i = 0; i < 5000; i++) {
+            updateLavaParticles(particles, game, 9000, 1 / 60);
+        }
+        const avgSpeed =
+            particles.reduce((sum, p) => sum + Math.hypot(p.vx, p.vy), 0) / particles.length;
+        expect(avgSpeed).toBeGreaterThan(0.2);
+
+        const tinyGame = { offsetX: 10, offsetY: 10, cellSize: 8, gridCols: 3, gridRows: 3 };
+        const tinyParticles = initializeLavaParticles(tinyGame);
+        updateLavaParticles(tinyParticles, tinyGame, 9000, 1 / 60);
+        expect(allParticlesInBounds(tinyParticles, tinyGame)).toBe(true);
+    });
+
+    it('normalizes lava movement by dtSeconds (1x16ms ≈ 2x8ms)', () => {
+        const game = makeGame();
+        const p60 = [{ x: 200, y: 200, vx: 1.5, vy: 1.0, r: 8 }];
+        const p120 = [{ x: 200, y: 200, vx: 1.5, vy: 1.0, r: 8 }];
+        updateLavaParticles(p60, game, 9000, 1 / 60);
+        updateLavaParticles(p120, game, 9000, 1 / 120);
+        updateLavaParticles(p120, game, 9000, 1 / 120);
+        expect(p120[0].x).toBeCloseTo(p60[0].x, 5);
+        expect(p120[0].y).toBeCloseTo(p60[0].y, 5);
+    });
 });

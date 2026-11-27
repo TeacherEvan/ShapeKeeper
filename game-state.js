@@ -382,7 +382,11 @@ export class GameState {
         }
 
         const targetCount = Math.max(1, Math.floor(safeLines.length * 0.1));
-        const shuffled = [...safeLines].sort(() => Math.random() - 0.5);
+        const shuffled = [...safeLines];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
 
         // Select lines incrementally so two lines in the same batch never complete a 4-sided square together
         const selectedLines = [];

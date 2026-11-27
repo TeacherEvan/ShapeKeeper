@@ -200,8 +200,16 @@ export function launchConfetti(accentColor) {
     document.body.appendChild(canvas);
 
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    if (typeof ctx.setTransform === 'function') {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    } else {
+        ctx.scale?.(dpr, dpr);
+    }
 
     const confetti = [];
     const colors = [
@@ -217,8 +225,8 @@ export function launchConfetti(accentColor) {
 
     for (let i = 0; i < 150; i += 1) {
         const piece = {
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height - canvas.height,
+            x: Math.random() * width,
+            y: Math.random() * height - height,
             w: Math.random() * 10 + 5,
             h: Math.random() * 6 + 4,
             color: colors[Math.floor(Math.random() * colors.length)],
@@ -234,19 +242,27 @@ export function launchConfetti(accentColor) {
         confetti.push(piece);
     }
 
-    let frame = 0;
+    let elapsedSec = 0;
+    let lastTs = typeof performance !== 'undefined' ? performance.now() : Date.now();
     const animate = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const dtSec = Math.min(Math.max((now - lastTs) / 1000, 0), 0.1);
+        lastTs = now;
+        const step = dtSec * 60;
+        elapsedSec += dtSec;
+
+        ctx.clearRect(0, 0, width, height);
 
         let activeCount = 0;
+        const phaseTick = elapsedSec * 60;
         confetti.forEach((piece) => {
-            if (piece.y < canvas.height + 50) {
+            if (piece.y < height + 50) {
                 activeCount += 1;
-                piece.y += piece.vy;
+                piece.y += piece.vy * step;
                 piece.x =
                     piece.startX +
-                    Math.sin(frame * piece.oscillationSpeed) * piece.oscillationDistance;
-                piece.rotation += piece.rotationSpeed;
+                    Math.sin(phaseTick * piece.oscillationSpeed) * piece.oscillationDistance;
+                piece.rotation += piece.rotationSpeed * step;
 
                 ctx.save();
                 ctx.translate(piece.x + piece.w / 2, piece.y + piece.h / 2);
@@ -257,8 +273,7 @@ export function launchConfetti(accentColor) {
             }
         });
 
-        frame += 1;
-        if (activeCount > 0 && frame < 300) {
+        if (activeCount > 0 && elapsedSec < 5) {
             activeConfettiAnim = requestAnimationFrame(animate);
             return;
         }

@@ -1183,9 +1183,10 @@ export class DotsAndBoxesGame {
         const lastAnimateAt = Number(this._lastAnimateAt) || now;
         const dtSeconds = Math.min(Math.max((now - lastAnimateAt) / 1000, 0), 0.1);
         this._lastAnimateAt = now;
+        this.lastFrameDtSeconds = dtSeconds;
 
         // Update particles
-        this.particleSystem.updateParticles(this.logicalWidth, this.logicalHeight);
+        this.particleSystem.updateParticles(this.logicalWidth, this.logicalHeight, dtSeconds);
 
         // Update animations
         this.animationSystem.updateAnimations(now);
@@ -1221,7 +1222,12 @@ export class DotsAndBoxesGame {
             this.selectionRibbon ||
             this.selectedDot;
 
-        const ambientRedraw = this.particleSystem.ambientParticles.length > 0 && now % 48 < 16;
+        const ambientRedraw =
+            this.particleSystem.ambientParticles.length > 0 &&
+            now - (this._lastAmbientDrawAt || 0) >= 48;
+        if (ambientRedraw) {
+            this._lastAmbientDrawAt = now;
+        }
 
         if (hasActiveAnimations || ambientRedraw || this.turnRemainingMs != null) {
             this.renderer.draw();

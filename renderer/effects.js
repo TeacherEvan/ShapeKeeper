@@ -76,10 +76,11 @@ function drawFloatingGeometry(game, isDark, time) {
         }
     }
 
+    const step = Math.min(Math.max(game.lastFrameDtSeconds ?? 1 / 60, 0), 0.1) * 60;
     for (const geo of game.backgroundGeometry) {
-        geo.x += geo.vx;
-        geo.y += geo.vy;
-        geo.rotation += geo.rotationSpeed;
+        geo.x += geo.vx * step;
+        geo.y += geo.vy * step;
+        geo.rotation += geo.rotationSpeed * step;
 
         if (geo.x < -geo.size) geo.x = game.logicalWidth + geo.size;
         if (geo.x > game.logicalWidth + geo.size) geo.x = -geo.size;
@@ -304,13 +305,16 @@ export function drawParticles(game) {
         }
 
         if (particle.spark) {
-            game.ctx.shadowColor = particle.color;
-            game.ctx.shadowBlur = 10;
+            // Cheap two-radius soft glow instead of per-particle shadowBlur
+            game.ctx.fillStyle = formatHexAlpha(particle.color, particle.life * 0.25);
+            game.ctx.beginPath();
+            game.ctx.arc(particle.x, particle.y, particle.size * 2.1, 0, Math.PI * 2);
+            game.ctx.fill();
+
             game.ctx.fillStyle = formatHexAlpha(particle.color, particle.life);
             game.ctx.beginPath();
             game.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
             game.ctx.fill();
-            game.ctx.shadowBlur = 0;
             return;
         }
 

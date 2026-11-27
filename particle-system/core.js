@@ -70,35 +70,46 @@ export function spawnParticlesFromPool(pool, x, y, color, count) {
     return spawned;
 }
 
-export function updateParticlesFromPool(pool, logicalWidth, logicalHeight) {
+export function updateParticlesFromPool(pool, logicalWidth, logicalHeight, dtSeconds = 1 / 60) {
+    const step = Math.min(Math.max(dtSeconds, 0), 0.1) * 60;
+    const drag = Math.pow(0.98, step);
+    const maxTrail = GAME_CONSTANTS.PARTICLE_TRAIL_LENGTH;
     for (const particle of pool.active) {
         if (!particle.trail) particle.trail = [];
-        particle.trail.push({ x: particle.x, y: particle.y });
-        if (particle.trail.length > GAME_CONSTANTS.PARTICLE_TRAIL_LENGTH) {
-            particle.trail.shift();
+        if (particle.trail.length < maxTrail) {
+            particle.trail.push({ x: particle.x, y: particle.y });
+        } else {
+            const recycled = particle.trail.shift();
+            recycled.x = particle.x;
+            recycled.y = particle.y;
+            particle.trail.push(recycled);
         }
-        particle.vx *= 0.98;
-        particle.vy *= 0.98;
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-        particle.vy += 0.15;
+        particle.vx *= drag;
+        particle.vy *= drag;
+        particle.x += particle.vx * step;
+        particle.y += particle.vy * step;
+        particle.vy += 0.15 * step;
         if (particle.y > logicalHeight - 10 && !particle.smoke) {
             particle.y = logicalHeight - 10;
             particle.vy *= -0.5;
             particle.vx *= 0.8;
         }
-        particle.life -= particle.decay;
+        particle.life -= particle.decay * step;
         if (particle.life <= 0) {
             pool.release(particle);
         }
     }
 }
 
-export function updateParticles(system, logicalWidth, logicalHeight) {
+export function updateParticles(system, logicalWidth, logicalHeight, dtSeconds = 1 / 60) {
+    const step = Math.min(Math.max(dtSeconds, 0), 0.1) * 60;
+    const drag = Math.pow(0.98, step);
+    const maxTrail = GAME_CONSTANTS.PARTICLE_TRAIL_LENGTH;
+
     for (let i = 0; i < system.ambientParticles.length; i++) {
         const particle = system.ambientParticles[i];
-        particle.x += particle.vx;
-        particle.y += particle.vy;
+        particle.x += particle.vx * step;
+        particle.y += particle.vy * step;
         if (particle.x < -10) particle.x = logicalWidth + 10;
         else if (particle.x > logicalWidth + 10) particle.x = -10;
         if (particle.y < -10) particle.y = logicalHeight + 10;
@@ -110,16 +121,20 @@ export function updateParticles(system, logicalWidth, logicalHeight) {
         const particle = system.particles[i];
 
         if (!particle.trail) particle.trail = [];
-        particle.trail.push({ x: particle.x, y: particle.y });
-        if (particle.trail.length > GAME_CONSTANTS.PARTICLE_TRAIL_LENGTH) {
-            particle.trail.shift();
+        if (particle.trail.length < maxTrail) {
+            particle.trail.push({ x: particle.x, y: particle.y });
+        } else {
+            const recycled = particle.trail.shift();
+            recycled.x = particle.x;
+            recycled.y = particle.y;
+            particle.trail.push(recycled);
         }
 
-        particle.vx *= 0.98;
-        particle.vy *= 0.98;
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-        particle.vy += 0.15;
+        particle.vx *= drag;
+        particle.vy *= drag;
+        particle.x += particle.vx * step;
+        particle.y += particle.vy * step;
+        particle.vy += 0.15 * step;
 
         if (particle.y > logicalHeight - 10 && !particle.smoke) {
             particle.y = logicalHeight - 10;
@@ -127,7 +142,7 @@ export function updateParticles(system, logicalWidth, logicalHeight) {
             particle.vx *= 0.8;
         }
 
-        particle.life -= particle.decay;
+        particle.life -= particle.decay * step;
 
         if (particle.life > 0) {
             system.particles[writeIndex++] = particle;
