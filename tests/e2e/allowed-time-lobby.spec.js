@@ -11,7 +11,9 @@ import { createSharedMockMultiplayerPages } from './helpers/bootstrap.js';
  * "no limit" — the turn clock is never armed.
  */
 test.describe('Allowed Time lobby control', () => {
-    test('host sets the countdown, guest sees it, and 0 means no limit', async ({ browser }) => {
+    test('host sets the countdown preset, guest sees it, and 0 means no limit', async ({
+        browser,
+    }) => {
         const session = await createSharedMockMultiplayerPages(browser, {
             roomCode: 'TMG456',
             startupTimeoutMs: 1500,
@@ -23,11 +25,11 @@ test.describe('Allowed Time lobby control', () => {
             await hostPage.getByTestId('create-game-button').click();
             await expect(hostPage.getByTestId('lobby-screen')).toHaveClass(/active/);
 
-            const hostTurnDuration = hostPage.getByTestId('lobby-turn-duration');
-            const guestTurnDuration = guestPage.getByTestId('lobby-turn-duration');
+            const hostTurnTimer = hostPage.getByTestId('lobby-turn-timer');
+            const guestTurnTimer = guestPage.getByTestId('lobby-turn-timer');
 
-            // Default (legacy/unset room): the control starts at 10s.
-            await expect(hostTurnDuration).toHaveValue('10');
+            // Default: 15 seconds (15000 ms).
+            await expect(hostTurnTimer).toHaveValue('15000');
 
             await guestPage.getByTestId('join-game-button').click();
             await expect(guestPage.getByTestId('lobby-browser-screen')).toHaveClass(/active/);
@@ -35,32 +37,18 @@ test.describe('Allowed Time lobby control', () => {
             await guestPage.getByTestId('open-lobby-entry').first().click();
             await expect(guestPage.getByTestId('lobby-screen')).toHaveClass(/active/);
 
-            // Host sets 45 seconds. The debounced handler (300ms) fires on change.
-            await hostTurnDuration.fill('45');
-            await hostTurnDuration.dispatchEvent('change');
-            await expect(hostTurnDuration).toHaveValue('45', { timeout: 3000 });
-
-            // The guest's lobby view reflects the host's value via the room snapshot.
-            await expect(guestTurnDuration).toHaveValue('45', { timeout: 3000 });
+            // Host sets 30 seconds (30000 ms).
+            await hostTurnTimer.selectOption('30000');
+            await expect(hostTurnTimer).toHaveValue('30000', { timeout: 3000 });
+            await expect(guestTurnTimer).toHaveValue('30000', { timeout: 3000 });
 
             // Guests cannot edit the control (host-only).
-            await expect(guestTurnDuration).toBeDisabled();
+            await expect(guestTurnTimer).toBeDisabled();
 
-            // Host sets 0 = no limit.
-            await hostTurnDuration.fill('0');
-            await hostTurnDuration.dispatchEvent('change');
-            await expect(hostTurnDuration).toHaveValue('0', { timeout: 3000 });
-            await expect(guestTurnDuration).toHaveValue('0', { timeout: 3000 });
-
-            // Server-side validation rejects out-of-range values (0..600).
-            // The mock validates too, so the server error surfaces as a toast
-            // and the input keeps the raw (invalid) value until the next
-            // successful update.
-            await hostTurnDuration.fill('9999');
-            await hostTurnDuration.dispatchEvent('change');
-            await expect(hostPage.getByText(/Error:|Invalid/)).toBeVisible({
-                timeout: 3000,
-            });
+            // Host sets 0 = Off (no limit).
+            await hostTurnTimer.selectOption('0');
+            await expect(hostTurnTimer).toHaveValue('0', { timeout: 3000 });
+            await expect(guestTurnTimer).toHaveValue('0', { timeout: 3000 });
         } finally {
             await session.cleanup();
         }

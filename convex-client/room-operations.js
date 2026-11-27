@@ -47,13 +47,14 @@
     shared.getHostToken = getHostToken;
     shared.clearHostToken = clearHostToken;
 
-    async function createRoom(playerName, gridSize) {
+    async function createRoom(playerName, gridSize, isPrivate = false) {
         const result = await shared.runMutation(
             shared.api.rooms.createRoom,
             {
                 sessionId: shared.getSessionId(),
                 playerName,
                 gridSize,
+                isPrivate: Boolean(isPrivate),
             },
             'creating room'
         );
@@ -156,14 +157,16 @@
         );
     }
 
-    async function updateTurnDuration(duration) {
+    async function updateTurnDuration(durationMs) {
         if (!shared.state.currentRoomId) {
             return { error: 'Not in a room' };
         }
 
-        const isMs = typeof duration === 'number' && duration > 600;
-        const turnDurationSeconds = isMs ? Math.round(duration / 1000) : duration;
-        const turnDurationMs = isMs ? duration : duration * 1000;
+        const normalizedMs =
+            typeof durationMs === 'number' && Number.isFinite(durationMs) && durationMs >= 0
+                ? Math.round(durationMs)
+                : 0;
+        const turnDurationSeconds = Math.round(normalizedMs / 1000);
 
         return shared.runMutation(
             shared.api.rooms.updateTurnDuration,
@@ -172,7 +175,7 @@
                 sessionId: shared.getSessionId(),
                 hostToken: getHostToken(shared.state.currentRoomId) || undefined,
                 turnDurationSeconds,
-                turnDurationMs,
+                turnDurationMs: normalizedMs,
             },
             'updating turn duration'
         );

@@ -68,10 +68,12 @@ export function handleRoomStateUpdate(roomState, deps) {
     lobbyManager.gridSize = effectiveRoomState.gridSize;
     // Allowed Time: mirror the room's configured turn countdown (seconds)
     // into the lobby manager so the control reflects it for everyone.
-    if (typeof effectiveRoomState.turnDurationSeconds === 'number') {
-        lobbyManager.turnDurationSeconds = effectiveRoomState.turnDurationSeconds;
-    } else if (typeof effectiveRoomState.turnDurationMs === 'number') {
+    if (typeof effectiveRoomState.turnDurationMs === 'number') {
+        lobbyManager.turnDurationMs = effectiveRoomState.turnDurationMs;
         lobbyManager.turnDurationSeconds = Math.round(effectiveRoomState.turnDurationMs / 1000);
+    } else if (typeof effectiveRoomState.turnDurationSeconds === 'number') {
+        lobbyManager.turnDurationSeconds = effectiveRoomState.turnDurationSeconds;
+        lobbyManager.turnDurationMs = effectiveRoomState.turnDurationSeconds * 1000;
     }
 
     const mySessionId = window.ShapeKeeperConvex?.getSessionId?.();
@@ -138,8 +140,14 @@ export function handleRoomStateUpdate(roomState, deps) {
 
     const lobbyTurnTimer = document.getElementById('lobbyTurnTimer');
     if (lobbyTurnTimer) {
-        lobbyTurnTimer.value = String(effectiveRoomState.turnDurationMs ?? 0);
-        lobbyTurnTimer.disabled = !effectiveRoomState.isHost;
+        const resolvedMs =
+            typeof effectiveRoomState.turnDurationMs === 'number'
+                ? effectiveRoomState.turnDurationMs
+                : typeof effectiveRoomState.turnDurationSeconds === 'number'
+                  ? effectiveRoomState.turnDurationSeconds * 1000
+                  : 15000;
+        lobbyTurnTimer.value = String(resolvedMs);
+        lobbyTurnTimer.disabled = !nextIsHost;
     }
 
     const readyBtn = document.getElementById('readyBtn');

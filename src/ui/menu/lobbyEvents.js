@@ -12,7 +12,6 @@ import { showScreen } from '../ScreenTransition.js';
 import { showToast } from '../Toast.js';
 
 let openLobbiesCleanup = null;
-let turnDurationDebounceTimer = null;
 
 function stopOpenLobbiesSubscription() {
     openLobbiesCleanup?.();
@@ -185,6 +184,18 @@ export function bindLobbyEvents(deps) {
         const result = await window.ShapeKeeperConvex.joinRoom(roomCode, effectiveName, passcode);
 
         if (result.error) {
+            if (
+                !passcode &&
+                typeof result.error === 'string' &&
+                result.error.toLowerCase().includes('passcode') &&
+                typeof window !== 'undefined' &&
+                typeof window.prompt === 'function'
+            ) {
+                const entered = window.prompt('This lobby is private. Enter the room passcode:');
+                if (entered && entered.trim()) {
+                    return joinLobbyByCode(roomCode, effectiveName, entered.trim());
+                }
+            }
             showToast('Error: ' + result.error, 'error');
             return;
         }
@@ -260,33 +271,26 @@ export function bindLobbyEvents(deps) {
             previousTimerValue = lobbyTimerSelect.value;
         });
         lobbyTimerSelect.addEventListener('change', async (event) => {
+            const { lobbyManager } = getState();
+            if (!lobbyManager.isHost) return;
             const newValue = event.target.value;
+            const durationMs = Number(newValue);
             if (window.ShapeKeeperConvex) {
-                const result = await window.ShapeKeeperConvex.updateTurnDuration(Number(newValue));
+                const result = await window.ShapeKeeperConvex.updateTurnDuration(durationMs);
                 if (result?.error) {
                     showToast('Error: ' + result.error, 'error');
                     lobbyTimerSelect.value = previousTimerValue;
                     return;
                 }
+                lobbyManager.turnDurationMs = durationMs;
+                lobbyManager.turnDurationSeconds = Math.round(durationMs / 1000);
                 previousTimerValue = newValue;
-            }
-        });
-    }
-
-    const copyCodeBtn = document.getElementById('copyCodeBtn');
-    if (copyCodeBtn) {
-        copyCodeBtn.addEventListener('click', () => {
-            const code = document.getElementById('roomCode')?.textContent;
-            if (code) {
-                navigator.clipboard.writeText(code).then(() => {
-                    copyCodeBtn.textContent = '✓';
-                    copyCodeBtn.classList.add('copied');
-                    showToast('Room code copied to clipboard!', 'success', 2000);
-                    setTimeout(() => {
-                        copyCodeBtn.textContent = '📋';
-                        copyCodeBtn.classList.remove('copied');
-                    }, 2000);
-                });
+                showToast(
+                    durationMs === 0
+                        ? 'Turn timer disabled'
+                        : `Turn timer set to ${Math.round(durationMs / 1000)}s`,
+                    'success'
+                );
             }
         });
     }
@@ -299,54 +303,19 @@ export function bindLobbyEvents(deps) {
                 ? lobbyManager.buildInviteUrl()
                 : `${window.location.origin}/?join=${lobbyManager.roomCode}`;
             if (navigator.clipboard) {
-                navigator.clipboard.writeText(inviteUrl).then(() => {
-                    copyInviteLinkBtn.textContent = '✓ Link Copied!';
-                    showToast('Invite link copied!', 'success');
-                    setTimeout(() => {
-                        copyInviteLinkBtn.textContent = '🔗 Copy Invite Link';
-                    }, 2000);
-                });
+                navigator.clipboard
+                    .writeText(inviteUrl)
+                    .then(() => {
+                        copyInviteLinkBtn.textContent = '✓ Link Copied!';
+                        showToast('Invite link copied!', 'success');
+                        setTimeout(() => {
+                            copyInviteLinkBtn.textContent = 'Copy Invite';
+                        }, 2000);
+                    })
+                    .catch(() => {
+                        showToast('Could not copy invite link', 'error');
+                    });
             }
-        });
-    }
-
-    // Allowed Time (free-form seconds input, host only). Debounced change
-    // handler pushes to the server; the server validates (0-600, whole
-    // numbers) and the next room snapshot re-renders the input.
-    const turnDurationInput = document.getElementById('lobbyTurnDuration');
-    if (turnDurationInput) {
-        turnDurationInput.addEventListener('change', async () => {
-            const { lobbyManager } = getState();
-            if (!lobbyManager.isHost) return;
-
-            const raw = turnDurationInput.value.trim();
-            // Empty or 0 = no limit
-            const seconds = raw === '' || parseInt(raw, 10) === 0 ? 0 : parseInt(raw, 10);
-
-            if (raw !== '' && (!Number.isInteger(seconds) || seconds < 0)) {
-                showToast('Allowed Time must be a whole number of seconds (0 = no limit)', 'error');
-                turnDurationInput.value =
-                    lobbyManager.turnDurationSeconds > 0
-                        ? String(lobbyManager.turnDurationSeconds)
-                        : '0';
-                return;
-            }
-
-            if (turnDurationDebounceTimer) clearTimeout(turnDurationDebounceTimer);
-            turnDurationDebounceTimer = setTimeout(async () => {
-                if (window.ShapeKeeperConvex) {
-                    const result = await window.ShapeKeeperConvex.updateTurnDuration(seconds);
-                    if (result?.error) {
-                        showToast('Error: ' + result.error, 'error');
-                        return;
-                    }
-                    lobbyManager.turnDurationSeconds = seconds;
-                    showToast(
-                        seconds === 0 ? 'Turn timer disabled' : `Allowed Time set to ${seconds}s`,
-                        'success'
-                    );
-                }
-            }, 300);
         });
     }
 

@@ -26,8 +26,8 @@ export class LiveLobbyManager {
         this.players = []; // [{sessionId, name, color, isReady, isConnected, playerIndex}]
         this.isHost = false;
         this.gridSize = 5;
-        this.turnDurationSeconds = 10; // Allowed Time: lava-timer countdown per turn (0 = no limit)
-        this.turnDurationMs = 10000;
+        this.turnDurationSeconds = 15; // Allowed Time: lava-timer countdown per turn (0 = no limit)
+        this.turnDurationMs = 15000;
         this.partyMode = false;
         this.status = 'idle'; // 'idle' | 'lobby' | 'playing' | 'finished'
         this._unsubscribe = null;
