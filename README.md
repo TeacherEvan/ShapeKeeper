@@ -14,6 +14,18 @@ A modern, browser-based implementation of the classic Dots and Boxes game (reima
 
 **Play Now:** [https://shape-keeper.vercel.app](https://shape-keeper.vercel.app)
 
+## 🎬 Gameplay Trailer (Mobile Portrait)
+
+<p align="center">
+  <a href="media/shapekeeper-gameplay-shorts.mp4">
+    <img src="media/shapekeeper-preview.gif" width="300" alt="ShapeKeeper mobile portrait gameplay trailer preview" />
+  </a>
+</p>
+
+- **Watch Full 1080×1920 Trailer (with Voiceover):** [shapekeeper-gameplay-shorts.mp4](media/shapekeeper-gameplay-shorts.mp4) (`5.6 MB`, 9:16 portrait — ready for YouTube Shorts)
+- **YouTube Shorts Publish Kit & Metadata:** [media/publish-kit.md](media/publish-kit.md) · [media/CREDITS.md](media/CREDITS.md)
+<!-- Optional: drag media/shapekeeper-gameplay-shorts.mp4 into GitHub's web README editor for inline audio playback -->
+
 ## 🎮 Features
 
 ### Core Gameplay
