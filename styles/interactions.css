@@ -71,7 +71,10 @@
         overflow-y: auto;
     }
 
-    .setup-section {
+    /* Setup sections are tall stacked cards. Snapping one to the top when a
+     * screen opens hid that screen's own heading (Local Play started 159px
+     * scrolled down), so only short snap rails opt in via `.snap-start`. */
+    .snap-start {
         scroll-snap-align: start;
     }
 }

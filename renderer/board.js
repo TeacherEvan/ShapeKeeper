@@ -62,6 +62,7 @@ export function drawBoardFrame(game) {
 }
 
 export function drawLines(game) {
+    const dark = isDarkTheme();
     // Precompute lookups once (O(n)) so per-line checks are O(1) instead of O(n^2).
     const lineDrawingKeys = new Set(game.lineDrawings.map((a) => a.lineKey));
     const pulsatingByLine = new Map();
@@ -95,7 +96,7 @@ export function drawLines(game) {
         } else {
             // Soft outer halo pass (no shadowBlur loop)
             game.ctx.save();
-            game.ctx.globalAlpha = 0.22;
+            game.ctx.globalAlpha = 0.3;
             game.ctx.strokeStyle = lineColor;
             game.ctx.lineWidth = coreWidth * 1.9;
             game.ctx.lineCap = 'round';
@@ -113,6 +114,21 @@ export function drawLines(game) {
         game.ctx.moveTo(x1, y1);
         game.ctx.lineTo(x2, y2);
         game.ctx.stroke();
+
+        if (!isGhostLine) {
+            // Hairline specular along the upper edge of the stroke: a jewel,
+            // not a flat 4px plastic strip. Three cheap passes, no shadowBlur.
+            game.ctx.save();
+            game.ctx.globalAlpha = dark ? 0.26 : 0.4;
+            game.ctx.strokeStyle = '#ffffff';
+            game.ctx.lineWidth = Math.max(1, coreWidth * 0.2);
+            game.ctx.lineCap = 'round';
+            game.ctx.beginPath();
+            game.ctx.moveTo(x1, y1 - coreWidth * 0.18);
+            game.ctx.lineTo(x2, y2 - coreWidth * 0.18);
+            game.ctx.stroke();
+            game.ctx.restore();
+        }
 
         if (isGhostLine) {
             game.ctx.setLineDash([]);
@@ -191,6 +207,12 @@ export function drawSquares(game) {
             game.ctx.fill();
             game.ctx.lineWidth = 1;
             game.ctx.strokeStyle = formatHexAlpha(color, dark ? 0.48 : 0.4);
+            game.ctx.stroke();
+            // Top-edge inset sheen gives the claimed tile a tactile lip.
+            game.ctx.strokeStyle = formatHexAlpha('#ffffff', dark ? 0.16 : 0.5);
+            game.ctx.beginPath();
+            game.ctx.moveTo(x + inset + radius, y + inset + 1);
+            game.ctx.lineTo(x + inset + tileSize - radius, y + inset + 1);
             game.ctx.stroke();
             game.ctx.restore();
         } else {

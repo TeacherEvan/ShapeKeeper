@@ -1,0 +1,344 @@
+/*
+ * ShapeKeeper — Menu & Levels editorial skin (v5)
+ *
+ * Loaded after the legacy menu/blueprint sheets and before cosmic-identity.css
+ * so the locked brand tokens stay authoritative. This sheet contains no new
+ * DOM: every flourish is generated content or a pseudo-element, which keeps
+ * the accessible names and the exact-label C2 / brand E2E contracts intact.
+ */
+
+/* ── HOME: atmospheric depth (radial nebula only, no grid lines) ─────────── */
+#mainMenuScreen .home-menu-layer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(58% 46% at 50% 24%, rgba(var(--accent-primary-rgb), 0.12), transparent 70%),
+        radial-gradient(42% 38% at 10% 84%, var(--nebula-2), transparent 76%),
+        radial-gradient(42% 38% at 90% 82%, var(--nebula-3), transparent 76%);
+}
+
+/* ── HOME: chapter eyebrow above the supplied promo plate ────────────────── */
+#mainMenuScreen .brand-plate-frame {
+    position: relative;
+    margin: 0 auto 4px;
+}
+
+#mainMenuScreen .brand-plate-frame::before {
+    content: 'THE SHAPE KEEPER  ·  CHAPTER I';
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    color: var(--text-tertiary);
+}
+
+#mainMenuScreen .brand-plate-frame::after {
+    content: '';
+    position: absolute;
+    inset: -14px -18px;
+    z-index: -1;
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.2);
+    border-radius: 26px;
+    pointer-events: none;
+}
+
+/* ── HOME: byline as an editorial rule ───────────────────────────────────── */
+#mainMenuScreen .credit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+#mainMenuScreen .credit::before,
+#mainMenuScreen .credit::after {
+    content: '';
+    width: 34px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-strong));
+}
+
+#mainMenuScreen .credit::after {
+    transform: rotate(180deg);
+}
+
+/* ── HOME: CTA rails and directional cue ─────────────────────────────────── */
+#mainMenuScreen .menu-options {
+    margin-top: 28px;
+}
+
+#mainMenuScreen .menu-options::before {
+    content: 'CHOOSE YOUR PATH';
+    display: block;
+    margin: 0 0 2px 2px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    color: var(--accent-primary);
+}
+
+/* No generated text on the buttons: Chromium folds pseudo-element content
+ * into the accessible name, which would break the exact-label CTA contract.
+ * The directional cue is painted as a non-text CSS arrow instead. */
+#mainMenuScreen .menu-btn {
+    padding-right: 48px;
+}
+
+#mainMenuScreen .menu-btn::after {
+    content: '';
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: translateY(-60%) rotate(45deg);
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+#mainMenuScreen .menu-btn.secondary::after {
+    opacity: 0.45;
+}
+
+/* ── HOME: editorial two-column hero on wide viewports ──────────────────── */
+@media (min-width: 900px) {
+    #mainMenuScreen .welcome-container {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+        grid-template-rows: auto auto auto;
+        grid-template-areas:
+            'plate cta'
+            'title cta'
+            'credit local';
+        align-content: center;
+        align-items: center;
+        column-gap: clamp(36px, 7vw, 100px);
+        max-width: 1120px;
+        padding: 0 clamp(24px, 5vw, 72px);
+        text-align: left;
+    }
+
+    #mainMenuScreen .brand-plate-frame {
+        grid-area: plate;
+        width: 100%;
+    }
+
+    #mainMenuScreen .brand-plate {
+        width: min(100%, 440px);
+    }
+
+    #mainMenuScreen h1 {
+        grid-area: title;
+        justify-content: flex-start;
+        font-size: clamp(3rem, 5.2vw, 5rem);
+    }
+
+    #mainMenuScreen .credit {
+        grid-area: credit;
+        justify-content: flex-start;
+        margin-bottom: 0;
+    }
+
+    #mainMenuScreen .menu-options {
+        grid-area: cta;
+        align-self: center;
+        justify-self: end;
+        width: 100%;
+        max-width: 460px;
+        margin-top: 0;
+    }
+
+    #mainMenuScreen .menu-tertiary-btn {
+        grid-area: local;
+        align-self: start;
+        justify-self: end;
+        width: 100%;
+        max-width: 460px;
+        margin-top: 0;
+    }
+
+    #mainMenuScreen .brand-plate-frame::before {
+        left: 0;
+        transform: none;
+    }
+}
+
+/* ── PLAYGROUND: tell players what the blank side pages are for ──────────── */
+#homePagerDots::before {
+    content: '✦ PLAYGROUND · drag the sprites, tap to ripple ✦';
+    position: absolute;
+    bottom: 54px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 88vw;
+    white-space: nowrap;
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--text-tertiary);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 240ms var(--easing-smooth);
+}
+
+#homePagerDots:has(.pager-dot[data-page='-1'].active)::before,
+#homePagerDots:has(.pager-dot[data-page='1'].active)::before {
+    opacity: 1;
+}
+
+/* ── LEVELS: chapter rails and mission cards ─────────────────────────────── */
+.levels-container {
+    position: relative;
+    max-width: 56rem;
+}
+
+.levels-container::before {
+    content: '';
+    position: absolute;
+    inset: -48px -24px 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(62% 42% at 50% 0%, rgba(var(--accent-primary-rgb), 0.12), transparent 72%);
+}
+
+.levels-grid {
+    counter-reset: chapter;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 10px;
+}
+
+.levels-status-banner > span {
+    font-variant-numeric: tabular-nums;
+}
+
+.level-tier-header {
+    counter-increment: chapter;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    padding: 4px 2px 10px;
+}
+
+.level-tier-header::before {
+    content: '0' counter(chapter);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    background: rgba(var(--accent-primary-rgb), 0.16);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.36);
+    box-shadow: var(--specular-top);
+}
+
+.level-tier-header::after {
+    content: '';
+    flex: 1 1 auto;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border-default), transparent);
+}
+
+.level-btn {
+    min-height: 88px;
+    border-radius: 16px;
+    box-shadow: var(--specular-top), var(--shadow-card);
+}
+
+.level-btn .level-num,
+.level-btn .level-grid-label {
+    font-variant-numeric: tabular-nums;
+}
+
+.level-btn .level-num {
+    font-size: 0.9rem;
+    letter-spacing: 0.01em;
+}
+
+.level-btn.completed {
+    border-color: rgba(var(--accent-primary-rgb), 0.5);
+    background: linear-gradient(
+        160deg,
+        rgba(var(--accent-primary-rgb), 0.18),
+        rgba(var(--accent-primary-rgb), 0.06)
+    );
+}
+
+.level-btn.completed .level-status-icon {
+    color: var(--accent-primary);
+    text-shadow: 0 0 12px rgba(var(--accent-primary-rgb), 0.5);
+}
+
+.level-btn.unlocked::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    width: 4px;
+    height: 18px;
+    border-radius: 2px;
+    background: var(--accent-secondary);
+    transform: translateY(-50%);
+    opacity: 0.75;
+}
+
+/* On narrow screens the eyebrow would run under the theme toggle. */
+@media (max-width: 899px) {
+    #mainMenuScreen .brand-plate-frame::before {
+        display: none;
+    }
+}
+
+/* Landscape phones hide the plate (see cosmic-identity.css); compact the
+ * remaining stack so LOCAL PLAY clears the pager rail at the bottom. */
+@media (max-height: 520px) and (orientation: landscape) {
+    #mainMenuScreen h1 {
+        font-size: 2.4rem;
+        margin-bottom: 4px;
+    }
+
+    #mainMenuScreen .credit {
+        margin-bottom: 12px;
+    }
+
+    #mainMenuScreen .menu-options {
+        margin-top: 12px;
+        gap: 10px;
+    }
+
+    #mainMenuScreen .menu-options::before {
+        display: none;
+    }
+
+    #mainMenuScreen .menu-tertiary-btn {
+        margin-top: 6px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #homePagerDots::before {
+        transition: none;
+    }
+}

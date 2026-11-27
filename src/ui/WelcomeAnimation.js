@@ -292,8 +292,11 @@ export class WelcomeAnimation {
             // Pre-parsed channels: the draw loop builds rgba() strings every
             // frame, so never parse the hex on the hot path.
             rgb: hexToRgbChannels(color),
-            size: 2 + Math.random() * 3,
-            baseSize: 2 + Math.random() * 3,
+            // A single collected sprite (new players have exactly one) used to
+            // be a 2-5px speck that read as a rendering artefact. Keep the
+            // footprint legible while staying small enough for 300 on screen.
+            size: 7 + Math.random() * 4,
+            baseSize: 7 + Math.random() * 4,
             type: this.particleTypes[Math.floor(Math.random() * this.particleTypes.length)],
             neighborhoodRadius: 120,
             maxSpeed: 1.8,
@@ -826,6 +829,23 @@ export class WelcomeAnimation {
         }
     }
 
+    /**
+     * Soft halo for a small flock. A new player has exactly one sprite, and a
+     * lone 7-11px gem still reads as a stray pixel; one translucent extra fill
+     * gives it a firefly presence. Kept out of `drawParticleShape()` (which has
+     * its own two-fill contract) and only used for <= 6 sprites so a full
+     * 300-sprite flock pays no extra per-frame cost.
+     */
+    drawSpriteHalo(ctx, particle, x, y, size, alpha) {
+        ctx.save?.();
+        ctx.globalAlpha = alpha * 0.18;
+        ctx.fillStyle = particle.color;
+        ctx.translate?.(x, y);
+        this.renderShapeGeometry(ctx, particle.type, size * 1.9);
+        ctx.fill?.();
+        ctx.restore?.();
+    }
+
     drawParticleShape(ctx, particle, x, y, size, alpha) {
         ctx.save?.();
         ctx.globalAlpha = alpha;
@@ -905,7 +925,10 @@ export class WelcomeAnimation {
             this.ctx.clearRect(0, 0, this.logicalWidth, this.logicalHeight);
         }
 
-        const particleAlpha = this.isDimmed ? 0.25 : 0.85;
+        // The sprite playground is the home screen and both side screens. On
+        // the game canvas even a dimmed sprite read as a stray coloured pixel,
+        // so gameplay gets a completely clean background.
+        const particleAlpha = this.isDimmed ? 0 : 0.85;
 
         // Draw connections first (behind particles)
         this.drawConnections(particleAlpha);
@@ -957,12 +980,23 @@ export class WelcomeAnimation {
                 this.ctx.restore();
             }
 
+            const drawnSize = particle.size * eggScale * (particle.pop ?? 1);
+            if (this.floatingParticles.length <= 6) {
+                this.drawSpriteHalo(
+                    this.ctx,
+                    particle,
+                    particle.x,
+                    particle.y,
+                    drawnSize,
+                    particleAlpha * eggAlpha
+                );
+            }
             this.drawParticleShape(
                 this.ctx,
                 particle,
                 particle.x,
                 particle.y,
-                particle.size * eggScale * (particle.pop ?? 1),
+                drawnSize,
                 particleAlpha * eggAlpha
             );
         }

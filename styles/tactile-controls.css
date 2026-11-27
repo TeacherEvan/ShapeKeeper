@@ -1,0 +1,133 @@
+/*
+ * ShapeKeeper — Tactile controls for the setup screens & game footer
+ *
+ * Loaded before cosmic-identity.css so the locked brand tokens remain the
+ * final authority. These rules only restyle native controls that the browser
+ * otherwise paints with OS chrome (checkbox, colour wells) and bring the
+ * in-game utility pills into the same specular surface language as the menu.
+ * Selectors, IDs and data-testid hooks are untouched.
+ */
+
+/* ── Compact, left-aligned toggle row ─────────────────────────────────────── */
+/* `.setting-row` is a column flex container; without this the native checkbox
+ * stretches to the full 595px width of the card (measured 595x13). */
+.setting-row:has(> input[type='checkbox']) {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.setting-row > input[type='checkbox'] {
+    flex: 0 0 auto;
+    align-self: center;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    margin: 0;
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+    transition: transform var(--transition-fast) var(--easing-smooth);
+}
+
+.setting-row > input[type='checkbox']:hover {
+    transform: scale(1.06);
+}
+
+.setting-row > input[type='checkbox']:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .setting-row > input[type='checkbox']:hover {
+        transform: none;
+    }
+}
+
+/* ── Colour wells: a jewelled swatch inside an inset plate ───────────────── */
+input[type='color'] {
+    -webkit-appearance: none;
+    appearance: none;
+    overflow: hidden;
+    padding: 4px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-layer-1);
+    box-shadow: var(--specular-top), var(--shadow-card);
+}
+
+input[type='color']::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+input[type='color']::-webkit-color-swatch {
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 9px;
+}
+
+input[type='color']::-moz-color-swatch {
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 9px;
+}
+
+/* ── Lobby toast: clear of the invite/copy controls ──────────────────────── */
+/* The default fixed top:78px toast landed on top of #copyInviteLinkBtn while
+ * the lobby's "created" toast was visible. */
+body:has(#lobbyScreen.active) .toast-notification {
+    top: 180px;
+}
+
+@media (max-width: 768px) {
+    body:has(#lobbyScreen.active) .toast-notification {
+        top: 210px;
+    }
+}
+
+/* ── Winner rows: brand amber, not blueprint's success-green ─────────────── */
+/* `blueprint.css` (loaded earlier) paints `.final-score-entry.winner` with
+ * `--status-success-surface`; that is why the victory row used to render olive
+ * on Void. This sheet loads after blueprint, so the amber cue wins. */
+.final-scores .final-score-entry {
+    background-color: var(--surface-layer-2);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--specular-top);
+}
+
+.final-scores .final-score-entry.winner {
+    background-color: rgba(var(--accent-primary-rgb), 0.16);
+    border-color: var(--accent-primary);
+    box-shadow: var(--specular-top), 0 4px 20px rgba(var(--accent-primary-rgb), 0.28);
+}
+
+/* ── In-game utility pills: tonal surfaces, not a saturated blue slab ─────── */
+.controls-toggle-btn,
+.populate-btn {
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    background: var(--surface-layer-2);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--specular-top), var(--shadow-card);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .controls-toggle-btn:hover,
+    .populate-btn:hover {
+        background: var(--surface-layer-3);
+        border-color: var(--accent-primary);
+        transform: translateY(-2px);
+        box-shadow: var(--specular-top), var(--shadow-elevated);
+    }
+}
+
+.controls-toggle-btn:active,
+.populate-btn:active {
+    transform: translateY(1px) scale(0.985);
+    box-shadow: var(--specular-top);
+}
+
+/* Keep the double-tap "primed" cue louder than the normal tonal surface. */
+.controls-toggle-btn.primed {
+    background: var(--accent-primary);
+    color: var(--text-inverse);
+    border-color: var(--accent-primary);
+}

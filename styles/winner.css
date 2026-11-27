@@ -20,11 +20,16 @@
 }
 
 .winner-container {
+    position: relative;
+    z-index: 1; /* stays above the z-index:0 fireworks canvas */
     max-width: 600px;
     margin: auto;
     padding: 40px;
     text-align: center;
-    background: var(--surface-layer-1);
+    background-color: var(--surface-layer-1);
+    background-image:
+        radial-gradient(120% 70% at 50% -12%, rgba(var(--accent-primary-rgb), 0.2), transparent 62%),
+        radial-gradient(90% 65% at 50% 118%, var(--nebula-2), transparent 70%);
     border: 1px solid var(--border-default);
     border-radius: 24px;
     backdrop-filter: blur(10px);
@@ -32,8 +37,29 @@
     box-shadow:
         var(--specular-top),
         var(--shadow-elevated),
-        0 0 60px rgba(255, 215, 0, 0.14);
+        0 0 60px rgba(var(--accent-primary-rgb), 0.18);
     animation: winnerAppear 280ms var(--easing-smooth);
+}
+
+/* Signature victory ribbon: brand amber at both ends, cobalt at the crown. */
+.winner-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 12%;
+    right: 12%;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--accent-primary),
+        var(--accent-secondary),
+        var(--accent-primary),
+        transparent
+    );
+    box-shadow: 0 0 16px rgba(var(--accent-primary-rgb), 0.5);
+    pointer-events: none;
 }
 
 @keyframes winnerAppear {
@@ -48,16 +74,26 @@
 }
 
 .winner-container h1 {
+    font-family: var(--font-display);
     font-size: 2.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     margin-bottom: 10px;
     color: var(--text-primary);
     animation: slideUp 240ms var(--easing-smooth) 40ms both;
 }
 
 .winner-container h2 {
+    font-family: var(--font-display);
     font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
     margin-bottom: 24px;
     color: var(--text-secondary);
+    /* `showWinner()` owns the semantic ink via an inline colour; a glow that
+     * inherits currentColor keeps that cue while giving the headline presence. */
+    text-shadow: 0 0 20px currentColor;
     animation: slideUp 240ms var(--easing-smooth) 80ms both;
 }
 
@@ -98,6 +134,10 @@
 .winner-container .start-btn {
     animation: slideUp 240ms var(--easing-smooth) 160ms both;
     margin: 8px;
+}
+
+.winner-container .start-btn:active {
+    transform: translateY(1px) scale(0.985);
 }
 
 .winner-container .start-btn.secondary {
@@ -153,28 +193,32 @@
 .final-score-entry {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 18px 24px;
-    background: var(--bg-secondary);
-    border-radius: 16px;
+    gap: 14px;
+    padding: 14px 20px;
+    background: var(--surface-layer-2);
+    border-radius: 14px;
+    border: 1px solid var(--border-default);
+    box-shadow: var(--specular-top);
     transition:
         transform 0.3s ease,
         border-color 0.3s ease,
         background-color 0.3s ease,
         box-shadow 0.3s ease;
-    border: 2px solid transparent;
 }
 
 .final-score-entry.winner {
     position: relative;
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.18) 0%, rgba(255, 193, 7, 0.12) 100%);
-    border: 2px solid #ffd700;
-    box-shadow: var(--specular-top), 0 4px 20px rgba(255, 215, 0, 0.25);
+    /* Brand amber, not legacy #ffd700: on Void this used to render olive. */
+    background: rgba(var(--accent-primary-rgb), 0.15);
+    border-color: var(--accent-primary);
+    box-shadow:
+        var(--specular-top),
+        0 4px 20px rgba(var(--accent-primary-rgb), 0.28);
 }
 
 .final-score-rank {
-    font-size: 2rem;
-    min-width: 50px;
+    font-size: 1.65rem;
+    min-width: 44px;
     text-align: center;
 }
 
@@ -182,21 +226,23 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    border: 3px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 2px solid var(--border-specular);
+    box-shadow: var(--specular-top), 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .final-score-name {
     flex: 1;
-    font-weight: bold;
+    font-weight: 600;
     font-size: 1.1rem;
     color: var(--text-primary);
 }
 
 .final-score-points {
-    font-size: 1.6rem;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    font-family: var(--font-mono);
+    font-size: 1.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
 }
 
 /* In-Game Game Over Splash Overlay (Levels Mode Timeout) */

@@ -227,19 +227,22 @@ export function launchConfetti(accentColor) {
     }
 
     const confetti = [];
+    // Saturated Arcade Classic hues, not pastel OS chrome. Zero, one and two
+    // are streamer / disc / diamond so the shower reads as wire confetti.
     const colors = [
         accentColor,
-        '#FFD700',
-        '#FF6B6B',
-        '#4ECDC4',
-        '#45B7D1',
-        '#96E6A1',
-        '#DDA0DD',
-        '#F7DC6F',
+        '#f5b727',
+        '#ff6b7a',
+        '#5c9bff',
+        '#34d399',
+        '#22d3ee',
+        '#c084fc',
+        '#a3e635',
     ];
 
     for (let i = 0; i < 150; i += 1) {
         const piece = {
+            shape: i % 3,
             x: Math.random() * width,
             y: Math.random() * height - height,
             w: Math.random() * 10 + 5,
@@ -283,7 +286,21 @@ export function launchConfetti(accentColor) {
                 ctx.translate(piece.x + piece.w / 2, piece.y + piece.h / 2);
                 ctx.rotate((piece.rotation * Math.PI) / 180);
                 ctx.fillStyle = piece.color;
-                ctx.fillRect(-piece.w / 2, -piece.h / 2, piece.w, piece.h);
+                if (piece.shape === 0) {
+                    ctx.fillRect(-piece.w / 2, -piece.h / 2, piece.w, piece.h);
+                } else if (piece.shape === 1) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, Math.max(piece.w, piece.h) / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.beginPath?.();
+                    ctx.moveTo?.(-piece.w / 2, 0);
+                    ctx.lineTo?.(0, -piece.h / 2);
+                    ctx.lineTo?.(piece.w / 2, 0);
+                    ctx.lineTo?.(0, piece.h / 2);
+                    ctx.closePath?.();
+                    ctx.fill?.();
+                }
                 ctx.restore();
             }
         });
@@ -318,8 +335,10 @@ export function launchFireworks(accentColor) {
 
     const canvas = document.createElement('canvas');
     canvas.id = 'fireworksCanvas';
+    // Behind the winner card (z-index 0 vs the card's 1): a burst used to
+    // paint dotted sparks straight over the player name and score.
     canvas.style.cssText =
-        'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10000;';
+        'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;';
     document.body.appendChild(canvas);
 
     const ctx = canvas.getContext('2d');
@@ -337,9 +356,12 @@ export function launchFireworks(accentColor) {
     const colors = [accentColor, '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1'];
 
     const spawnRocket = () => {
+        // Frame the card from the side gutters instead of exploding through it.
+        const side = Math.random() < 0.5 ? 0.06 + Math.random() * 0.2 : 0.74 + Math.random() * 0.2;
         fireworks.push({
-            x: logicalWidth * (0.2 + Math.random() * 0.6),
+            x: logicalWidth * side,
             y: logicalHeight,
+            prevY: logicalHeight,
             targetY: logicalHeight * (0.2 + Math.random() * 0.3),
             vy: -12 - Math.random() * 4,
             color: colors[Math.floor(Math.random() * colors.length)],
@@ -386,8 +408,20 @@ export function launchFireworks(accentColor) {
                 firework.y += firework.vy * dtScale;
                 firework.vy += 0.2 * dtScale;
 
+                // Continuous streak, not a column of fading dots: draw the
+                // segment travelled this frame, then a small bright head.
+                ctx.save();
+                ctx.strokeStyle = firework.color;
+                ctx.lineWidth = 2.5;
+                ctx.lineCap = 'round';
+                ctx.beginPath?.();
+                ctx.moveTo?.(firework.x, firework.prevY);
+                ctx.lineTo?.(firework.x, firework.y);
+                ctx.stroke?.();
+                ctx.restore();
+                firework.prevY = firework.y;
                 ctx.beginPath();
-                ctx.arc(firework.x, firework.y, 3, 0, Math.PI * 2);
+                ctx.arc(firework.x, firework.y, 2.5, 0, Math.PI * 2);
                 ctx.fillStyle = firework.color;
                 ctx.fill();
 

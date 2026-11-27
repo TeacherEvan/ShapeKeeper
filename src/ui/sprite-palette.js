@@ -8,7 +8,7 @@
  *
  * Two rules, both enforced by `tests/cosmic-identity.test.js`:
  *  1. Every ink is saturated (HSL S >= 60%) — pastel washes disappear at the
- *     2–7 px sprite size and at trail opacity.
+ *     small sprite size and at trail opacity.
  *  2. Every ink clears WCAG 1.4.11 non-text contrast (>= 3:1) against its own
  *     theme backdrop (`--bg-primary`), so no sprite is invisible on the canvas.
  *
