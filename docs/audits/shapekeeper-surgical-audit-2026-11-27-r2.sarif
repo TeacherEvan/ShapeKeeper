@@ -1,0 +1,4737 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "surgical-audit-preflight",
+          "version": "3.0.0",
+          "informationUri": "https://github.com/TeacherEvan/surgical-audit",
+          "rules": [
+            {
+              "id": "SA-GOD-FILE",
+              "name": "GodFileThresholdExceeded",
+              "shortDescription": {
+                "text": "File exceeds 400 effective lines of code"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "SA-HIGH-COMPLEXITY",
+              "name": "HighComplexityHotspot",
+              "shortDescription": {
+                "text": "Function or file exceeds complexity (CC >= 10), nesting (> 5), or span LOC (>= 60)"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "SA-SILENT-CATCH",
+              "name": "SilentExceptionHandler",
+              "shortDescription": {
+                "text": "Empty or pass-only exception catch handler swallows errors"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "SA-HOT-LOOP",
+              "name": "HotLoopAllocationMarker",
+              "shortDescription": {
+                "text": "Per-frame or hot-loop allocation/callback marker detected"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              }
+            },
+            {
+              "id": "SA-PARSE-ERROR",
+              "name": "SyntaxParseError",
+              "shortDescription": {
+                "text": "Syntax error prevented full AST inspection"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            }
+          ]
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "properties": {
+            "tree_integrity_sha256": "1906e014e562c738a5a16ae0592c325968fab611c37e81cdef42d493ed31b09e",
+            "skipped_dirs_count": 0,
+            "files_scanned": 257,
+            "effective_loc_total": 31741
+          }
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "SA-GOD-FILE",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "dots-and-boxes-game.js has 1243 effective LOC (> 400)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dots-and-boxes-game.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "effective_loc": 1243
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "dots-and-boxes-game.js flagged for complexity (CC=4, nesting=7, max_function_loc=4)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dots-and-boxes-game.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 31
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 4,
+            "nesting_depth": 7,
+            "max_function_loc": 4
+          }
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "dots-and-boxes-game.js:142 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dots-and-boxes-game.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 142
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "dots-and-boxes-game.js:185 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dots-and-boxes-game.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 185
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "dots-and-boxes-game.js:254 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dots-and-boxes-game.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 254
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "dots-and-boxes-game.js:356 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dots-and-boxes-game.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 356
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "dots-and-boxes-game.js:554 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dots-and-boxes-game.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 554
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "dots-and-boxes-game.js:737 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dots-and-boxes-game.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 737
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "dots-and-boxes-game.js:742 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dots-and-boxes-game.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 742
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "dots-and-boxes-game.js:745 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dots-and-boxes-game.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 745
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "dots-and-boxes-game.js:801 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dots-and-boxes-game.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 801
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "dots-and-boxes-game.js:1233 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dots-and-boxes-game.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1233
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "dots-and-boxes-game.js:1302 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dots-and-boxes-game.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1302
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-GOD-FILE",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "tests/e2e/helpers/bootstrap-shared-multiplayer.js has 883 effective LOC (> 400)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/e2e/helpers/bootstrap-shared-multiplayer.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "effective_loc": 883
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/e2e/helpers/bootstrap-shared-multiplayer.js:319 getSquareKeysCompletedByLine exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/e2e/helpers/bootstrap-shared-multiplayer.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 319,
+                  "endLine": 362
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 11,
+            "nesting_depth": 8,
+            "max_function_loc": 54
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/e2e/helpers/bootstrap-shared-multiplayer.js:363 buildOpenLobbiesList exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/e2e/helpers/bootstrap-shared-multiplayer.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 363,
+                  "endLine": 382
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 11,
+            "nesting_depth": 8,
+            "max_function_loc": 54
+          }
+        },
+        {
+          "ruleId": "SA-GOD-FILE",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/WelcomeAnimation.js has 830 effective LOC (> 400)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/WelcomeAnimation.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "effective_loc": 830
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/WelcomeAnimation.js flagged for complexity (CC=3, nesting=6, max_function_loc=9)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/WelcomeAnimation.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 949
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 3,
+            "nesting_depth": 6,
+            "max_function_loc": 9
+          }
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/WelcomeAnimation.js:126 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/WelcomeAnimation.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 126
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/WelcomeAnimation.js:129 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/WelcomeAnimation.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 129
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/WelcomeAnimation.js:447 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/WelcomeAnimation.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 447
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/WelcomeAnimation.js:867 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/WelcomeAnimation.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 867
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/WelcomeAnimation.js:870 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/WelcomeAnimation.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 870
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/WelcomeAnimation.js:992 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/WelcomeAnimation.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 992
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/WelcomeAnimation.js:1008 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/WelcomeAnimation.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1008
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "src/audio/AmbientSoundscape.js:178 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/audio/AmbientSoundscape.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 178
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "src/audio/AmbientSoundscape.js:300 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/audio/AmbientSoundscape.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 300
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "src/audio/AmbientSoundscape.js:331 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/audio/AmbientSoundscape.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 331
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "src/audio/AmbientSoundscape.js:467 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/audio/AmbientSoundscape.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 467
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "src/audio/AmbientSoundscape.js:474 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/audio/AmbientSoundscape.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 474
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-GOD-FILE",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "ui-manager/celebrations.js has 531 effective LOC (> 400)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager/celebrations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "effective_loc": 531
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "ui-manager/celebrations.js:480 showWinner exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager/celebrations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 480,
+                  "endLine": 615
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 36,
+            "nesting_depth": 7,
+            "max_function_loc": 138
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "ui-manager/celebrations.js:273 launchFireworks exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager/celebrations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 273,
+                  "endLine": 410
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 36,
+            "nesting_depth": 7,
+            "max_function_loc": 138
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "ui-manager/celebrations.js:334 animate exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager/celebrations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 334,
+                  "endLine": 407
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 36,
+            "nesting_depth": 7,
+            "max_function_loc": 138
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "ui-manager/celebrations.js:420 showGameOverSplash exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager/celebrations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 420,
+                  "endLine": 478
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 36,
+            "nesting_depth": 7,
+            "max_function_loc": 138
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "ui-manager/celebrations.js:188 launchConfetti exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager/celebrations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 188,
+                  "endLine": 271
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 36,
+            "nesting_depth": 7,
+            "max_function_loc": 138
+          }
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "ui-manager/celebrations.js:242 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager/celebrations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 242
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "ui-manager/celebrations.js:262 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager/celebrations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 262
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "ui-manager/celebrations.js:270 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager/celebrations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 270
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "ui-manager/celebrations.js:347 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager/celebrations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 347
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "ui-manager/celebrations.js:401 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager/celebrations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 401
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "ui-manager/celebrations.js:409 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager/celebrations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 409
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "ui-manager/celebrations.js:604 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager/celebrations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 604
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-GOD-FILE",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "tests/game-effects.test.js has 482 effective LOC (> 400)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/game-effects.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "effective_loc": 482
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "sound-manager.js flagged for complexity (CC=49, nesting=4, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "sound-manager.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 49,
+            "nesting_depth": 4,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "sound-manager.js:236 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "sound-manager.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 236
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "sound-manager.js:339 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "sound-manager.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 339
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "sound-manager.js:371 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "sound-manager.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 371
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/menu/lobbyEvents.js:49 bindLobbyEvents exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/menu/lobbyEvents.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 49,
+                  "endLine": 404
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 70,
+            "nesting_depth": 6,
+            "max_function_loc": 356
+          }
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "src/ui/menu/lobbyEvents.js:39 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/menu/lobbyEvents.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 39
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-GOD-FILE",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "renderer/effects.js has 409 effective LOC (> 400)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "renderer/effects.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "effective_loc": 409
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "renderer/effects.js:129 drawAmbientParticles exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "renderer/effects.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 129,
+                  "endLine": 193
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 24,
+            "nesting_depth": 4,
+            "max_function_loc": 97
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "renderer/effects.js:391 drawPenaltyBoxAnimations exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "renderer/effects.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 391,
+                  "endLine": 487
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 24,
+            "nesting_depth": 4,
+            "max_function_loc": 97
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "renderer/effects.js:52 drawFloatingGeometry exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "renderer/effects.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 52,
+                  "endLine": 127
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 24,
+            "nesting_depth": 4,
+            "max_function_loc": 97
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "renderer/effects.js:244 drawSelectionRibbon exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "renderer/effects.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 244,
+                  "endLine": 274
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 24,
+            "nesting_depth": 4,
+            "max_function_loc": 97
+          }
+        },
+        {
+          "ruleId": "SA-GOD-FILE",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "convex/games/state.ts has 409 effective LOC (> 400)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/games/state.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "effective_loc": 409
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/games/state.ts:87 revealMultiplierHandler exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/games/state.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 87,
+                  "endLine": 183
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 15,
+            "nesting_depth": 3,
+            "max_function_loc": 116
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/games/state.ts:200 tapSquareHandler exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/games/state.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 200,
+                  "endLine": 283
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 15,
+            "nesting_depth": 3,
+            "max_function_loc": 116
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/games/state.ts:388 populateLinesHandler exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/games/state.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 388,
+                  "endLine": 503
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 15,
+            "nesting_depth": 3,
+            "max_function_loc": 116
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "input-handler/pointer-controls.js:203 handlePointerDown exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "input-handler/pointer-controls.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 203,
+                  "endLine": 245
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 10,
+            "nesting_depth": 3,
+            "max_function_loc": 50
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "input-handler/pointer-controls.js:274 handlePointerUp exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "input-handler/pointer-controls.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 274,
+                  "endLine": 323
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 10,
+            "nesting_depth": 3,
+            "max_function_loc": 50
+          }
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "input-handler/pointer-controls.js:21 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "input-handler/pointer-controls.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 21
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "input-handler/pointer-controls.js:238 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "input-handler/pointer-controls.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 238
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-GOD-FILE",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "tests/e2e/reconnect.spec.js has 410 effective LOC (> 400)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/e2e/reconnect.spec.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "effective_loc": 410
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "local-save-replay.js:50 isValidSnapshot exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "local-save-replay.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 50,
+                  "endLine": 109
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 26,
+            "nesting_depth": 3,
+            "max_function_loc": 60
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "local-save-replay.js:210 validateLocalSavePayload exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "local-save-replay.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 210,
+                  "endLine": 264
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 26,
+            "nesting_depth": 3,
+            "max_function_loc": 60
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "local-save-replay.js:144 normalizeConfig exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "local-save-replay.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 144,
+                  "endLine": 186
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 26,
+            "nesting_depth": 3,
+            "max_function_loc": 60
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "local-save-replay.js:121 normalizeGridSize exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "local-save-replay.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 121,
+                  "endLine": 142
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 26,
+            "nesting_depth": 3,
+            "max_function_loc": 60
+          }
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "local-save-replay.js:352 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "local-save-replay.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 352
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/welcome-animation-interaction.test.js flagged for complexity (CC=16, nesting=3, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/welcome-animation-interaction.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 16,
+            "nesting_depth": 3,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/MenuNavigation.js:81 setStartupState exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/MenuNavigation.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 81,
+                  "endLine": 117
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 13,
+            "nesting_depth": 4,
+            "max_function_loc": 50
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/MenuNavigation.js:184 ensureConnectionStateMonitoring exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/MenuNavigation.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 184,
+                  "endLine": 220
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 13,
+            "nesting_depth": 4,
+            "max_function_loc": 50
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/MenuNavigation.js:280 initializeMultiplayerGame exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/MenuNavigation.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 280,
+                  "endLine": 329
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 13,
+            "nesting_depth": 4,
+            "max_function_loc": 50
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "game-state.js flagged for complexity (CC=4, nesting=6, max_function_loc=17)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "game-state.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 265
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 4,
+            "nesting_depth": 6,
+            "max_function_loc": 17
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/menu/syncHandlers.js:14 handleRoomStateUpdate exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/menu/syncHandlers.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 14,
+                  "endLine": 162
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 40,
+            "nesting_depth": 6,
+            "max_function_loc": 188
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/menu/syncHandlers.js:164 handleAuthoritativeGameState exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/menu/syncHandlers.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 164,
+                  "endLine": 351
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 40,
+            "nesting_depth": 6,
+            "max_function_loc": 188
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex-client/room-operations.js:1 initializeShapeKeeperConvexRoomOperations exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex-client/room-operations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1,
+                  "endLine": 235
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 30,
+            "nesting_depth": 4,
+            "max_function_loc": 235
+          }
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "convex-client/room-operations.js:23 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex-client/room-operations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 23
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "convex-client/room-operations.js:39 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex-client/room-operations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 39
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/a11y/AccessibleGridTree.js flagged for complexity (CC=2, nesting=6, max_function_loc=10)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/a11y/AccessibleGridTree.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 240
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 2,
+            "nesting_depth": 6,
+            "max_function_loc": 10
+          }
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "src/a11y/AccessibleGridTree.js:312 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/a11y/AccessibleGridTree.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 312
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/e2e/layout-overlap-mobile.spec.js:99 getInteractiveRects exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/e2e/layout-overlap-mobile.spec.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 99,
+                  "endLine": 144
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 20,
+            "nesting_depth": 5,
+            "max_function_loc": 63
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/e2e/layout-overlap-mobile.spec.js:190 expectMobileFriendly exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/e2e/layout-overlap-mobile.spec.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 190,
+                  "endLine": 252
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 20,
+            "nesting_depth": 5,
+            "max_function_loc": 63
+          }
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "tutorial-system.js:90 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tutorial-system.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 90
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "tutorial-system.js:112 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tutorial-system.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 112
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "tutorial-system.js:258 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tutorial-system.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 258
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "tutorial-system.js:267 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tutorial-system.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 267
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "tutorial-system.js:293 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tutorial-system.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 293
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "input-handler.js flagged for complexity (CC=13, nesting=5, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "input-handler.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 13,
+            "nesting_depth": 5,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "input-handler.js:117 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "input-handler.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 117
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/e2e/multiplayer-sync.spec.js flagged for complexity (CC=14, nesting=5, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/e2e/multiplayer-sync.spec.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 14,
+            "nesting_depth": 5,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "ui-manager.js flagged for complexity (CC=49, nesting=4, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "ui-manager.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 49,
+            "nesting_depth": 4,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "renderer/board.js:203 drawSquaresWithAnimations exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "renderer/board.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 203,
+                  "endLine": 299
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 15,
+            "nesting_depth": 3,
+            "max_function_loc": 97
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "renderer/board.js:30 drawBoardFrame exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "renderer/board.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 30,
+                  "endLine": 62
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 15,
+            "nesting_depth": 3,
+            "max_function_loc": 97
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/games/draw.ts:137 drawLineHandler exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/games/draw.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 137,
+                  "endLine": 282
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 13,
+            "nesting_depth": 6,
+            "max_function_loc": 146
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/games/draw.ts:9 applyLineForPlayer exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/games/draw.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 9,
+                  "endLine": 135
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 13,
+            "nesting_depth": 6,
+            "max_function_loc": 146
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ai/MinimaxEngine.js:16 evaluateImmediateSquareGain exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ai/MinimaxEngine.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 16,
+                  "endLine": 56
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 19,
+            "nesting_depth": 5,
+            "max_function_loc": 137
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ai/MinimaxEngine.js:90 minimax exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ai/MinimaxEngine.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 90,
+                  "endLine": 226
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 19,
+            "nesting_depth": 5,
+            "max_function_loc": 137
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ai/MinimaxEngine.js:231 findOptimalMinimaxMove exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ai/MinimaxEngine.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 231,
+                  "endLine": 284
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 19,
+            "nesting_depth": 5,
+            "max_function_loc": 137
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ai/MinimaxEngine.js:21 isComplete exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ai/MinimaxEngine.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 21,
+                  "endLine": 37
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 19,
+            "nesting_depth": 5,
+            "max_function_loc": 137
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/ai-chain-engine.test.js flagged for complexity (CC=5, nesting=6, max_function_loc=13)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/ai-chain-engine.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 187
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 5,
+            "nesting_depth": 6,
+            "max_function_loc": 13
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/DonationPrompt.js:86 maybeShowDonationPrompt exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/DonationPrompt.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 86,
+                  "endLine": 173
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 19,
+            "nesting_depth": 5,
+            "max_function_loc": 88
+          }
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "src/ui/DonationPrompt.js:40 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/DonationPrompt.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 40
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "src/ui/DonationPrompt.js:129 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/DonationPrompt.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 129
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/DonationPrompt.js:168 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/DonationPrompt.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 168
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/property-invariants.test.js flagged for complexity (CC=1, nesting=6, max_function_loc=47)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/property-invariants.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 1,
+            "nesting_depth": 6,
+            "max_function_loc": 47
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/games.test.ts flagged for complexity (CC=5, nesting=6, max_function_loc=35)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/games.test.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 18
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 5,
+            "nesting_depth": 6,
+            "max_function_loc": 35
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/games/turnTimer.test.ts flagged for complexity (CC=8, nesting=8, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/games/turnTimer.test.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 8,
+            "nesting_depth": 8,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex-client/subscriptions.js:1 initializeShapeKeeperConvexSubscriptions exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex-client/subscriptions.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1,
+                  "endLine": 208
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 47,
+            "nesting_depth": 7,
+            "max_function_loc": 208
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex-client/subscriptions.js:10 stateHasChanged exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex-client/subscriptions.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 49
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 47,
+            "nesting_depth": 7,
+            "max_function_loc": 208
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex-client/subscriptions.js:107 subscribeToGameState exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex-client/subscriptions.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 107,
+                  "endLine": 174
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 47,
+            "nesting_depth": 7,
+            "max_function_loc": 208
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex-client/subscriptions.js:51 subscribeToRoom exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex-client/subscriptions.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 51,
+                  "endLine": 105
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 47,
+            "nesting_depth": 7,
+            "max_function_loc": 208
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex-client/subscriptions.js:126 optimizedCallback exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex-client/subscriptions.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 126,
+                  "endLine": 163
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 47,
+            "nesting_depth": 7,
+            "max_function_loc": 208
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex-client/shared.js:1 initializeShapeKeeperConvexShared exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex-client/shared.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1,
+                  "endLine": 216
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 23,
+            "nesting_depth": 4,
+            "max_function_loc": 216
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/menu/localSetupEvents.js:57 bindLocalSetupEvents exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/menu/localSetupEvents.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 57,
+                  "endLine": 221
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 28,
+            "nesting_depth": 4,
+            "max_function_loc": 165
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "checkout.js:10 checkout exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "checkout.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 165
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 21,
+            "nesting_depth": 5,
+            "max_function_loc": 156
+          }
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "checkout.js:55 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "checkout.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 55
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/menu/sessionEvents.js:20 bindSessionEvents exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/menu/sessionEvents.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 20,
+                  "endLine": 208
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 33,
+            "nesting_depth": 6,
+            "max_function_loc": 189
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/mutations/updateTurnDuration.test.ts flagged for complexity (CC=5, nesting=9, max_function_loc=44)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/mutations/updateTurnDuration.test.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 12
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 5,
+            "nesting_depth": 9,
+            "max_function_loc": 44
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/mine-placement.test.js flagged for complexity (CC=1, nesting=6, max_function_loc=38)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/mine-placement.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 16
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 1,
+            "nesting_depth": 6,
+            "max_function_loc": 38
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/SpriteFireworks.js:20 advanceSpriteLifecycle exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/SpriteFireworks.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 20,
+                  "endLine": 91
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 13,
+            "nesting_depth": 4,
+            "max_function_loc": 72
+          }
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/SpriteFireworks.js:139 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/SpriteFireworks.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 139
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/SpriteFireworks.js:173 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/SpriteFireworks.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 173
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "game-logic.js flagged for complexity (CC=37, nesting=5, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "game-logic.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 37,
+            "nesting_depth": 5,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/e2e/multiplayer-reconnect-cycles.spec.js flagged for complexity (CC=10, nesting=5, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/e2e/multiplayer-reconnect-cycles.spec.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 10,
+            "nesting_depth": 5,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/UnlockGate.js:125 buildDialog exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/UnlockGate.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 125,
+                  "endLine": 217
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 7,
+            "nesting_depth": 4,
+            "max_function_loc": 93
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/games/state.test.ts flagged for complexity (CC=11, nesting=10, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/games/state.test.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 11,
+            "nesting_depth": 10,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/mutations/joinRoom.test.ts flagged for complexity (CC=7, nesting=9, max_function_loc=51)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/mutations/joinRoom.test.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 20
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 7,
+            "nesting_depth": 9,
+            "max_function_loc": 51
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ai/ChainAnalysis.js flagged for complexity (CC=4, nesting=6, max_function_loc=41)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ai/ChainAnalysis.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 186
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 4,
+            "nesting_depth": 6,
+            "max_function_loc": 41
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/LevelsScreen.js:81 renderLevelsGrid exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/LevelsScreen.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 81,
+                  "endLine": 194
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 26,
+            "nesting_depth": 5,
+            "max_function_loc": 114
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "input-handler/keyboard-controls.js:139 handleKeyDown exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "input-handler/keyboard-controls.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 139,
+                  "endLine": 180
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 12,
+            "nesting_depth": 3,
+            "max_function_loc": 62
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "input-handler/keyboard-controls.js:10 setKeyboardFocusDot exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "input-handler/keyboard-controls.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 43
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 12,
+            "nesting_depth": 3,
+            "max_function_loc": 62
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "input-handler/keyboard-controls.js:76 handleKeyboardSelection exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "input-handler/keyboard-controls.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 76,
+                  "endLine": 137
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 12,
+            "nesting_depth": 3,
+            "max_function_loc": 62
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/e2e/opponent-tap.spec.js flagged for complexity (CC=3, nesting=6, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/e2e/opponent-tap.spec.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 3,
+            "nesting_depth": 6,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/particles/TypedParticlePool.js:7 parseColorToUint32 exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/particles/TypedParticlePool.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 7,
+                  "endLine": 34
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 19,
+            "nesting_depth": 4,
+            "max_function_loc": 28
+          }
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/particles/TypedParticlePool.js:141 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/particles/TypedParticlePool.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 141
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/games/rematch.test.ts flagged for complexity (CC=5, nesting=7, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/games/rematch.test.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 5,
+            "nesting_depth": 7,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/queries/roomQueries.test.ts flagged for complexity (CC=7, nesting=8, max_function_loc=34)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/queries/roomQueries.test.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 25
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 7,
+            "nesting_depth": 8,
+            "max_function_loc": 34
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/MultiplayerStartup.js:53 createMultiplayerStartupController exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/MultiplayerStartup.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 53,
+                  "endLine": 170
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 8,
+            "nesting_depth": 4,
+            "max_function_loc": 118
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/rate-limit.test.js flagged for complexity (CC=6, nesting=9, max_function_loc=50)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/rate-limit.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 6,
+            "nesting_depth": 9,
+            "max_function_loc": 50
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex-client/game-operations.js:1 initializeShapeKeeperConvexGameOperations exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex-client/game-operations.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1,
+                  "endLine": 156
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 12,
+            "nesting_depth": 3,
+            "max_function_loc": 156
+          }
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "convex/games/turnTimer.ts:26 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/games/turnTimer.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 26
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "particle-system/core.js:97 updateParticles exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "particle-system/core.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 97,
+                  "endLine": 139
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 13,
+            "nesting_depth": 3,
+            "max_function_loc": 43
+          }
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "src/ui/sprite-sparks.js:111 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/sprite-sparks.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 111
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/sprite-sparks.js:65 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/sprite-sparks.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 65
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/sprite-sparks.js:86 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/sprite-sparks.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 86
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "tests/particle-soa.test.js:93 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/particle-soa.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 93
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "tests/particle-soa.test.js:112 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/particle-soa.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 112
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "tests/particle-soa.test.js:127 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/particle-soa.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 127
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/lifecycle/DisposableRegistry.js flagged for complexity (CC=24, nesting=5, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/lifecycle/DisposableRegistry.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 24,
+            "nesting_depth": 5,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "renderer/lava-timer.js:83 drawLavaTimer exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "renderer/lava-timer.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 83,
+                  "endLine": 152
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 23,
+            "nesting_depth": 3,
+            "max_function_loc": 70
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/entitlements.test.ts flagged for complexity (CC=4, nesting=7, max_function_loc=38)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/entitlements.test.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 4,
+            "nesting_depth": 7,
+            "max_function_loc": 38
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex-client.js:24 initializeShapeKeeperConvex exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex-client.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 24,
+                  "endLine": 100
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 12,
+            "nesting_depth": 5,
+            "max_function_loc": 77
+          }
+        },
+        {
+          "ruleId": "SA-SILENT-CATCH",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "convex-client.js:88 silent catch handler swallows errors."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex-client.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 88
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/e2e/multiplayer-sync-host-transfer.spec.js flagged for complexity (CC=9, nesting=6, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/e2e/multiplayer-sync-host-transfer.spec.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 9,
+            "nesting_depth": 6,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/rooms/settings.ts:50 startGameHandler exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/rooms/settings.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 50,
+                  "endLine": 127
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 8,
+            "nesting_depth": 3,
+            "max_function_loc": 78
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "welcome.js:42 initializeApp exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "welcome.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 42,
+                  "endLine": 134
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 17,
+            "nesting_depth": 5,
+            "max_function_loc": 93
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/licences.test.ts flagged for complexity (CC=5, nesting=6, max_function_loc=36)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/licences.test.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 5,
+            "nesting_depth": 6,
+            "max_function_loc": 36
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/timing/turn-clock-controller.js:17 createTurnClockController exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/timing/turn-clock-controller.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17,
+                  "endLine": 133
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 17,
+            "nesting_depth": 6,
+            "max_function_loc": 117
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/LobbyManager.js flagged for complexity (CC=10, nesting=3, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/LobbyManager.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 10,
+            "nesting_depth": 3,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/mutations/createRoom.test.ts flagged for complexity (CC=5, nesting=9, max_function_loc=42)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/mutations/createRoom.test.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 4
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 5,
+            "nesting_depth": 9,
+            "max_function_loc": 42
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/mutations/updatePlayer.test.ts flagged for complexity (CC=5, nesting=9, max_function_loc=43)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/mutations/updatePlayer.test.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 5,
+            "nesting_depth": 9,
+            "max_function_loc": 43
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "tests/e2e/helpers/bootstrap-app.js:39 gotoApp exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/e2e/helpers/bootstrap-app.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 39,
+                  "endLine": 111
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 8,
+            "nesting_depth": 4,
+            "max_function_loc": 73
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/games/squares.ts:4 checkForCompletedSquares exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/games/squares.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 4,
+                  "endLine": 110
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 13,
+            "nesting_depth": 3,
+            "max_function_loc": 107
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/mutations/toggleReady.test.ts flagged for complexity (CC=5, nesting=9, max_function_loc=41)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/mutations/toggleReady.test.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 5,
+            "nesting_depth": 9,
+            "max_function_loc": 41
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/mutations/createRoom.ts flagged for complexity (CC=12, nesting=3, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/mutations/createRoom.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 12,
+            "nesting_depth": 3,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/mutations/sweepStaleLobbies.test.ts flagged for complexity (CC=7, nesting=10, max_function_loc=47)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/mutations/sweepStaleLobbies.test.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 7,
+            "nesting_depth": 10,
+            "max_function_loc": 47
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/menu/lobbyView.js:5 updateLobbyUI exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/menu/lobbyView.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 96
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 18,
+            "nesting_depth": 5,
+            "max_function_loc": 92
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/mutations/joinRoom.ts flagged for complexity (CC=18, nesting=4, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/mutations/joinRoom.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 18,
+            "nesting_depth": 4,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "effect-system/gameplay.js:74 tapSquare exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "effect-system/gameplay.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 74,
+                  "endLine": 108
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 11,
+            "nesting_depth": 4,
+            "max_function_loc": 41
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/timing/clock-sync.js:17 createClockSync exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/timing/clock-sync.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17,
+                  "endLine": 117
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 6,
+            "nesting_depth": 4,
+            "max_function_loc": 101
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/mutations/leaveRoom.ts flagged for complexity (CC=14, nesting=4, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/mutations/leaveRoom.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 14,
+            "nesting_depth": 4,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/SpriteFireworks.test.js:75 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/SpriteFireworks.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 75
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/SpriteFireworks.test.js:87 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/SpriteFireworks.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 87
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/SpriteFireworks.test.js:94 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/SpriteFireworks.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 94
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/mutations/updateTurnDuration.ts flagged for complexity (CC=13, nesting=4, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/mutations/updateTurnDuration.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 13,
+            "nesting_depth": 4,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/Toast.js:15 showToast exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/Toast.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 15,
+                  "endLine": 76
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 10,
+            "nesting_depth": 3,
+            "max_function_loc": 62
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/timing/local-turn-timer.js:5 createLocalTurnTimer exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/timing/local-turn-timer.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 5,
+                  "endLine": 51
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 16,
+            "nesting_depth": 3,
+            "max_function_loc": 47
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "src/ui/ScreenTransition.js:13 showScreen exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/ScreenTransition.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 13,
+                  "endLine": 55
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 10,
+            "nesting_depth": 2,
+            "max_function_loc": 43
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "config.js:18 configureShapeKeeper exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "config.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 18,
+                  "endLine": 74
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 14,
+            "nesting_depth": 2,
+            "max_function_loc": 57
+          }
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "tests/sri-integrity.test.js:72 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/sri-integrity.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 72
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/sprite-sparks.test.js:17 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/sprite-sparks.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/sprite-sparks.test.js:18 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/sprite-sparks.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 18
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/sprite-sparks.test.js:19 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/sprite-sparks.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 19
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/sprite-sparks.test.js:20 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/sprite-sparks.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 20
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/sprite-sparks.test.js:22 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/sprite-sparks.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 22
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/sprite-sparks.test.js:36 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/sprite-sparks.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/sprite-sparks.test.js:40 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/sprite-sparks.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 40
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HOT-LOOP",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "src/ui/sprite-sparks.test.js:46 hot-loop allocation/callback marker."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ui/sprite-sparks.test.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 46
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/mutations/startGame.ts flagged for complexity (CC=10, nesting=3, max_function_loc=0)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/mutations/startGame.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 10,
+            "nesting_depth": 3,
+            "max_function_loc": 0
+          }
+        },
+        {
+          "ruleId": "SA-HIGH-COMPLEXITY",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "convex/games/lineValidation.ts:8 validateLineKey exceeds complexity thresholds."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "convex/games/lineValidation.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 8,
+                  "endLine": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cyclomatic_complexity": 16,
+            "nesting_depth": 1,
+            "max_function_loc": 23
+          }
+        }
+      ]
+    }
+  ]
+}
