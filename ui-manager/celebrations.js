@@ -5,7 +5,7 @@
 import { announceAlert, announceStatus } from '../src/ui/AccessibilityAnnouncer.js';
 import { LevelsProgress, MAX_LEVEL, getTurnDurationForLevel } from '../src/ui/LevelsProgress.js';
 import { showScreen } from '../src/ui/ScreenTransition.js';
-import { formatHexAlpha, prefersReducedMotion } from '../utils.js';
+import { formatHexAlpha, getPlayerColor, getPlayerName, prefersReducedMotion } from '../utils.js';
 
 function getTurnIndicator() {
     return document.getElementById('turnIndicator');
@@ -32,7 +32,7 @@ export function triggerBonusTurnVisual(game, refreshUI) {
         }, 1500);
     }
 
-    const playerColor = game.currentPlayer === 1 ? game.player1Color : game.player2Color;
+    const playerColor = getPlayerColor(game, game.currentPlayer);
     spawnDirectionalBurst(game, 20, () => {
         const angle = Math.random() * Math.PI * 2;
         const speed = 2 + Math.random() * 3;
@@ -484,10 +484,23 @@ export function showWinner(game) {
         return;
     }
 
-    const winner = game.scores[1] > game.scores[2] ? 1 : game.scores[2] > game.scores[1] ? 2 : 0;
-    const isTie = winner === 0;
-    const winnerColor =
-        winner === 1 ? game.player1Color : winner === 2 ? game.player2Color : '#FFD700';
+    const playerCount = Math.max(2, game.playerCount || 2);
+    const players = [];
+    for (let num = 1; num <= playerCount; num += 1) {
+        players.push({
+            num,
+            name: getPlayerName(game, num),
+            score: game.scores[num] ?? 0,
+            color: getPlayerColor(game, num),
+        });
+    }
+    players.sort((left, right) => right.score - left.score);
+
+    const topScore = players[0]?.score ?? 0;
+    const leaders = players.filter((p) => p.score === topScore);
+    const isTie = leaders.length > 1;
+    const winner = isTie ? 0 : players[0].num;
+    const winnerColor = isTie ? '#FFD700' : players[0].color;
 
     // A draw counts as a win in Levels mode (owner decision 2026-10-30): the AI
     // has to actually out-score the player to take a sprite. A tie clears the
@@ -588,16 +601,14 @@ export function showWinner(game) {
                 winnerText.textContent = `🤝 It's a Tie! 🤝`;
                 winnerText.style.color = '#FFD700';
             } else {
-                winnerText.textContent = `🏆 Player ${winner} Wins! 🏆`;
+                const winnerLabel = game.isMultiplayer
+                    ? getPlayerName(game, winner)
+                    : `Player ${winner}`;
+                winnerText.textContent = `🏆 ${winnerLabel} Wins! 🏆`;
                 winnerText.style.color = winnerColor;
             }
         }
     }
-
-    const players = [
-        { num: 1, score: game.scores[1], color: game.player1Color },
-        { num: 2, score: game.scores[2], color: game.player2Color },
-    ].sort((left, right) => right.score - left.score);
 
     if (finalScores) {
         finalScores.replaceChildren(

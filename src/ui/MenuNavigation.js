@@ -319,6 +319,17 @@ function initializeMultiplayerGame(roomState) {
     multiplayerGame.isOnline = true;
     multiplayerGame.myPlayerNumber = myIndex + 1;
     multiplayerGame.isHost = resolvedIsHost;
+    multiplayerGame.playerCount = Math.max(2, sortedPlayers.length);
+    multiplayerGame.playerColors = {};
+    multiplayerGame.playerNames = {};
+    sortedPlayers.forEach((player, idx) => {
+        const num = (player.playerIndex ?? idx) + 1;
+        multiplayerGame.playerColors[num] =
+            player.color || (num === 1 ? player1Color : player2Color);
+        multiplayerGame.playerNames[num] = player.name || `Player ${num}`;
+        multiplayerGame.scores[num] = player.score || 0;
+        multiplayerGame.displayedScores[num] = player.score || 0;
+    });
     setActiveGame(multiplayerGame);
     game.uiManager.displayLoadingSkeleton(true);
 

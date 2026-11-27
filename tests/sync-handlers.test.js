@@ -133,6 +133,37 @@ describe('handleAuthoritativeGameState — online game completion', () => {
         expect(game2.turnRemainingMs).toBeGreaterThan(0);
         expect(game1.turnRemainingMs).toBeNull();
     });
+
+    it('syncs 4-player online scores, names, colors, and multiplierRevealed on reconnect', () => {
+        const g = makeGame();
+        g.revealedMultipliers = new Set();
+        const fourPlayerState = {
+            players: [
+                { playerIndex: 0, score: 2, name: 'Ada', color: '#FF5C5C' },
+                { playerIndex: 1, score: 3, name: 'Bob', color: '#3B82F6' },
+                { playerIndex: 2, score: 7, name: 'Cleo', color: '#10B981' },
+                { playerIndex: 3, score: 1, name: 'Dan', color: '#F59E0B' },
+            ],
+            lines: [],
+            squares: [
+                {
+                    squareKey: '0,0',
+                    playerIndex: 2,
+                    multiplier: { type: 'multiplier', value: 2 },
+                    multiplierRevealed: true,
+                },
+            ],
+            room: { status: 'playing', currentPlayerIndex: 2 },
+        };
+
+        handleAuthoritativeGameState(fourPlayerState, makeDeps({ game: g }));
+
+        expect(g.playerCount).toBe(4);
+        expect(g.scores[3]).toBe(7);
+        expect(g.playerNames[3]).toBe('Cleo');
+        expect(g.playerColors[3]).toBe('#10B981');
+        expect(g.revealedMultipliers.has('0,0')).toBe(true);
+    });
 });
 
 describe('handleRoomStateUpdate — isHost/isYou from server', () => {

@@ -232,8 +232,11 @@ export function handleAuthoritativeGameState(gameState, deps) {
         if (game.squareTaps) game.squareTaps = {};
         game.revealedMultipliers?.clear?.();
         game.claimedCells?.clear?.();
-        game.scores[1] = 0;
-        game.scores[2] = 0;
+        const resetCount = Math.max(2, game.playerCount || gameState.players?.length || 2);
+        for (let pNum = 1; pNum <= resetCount; pNum += 1) {
+            game.scores[pNum] = 0;
+            if (game.displayedScores) game.displayedScores[pNum] = 0;
+        }
         const btn = document.getElementById('playAgain');
         if (btn) {
             btn.disabled = false;
@@ -313,29 +316,44 @@ export function handleAuthoritativeGameState(gameState, deps) {
             if (game.squareTaps) {
                 game.squareTaps[key] = square.taps ?? 0;
             }
+            if (square.multiplierRevealed && game.revealedMultipliers) {
+                game.revealedMultipliers.add(key);
+            }
 
             game.triggerSquareAnimation(key, square.playerIndex + 1);
             game.playSquareSound(game.comboCount);
-        } else if (game.squareTaps && (square.taps ?? 0) > (game.squareTaps[key] ?? 0)) {
-            // The square was already known to us, but a NEW tap has landed.
-            // Update the local counter (so the renderer can show ✋) and
-            // refresh the effective multiplier from the server so the next
-            // reveal uses the right value. We do NOT trigger a re-animation
-            // — taps should feel snappy and lightweight, not a re-claim.
-            game.squareTaps[key] = square.taps ?? 0;
-            if (square.effectiveMultiplier) {
-                game.squareMultipliers[key] = {
-                    type: square.effectiveMultiplier.type,
-                    value: square.effectiveMultiplier.value,
-                };
+        } else {
+            if (square.multiplierRevealed && game.revealedMultipliers) {
+                game.revealedMultipliers.add(key);
+            }
+            if (game.squareTaps && (square.taps ?? 0) > (game.squareTaps[key] ?? 0)) {
+                game.squareTaps[key] = square.taps ?? 0;
+                if (square.effectiveMultiplier) {
+                    game.squareMultipliers[key] = {
+                        type: square.effectiveMultiplier.type,
+                        value: square.effectiveMultiplier.value,
+                    };
+                }
             }
         }
     });
 
-    const p1 = gameState.players?.find((player) => player.playerIndex === 0);
-    const p2 = gameState.players?.find((player) => player.playerIndex === 1);
-    game.scores[1] = p1?.score || 0;
-    game.scores[2] = p2?.score || 0;
+    const syncedPlayers = gameState.players || [];
+    game.playerCount = Math.max(2, syncedPlayers.length);
+    if (!game.playerColors) game.playerColors = {};
+    if (!game.playerNames) game.playerNames = {};
+    if (!game.displayedScores) game.displayedScores = {};
+    syncedPlayers.forEach((player, idx) => {
+        const pNum = (player.playerIndex ?? idx) + 1;
+        game.scores[pNum] = player.score || 0;
+        if (game.displayedScores[pNum] === undefined) {
+            game.displayedScores[pNum] = player.score || 0;
+        }
+        if (player.color) game.playerColors[pNum] = player.color;
+        if (player.name) game.playerNames[pNum] = player.name;
+    });
+    if (game.scores[1] === undefined) game.scores[1] = 0;
+    if (game.scores[2] === undefined) game.scores[2] = 0;
 
     game.uiManager.updatePopulateButtonVisibility();
 

@@ -7,7 +7,7 @@
  */
 
 import { announceStatus } from './src/ui/AccessibilityAnnouncer.js';
-import { expDecay } from './utils.js';
+import { expDecay, getPlayerColor, getPlayerName } from './utils.js';
 import {
     hideGameOverSplash,
     showGameOverSplash,
@@ -71,42 +71,28 @@ export class UIManager {
         const { player1Score, player2Score, player1Info, player2Info, turnIndicator } =
             this.domCache;
 
-        // Frame-rate independent score counting via expDecay
-        const player1ScoreDiff = this.game.scores[1] - this.game.displayedScores[1];
-        const player2ScoreDiff = this.game.scores[2] - this.game.displayedScores[2];
-
-        if (this.game.scoreAnimationSpeed >= 1 || Math.abs(player1ScoreDiff) <= 0.1) {
-            this.game.displayedScores[1] = this.game.scores[1];
-        } else {
-            this.game.displayedScores[1] = expDecay(
-                this.game.displayedScores[1],
-                this.game.scores[1],
-                10,
-                dt
-            );
+        const playerCount = Math.max(2, this.game.playerCount || 2);
+        for (let pNum = 1; pNum <= playerCount; pNum += 1) {
+            const target = this.game.scores[pNum] ?? 0;
+            const current = this.game.displayedScores[pNum] ?? target;
+            const diff = target - current;
+            if (this.game.scoreAnimationSpeed >= 1 || Math.abs(diff) <= 0.1) {
+                this.game.displayedScores[pNum] = target;
+            } else {
+                this.game.displayedScores[pNum] = expDecay(current, target, 10, dt);
+            }
         }
 
-        if (this.game.scoreAnimationSpeed >= 1 || Math.abs(player2ScoreDiff) <= 0.1) {
-            this.game.displayedScores[2] = this.game.scores[2];
-        } else {
-            this.game.displayedScores[2] = expDecay(
-                this.game.displayedScores[2],
-                this.game.scores[2],
-                10,
-                dt
-            );
-        }
+        const formatScore = (pNum) => {
+            const target = this.game.scores[pNum] ?? 0;
+            const displayed = this.game.displayedScores[pNum] ?? target;
+            return target % 1 === 0
+                ? Math.floor(displayed)
+                : Number(displayed.toFixed(2)).toString();
+        };
 
-        const p1Target = this.game.scores[1];
-        const p2Target = this.game.scores[2];
-        const nextPlayer1Score =
-            p1Target % 1 === 0
-                ? Math.floor(this.game.displayedScores[1])
-                : Number(this.game.displayedScores[1].toFixed(2)).toString();
-        const nextPlayer2Score =
-            p2Target % 1 === 0
-                ? Math.floor(this.game.displayedScores[2])
-                : Number(this.game.displayedScores[2].toFixed(2)).toString();
+        const nextPlayer1Score = formatScore(1);
+        const nextPlayer2Score = formatScore(2);
 
         if (this.lastRenderedState.player1Score !== nextPlayer1Score) {
             player1Score.textContent = nextPlayer1Score;
@@ -118,20 +104,53 @@ export class UIManager {
             this.lastRenderedState.player2Score = nextPlayer2Score;
         }
 
+        const header = player2Info?.parentElement;
+        if (header) {
+            // Sync dynamic scorecards for players 3..N in online 3-6 player matches
+            for (let pNum = 3; pNum <= 6; pNum += 1) {
+                let card = document.getElementById(`player${pNum}Info`);
+                if (pNum <= playerCount) {
+                    if (!card) {
+                        card = document.createElement('div');
+                        card.id = `player${pNum}Info`;
+                        card.className = 'player-info dynamic-player-info';
+                        const nameSpan = document.createElement('span');
+                        nameSpan.className = 'player-name';
+                        nameSpan.id = `player${pNum}Name`;
+                        const scoreSpan = document.createElement('span');
+                        scoreSpan.className = 'score';
+                        scoreSpan.id = `player${pNum}Score`;
+                        card.append(nameSpan, scoreSpan);
+                        header.appendChild(card);
+                    }
+                    const nameEl = card.querySelector('.player-name');
+                    const scoreEl = card.querySelector('.score');
+                    if (nameEl) nameEl.textContent = getPlayerName(this.game, pNum);
+                    if (scoreEl) scoreEl.textContent = String(formatScore(pNum));
+                    card.classList.toggle('active', this.game.currentPlayer === pNum);
+                    card.style.setProperty('--player-swatch', getPlayerColor(this.game, pNum));
+                } else if (card) {
+                    card.remove();
+                }
+            }
+        }
+
         if (this.lastRenderedState.activePlayer !== this.game.currentPlayer) {
             player1Info.classList.toggle('active', this.game.currentPlayer === 1);
             player2Info.classList.toggle('active', this.game.currentPlayer === 2);
             this.lastRenderedState.activePlayer = this.game.currentPlayer;
         }
 
-        if (this.lastRenderedState.player1Color !== this.game.player1Color) {
-            player1Info.style.setProperty('--player-swatch', this.game.player1Color);
-            this.lastRenderedState.player1Color = this.game.player1Color;
+        const p1Color = getPlayerColor(this.game, 1);
+        const p2Color = getPlayerColor(this.game, 2);
+        if (this.lastRenderedState.player1Color !== p1Color) {
+            player1Info.style.setProperty('--player-swatch', p1Color);
+            this.lastRenderedState.player1Color = p1Color;
         }
 
-        if (this.lastRenderedState.player2Color !== this.game.player2Color) {
-            player2Info.style.setProperty('--player-swatch', this.game.player2Color);
-            this.lastRenderedState.player2Color = this.game.player2Color;
+        if (this.lastRenderedState.player2Color !== p2Color) {
+            player2Info.style.setProperty('--player-swatch', p2Color);
+            this.lastRenderedState.player2Color = p2Color;
         }
 
         this.updatePlayerEffectsDisplay(1, player1Info);
@@ -140,7 +159,11 @@ export class UIManager {
         let turnText;
         if (this.game.isMultiplayer) {
             this.game.isMyTurn = this.game.currentPlayer === this.game.myPlayerNumber;
-            turnText = this.game.isMyTurn ? 'Your Turn' : "Opponent's Turn";
+            turnText = this.game.isMyTurn
+                ? 'Your Turn'
+                : playerCount > 2
+                  ? `${getPlayerName(this.game, this.game.currentPlayer)}'s Turn`
+                  : "Opponent's Turn";
         } else {
             turnText = `Player ${this.game.currentPlayer}'s Turn`;
         }
@@ -153,8 +176,7 @@ export class UIManager {
                 announceStatus(turnText);
             }
 
-            const turnColor =
-                this.game.currentPlayer === 1 ? this.game.player1Color : this.game.player2Color;
+            const turnColor = getPlayerColor(this.game, this.game.currentPlayer);
             if (this.lastRenderedState.turnColor !== turnColor) {
                 turnIndicator.style.setProperty('--turn-color', turnColor);
                 this.lastRenderedState.turnColor = turnColor;

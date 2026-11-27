@@ -1,5 +1,5 @@
 import { GAME_CONSTANTS } from '../constants.js';
-import { expDecay, formatHexAlpha, prefersReducedMotion } from '../utils.js';
+import { expDecay, formatHexAlpha, getPlayerColor, prefersReducedMotion } from '../utils.js';
 
 /**
  * How fast the background hue follows the score difference. Matches the old
@@ -225,10 +225,10 @@ export function drawHoverPreview(game) {
     const y1 = game.offsetY + game.selectedDot.row * game.cellSize;
     const x2 = game.offsetX + game.hoveredDot.col * game.cellSize;
     const y2 = game.offsetY + game.hoveredDot.row * game.cellSize;
-    const playerColor = game.currentPlayer === 1 ? game.player1Color : game.player2Color;
+    const playerColor = getPlayerColor(game, game.currentPlayer);
 
     game.ctx.save();
-    game.ctx.strokeStyle = playerColor + '40';
+    game.ctx.strokeStyle = formatHexAlpha(playerColor, 0.25);
     game.ctx.lineWidth = GAME_CONSTANTS.LINE_WIDTH;
     game.ctx.lineCap = 'round';
     game.ctx.setLineDash([10, 10]);
@@ -257,10 +257,10 @@ export function drawSelectionRibbon(game) {
     const midX = (startX + targetX) / 2;
     const midY = (startY + targetY) / 2;
     const waveOffset = Math.sin(now / 200) * 10;
-    const playerColor = game.currentPlayer === 1 ? game.player1Color : game.player2Color;
+    const playerColor = getPlayerColor(game, game.currentPlayer);
 
     game.ctx.save();
-    game.ctx.strokeStyle = playerColor + '60';
+    game.ctx.strokeStyle = formatHexAlpha(playerColor, 0.38);
     game.ctx.lineWidth = GAME_CONSTANTS.LINE_WIDTH * 1.5;
     game.ctx.lineCap = 'round';
     game.ctx.setLineDash([15, 25]);
@@ -276,9 +276,9 @@ export function drawSelectionRibbon(game) {
 export function drawComboFlash(game) {
     if (!game.comboFlashActive) return;
 
-    const playerColor = game.currentPlayer === 1 ? game.player1Color : game.player2Color;
+    const playerColor = getPlayerColor(game, game.currentPlayer);
     game.ctx.save();
-    game.ctx.fillStyle = playerColor + '15';
+    game.ctx.fillStyle = formatHexAlpha(playerColor, 0.08);
     game.ctx.fillRect(0, 0, game.logicalWidth, game.logicalHeight);
     game.ctx.restore();
     game.comboFlashActive = false;

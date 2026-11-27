@@ -24,6 +24,25 @@ export function generateRandomColor() {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
+const FALLBACK_PLAYER_COLORS = ['#FF5C5C', '#3B82F6', '#10B981', '#F59E0B', '#A855F7', '#EC4899'];
+
+export function getPlayerColor(game, playerNum) {
+    if (game?.playerColors && game.playerColors[playerNum]) {
+        return game.playerColors[playerNum];
+    }
+    if (playerNum === 1 && game?.player1Color) return game.player1Color;
+    if (playerNum === 2 && game?.player2Color) return game.player2Color;
+    const idx = Math.max(0, (Number(playerNum) || 1) - 1) % FALLBACK_PLAYER_COLORS.length;
+    return FALLBACK_PLAYER_COLORS[idx];
+}
+
+export function getPlayerName(game, playerNum) {
+    if (game?.playerNames && game.playerNames[playerNum]) {
+        return game.playerNames[playerNum];
+    }
+    return `Player ${playerNum}`;
+}
+
 /**
  * Easing function: ease-out-quad
  * @param {number} t - Progress 0-1
