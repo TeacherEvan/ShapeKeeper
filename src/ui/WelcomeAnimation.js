@@ -69,38 +69,108 @@ export class WelcomeAnimation {
         this.ripples = [];
         this.sparks = new SpriteSparks();
         this.stepAccumulator = 0;
-        this.reducedMotion = Boolean(
-            typeof window !== 'undefined' &&
-            typeof window.matchMedia === 'function' &&
-            window.matchMedia('(prefers-reduced-motion: reduce)')?.matches
-        );
+        this._nextParticleId = 0;
+        this._neighborBuffer = [];
+        this._boundListeners = [];
+        this.isPaused = false;
+        this.isScreenPaused = false;
+        this.isDestroyed = false;
+        this._motionMediaQuery =
+            typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+                ? window.matchMedia('(prefers-reduced-motion: reduce)')
+                : null;
+        this.reducedMotion = Boolean(this._motionMediaQuery?.matches);
         this.onInteractionCallback = null;
 
         this.initializeCanvas();
         this.createParticles();
-        this.startAnimationLoop();
+        if (this.reducedMotion) {
+            this.renderParticles();
+        } else {
+            this.startAnimationLoop();
+        }
 
-        window.addEventListener('resize', () => this.handleViewportResize());
-        this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-        this.canvas.addEventListener('mouseleave', () => this.handleMouseLeave());
-        this.canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e), {
+        this._addListener(window, 'resize', () => this.handleViewportResize());
+        this._addListener(this.canvas, 'mousemove', (e) => this.handleMouseMove(e));
+        this._addListener(this.canvas, 'mouseleave', () => this.handleMouseLeave());
+        this._addListener(this.canvas, 'touchmove', (e) => this.handleTouchMove(e), {
             passive: true,
         });
-        this.canvas.addEventListener('touchend', () => this.handleMouseLeave());
+        this._addListener(this.canvas, 'touchend', () => this.handleMouseLeave());
+        this._addListener(this.canvas, 'pointerdown', (e) => this.handlePointerDown(e));
+        this._addListener(window, 'pointermove', (e) => this.handlePointerMove(e));
+        this._addListener(window, 'pointerup', (e) => this.handlePointerUp(e));
+        this._addListener(window, 'pointercancel', (e) => this.handlePointerUp(e));
 
-        this.canvas.addEventListener('pointerdown', (e) => this.handlePointerDown(e));
-        window.addEventListener('pointermove', (e) => this.handlePointerMove(e));
-        window.addEventListener('pointerup', (e) => this.handlePointerUp(e));
-        window.addEventListener('pointercancel', (e) => this.handlePointerUp(e));
+        this._addListener(document, 'visibilitychange', () => {
+            if (document.hidden) {
+                this.pause();
+            } else if (!this.isScreenPaused && !this.reducedMotion) {
+                this.resume();
+            }
+        });
+
+        this._addListener(window, 'shapekeeper:themeChanged', () => {
+            this.recolorForCurrentTheme();
+        });
+
+        this._addListener(window, 'shapekeeper:screenChanged', (e) => {
+            const screenId = e?.detail?.screenId;
+            if (!screenId) return;
+            if (screenId === 'mainMenuScreen') {
+                if (this.canvas?.id !== 'welcomeCanvas') {
+                    this.transitionToMainMenu();
+                }
+                this.isScreenPaused = false;
+                if (!this.reducedMotion && !document.hidden) {
+                    this.resume();
+                } else {
+                    this.renderParticles();
+                }
+            } else if (screenId === 'gameScreen') {
+                this.isScreenPaused = false;
+                if (!this.reducedMotion && !document.hidden) {
+                    this.resume();
+                }
+            } else {
+                this.isScreenPaused = true;
+                this.pause();
+            }
+        });
+
+        if (
+            this._motionMediaQuery &&
+            typeof this._motionMediaQuery.addEventListener === 'function'
+        ) {
+            this._addListener(this._motionMediaQuery, 'change', (e) => {
+                this.reducedMotion = Boolean(e?.matches);
+                if (this.reducedMotion) {
+                    this.pause();
+                    this.renderParticles();
+                } else if (!this.isScreenPaused && !document.hidden) {
+                    this.resume();
+                }
+            });
+        }
+    }
+
+    _addListener(target, type, handler, options) {
+        if (!target || typeof target.addEventListener !== 'function') return;
+        target.addEventListener(type, handler, options);
+        this._boundListeners.push({ target, type, handler, options });
     }
 
     initializeCanvas() {
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         this.canvas.width = window.innerWidth * dpr;
         this.canvas.height = window.innerHeight * dpr;
         this.canvas.style.width = window.innerWidth + 'px';
         this.canvas.style.height = window.innerHeight + 'px';
-        this.ctx.scale(dpr, dpr);
+        if (typeof this.ctx.setTransform === 'function') {
+            this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        } else {
+            this.ctx.scale(dpr, dpr);
+        }
         this.logicalWidth = window.innerWidth;
         this.logicalHeight = window.innerHeight;
         this.initializeSpatialPartitioning();
@@ -146,22 +216,26 @@ export class WelcomeAnimation {
         }
     }
 
-    getNeighboringParticles(particle) {
+    getNeighboringParticles(particle, out = this._neighborBuffer) {
         const gridX = Math.floor(particle.x / this.partitionCellSize);
         const gridY = Math.floor(particle.y / this.partitionCellSize);
-        const neighbors = [];
+        out.length = 0;
 
         for (let dy = -1; dy <= 1; dy++) {
+            const ny = gridY + dy;
+            if (ny < 0 || ny >= this.gridRows) continue;
+            const row = this.spatialPartitionGrid[ny];
             for (let dx = -1; dx <= 1; dx++) {
                 const nx = gridX + dx;
-                const ny = gridY + dy;
-                if (nx >= 0 && nx < this.gridCols && ny >= 0 && ny < this.gridRows) {
-                    neighbors.push(...this.spatialPartitionGrid[ny][nx]);
+                if (nx < 0 || nx >= this.gridCols) continue;
+                const cell = row[nx];
+                for (let k = 0; k < cell.length; k++) {
+                    out.push(cell[k]);
                 }
             }
         }
 
-        return neighbors;
+        return out;
     }
 
     transitionToGameScreen() {
@@ -208,6 +282,7 @@ export class WelcomeAnimation {
         else color = colorSet.accent;
 
         return {
+            id: ++this._nextParticleId,
             x: Math.random() * this.logicalWidth,
             y: Math.random() * this.logicalHeight,
             vx: (Math.random() - 0.5) * 1.5,
@@ -264,15 +339,43 @@ export class WelcomeAnimation {
         particle.isGrabbed = false;
     }
 
+    recolorForCurrentTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const palette = this.colorPalette[isDark ? 'dark' : 'light'];
+        if (!Array.isArray(palette) || palette.length === 0) return;
+
+        for (let i = 0; i < this.floatingParticles.length; i++) {
+            const p = this.floatingParticles[i];
+            const colorSet = palette[i % palette.length];
+            const variant = i % 3;
+            const nextColor =
+                variant === 0
+                    ? colorSet.primary
+                    : variant === 1
+                      ? colorSet.secondary
+                      : colorSet.accent;
+            p.color = nextColor;
+            p.baseColor = nextColor;
+            p.rgb = hexToRgbChannels(nextColor);
+        }
+        if (this.isPaused || this.reducedMotion) {
+            this.renderParticles();
+        }
+    }
+
     applyFlockingBehavior(particle) {
-        let separation = { x: 0, y: 0 };
-        let alignment = { x: 0, y: 0 };
-        let cohesion = { x: 0, y: 0 };
+        let sepX = 0;
+        let sepY = 0;
+        let alignX = 0;
+        let alignY = 0;
+        let cohX = 0;
+        let cohY = 0;
         let neighborCount = 0;
 
         const nearbyParticles = this.getNeighboringParticles(particle);
 
-        for (let other of nearbyParticles) {
+        for (let i = 0; i < nearbyParticles.length; i++) {
+            const other = nearbyParticles[i];
             if (other === particle) continue;
 
             const dx = other.x - particle.x;
@@ -286,15 +389,15 @@ export class WelcomeAnimation {
                 const dist = Math.sqrt(distSq);
 
                 if (dist < 30) {
-                    separation.x -= dx / dist;
-                    separation.y -= dy / dist;
+                    sepX -= dx / dist;
+                    sepY -= dy / dist;
                 }
 
-                alignment.x += other.vx;
-                alignment.y += other.vy;
+                alignX += other.vx;
+                alignY += other.vy;
 
-                cohesion.x += other.x;
-                cohesion.y += other.y;
+                cohX += other.x;
+                cohY += other.y;
             }
         }
 
@@ -312,23 +415,23 @@ export class WelcomeAnimation {
         }
 
         if (neighborCount > 0) {
-            alignment.x /= neighborCount;
-            alignment.y /= neighborCount;
+            alignX /= neighborCount;
+            alignY /= neighborCount;
 
-            cohesion.x = cohesion.x / neighborCount - particle.x;
-            cohesion.y = cohesion.y / neighborCount - particle.y;
+            cohX = cohX / neighborCount - particle.x;
+            cohY = cohY / neighborCount - particle.y;
         }
 
         const separationWeight = 1.8;
         const alignmentWeight = 1.0;
         const cohesionWeight = 0.8;
 
-        particle.vx += separation.x * separationWeight * particle.maxForce;
-        particle.vy += separation.y * separationWeight * particle.maxForce;
-        particle.vx += alignment.x * alignmentWeight * particle.maxForce * 0.1;
-        particle.vy += alignment.y * alignmentWeight * particle.maxForce * 0.1;
-        particle.vx += cohesion.x * cohesionWeight * particle.maxForce * 0.01;
-        particle.vy += cohesion.y * cohesionWeight * particle.maxForce * 0.01;
+        particle.vx += sepX * separationWeight * particle.maxForce;
+        particle.vy += sepY * separationWeight * particle.maxForce;
+        particle.vx += alignX * alignmentWeight * particle.maxForce * 0.1;
+        particle.vy += alignY * alignmentWeight * particle.maxForce * 0.1;
+        particle.vx += cohX * cohesionWeight * particle.maxForce * 0.01;
+        particle.vy += cohY * cohesionWeight * particle.maxForce * 0.01;
 
         const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
         if (speed > particle.maxSpeed) {
@@ -914,8 +1017,10 @@ export class WelcomeAnimation {
             const linkInk = p1.rgb || fallbackInk;
             const nearby = this.getNeighboringParticles(p1);
 
-            for (let p2 of nearby) {
+            for (let j = 0; j < nearby.length; j++) {
+                const p2 = nearby[j];
                 if (p1 === p2) continue;
+                if (p1.id !== undefined && p2.id !== undefined && p1.id >= p2.id) continue;
                 if (p2.fireworksState && p2.fireworksState.phase !== 'alive') continue;
 
                 const dx = p2.x - p1.x;
@@ -969,6 +1074,10 @@ export class WelcomeAnimation {
     }
 
     startAnimationLoop() {
+        if (this.isPaused || this.reducedMotion || this.isDestroyed) {
+            this.animationFrameId = null;
+            return;
+        }
         const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
         const dtMs = Math.min(100, Math.max(1, now - (this.lastFrameTime || now)));
         this.lastFrameTime = now;
@@ -1008,11 +1117,41 @@ export class WelcomeAnimation {
         this.animationFrameId = requestAnimationFrame(() => this.startAnimationLoop());
     }
 
+    pause() {
+        this.isPaused = true;
+        this.stopAnimation();
+    }
+
+    resume() {
+        if (this.isDestroyed || this.reducedMotion) return;
+        if (!this.isPaused && this.animationFrameId !== null) return;
+        this.isPaused = false;
+        this.lastFrameTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        this.stepAccumulator = 0;
+        this.startAnimationLoop();
+    }
+
     stopAnimation() {
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
+    }
+
+    destroy() {
+        if (this.isDestroyed) return;
+        this.isDestroyed = true;
+        this.pause();
+        for (const { target, type, handler, options } of this._boundListeners) {
+            try {
+                target.removeEventListener(type, handler, options);
+            } catch {
+                // ignore
+            }
+        }
+        this._boundListeners = [];
+        this.activePointers.clear();
+        this.grabbedSprites.clear();
     }
 
     stop() {

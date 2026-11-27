@@ -19,6 +19,12 @@ export function initializeTheme() {
     updateThemeButton(savedTheme);
 }
 
+function dispatchThemeChanged(theme) {
+    if (typeof window !== 'undefined' && typeof CustomEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('shapekeeper:themeChanged', { detail: { theme } }));
+    }
+}
+
 /**
  * Toggle between light and dark themes
  */
@@ -28,6 +34,7 @@ export function toggleTheme() {
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem(STORAGE_KEY, newTheme);
     updateThemeButton(newTheme);
+    dispatchThemeChanged(newTheme);
 }
 
 /**
@@ -66,4 +73,5 @@ export function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem(STORAGE_KEY, theme);
     updateThemeButton(theme);
+    dispatchThemeChanged(theme);
 }
