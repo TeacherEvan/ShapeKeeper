@@ -268,5 +268,19 @@ describe('AccessibleGridTree', () => {
             expect(document.body.contains(gridEl)).toBe(false);
             expect(tree.isDestroyed).toBe(true);
         });
+
+        it('restores game.showKeyboardFocusRing on focusDot and uses 3 delegated listeners on 30x30 boards', () => {
+            game.gridRows = 30;
+            game.gridCols = 30;
+            game.showKeyboardFocusRing = false;
+            const tree = new AccessibleGridTree(game);
+
+            expect(tree._listeners.length).toBe(3);
+
+            tree.focusDot({ row: 2, col: 3 });
+            expect(game.showKeyboardFocusRing).toBe(true);
+
+            tree.destroy();
+        });
     });
 });

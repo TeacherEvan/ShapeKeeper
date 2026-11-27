@@ -229,6 +229,12 @@ export class GameState {
         this.game.dotsCtx.scale(dpr, dpr);
 
         this.renderStaticDots();
+        if (
+            this.game.accessibleGrid &&
+            this.game.accessibleGrid.dotButtons?.size !== this.game.gridRows * this.game.gridCols
+        ) {
+            this.game.accessibleGrid.rebuild();
+        }
     }
 
     /**

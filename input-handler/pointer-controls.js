@@ -47,14 +47,34 @@ export function getSquareAtPosition(handler, x, y) {
     return null;
 }
 
-function handleCellInteraction(handler, clickedCell) {
+function isInsideCellInterior(handler, clickedCell, x, y) {
+    if (typeof x !== 'number' || typeof y !== 'number' || !handler.game.cellSize) {
+        return true;
+    }
+    const [row, col] = clickedCell.split(',').map(Number);
+    const cellLeft = handler.game.offsetX + col * handler.game.cellSize;
+    const cellTop = handler.game.offsetY + row * handler.game.cellSize;
+    const fracX = (x - cellLeft) / handler.game.cellSize;
+    const fracY = (y - cellTop) / handler.game.cellSize;
+    return fracX >= 0.25 && fracX <= 0.75 && fracY >= 0.25 && fracY <= 0.75;
+}
+
+function handleCellInteraction(handler, clickedCell, x, y) {
     if (!clickedCell || !handler.game.squares?.[clickedCell]) {
         return false;
     }
+    if (!handler.game.isMultiplayer) {
+        return false;
+    }
+    const multiplier = handler.game.squareMultipliers?.[clickedCell];
+    if (!multiplier || multiplier.type !== 'multiplier') {
+        return false;
+    }
+    if (!isInsideCellInterior(handler, clickedCell, x, y)) {
+        return false;
+    }
     const squareOwner = handler.game.squares[clickedCell];
-    const isOpponentSquare = handler.game.isMultiplayer
-        ? squareOwner !== handler.game.myPlayerNumber
-        : squareOwner !== handler.game.currentPlayer;
+    const isOpponentSquare = squareOwner !== handler.game.myPlayerNumber;
 
     if (isOpponentSquare && !handler.game.revealedMultipliers?.has(clickedCell)) {
         if (typeof handler.game.tapSquare === 'function') {
@@ -284,30 +304,34 @@ export function handlePointerUp(handler, event) {
 
     const { x, y } = getClientCoordinates(handler, event);
     const pointer = handler.activePointers.get(event.pointerId);
-    const clickedCell = getSquareAtPosition(handler, x, y);
-    if (handleCellInteraction(handler, clickedCell)) {
-        handler.activePointers.delete(event.pointerId);
-        releasePointerCapture(handler, event.pointerId);
-        handler.selectionRibbon = null;
-        handler.syncPreviewState();
-        handler.suppressNextClickUntil = now + 500;
-        handler.game.draw();
-        return;
-    }
-
     const endDot = handler.getNearestDot(x, y);
     const selectionRadius =
         handler.game.cellSize *
         (handler.game.selectionRadiusMultiplier || (event.pointerType === 'touch' ? 0.68 : 0.5));
+    const hitDot = Boolean(
+        endDot && getSelectionDistance(handler, x, y, endDot) <= selectionRadius
+    );
 
-    if (endDot && getSelectionDistance(handler, x, y, endDot) <= selectionRadius) {
+    if (hitDot) {
         tryDrawFromSelection(handler, endDot, {
             sameDotClears: pointer?.startedWithSelection === true,
         });
-    } else if (handler.game.selectedDot) {
-        // Preserve the selected start dot on an imprecise release rather than
-        // interpreting the gesture as a second, unrelated selection.
-        handler.selectionLocked = true;
+    } else {
+        const clickedCell = getSquareAtPosition(handler, x, y);
+        if (handleCellInteraction(handler, clickedCell, x, y)) {
+            handler.activePointers.delete(event.pointerId);
+            releasePointerCapture(handler, event.pointerId);
+            handler.selectionRibbon = null;
+            handler.syncPreviewState();
+            handler.suppressNextClickUntil = now + 500;
+            handler.game.draw();
+            return;
+        }
+        if (handler.game.selectedDot) {
+            // Preserve the selected start dot on an imprecise release rather than
+            // interpreting the gesture as a second, unrelated selection.
+            handler.selectionLocked = true;
+        }
     }
 
     handler.activePointers.delete(event.pointerId);
@@ -344,29 +368,29 @@ export const handleTouchMove = handlePointerMove;
 export const handleTouchEnd = handlePointerUp;
 
 export function processClick(handler, x, y) {
-    const clickedCell = getSquareAtPosition(handler, x, y);
-    if (handleCellInteraction(handler, clickedCell)) {
-        return;
-    }
-
     const dot = handler.getNearestDot(x, y);
-    if (!dot) {
-        if (!handler.selectionLocked) {
-            handler.game.selectedDot = null;
+    if (dot) {
+        if (!handler.game.selectedDot) {
+            if (!selectDot(handler, dot)) {
+                return;
+            }
             handler.game.draw();
-        }
-        return;
-    }
-
-    if (!handler.game.selectedDot) {
-        if (!selectDot(handler, dot)) {
             return;
         }
+
+        tryDrawFromSelection(handler, dot);
+        handler.setKeyboardFocusDot(dot, { announce: false });
         handler.game.draw();
         return;
     }
 
-    tryDrawFromSelection(handler, dot);
-    handler.setKeyboardFocusDot(dot, { announce: false });
-    handler.game.draw();
+    const clickedCell = getSquareAtPosition(handler, x, y);
+    if (handleCellInteraction(handler, clickedCell, x, y)) {
+        return;
+    }
+
+    if (!handler.selectionLocked) {
+        handler.game.selectedDot = null;
+        handler.game.draw();
+    }
 }

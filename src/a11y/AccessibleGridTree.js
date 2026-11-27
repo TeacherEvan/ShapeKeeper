@@ -12,6 +12,8 @@ export class AccessibleGridTree {
         this.gridElement = null;
         this.dotButtons = new Map(); // key: "r,c" -> HTMLButtonElement
         this.focusedDot = null;
+        this._rovingBtn = null;
+        this._selectedBtn = null;
         this.isDestroyed = false;
         this._listeners = [];
 
@@ -31,6 +33,8 @@ export class AccessibleGridTree {
         }
         this.cleanupListeners();
         this.dotButtons.clear();
+        this._rovingBtn = null;
+        this._selectedBtn = null;
 
         const rows = this.game.gridRows || 4;
         const cols = this.game.gridCols || 4;
@@ -58,21 +62,11 @@ export class AccessibleGridTree {
                 btn.setAttribute('aria-colindex', String(c + 1));
                 btn.setAttribute('aria-label', `Dot row ${r + 1}, column ${c + 1}`);
                 btn.setAttribute('aria-selected', 'false');
-                btn.setAttribute('tabindex', r === 0 && c === 0 ? '0' : '-1');
-
-                const onKeyDown = (e) => this.handleKeyDown(r, c, e);
-                const onClick = (e) => this.handleClick(r, c, e);
-                const onFocus = () => this.handleFocus(r, c);
-
-                btn.addEventListener('keydown', onKeyDown);
-                btn.addEventListener('click', onClick);
-                btn.addEventListener('focus', onFocus);
-
-                this._listeners.push(
-                    { target: btn, type: 'keydown', listener: onKeyDown },
-                    { target: btn, type: 'click', listener: onClick },
-                    { target: btn, type: 'focus', listener: onFocus }
-                );
+                const isFirst = r === 0 && c === 0;
+                btn.setAttribute('tabindex', isFirst ? '0' : '-1');
+                if (isFirst) {
+                    this._rovingBtn = btn;
+                }
 
                 this.dotButtons.set(`${r},${c}`, btn);
                 rowDiv.appendChild(btn);
@@ -80,6 +74,37 @@ export class AccessibleGridTree {
 
             grid.appendChild(rowDiv);
         }
+
+        const resolveCoords = (event) => {
+            const btn = event.target?.closest?.('button[data-row][data-col]');
+            if (!btn) return null;
+            return {
+                row: Number(btn.getAttribute('data-row')),
+                col: Number(btn.getAttribute('data-col')),
+            };
+        };
+
+        const onKeyDown = (e) => {
+            const coords = resolveCoords(e);
+            if (coords) this.handleKeyDown(coords.row, coords.col, e);
+        };
+        const onClick = (e) => {
+            const coords = resolveCoords(e);
+            if (coords) this.handleClick(coords.row, coords.col, e);
+        };
+        const onFocusIn = (e) => {
+            const coords = resolveCoords(e);
+            if (coords) this.handleFocus(coords.row, coords.col);
+        };
+
+        grid.addEventListener('keydown', onKeyDown);
+        grid.addEventListener('click', onClick);
+        grid.addEventListener('focusin', onFocusIn);
+        this._listeners.push(
+            { target: grid, type: 'keydown', listener: onKeyDown },
+            { target: grid, type: 'click', listener: onClick },
+            { target: grid, type: 'focusin', listener: onFocusIn }
+        );
 
         this.gridElement = grid;
 
@@ -107,19 +132,21 @@ export class AccessibleGridTree {
         const targetRow = Math.max(0, Math.min(maxRow, dot.row));
         const targetCol = Math.max(0, Math.min(maxCol, dot.col));
 
-        // Update tabindex roving
-        for (const btn of this.dotButtons.values()) {
-            btn.setAttribute('tabindex', '-1');
+        // O(1) roving tabindex update
+        if (this._rovingBtn) {
+            this._rovingBtn.setAttribute('tabindex', '-1');
         }
 
         const btn = this.getDotButton(targetRow, targetCol);
         if (btn) {
             btn.setAttribute('tabindex', '0');
+            this._rovingBtn = btn;
             btn.focus();
         }
 
         this.focusedDot = { row: targetRow, col: targetCol };
         this.game.keyboardFocusDot = { row: targetRow, col: targetCol };
+        this.game.showKeyboardFocusRing = true;
 
         if (this.game.draw) {
             this.game.draw();
@@ -133,6 +160,7 @@ export class AccessibleGridTree {
     handleFocus(row, col) {
         this.focusedDot = { row, col };
         this.game.keyboardFocusDot = { row, col };
+        this.game.showKeyboardFocusRing = true;
         if (this.game.draw) {
             this.game.draw();
         }
@@ -295,13 +323,16 @@ export class AccessibleGridTree {
     }
 
     updateAriaSelected() {
-        for (const [key, btn] of this.dotButtons.entries()) {
-            const [r, c] = key.split(',').map(Number);
-            const isSelected =
-                this.game.selectedDot &&
-                this.game.selectedDot.row === r &&
-                this.game.selectedDot.col === c;
-            btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        if (this._selectedBtn) {
+            this._selectedBtn.setAttribute('aria-selected', 'false');
+            this._selectedBtn = null;
+        }
+        if (this.game.selectedDot) {
+            const btn = this.getDotButton(this.game.selectedDot.row, this.game.selectedDot.col);
+            if (btn) {
+                btn.setAttribute('aria-selected', 'true');
+                this._selectedBtn = btn;
+            }
         }
     }
 
