@@ -29,6 +29,10 @@ export function bindMenuEventHandlers(deps) {
         showScreen('levelsScreen');
     });
 
+    document.getElementById('localPlayBtn')?.addEventListener('click', () => {
+        showScreen('localSetupScreen');
+    });
+
     document.getElementById('backToMenuFromLevels')?.addEventListener('click', () => {
         showScreen('mainMenuScreen');
     });

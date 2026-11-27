@@ -2,7 +2,7 @@ import { v } from 'convex/values';
 import { mutation } from '../_generated/server';
 import { isAuthorisedHostAsync } from '../auth/token';
 import { ALLOWED_TURN_DURATIONS_MS } from '../games/turnTimer';
-import { checkRateLimit } from '../rate_limit';
+import { checkRateLimit } from '../rateLimit';
 
 // Update the per-turn "Allowed Time" countdown (host only, lobby state only).
 // seconds = 0 means "no limit"; otherwise a whole number of seconds.

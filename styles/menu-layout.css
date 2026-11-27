@@ -935,3 +935,28 @@ input[type='color']:focus {
         padding-top: 64px;
     }
 }
+
+.menu-tertiary-btn {
+    margin-top: 12px;
+    padding: 10px 18px;
+    min-height: 44px;
+    background: transparent;
+    border: 1px solid var(--border-default, rgba(255, 255, 255, 0.16));
+    border-radius: 999px;
+    color: var(--text-secondary, #cbd5e1);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition:
+        background-color 180ms ease,
+        color 180ms ease,
+        border-color 180ms ease;
+}
+
+.menu-tertiary-btn:hover,
+.menu-tertiary-btn:focus-visible {
+    background: var(--surface-layer-2, rgba(255, 255, 255, 0.08));
+    color: var(--text-primary, #f8fafc);
+    border-color: var(--accent-primary, #f5b727);
+}

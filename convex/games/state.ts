@@ -3,7 +3,7 @@ import { POPULATE_PLAYER_INDEX, normalizeLineKey } from './shared';
 import { validateLineKey } from './lineValidation';
 import { cancelTurnTimer } from './turnTimer';
 import { log, errorLog, warn } from '../log';
-import { checkRateLimit } from '../rate_limit';
+import { checkRateLimit } from '../rateLimit';
 
 function wouldLineCompleteAnySquare(lineKey: string, lineSet: Set<string>, gridSize: number): boolean {
     const [start, end] = lineKey.split('-');

@@ -118,6 +118,14 @@
                                 JOIN LOBBY
                             </button>
                         </div>
+                        <button
+                            type="button"
+                            id="localPlayBtn"
+                            class="menu-tertiary-btn"
+                            data-testid="local-play-button"
+                        >
+                            LOCAL PLAY &middot; 2P &amp; TUTORIAL
+                        </button>
                         <button id="themeToggle" class="theme-toggle" aria-label="Switch to dark mode">
                             🌙
                         </button>
@@ -148,7 +156,6 @@
                 aria-hidden="true"
                 aria-labelledby="localSetupTitle"
             >
-                <canvas id="localSetupCanvas"></canvas>
                 <div class="welcome-container">
                     <h1 id="localSetupTitle">Local Play</h1>
                     <p class="credit">2 Player Mode</p>
@@ -286,7 +293,6 @@
                 aria-hidden="true"
                 aria-labelledby="levelsTitle"
             >
-                <canvas id="levelsCanvas"></canvas>
                 <div class="welcome-container levels-container">
                     <h1 id="levelsTitle">LET'S GO!</h1>
                     <p class="credit" id="levelsSubtitle">Complete levels to collect colorful sprites</p>
@@ -313,7 +319,6 @@
                 aria-hidden="true"
                 aria-labelledby="lobbyTitle"
             >
-                <canvas id="lobbyCanvas"></canvas>
                 <div class="lobby-container">
                     <div class="lobby-header">
                         <h1 id="lobbyTitle">Game Lobby</h1>

@@ -1,6 +1,6 @@
 import { checkForCompletedSquares } from './squares';
-import { validateLineKey } from './line_validation';
-import { isTurnExpired } from './turn_deadline';
+import { validateLineKey } from './lineValidation';
+import { isTurnExpired } from './turnDeadline';
 import { armTurnTimer, cancelTurnTimer, normalizeTurnDuration } from './turnTimer';
 import { getAllLineKeys, pickRandomFreeLine } from './shared';
 import { log, errorLog, warn } from '../log';

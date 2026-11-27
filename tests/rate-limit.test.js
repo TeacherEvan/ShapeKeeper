@@ -8,11 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-    checkRateLimit,
-    pruneExpiredRateLimits,
-    RATE_LIMIT_ACTIONS,
-} from '../convex/rate_limit.js';
+import { checkRateLimit, pruneExpiredRateLimits, RATE_LIMIT_ACTIONS } from '../convex/rateLimit.js';
 
 function makeMockCtx() {
     const store = new Map();

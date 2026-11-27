@@ -1,7 +1,7 @@
 import { internalMutation } from '../_generated/server';
 import { cancelTurnTimer } from '../games/turnTimer';
 import { log } from '../log';
-import { pruneExpiredRateLimits } from '../rate_limit';
+import { pruneExpiredRateLimits } from '../rateLimit';
 
 const STALE_LOBBY_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 const STALE_MATCH_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours for abandoned playing/finished rooms
