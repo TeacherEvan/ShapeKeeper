@@ -53,21 +53,22 @@ export function createTurnClockController(game) {
             }
             turnKey = nextTurnKey;
 
-            // Seed the clock offset from the last move's RTT sample (FR-2),
-            // once per unique server move receipt.
+            // Seed the clock offset ONLY from our own move's RTT sample (FR-2).
+            // Comparing a remote opponent's wall clock against server time mixes
+            // two unsynchronized clocks and triggers false lag pauses.
             if (
+                pendingLocalSendAt !== null &&
                 typeof room.lastTurnClientSentAt === 'number' &&
                 typeof room.lastTurnServerReceivedAt === 'number' &&
+                room.lastTurnClientSentAt === pendingLocalSendAt &&
                 room.lastTurnServerReceivedAt !== lastSampledServerReceivedAt
             ) {
                 lastSampledServerReceivedAt = room.lastTurnServerReceivedAt;
-                const latency =
-                    pendingLocalSendAt !== null && room.lastTurnClientSentAt === pendingLocalSendAt
-                        ? Math.max(0, Date.now() - room.lastTurnClientSentAt)
-                        : room.lastTurnServerReceivedAt - room.lastTurnClientSentAt;
+                const receiveTime = Date.now();
+                const latency = Math.max(0, receiveTime - room.lastTurnClientSentAt);
                 pendingLocalSendAt = null;
                 lastLatencySampleMs = latency;
-                clock.sample(room.lastTurnClientSentAt, room.lastTurnServerReceivedAt, Date.now());
+                clock.sample(room.lastTurnClientSentAt, room.lastTurnServerReceivedAt, receiveTime);
 
                 if (
                     FEATURE_FLAGS.FEATURE_SYNC_RESILIENCE &&

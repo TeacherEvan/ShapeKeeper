@@ -1,5 +1,8 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { handleAuthoritativeGameState } from '../src/ui/menu/syncHandlers.js';
+import {
+    handleAuthoritativeGameState,
+    resetTurnClockController,
+} from '../src/ui/menu/syncHandlers.js';
 
 // Minimal stubs for the deps `handleAuthoritativeGameState` reads.
 function makeDeps(overrides = {}) {
@@ -99,6 +102,36 @@ describe('handleAuthoritativeGameState — online game completion', () => {
 
         expect(game.showWinner).not.toHaveBeenCalled();
         expect(game.gameOverHandled).toBeUndefined();
+    });
+
+    it('rebinds turnClockController when a new match game instance starts', () => {
+        const game1 = makeGame();
+        const game2 = makeGame();
+        const now = Date.now();
+        const playing = {
+            players: [
+                { playerIndex: 0, score: 0 },
+                { playerIndex: 1, score: 0 },
+            ],
+            lines: [],
+            squares: [],
+            room: {
+                status: 'playing',
+                currentPlayerIndex: 0,
+                turnEndTime: now + 15000,
+                turnDurationMs: 15000,
+            },
+        };
+
+        handleAuthoritativeGameState(playing, makeDeps({ game: game1 }));
+        expect(game1.turnRemainingMs).toBeGreaterThan(0);
+
+        resetTurnClockController();
+        expect(game1.turnRemainingMs).toBeNull();
+
+        handleAuthoritativeGameState(playing, makeDeps({ game: game2 }));
+        expect(game2.turnRemainingMs).toBeGreaterThan(0);
+        expect(game1.turnRemainingMs).toBeNull();
     });
 });
 

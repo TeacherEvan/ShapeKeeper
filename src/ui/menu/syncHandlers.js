@@ -7,9 +7,19 @@ import { createTurnClockController } from '../../timing/turn-clock-controller.js
 import { showScreen } from '../ScreenTransition.js';
 import { announceStatus } from '../AccessibilityAnnouncer.js';
 
-// turnClockController is module-scoped, reset on new match.
+// turnClockController is bound per active game instance and reset on teardown.
 let turnClockController = null;
+let turnClockGame = null;
 let announcedRematchVote = false;
+
+export function resetTurnClockController() {
+    turnClockController?.clear();
+    turnClockController = null;
+    turnClockGame = null;
+    if (typeof window !== 'undefined') {
+        window.ShapeKeeperTurnClock = null;
+    }
+}
 
 export function handleRoomStateUpdate(roomState, deps) {
     const {
@@ -33,9 +43,7 @@ export function handleRoomStateUpdate(roomState, deps) {
         resetStartupState();
         clearSubscriptions({ room: true, gameState: true });
         setActiveGame(null);
-        turnClockController?.clear();
-        turnClockController = null;
-        window.ShapeKeeperTurnClock = null;
+        resetTurnClockController();
         showToast('Room no longer exists', 'warning');
         lobbyManager.leaveRoom();
         showScreen('mainMenuScreen');
@@ -182,10 +190,14 @@ export function handleAuthoritativeGameState(gameState, deps) {
     game.currentPlayer = serverPlayerIndex + 1;
 
     // FR-2 / FR-3: feed authoritative turn timing into the clock controller and
-    // keep the live countdown on the game object.
-    if (!turnClockController) {
+    // rebind cleanly whenever a new match/game instance starts.
+    if (!turnClockController || turnClockGame !== game) {
+        turnClockController?.clear();
         turnClockController = createTurnClockController(game);
-        window.ShapeKeeperTurnClock = turnClockController;
+        turnClockGame = game;
+        if (typeof window !== 'undefined') {
+            window.ShapeKeeperTurnClock = turnClockController;
+        }
     }
     turnClockController.onAuthoritativeRoom(gameState.room);
     turnClockController.tick();

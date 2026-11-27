@@ -440,12 +440,20 @@ export class DotsAndBoxesGame {
 
         if (this.isMultiplayer) {
             this.isMyTurn = this.currentPlayer === this.myPlayerNumber;
-            if (!this.isMyTurn) return;
+            if (!this.isMyTurn || this._drawInFlight) return;
 
             if (window.ShapeKeeperConvex) {
-                const result = await window.ShapeKeeperConvex.drawLine(lineKey, {
-                    clientSentAt: Date.now(),
-                });
+                this._drawInFlight = true;
+                let result;
+                try {
+                    const clientSentAt = Date.now();
+                    window.ShapeKeeperTurnClock?.markLocalMoveSent?.(clientSentAt);
+                    result = await window.ShapeKeeperConvex.drawLine(lineKey, {
+                        clientSentAt,
+                    });
+                } finally {
+                    this._drawInFlight = false;
+                }
                 if (result.error) {
                     if (result.turnExpired) {
                         // Allowed Time ran out mid-flight: the server auto-drew

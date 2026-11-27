@@ -5,18 +5,22 @@ import { FEATURE_FLAGS } from '../constants.js';
 // Use a fixed "now" so the absolute-epoch model is deterministic.
 const NOW = 1_700_000_000_000;
 let realNow;
+let prevLavaFlag;
+let prevSyncFlag;
 
 beforeEach(() => {
     realNow = Date.now;
     Date.now = () => NOW;
+    prevLavaFlag = FEATURE_FLAGS.FEATURE_LAVA_TIMER;
+    prevSyncFlag = FEATURE_FLAGS.FEATURE_SYNC_RESILIENCE;
     FEATURE_FLAGS.FEATURE_LAVA_TIMER = true;
     FEATURE_FLAGS.FEATURE_SYNC_RESILIENCE = true;
 });
 
 afterEach(() => {
     Date.now = realNow;
-    FEATURE_FLAGS.FEATURE_LAVA_TIMER = false;
-    FEATURE_FLAGS.FEATURE_SYNC_RESILIENCE = false;
+    FEATURE_FLAGS.FEATURE_LAVA_TIMER = prevLavaFlag;
+    FEATURE_FLAGS.FEATURE_SYNC_RESILIENCE = prevSyncFlag;
 });
 
 describe('createTurnClockController (FR-2 / FR-3 client integration)', () => {
@@ -38,31 +42,48 @@ describe('createTurnClockController (FR-2 / FR-3 client integration)', () => {
         expect(game.turnRemainingMs).toBe(8000);
     });
 
-    it('seeds the clock offset from an RTT sample (latency = 100ms, no pause)', () => {
+    it('seeds the clock offset from a local move RTT sample (latency = 100ms, no pause)', () => {
         const game = makeGame();
         const ctrl = createTurnClockController(game);
-        // client sends at NOW, server receives at NOW+100 (up-leg latency 100ms).
+        ctrl.markLocalMoveSent(NOW);
+        Date.now = () => NOW + 100;
         ctrl.onAuthoritativeRoom({
             turnEndTime: NOW + 5000,
             lastTurnClientSentAt: NOW,
-            lastTurnServerReceivedAt: NOW + 100,
+            lastTurnServerReceivedAt: NOW + 50,
         });
         expect(ctrl.getLastLatency()).toBe(100);
         expect(ctrl.clock.isPaused()).toBe(false);
     });
 
-    it('pauses the clock when up-leg latency exceeds the lag threshold (FR-3)', () => {
+    it('pauses the clock when local move RTT exceeds the lag threshold (FR-3)', () => {
         const game = makeGame();
         const ctrl = createTurnClockController(game);
-        // up-leg latency 1000ms (> 600ms threshold) -> pause + 400ms buffer.
+        ctrl.markLocalMoveSent(NOW);
+        Date.now = () => NOW + 1000;
         ctrl.onAuthoritativeRoom({
             turnEndTime: NOW + 10000,
             lastTurnClientSentAt: NOW,
-            lastTurnServerReceivedAt: NOW + 1000,
+            lastTurnServerReceivedAt: NOW + 500,
         });
         expect(ctrl.getLastLatency()).toBe(1000);
         expect(ctrl.clock.isPaused()).toBe(true);
         expect(ctrl.clock.getDelayBuffer()).toBe(400);
+    });
+
+    it('ignores remote opponent clock timestamps so remote skew never poisons offset or triggers lag pause', () => {
+        const game = makeGame();
+        const ctrl = createTurnClockController(game);
+        // markLocalMoveSent was NOT called — this update came from an opponent's move
+        // whose wall clock is skewed by 5 seconds.
+        ctrl.onAuthoritativeRoom({
+            turnEndTime: NOW + 10000,
+            lastTurnClientSentAt: NOW - 5000,
+            lastTurnServerReceivedAt: NOW,
+        });
+        expect(ctrl.getLastLatency()).toBe(0);
+        expect(ctrl.clock.getOffset()).toBe(0);
+        expect(ctrl.clock.isPaused()).toBe(false);
     });
 
     it('returns null remaining when no authoritative turn is active', () => {
