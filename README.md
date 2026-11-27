@@ -1,24 +1,54 @@
-# ShapeKeeper
+<div align="center">
 
 <img src="assets/branding/shape-keeper-hero.jpg" alt="The Shape Keeper holding a glowing polyhedron in a constellation of neon shapes" width="384" />
 
-![Game Version](https://img.shields.io/badge/version-4.7.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Deployment](https://img.shields.io/badge/deployed-shape--keeper.vercel.app-brightgreen)
+# ShapeKeeper
 
-A modern, browser-based territory capture game (inspired by classic Dots and Boxes) featuring a 100-level campaign, collectible physics-driven sprites, real-time Convex multiplayer, procedural Web Audio synthesis, and a high-craft Cosmic Void & Dawn visual system.
+**Celestial Astrolabe Dots & Boxes — 100-Level Campaign, Collectible 3D Mini-Spheres & Real-Time Convex Multiplayer**
+
+[![Game Version](https://img.shields.io/badge/version-4.7.0-blue)](https://github.com/TeacherEvan/ShapeKeeper)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Deployment](https://img.shields.io/badge/deployed-shape--keeper.vercel.app-brightgreen)](https://shape-keeper.vercel.app)
+[![Campaign](https://img.shields.io/badge/campaign-100%20Levels-f59e0b)](https://shape-keeper.vercel.app)
+
+[🌐 Play Live](https://shape-keeper.vercel.app) · [🎮 Features](#-features) · [🚀 Quick Start](#-quick-start) · [🎯 How to Play](#-how-to-play) · [🧪 Testing & Quality Gates](#-testing--quality-gates)
+
+<br />
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/home-void.png" />
+  <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/home-dawn.png" />
+  <img alt="ShapeKeeper Home Menu in Cosmic Void and Dawn Light themes" src="docs/screenshots/home-void.png" width="100%" />
+</picture>
+
+</div>
 
 ## 🌐 Live Demo
 
 **Play Now:** [https://shape-keeper.vercel.app](https://shape-keeper.vercel.app)
+
+Zero build step required — pure ES Modules, Canvas 2D rendering, procedural Web Audio synthesis, and optional real-time Convex multiplayer for 2–6 players.
 
 ## 🖼️ Visual Showcase
 
 | Cosmic Void (Home) | Dawn Light (Home) |
 | :---: | :---: |
 | ![ShapeKeeper Home — Cosmic Void](docs/screenshots/home-void.png) | ![ShapeKeeper Home — Dawn Light](docs/screenshots/home-dawn.png) |
-| **100-Level Campaign** | **Active Match & Lava Timer** |
-| ![ShapeKeeper Levels Campaign](docs/screenshots/levels-void.png) | ![ShapeKeeper Gameplay](docs/screenshots/gameplay-void.png) |
+| **3D Mini-Sphere Playground — Cosmic Void** | **3D Mini-Sphere Playground — Dawn Light** |
+| ![ShapeKeeper Playground — Cosmic Void](docs/screenshots/playground-void.png) | ![ShapeKeeper Playground — Dawn Light](docs/screenshots/playground-dawn.png) |
+| **Active Match & Thermal Lava Timer — Void** | **Active Match & Thermal Lava Timer — Dawn** |
+| ![ShapeKeeper Gameplay — Cosmic Void](docs/screenshots/gameplay-void.png) | ![ShapeKeeper Gameplay — Dawn Light](docs/screenshots/gameplay-dawn.png) |
+| **100-Level Star-Atlas Campaign** | **Winner Altar & Podium Celebration** |
+| ![ShapeKeeper Levels Campaign](docs/screenshots/levels-void.png) | ![ShapeKeeper Winner Screen](docs/screenshots/winner-void.png) |
+
+<details>
+<summary>📱 Mobile Portrait Showcase (390×844)</summary>
+
+| Home Menu | Sprite Playground | Active Match |
+| :---: | :---: | :---: |
+| ![Mobile Home](docs/screenshots/mobile-home-void.png) | ![Mobile Playground](docs/screenshots/mobile-playground-void.png) | ![Mobile Gameplay](docs/screenshots/mobile-gameplay-void.png) |
+
+</details>
 
 ## 🎬 Gameplay Trailer (Mobile Portrait)
 
@@ -195,12 +225,26 @@ ShapeKeeper/
 ├── src/                        # Modular AI, a11y, audio, lifecycle, particle pool, timing, UI controllers
 │   ├── ai/                     # ChainAnalysis, LocalAIController, MinimaxEngine
 │   ├── timing/                 # Clock sync, local turn timer, turn clock controller
-│   └── ui/                     # WelcomeAnimation, LevelsScreen, LiveLobbyManager, HomePager, ThemeManager
+│   └── ui/                     # WelcomeAnimation, sprite-sphere, LevelsScreen, LiveLobbyManager, HomePager, ThemeManager
 ├── convex/                     # Convex TypeScript schema, queries, mutations, turn timer
 ├── convex-client/              # Browser Convex client operations & subscriptions
 ├── tests/                      # Vitest unit tests & Playwright E2E specs
 ├── docs/                       # Plans, audits, feature notes, and docs/screenshots/
 └── vercel.json                 # Vercel static hosting & CSP/SRI headers
+```
+
+### 🧭 Client & Multiplayer Flow
+
+```mermaid
+flowchart LR
+    Home["Home Pager (Void / Dawn)"] --> Setup["Local Setup (Hot-Seat / AI)"]
+    Home --> Levels["100-Level Star-Atlas"]
+    Home --> Lobby["Online Lobby (Convex + Passcode)"]
+    Setup --> Match["Gameplay Canvas (2-6 Players + Lava Timer)"]
+    Levels --> Match
+    Lobby --> Sync["Convex Realtime Subscriptions & Turn Timer"]
+    Sync --> Match
+    Match --> Winner["Winner Altar & Sprite Rewards"]
 ```
 
 ## 🔧 Technical Architecture
@@ -279,18 +323,11 @@ Contributions welcome! Feel free to report bugs via Issues, submit pull requests
 
 ## 📝 Version History
 
-### v4.7.0 (Celestial Astrolabe & Faceted Relic Overhaul)
+### v4.7.0 — Celestial Astrolabe, 3D Mini-Spheres & UX Polish
 
-- **Celestial Astrolabe Stage & Forged Relic Hero** — Added deterministic twinkling starlight and counter-rotating gold/cobalt astrolabe rings to `WelcomeAnimation`, upgraded display typography to geometric `Oxanium`, framed the hero relic with an inscribed double halo (`◆ THE SHAPE KEEPER · CHAPTER I ◆`), placed the menu CTAs on a frosted Celestial Command Plinth, and forged 3-tier metallic gold/machined-glass keys with responsive `390×844` mobile clearance.
-- **Faceted Gameplay Board & Thermal HUD** — Sculpted the game board bezel with burnished-gold corner L-brackets, upgraded claimed boxes into stained-glass diagonal gradients with crystal glints and circular owner medallions, rendered 4-pass jewel filaments, machined 4-pass constellation pegs, rotating astrolabe lock-on reticles, an integrated thermal Lava Timer gauge bar with molten embers, and frosted celestial HUD rails with live mid-game theme repainting.
-- **Star-Atlas Levels Codex, Tactile Setup & Winner Altar** — Grouped the 100-level campaign under color-coded chapter tiers with a Level 100 Grand Finale centerpiece, arranged desktop Local Setup into a 2-column tactile card grid, upgraded `donate.html` and `checkout.html` with gold-cobalt crown hairlines and `Oxanium` headers, and framed the Winner Altar with a rank-1 gilded plaque and dual-core celebration fireworks.
-- **Updated README & showcase** — Refreshed documentation and captured verified clean showcase screenshots across Void, Dawn, Levels, and active Gameplay in `docs/screenshots/`.
-
-### v4.7.0 (Draws count as wins)
-
-- **A draw clears the level** — If the board ends level (e.g. 2–2), Levels mode records the level, pays the `+1` sprite, and offers the next level instead of failing you.
-- **Copy matches the rule** — The win screen displays `🤝 Level N Complete — Draw!` with a "draw counts as a win" note; only a real AI win shows `Level N Failed`.
-- **Smoother motion** — Background hue, screen shake, and screen pulse decay by elapsed time (`expDecay`) for consistent 60 Hz / 120 Hz behavior.
+- **Celestial Astrolabe Stage & Volumetric 3D Mini-Spheres** — Added deterministic twinkling starlight and counter-rotating gold/cobalt astrolabe rings in `src/ui/WelcomeAnimation.js`, volumetric lit spheres in `src/ui/sprite-sphere.js`, geometric `Oxanium` display typography, framed hero relic (`◆ THE SHAPE KEEPER · CHAPTER I ◆`), frosted Celestial Command Plinth, and `HomePager` side playgrounds with swipe/sprite hints (`#homePlaygroundHint`).
+- **Faceted Gameplay Board, Thermal HUD & 2–6 Player Scaling** — Sculpted gold-bracketed game bezel and stained-glass owner crests (`renderer/board.js`), thermal Lava Timer gauge pill (`renderer/lava-timer.js`), responsive `.game-header.multi-player` grid (`3–6` players), live `#connectionStatusChip` online sync status, bottom-corner non-blocking toasts (`Toast.js`), and in-flow tutorial dock (`tutorial.css`).
+- **Star-Atlas Levels Codex, Unified Setup & Winner Altar** — Chapter-grouped 100-level grid (`src/ui/LevelsScreen.js`) where draws count as wins (`+1` sprite), unified Local Setup timer (`#localTurnTimerSection`) with conditional AI visibility, toggleable color-blind palette, inline lobby passcode dialog (`#passcodeModalOverlay`), two-tap `Tap again` controls guard, named multi-player Winner podium ranks (`🥇`, `🥈`, `🥉`), and dual-theme (`Cosmic Void` / `Dawn Light`) desktop & mobile showcase screenshots in `docs/screenshots/`.
 
 ### v4.6.0 (Mine penalties)
 
