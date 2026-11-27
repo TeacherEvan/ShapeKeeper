@@ -394,8 +394,10 @@ describe('WelcomeAnimation sprite interactions and ripples', () => {
         expect(anim.sparks.length).toBeGreaterThan(0);
     });
 
-    it('drawParticleShape applies squash & stretch and draws celestial core', () => {
+    it('creates pure sphere sprites and draws static mini spheres without velocity warp', () => {
+        expect(anim.particleTypes).toEqual(['sphere']);
         const p = anim.floatingParticles[0];
+        expect(p.type).toBe('sphere');
         p.vx = 5;
         p.vy = 0;
         const mockCtx = {
@@ -408,9 +410,10 @@ describe('WelcomeAnimation sprite interactions and ripples', () => {
             arc: vi.fn(),
             fill: vi.fn(),
         };
-        anim.drawParticleShape(mockCtx, p, 100, 100, 10, 1);
+        anim.drawParticleShape(mockCtx, p, 100, 100, 6, 1);
         expect(mockCtx.translate).toHaveBeenCalledWith(100, 100);
-        expect(mockCtx.scale).toHaveBeenCalled();
+        expect(mockCtx.scale).not.toHaveBeenCalled();
+        expect(mockCtx.arc).toHaveBeenCalledTimes(2);
         expect(mockCtx.fill).toHaveBeenCalledTimes(2);
     });
 });

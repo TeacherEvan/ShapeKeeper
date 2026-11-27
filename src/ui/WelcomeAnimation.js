@@ -10,6 +10,7 @@ import { LevelsProgress, getVisibleSpriteCount } from './LevelsProgress.js';
 import { SpriteFireworksManager, advanceSpriteLifecycle } from './SpriteFireworks.js';
 import { SPRITE_PALETTES, hexToRgbChannels } from './sprite-palette.js';
 import { SpriteSparks } from './sprite-sparks.js';
+import { drawSphereSprite } from './sprite-sphere.js';
 import { SpriteTrail, TRAIL_CAPACITY, TRAIL_MAX_SEGMENT } from './sprite-trail.js';
 
 /**
@@ -54,7 +55,7 @@ export class WelcomeAnimation {
         this.mousePosition = { x: -1000, y: -1000 };
         this.mouseInfluenceRadius = 200;
         this.connectionDistance = 140;
-        this.particleTypes = ['circle', 'square', 'triangle', 'diamond'];
+        this.particleTypes = ['sphere'];
         // Full-spectrum sprite ink, one family per hue band. Lives in
         // ui/sprite-palette so the hue/contrast contract is unit-testable.
         this.colorPalette = SPRITE_PALETTES;
@@ -404,12 +405,9 @@ export class WelcomeAnimation {
             // Pre-parsed channels: the draw loop builds rgba() strings every
             // frame, so never parse the hex on the hot path.
             rgb: hexToRgbChannels(color),
-            // A single collected sprite (new players have exactly one) used to
-            // be a 2-5px speck that read as a rendering artefact. Keep the
-            // footprint legible while staying small enough for 300 on screen.
-            size: 7 + Math.random() * 4,
-            baseSize: 7 + Math.random() * 4,
-            type: this.particleTypes[Math.floor(Math.random() * this.particleTypes.length)],
+            size: 3.6 + Math.random() * 2.6,
+            baseSize: 3.6 + Math.random() * 2.6,
+            type: 'sphere',
             neighborhoodRadius: 120,
             maxSpeed: 1.8,
             maxForce: 0.04,
@@ -639,7 +637,7 @@ export class WelcomeAnimation {
             particle.y += particle.vy;
 
             particle.pulsePhase += particle.pulseSpeed;
-            particle.size = particle.baseSize * (0.8 + 0.2 * Math.sin(particle.pulsePhase));
+            particle.size = particle.baseSize * (0.92 + 0.08 * Math.sin(particle.pulsePhase));
 
             // Edge wrap is a teleport. Restart the trail so the jump is never
             // stroked as a line across the whole canvas.
@@ -941,86 +939,13 @@ export class WelcomeAnimation {
         }
     }
 
-    /**
-     * Soft halo for a small flock. A new player has exactly one sprite, and a
-     * lone 7-11px gem still reads as a stray pixel; one translucent extra fill
-     * gives it a firefly presence. Kept out of `drawParticleShape()` (which has
-     * its own two-fill contract) and only used for <= 6 sprites so a full
-     * 300-sprite flock pays no extra per-frame cost.
-     */
-    drawSpriteHalo(ctx, particle, x, y, size, alpha) {
-        ctx.save?.();
-        ctx.globalAlpha = alpha * 0.18;
-        ctx.fillStyle = particle.color;
-        ctx.translate?.(x, y);
-        this.renderShapeGeometry(ctx, particle.type, size * 1.9);
-        ctx.fill?.();
-        ctx.restore?.();
-    }
-
     drawParticleShape(ctx, particle, x, y, size, alpha) {
-        ctx.save?.();
-        ctx.globalAlpha = alpha;
-
-        const vx = particle.vx || 0;
-        const vy = particle.vy || 0;
-        const speed = Math.hypot(vx, vy);
-
-        ctx.translate?.(x, y);
-
-        // Disney Principle #1: Squash & Stretch along velocity vector
-        if (!this.reducedMotion && speed > 0.8 && !particle.isGrabbed) {
-            const angle = Math.atan2(vy, vx);
-            const stretch = Math.min(1.8, 1 + speed * 0.08);
-            const squash = 1 / Math.sqrt(stretch);
-            ctx.rotate?.(angle);
-            ctx.scale?.(stretch, squash);
-        }
-
-        // 1. Primary outer shape
-        ctx.fillStyle = particle.color;
-        this.renderShapeGeometry(ctx, particle.type, size);
-        ctx.fill?.();
-
-        // 2. Luminous Celestial Core: bright jewel-like inner nucleus
-        ctx.fillStyle = '#ffffff';
-        ctx.globalAlpha = alpha * 0.72;
-        this.renderShapeGeometry(ctx, particle.type, size * 0.42);
-        ctx.fill?.();
-
-        ctx.restore?.();
+        drawSphereSprite(ctx, particle, x, y, size, alpha, this.isDarkTheme());
     }
 
-    renderShapeGeometry(ctx, type, size) {
+    renderShapeGeometry(ctx, _type, size) {
         ctx.beginPath?.();
-        switch (type) {
-            case 'circle':
-                ctx.arc?.(0, 0, size, 0, Math.PI * 2);
-                break;
-            case 'square':
-                if (typeof ctx.rect === 'function') {
-                    ctx.rect(-size, -size, size * 2, size * 2);
-                } else if (typeof ctx.fillRect === 'function') {
-                    ctx.fillRect(-size, -size, size * 2, size * 2);
-                }
-                break;
-            case 'triangle':
-                ctx.moveTo?.(0, -size * 1.15);
-                ctx.lineTo?.(size, size * 0.85);
-                ctx.lineTo?.(-size, size * 0.85);
-                ctx.closePath?.();
-                break;
-            case 'diamond':
-                ctx.moveTo?.(0, -size * 1.15);
-                ctx.lineTo?.(size * 0.9, 0);
-                ctx.lineTo?.(0, size * 1.15);
-                ctx.lineTo?.(-size * 0.9, 0);
-                ctx.closePath?.();
-                break;
-            default:
-                ctx.arc?.(0, 0, size, 0, Math.PI * 2);
-                break;
-        }
+        ctx.arc?.(0, 0, size, 0, Math.PI * 2);
     }
 
     /** Resolve a `{ light, dark }` token map against the live document theme. */
@@ -1076,35 +1001,27 @@ export class WelcomeAnimation {
             if (eggAlpha <= 0.01 || eggScale <= 0.01) continue;
 
             if (particle.isGrabbed) {
+                const orbitR = particle.size * 2.8 * (1 + 0.08 * Math.sin(this.lastFrameTime / 90));
                 this.ctx.save();
-                this.ctx.globalAlpha = 0.6 * particleAlpha;
+                this.ctx.globalAlpha = 0.35 * particleAlpha;
                 this.ctx.strokeStyle = particle.color;
-                this.ctx.lineWidth = 3;
-                this.ctx.shadowColor = particle.color;
-                this.ctx.shadowBlur = 20;
+                this.ctx.lineWidth = 1.2;
+                this.ctx.setLineDash?.([4, 5]);
                 this.ctx.beginPath();
-                this.ctx.arc(
-                    particle.x,
-                    particle.y,
-                    particle.size * 2.8 * (1 + 0.08 * Math.sin(this.lastFrameTime / 90)),
-                    0,
-                    Math.PI * 2
-                );
+                this.ctx.arc(particle.x, particle.y, orbitR * 1.28, 0, Math.PI * 2);
+                this.ctx.stroke();
+
+                this.ctx.setLineDash?.([]);
+                this.ctx.globalAlpha = 0.72 * particleAlpha;
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.arc(particle.x, particle.y, orbitR, 0, Math.PI * 2);
                 this.ctx.stroke();
                 this.ctx.restore();
             }
 
-            const drawnSize = particle.size * eggScale * (particle.pop ?? 1);
-            if (this.floatingParticles.length <= 6) {
-                this.drawSpriteHalo(
-                    this.ctx,
-                    particle,
-                    particle.x,
-                    particle.y,
-                    drawnSize,
-                    particleAlpha * eggAlpha
-                );
-            }
+            const smallFlockBoost = this.floatingParticles.length <= 6 ? 1.22 : 1;
+            const drawnSize = particle.size * smallFlockBoost * eggScale * (particle.pop ?? 1);
             this.drawParticleShape(
                 this.ctx,
                 particle,
@@ -1155,7 +1072,9 @@ export class WelcomeAnimation {
     drawConnections(alpha) {
         const fallbackInk = this.themedInk(this.constellationInk);
         const maxDistSq = this.connectionDistance * this.connectionDistance;
-        this.ctx.lineWidth = 0.8;
+        const arcThresholdSq = 72 * 72;
+        const t = this.reducedMotion ? 0 : (this.lastFrameTime || 0) * 0.001;
+        this.ctx.lineWidth = 0.85;
 
         for (let i = 0; i < this.floatingParticles.length; i++) {
             const p1 = this.floatingParticles[i];
@@ -1176,14 +1095,23 @@ export class WelcomeAnimation {
                 const distSq = dx * dx + dy * dy;
 
                 if (distSq < maxDistSq) {
-                    // 0.34 is calibrated, not invented: with per-sprite ink the
-                    // links no longer stack into one bright cyan mass, so the
-                    // old 0.15 read as a faint wash (9.7k vivid px measured vs
-                    // 17.6k here) while the hue spread stays full-spectrum.
-                    const opacity = alpha * 0.34 * (1 - distSq / maxDistSq);
+                    const opacity = alpha * 0.36 * (1 - distSq / maxDistSq);
                     this.ctx.strokeStyle = `rgba(${linkInk}, ${opacity})`;
                     this.ctx.beginPath();
                     this.ctx.moveTo(p1.x, p1.y);
+                    if (!this.reducedMotion && distSq > 0 && distSq < arcThresholdSq) {
+                        const dist = Math.sqrt(distSq);
+                        const arcAmp =
+                            Math.sin(t * 12 + (p1.id || 1) * 3.1 + (p2.id || 2) * 1.7) *
+                            3.2 *
+                            (1 - dist / 72);
+                        const nx = -dy / dist;
+                        const ny = dx / dist;
+                        this.ctx.lineTo(
+                            (p1.x + p2.x) * 0.5 + nx * arcAmp,
+                            (p1.y + p2.y) * 0.5 + ny * arcAmp
+                        );
+                    }
                     this.ctx.lineTo(p2.x, p2.y);
                     this.ctx.stroke();
                 }
@@ -1193,9 +1121,9 @@ export class WelcomeAnimation {
 
     drawTrails(alpha) {
         const ctx = this.ctx;
-        const trailAlpha = alpha * 0.4;
+        const trailAlpha = alpha * 0.3;
         ctx.globalAlpha = trailAlpha;
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1.4;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
