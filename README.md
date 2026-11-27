@@ -38,7 +38,7 @@ A modern, browser-based territory capture game (inspired by classic Dots and Box
 - **100 Progressive Levels** — Five structured chapters scaling from quick `3×3` warm-ups (Levels 1–25) through `6×8` (26–50), `8×8` (51–89), `10×10` (90–99), and the `10×15` Grand Finale at Level 100
 - **Adaptive Turn Timer** — Starts at `7s` and adds `+2s` per completed level, capped at `30s`
 - **Draws Count as Wins** — Tying the AI clears the level, awards `+1` sprite, and advances; the AI must out-score you to take a sprite (floored at 1)
-- **Collectible Sprite Playground** — Swipe left or right on the home screen to visit interactive sprite playgrounds populated by the exact sprites you have earned (`1` minimum, capped at `300`), featuring boids flocking, tap ripples, grab-and-fling springs, and hold-to-singularity blooms
+- **Collectible Sprite Playground** — Swipe left or right on the home screen to visit interactive playgrounds populated by the exact **3D luminous mini spheres** you have earned (`1` minimum, capped at `300`), featuring boids flocking, subtle electrostatic filaments, tap ripples, grab-and-fling springs, and hold-to-singularity blooms
 - **Level 100 Easter Egg** — Clearing Level 100 permanently unlocks celebratory home-screen sprite fireworks
 
 ### Core Gameplay & Multiplayer
@@ -54,7 +54,7 @@ A modern, browser-based territory capture game (inspired by classic Dots and Box
 
 ### Visual Identity & Accessibility
 
-- **Dual Themes & Celestial Astrolabe Stage** — Instant toggle between deep obsidian (`#0b0e14`, Cosmic Void) and warm ivory paper (`#f7f4ec`, Dawn) with Solar Gold (`#f5b727` / `#8c5500`) and Royal Cobalt (`#5c9bff` / `#1d4ed8`) accents, radial nebula washes (zero gridlines), twinkling starlight, and counter-rotating astrolabe rings behind all screens
+- **Dual Themes & Celestial Astrolabe Stage** — Instant toggle between deep obsidian (`#0b0e14`, Cosmic Void) and warm ivory paper (`#f7f4ec`, Dawn) with Solar Gold (`#f5b727` / `#8c5500`) and Royal Cobalt (`#5c9bff` / `#1d4ed8`) accents, radial nebula washes (zero gridlines), twinkling starlight, counter-rotating astrolabe rings, and cached 3D volumetric mini spheres with glass specular highlights
 - **Typography & Tactile Surfaces** — Geometric `Oxanium` display headings paired with `Space Grotesk` body text and `Space Mono` (`tabular-nums`) telemetry, perceptual `oklch()` layered surfaces, frosted command plinths, top-edge specular hairlines, and forged gold/glass key elevations
 - **Faceted Relic Board & Jewel Craft** — Chamfered tabletop board bezels with gold corner brackets, stained-glass claimed tiles with diagonal crystal glints and circular owner medallions, four-pass jewel filaments, machined constellation pegs, rotating astrolabe selection reticles, an integrated thermal Lava Timer gauge with molten embers, and dual-core celebration fireworks
 - **Accessibility & Comfort (WCAG 2.2)** — Full keyboard dot navigation (`Arrow` keys, `Enter`/`Space`, `Escape`) via `AccessibleGridTree`, `prefers-reduced-motion: reduce`, `prefers-contrast: more`, `forced-colors: active`, `44×44 px` touch targets, and one-click Okabe-Ito color-blind-safe player colors
