@@ -61,6 +61,40 @@
     animation: slideUp 240ms var(--easing-smooth) 80ms both;
 }
 
+.winner-reward-note {
+    font-size: 0.6em;
+    color: var(--accent-primary, #38bdf8);
+}
+
+.winner-draw-note,
+.winner-egg-note {
+    font-size: 0.55em;
+    color: var(--accent-gold, #f5b727);
+}
+
+.winner-loss-heading,
+.winner-loss-note {
+    color: #fca5a5;
+}
+
+.winner-loss-note {
+    font-size: 0.6em;
+}
+
+[data-theme='light'] .winner-reward-note {
+    color: #1d4ed8;
+}
+
+[data-theme='light'] .winner-draw-note,
+[data-theme='light'] .winner-egg-note {
+    color: #92400e;
+}
+
+[data-theme='light'] .winner-loss-heading,
+[data-theme='light'] .winner-loss-note {
+    color: #b91c1c;
+}
+
 .winner-container .start-btn {
     animation: slideUp 240ms var(--easing-smooth) 160ms both;
     margin: 8px;

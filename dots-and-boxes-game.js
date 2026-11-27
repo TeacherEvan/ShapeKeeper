@@ -1161,7 +1161,10 @@ export class DotsAndBoxesGame {
         this.moveHistory = JSON.parse(JSON.stringify(payload.moveHistory));
         this.redoHistory = JSON.parse(JSON.stringify(payload.redoHistory));
         this.replayIndex = payload.replayIndex;
-        this.turnDurationMs = payload.config.turnDurationMs ?? 0;
+        this.turnDurationMs =
+            typeof payload.config.turnDurationMs === 'number' && payload.config.turnDurationMs > 0
+                ? payload.config.turnDurationMs
+                : this.turnDurationSeconds * 1000;
         this.restoreMoveSnapshot(payload.state);
         this.gameState.setupCanvas();
         this.accessibleGrid?.rebuild?.();
@@ -1358,6 +1361,7 @@ export class DotsAndBoxesGame {
         }
         if (this.isLevelsMode && this.currentPlayer !== 1) {
             this.turnRemainingMs = null;
+            document.getElementById('gameScreen')?.classList.remove('turn-urgent');
             return;
         }
         const clock = this._localTurnClock;

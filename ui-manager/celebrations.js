@@ -26,10 +26,13 @@ export function triggerBonusTurnVisual(game, refreshUI) {
         turnIndicator.textContent = '🎁 BONUS TURN! 🎁';
         turnIndicator.style.animation = 'pulse 0.5s ease-in-out 3';
         announceStatus('Bonus turn earned.');
-        setTimeout(() => {
+        const tid = setTimeout(() => {
+            if (game?.isDestroyed) return;
             turnIndicator.style.animation = '';
+            turnIndicator.style.color = '';
             refreshUI();
         }, 1500);
+        game?.disposables?.addTimeout?.(tid);
     }
 
     const playerColor = getPlayerColor(game, game.currentPlayer);
@@ -59,9 +62,12 @@ export function triggerSkipTurnVisual(game, skippedPlayer, refreshUI) {
         turnIndicator.textContent = `❄️ Player ${skippedPlayer} is FROZEN! Turn skipped! ❄️`;
         turnIndicator.style.color = '#03A9F4';
         announceStatus(`Player ${skippedPlayer} is frozen. Turn skipped.`);
-        setTimeout(() => {
+        const tid = setTimeout(() => {
+            if (game?.isDestroyed) return;
+            turnIndicator.style.color = '';
             refreshUI();
         }, 2000);
+        game?.disposables?.addTimeout?.(tid);
     }
 
     spawnDirectionalBurst(game, 25, () => ({
@@ -118,9 +124,12 @@ export function triggerDoubleLineReminder(game, refreshUI) {
         turnIndicator.textContent = '⚡ LIGHTNING! Draw another line! ⚡';
         turnIndicator.style.color = '#FFEB3B';
         announceStatus('Lightning effect active. Draw another line.');
-        setTimeout(() => {
+        const tid = setTimeout(() => {
+            if (game?.isDestroyed) return;
+            turnIndicator.style.color = '';
             refreshUI();
         }, 2000);
+        game?.disposables?.addTimeout?.(tid);
     }
 
     spawnDirectionalBurst(game, 25, () => ({
@@ -168,6 +177,8 @@ let activeConfettiAnim = null;
 let activeFireworksAnim = null;
 let activeFireworksInterval = null;
 
+let activeFireworksRemovalTimer = null;
+
 export function stopCelebrationAnimations() {
     if (activeConfettiAnim) {
         cancelAnimationFrame(activeConfettiAnim);
@@ -180,6 +191,10 @@ export function stopCelebrationAnimations() {
     if (activeFireworksInterval) {
         clearInterval(activeFireworksInterval);
         activeFireworksInterval = null;
+    }
+    if (activeFireworksRemovalTimer) {
+        clearTimeout(activeFireworksRemovalTimer);
+        activeFireworksRemovalTimer = null;
     }
     document.getElementById('confettiCanvas')?.remove();
     document.getElementById('fireworksCanvas')?.remove();
@@ -295,6 +310,10 @@ export function launchFireworks(accentColor) {
         clearInterval(activeFireworksInterval);
         activeFireworksInterval = null;
     }
+    if (activeFireworksRemovalTimer) {
+        clearTimeout(activeFireworksRemovalTimer);
+        activeFireworksRemovalTimer = null;
+    }
     document.getElementById('fireworksCanvas')?.remove();
 
     const canvas = document.createElement('canvas');
@@ -356,8 +375,11 @@ export function launchFireworks(accentColor) {
         const dtScale = Math.min(0.05, Math.max(0.001, (now - lastTime) / 1000)) * 60;
         lastTime = now;
 
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
         ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
         ctx.fillRect(0, 0, logicalWidth, logicalHeight);
+        ctx.restore();
 
         fireworks.forEach((firework) => {
             if (!firework.exploded) {
@@ -418,7 +440,10 @@ export function launchFireworks(accentColor) {
         }
 
         activeFireworksAnim = null;
-        setTimeout(() => canvas.remove(), 1000);
+        activeFireworksRemovalTimer = setTimeout(() => {
+            activeFireworksRemovalTimer = null;
+            canvas.remove();
+        }, 1000);
     };
 
     activeFireworksAnim = requestAnimationFrame(animate);
@@ -563,14 +588,28 @@ export function showWinner(game) {
                 const headline = isTie
                     ? `🤝 Level ${game.currentLevel} Complete — Draw! 🤝`
                     : `🏆 Level ${game.currentLevel} Complete! 🏆`;
-                const drawNote = isTie
-                    ? '<br><span style="font-size: 0.55em; color: #ffd700;">🤝 A draw counts as a win — level cleared.</span>'
-                    : '';
-                let winHtml = `${headline}${drawNote}<br><span style="font-size: 0.6em; color: #00f0ff;">✨ +1 Sprite (Total: ${state.spritesObtained}) · ⏱️ Turn Timer: ${updatedTurnDuration}s${durationSuffix} ✨</span>`;
-                if (state.easterEggJustUnlocked) {
-                    winHtml += `<br><span style="font-size: 0.55em; color: #ffd700;">🎆 You beat level 100! Secret unlocked — check the home screen! 🎆</span>`;
+                winnerText.replaceChildren();
+                winnerText.appendChild(document.createTextNode(headline));
+                if (isTie) {
+                    winnerText.appendChild(document.createElement('br'));
+                    const drawSpan = document.createElement('span');
+                    drawSpan.className = 'winner-draw-note';
+                    drawSpan.textContent = '🤝 A draw counts as a win — level cleared.';
+                    winnerText.appendChild(drawSpan);
                 }
-                winnerText.innerHTML = winHtml;
+                winnerText.appendChild(document.createElement('br'));
+                const rewardSpan = document.createElement('span');
+                rewardSpan.className = 'winner-reward-note';
+                rewardSpan.textContent = `✨ +1 Sprite (Total: ${state.spritesObtained}) · ⏱️ Turn Timer: ${updatedTurnDuration}s${durationSuffix} ✨`;
+                winnerText.appendChild(rewardSpan);
+                if (state.easterEggJustUnlocked) {
+                    winnerText.appendChild(document.createElement('br'));
+                    const eggSpan = document.createElement('span');
+                    eggSpan.className = 'winner-egg-note';
+                    eggSpan.textContent =
+                        '🎆 You beat level 100! Secret unlocked — check the home screen! 🎆';
+                    winnerText.appendChild(eggSpan);
+                }
                 winnerText.style.color = winnerColor;
                 if (playAgainBtn) {
                     if (game.currentLevel < MAX_LEVEL) {
@@ -601,8 +640,17 @@ export function showWinner(game) {
                 const spriteMsg = lossResult.spriteLost
                     ? `💔 −1 Sprite (Total: ${lossResult.state.spritesObtained})`
                     : `🛡️ Your last sprite is safe (Total: 1)`;
-                winnerText.innerHTML = `Level ${game.currentLevel} Failed<br><span style="font-size: 0.6em; color: #FFB088;">${spriteMsg} · Try again to unlock the next level!</span>`;
-                winnerText.style.color = '#FFB088';
+                winnerText.replaceChildren();
+                winnerText.appendChild(
+                    document.createTextNode(`Level ${game.currentLevel} Failed`)
+                );
+                winnerText.appendChild(document.createElement('br'));
+                const lossSpan = document.createElement('span');
+                lossSpan.className = 'winner-loss-note';
+                lossSpan.textContent = `${spriteMsg} · Try again to unlock the next level!`;
+                winnerText.appendChild(lossSpan);
+                winnerText.style.color = '';
+                winnerText.classList.add('winner-loss-heading');
                 if (playAgainBtn) {
                     playAgainBtn.textContent = `Retry Level ${game.currentLevel} ↺`;
                     game._nextLevelToPlay = game.currentLevel;

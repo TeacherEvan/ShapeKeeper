@@ -95,7 +95,11 @@
     const returning = hashParams.get('reference') || storedReference;
     if (returning) {
         payBtn.disabled = true;
-        verify(returning);
+        verify(returning).then((ok) => {
+            if (!ok && publicKey && verifyUrl) {
+                payBtn.disabled = false;
+            }
+        });
     }
 
     if (!publicKey || !verifyUrl) {

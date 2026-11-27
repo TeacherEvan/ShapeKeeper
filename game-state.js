@@ -326,7 +326,11 @@ export class GameState {
      */
     checkGameOver() {
         if (this.isGameOver()) {
-            setTimeout(() => this.game.uiManager.showWinner(), 500);
+            const tid = setTimeout(() => {
+                if (this.game.isDestroyed) return;
+                this.game.uiManager.showWinner();
+            }, 500);
+            this.game.disposables?.addTimeout?.(tid);
         }
     }
 
