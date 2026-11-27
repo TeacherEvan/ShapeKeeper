@@ -12,6 +12,21 @@
 let activeToastShowTimer = null;
 let activeToastHideTimer = null;
 
+/** Immediately clear any visible toast notification and pending timers. */
+export function clearToast() {
+    if (activeToastShowTimer) {
+        clearTimeout(activeToastShowTimer);
+        activeToastShowTimer = null;
+    }
+    if (activeToastHideTimer) {
+        clearTimeout(activeToastHideTimer);
+        activeToastHideTimer = null;
+    }
+    if (typeof document !== 'undefined') {
+        document.querySelectorAll('.toast-notification').forEach((el) => el.remove());
+    }
+}
+
 export function showToast(message, type = 'info', duration = 4000) {
     if (activeToastShowTimer) {
         clearTimeout(activeToastShowTimer);

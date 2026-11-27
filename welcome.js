@@ -3,6 +3,7 @@
  * Orchestrates all UI modules for the welcome screen
  */
 
+import { LevelsProgress, getVisibleSpriteCount } from './src/ui/LevelsProgress.js';
 import { LiveLobbyManager, getJoinParamsFromUrl } from './src/ui/LiveLobbyManager.js';
 import {
     handleGameStateUpdate,
@@ -63,10 +64,19 @@ function initializeApp() {
     const mainMenuScreen = document.getElementById('mainMenuScreen');
     const returnBtn = document.getElementById('sideScreenReturnBtn');
     const pagerDotsContainer = document.getElementById('homePagerDots');
+    const playgroundHint = document.getElementById('homePlaygroundHint');
 
     const updatePagerUI = (pos) => {
         if (returnBtn) {
             returnBtn.hidden = pos === 0;
+        }
+        if (playgroundHint) {
+            if (pos === 0) {
+                playgroundHint.textContent = '◀ Swipe for Sprite Playground ▶';
+            } else {
+                const count = getVisibleSpriteCount(LevelsProgress.getState());
+                playgroundHint.textContent = `✦ PLAYGROUND · ${count} / 300 Sprites · Drag, tap, or hold to gather`;
+            }
         }
         if (pagerDotsContainer) {
             pagerDotsContainer.querySelectorAll('.pager-dot').forEach((dot) => {

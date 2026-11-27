@@ -7,7 +7,7 @@
  * getting back to gameplay is friction-free.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createGameControlsPanel } from './GameControlsPanel.js';
+import { bindGameControlsPanel, createGameControlsPanel } from './GameControlsPanel.js';
 
 describe('GameControlsPanel — initial state', () => {
     it('starts closed', () => {
@@ -109,5 +109,32 @@ describe('GameControlsPanel — custom window', () => {
         now = 900;
         panel.tap(); // within 1000ms
         expect(panel.isOpen()).toBe(true);
+    });
+});
+
+describe('bindGameControlsPanel — primed touch cue and auto-reset', () => {
+    it('shows "Tap again" on first tap and restores "Controls" after window expires', () => {
+        vi.useFakeTimers();
+        document.body.innerHTML = `
+            <button id="toggle"><span class="controls-toggle-label">Controls</span></button>
+            <div id="panel" hidden></div>
+        `;
+        const toggleBtn = document.getElementById('toggle');
+        const panelEl = document.getElementById('panel');
+        const labelEl = toggleBtn.querySelector('.controls-toggle-label');
+        const panel = createGameControlsPanel({ windowMs: 500 });
+        const cleanup = bindGameControlsPanel(panel, toggleBtn, panelEl);
+
+        toggleBtn.click();
+        expect(toggleBtn.classList.contains('primed')).toBe(true);
+        expect(labelEl.textContent).toBe('Tap again');
+        expect(panelEl.hidden).toBe(true);
+
+        vi.advanceTimersByTime(520);
+        expect(toggleBtn.classList.contains('primed')).toBe(false);
+        expect(labelEl.textContent).toBe('Controls');
+
+        cleanup();
+        vi.useRealTimers();
     });
 });

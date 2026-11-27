@@ -144,11 +144,37 @@ select.name-input {
     width: 100%;
 }
 
+#localSetupScreen .setup-section[hidden] {
+    display: none;
+}
+
+.local-timer-custom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-subtle);
+}
+
+.local-timer-custom .name-input {
+    max-width: 160px;
+    min-height: 44px;
+    padding: 10px 12px;
+    text-align: center;
+}
+
 #localSetupScreen .setting-hint {
     max-width: 34ch;
     font-size: 0.78rem;
     line-height: 1.4;
     color: var(--text-tertiary);
+}
+
+#localGridDensityHint[hidden] {
+    display: none;
 }
 
 #localSetupScreen .button-row {
@@ -235,19 +261,6 @@ input[type='color']::-moz-color-swatch {
 [data-theme='light'] .grid-btn.selected {
     background-image: linear-gradient(180deg, #a66706 0%, #8c5500 56%, #6e4200 100%);
     border-color: rgba(110, 66, 0, 0.55);
-}
-
-/* ── Lobby toast: clear of the invite/copy controls ──────────────────────── */
-/* The default fixed top:78px toast landed on top of #copyInviteLinkBtn while
- * the lobby's "created" toast was visible. */
-body:has(#lobbyScreen.active) .toast-notification {
-    top: 180px;
-}
-
-@media (max-width: 768px) {
-    body:has(#lobbyScreen.active) .toast-notification {
-        top: 210px;
-    }
 }
 
 /* ── Winner rows: brand amber, not blueprint's success-green ─────────────── */

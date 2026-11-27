@@ -300,6 +300,7 @@ export class TutorialSystem {
         if (!this.active || !step) {
             overlay.classList.add('hidden');
             overlay.dataset.tutorialStep = 'inactive';
+            this.game.gameState?.setupCanvas?.();
             return;
         }
 
@@ -319,6 +320,7 @@ export class TutorialSystem {
             continueBtn.hidden = !step.isInfoStep;
         }
 
+        this.game.gameState?.setupCanvas?.();
         announceStatus(`${step.title}. ${step.message}`);
     }
 }

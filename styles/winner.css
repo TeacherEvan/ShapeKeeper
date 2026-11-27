@@ -1,30 +1,17 @@
-.game-header.multi-player {
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-}
-
-.game-header.multi-player .player-info {
-    min-width: 80px;
-    flex: 0 1 auto;
-}
-
-.game-header.multi-player .exit-btn {
-    order: -1;
-    margin-right: auto;
-}
-
 #winnerScreen {
-    justify-content: center;
-    align-items: center;
+    overflow-y: auto;
+    justify-content: flex-start;
+    align-items: safe center;
+    padding: 20px 16px;
 }
 
 .winner-container {
     position: relative;
     z-index: 1; /* stays above the z-index:0 fireworks canvas */
+    width: min(560px, 100%);
     max-width: 600px;
     margin: auto;
-    padding: 42px 36px;
+    padding: clamp(24px, 4vw, 40px) clamp(18px, 4vw, 34px);
     text-align: center;
     background-color: var(--surface-layer-1);
     background-image:
@@ -188,10 +175,23 @@
 .final-scores {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin: 0 auto 24px;
-    max-width: 400px;
+    gap: 10px;
+    margin: 0 auto 20px;
+    max-width: 440px;
     animation: slideUp 240ms var(--easing-smooth) 120ms both;
+}
+
+.final-scores.multi-player-scores {
+    gap: 8px;
+}
+
+.final-scores.multi-player-scores .final-score-entry {
+    padding: 10px 16px;
+    gap: 10px;
+}
+
+.final-scores.multi-player-scores .final-score-points {
+    font-size: 1.45rem;
 }
 
 .final-score-entry {

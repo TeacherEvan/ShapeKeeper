@@ -59,13 +59,18 @@ export function bindLocalSetupEvents(deps) {
 
     const localOpponentType = document.getElementById('localOpponentType');
     const localAIDifficulty = document.getElementById('localAIDifficulty');
+    const localAIDifficultySection = document.getElementById('localAIDifficultySection');
     const localTutorialMode = document.getElementById('localTutorialMode');
     const syncLocalAIControls = () => {
         if (!localOpponentType || !localAIDifficulty) {
             return;
         }
-        localAIDifficulty.disabled = localOpponentType.value !== 'ai';
-        if (localOpponentType.value === 'ai' && localTutorialMode) {
+        const isAI = localOpponentType.value === 'ai';
+        localAIDifficulty.disabled = !isAI;
+        if (localAIDifficultySection) {
+            localAIDifficultySection.hidden = !isAI;
+        }
+        if (isAI && localTutorialMode) {
             localTutorialMode.checked = false;
             localTutorialMode.disabled = true;
         } else if (localTutorialMode) {
@@ -110,8 +115,15 @@ export function bindLocalSetupEvents(deps) {
                 .querySelectorAll('.local-grid-btn')
                 .forEach((candidate) => candidate.classList.remove('selected'));
             btn.classList.add('selected');
-            setSelectedGridSize(parseInt(btn.dataset.size));
+            const size = parseInt(btn.dataset.size);
+            setSelectedGridSize(size);
             document.getElementById('startLocalGame').disabled = false;
+
+            const densityHint = document.getElementById('localGridDensityHint');
+            if (densityHint) {
+                const isNarrow = typeof window !== 'undefined' && window.innerWidth <= 600;
+                densityHint.hidden = !(isNarrow && size >= 20);
+            }
 
             if (!isFullscreenTriggered()) {
                 setFullscreenTriggered(true);
@@ -124,16 +136,25 @@ export function bindLocalSetupEvents(deps) {
         showScreen('mainMenuScreen');
     });
 
-    document.getElementById('colorblindPalette')?.addEventListener('click', () => {
+    document.getElementById('colorblindPalette')?.addEventListener('click', (event) => {
+        const btn = event.currentTarget;
         const p1 = document.getElementById('player1Color');
         const p2 = document.getElementById('player2Color');
+        const useClassic = btn?.getAttribute('aria-pressed') === 'true';
+        const nextColors = useClassic ? ['#ef4444', '#3b82f6'] : ['#0072B2', '#E69F00'];
         if (p1) {
-            p1.value = '#0072B2';
+            p1.value = nextColors[0];
             p1.dispatchEvent(new Event('input', { bubbles: true }));
         }
         if (p2) {
-            p2.value = '#E69F00';
+            p2.value = nextColors[1];
             p2.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (btn) {
+            btn.setAttribute('aria-pressed', String(!useClassic));
+            btn.textContent = !useClassic
+                ? 'Using Okabe-Ito colours (reset)'
+                : 'Colour-blind-safe colours';
         }
     });
 
@@ -149,18 +170,15 @@ export function bindLocalSetupEvents(deps) {
         let turnDurationSeconds = 0;
         let turnDurationMs = 0;
 
-        if (activeTimerSource === 'select') {
-            turnDurationMs = Number(turnDurationSelect?.value) || 0;
-            turnDurationSeconds = Math.round(turnDurationMs / 1000);
-        } else if (activeTimerSource === 'input') {
-            turnDurationSeconds = parseLocalTurnDuration();
-            turnDurationMs = turnDurationSeconds * 1000;
-        } else if (localTurnDurationInput) {
+        if (activeTimerSource === 'input' && localTurnDurationInput) {
             turnDurationSeconds = parseLocalTurnDuration();
             turnDurationMs = turnDurationSeconds * 1000;
         } else if (turnDurationSelect) {
             turnDurationMs = Number(turnDurationSelect.value) || 0;
             turnDurationSeconds = Math.round(turnDurationMs / 1000);
+        } else if (localTurnDurationInput) {
+            turnDurationSeconds = parseLocalTurnDuration();
+            turnDurationMs = turnDurationSeconds * 1000;
         }
 
         if (welcomeAnimation) {

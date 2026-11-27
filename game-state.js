@@ -141,8 +141,13 @@ export class GameState {
             console.warn('[Game] Cannot setup canvas: container not found');
             return;
         }
+        const tutOverlay = document.getElementById('tutorialOverlay');
+        const tutReserve =
+            tutOverlay && !tutOverlay.classList.contains('hidden')
+                ? (tutOverlay.offsetHeight || 132) + 12
+                : 0;
         const maxWidth = container.clientWidth - 40;
-        const maxHeight = container.clientHeight - 40;
+        const maxHeight = Math.max(80, container.clientHeight - 40 - tutReserve);
 
         if (typeof this.game.gridSize === 'number') {
             // Honor the selected grid dimensions exactly. The board's cell count

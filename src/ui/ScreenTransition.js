@@ -3,6 +3,8 @@
  * @module ui/ScreenTransition
  */
 
+import { clearToast } from './Toast.js';
+
 let selectedGridSize = null;
 let fullscreenTriggered = false;
 
@@ -11,6 +13,7 @@ let fullscreenTriggered = false;
  * @param {string} screenId - The ID of the screen to show
  */
 export function showScreen(screenId) {
+    clearToast();
     const newScreen = document.getElementById(screenId);
 
     // Focus is handled in two beats around the visibility flip. The browser raises a

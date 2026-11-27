@@ -101,4 +101,28 @@ describe('UIManager', () => {
         ui.updatePopulateButtonVisibility();
         expect(ui.domCache.populateBtn.classList.contains('hidden')).toBe(false);
     });
+
+    it('toggles multi-player header class and syncs all 6 player names', () => {
+        const p1Name = document.createElement('span');
+        p1Name.className = 'player-name';
+        document.getElementById('player1Info').appendChild(p1Name);
+        const p2Name = document.createElement('span');
+        p2Name.className = 'player-name';
+        document.getElementById('player2Info').appendChild(p2Name);
+
+        const game = makeGame({
+            playerCount: 6,
+            isMultiplayer: true,
+            playerNames: { 1: 'Evan', 2: 'Alex', 3: 'Sarah', 4: 'Marcus', 5: 'Priya', 6: 'Devon' },
+            playerColors: { 1: '#f00', 2: '#00f', 3: '#0f0', 4: '#ff0', 5: '#a0f', 6: '#0ff' },
+            scores: { 1: 5, 2: 4, 3: 3, 4: 2, 5: 1, 6: 0 },
+        });
+        const ui = new UIManager(game);
+        ui.updateUI();
+
+        expect(root.classList.contains('multi-player')).toBe(true);
+        expect(p1Name.textContent).toBe('Evan');
+        expect(p2Name.textContent).toBe('Alex');
+        expect(document.getElementById('player6Name').textContent).toBe('Devon');
+    });
 });

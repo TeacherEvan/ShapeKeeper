@@ -418,3 +418,64 @@
     width: 100%;
     max-width: 80px;
 }
+
+.lobby-start-hint {
+    text-align: center;
+    font-size: 0.84rem;
+    color: var(--text-secondary);
+    margin: -6px auto 12px;
+}
+
+.lobby-start-hint[hidden] {
+    display: none;
+}
+
+.passcode-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 320;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(10, 14, 26, 0.78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.passcode-modal-overlay[hidden] {
+    display: none;
+}
+
+.passcode-modal-card {
+    width: min(380px, 100%);
+    padding: 24px 22px;
+    border-radius: 18px;
+    border: 1px solid var(--border-default);
+    background: var(--surface-layer-1);
+    box-shadow: var(--specular-top), var(--shadow-elevated);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+}
+
+.passcode-modal-card h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    color: var(--text-primary);
+}
+
+.passcode-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.passcode-modal-actions .back-btn,
+.passcode-modal-actions .start-btn {
+    flex: 1;
+    margin: 0;
+}

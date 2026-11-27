@@ -239,12 +239,49 @@
     z-index: 1;
     flex: 1;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 10px;
     padding: 16px;
     overflow: hidden;
     min-width: 0;
     min-height: 0;
+}
+
+.connection-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-layer-1);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+.connection-status-chip[hidden] {
+    display: none;
+}
+
+.connection-status-chip.is-connected {
+    border-color: rgba(52, 211, 153, 0.45);
+    color: var(--accent-success);
+}
+
+.connection-status-chip.is-reconnecting {
+    border-color: rgba(var(--accent-primary-rgb), 0.55);
+    color: var(--accent-warning);
+}
+
+.connection-status-chip.is-disconnected {
+    border-color: rgba(var(--accent-danger-rgb), 0.55);
+    color: var(--accent-danger);
 }
 
 #gameCanvas {
@@ -455,18 +492,76 @@
 
 .game-header.multi-player {
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     justify-content: center;
+    padding: 8px 14px;
 }
 
 .game-header.multi-player .player-info {
-    min-width: 80px;
+    min-width: 82px;
+    padding: 7px 12px;
     flex: 0 1 auto;
 }
 
+.game-header.multi-player .player-name {
+    font-size: 0.78rem;
+    max-width: 11ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.game-header.multi-player .player-score {
+    font-size: 1.25rem;
+}
+
 .game-header.multi-player .exit-btn {
+    order: -2;
+    min-height: 44px;
+    padding: 6px 14px;
+}
+
+.game-header.multi-player .connection-status-chip {
     order: -1;
     margin-right: auto;
+}
+
+@media screen and (max-width: 768px) {
+    .game-header.multi-player {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        padding: 8px 10px;
+        align-items: stretch;
+    }
+
+    .game-header.multi-player .exit-btn {
+        grid-column: 1 / 2;
+        justify-self: start;
+        width: auto;
+    }
+
+    .game-header.multi-player .connection-status-chip {
+        grid-column: 2 / -1;
+        justify-self: end;
+        align-self: center;
+        margin-right: 0;
+    }
+
+    .game-header.multi-player .player-info {
+        min-width: 0;
+        width: 100%;
+        padding: 5px 8px;
+    }
+
+    .game-header.multi-player .player-name {
+        font-size: 0.72rem;
+        margin-bottom: 2px;
+    }
+
+    .game-header.multi-player .player-score {
+        font-size: 1.05rem;
+    }
 }
 
 .player-effects {

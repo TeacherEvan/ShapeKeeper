@@ -186,6 +186,28 @@ function hasActiveMultiplayerSession() {
     );
 }
 
+function updateConnectionChip(state, active) {
+    const chip = document.getElementById('connectionStatusChip');
+    if (!chip) return;
+    chip.classList.remove('is-connected', 'is-reconnecting', 'is-disconnected');
+    if (!active) {
+        chip.hidden = true;
+        chip.textContent = '';
+        return;
+    }
+    chip.hidden = false;
+    if (state === 'reconnecting') {
+        chip.textContent = '◌ Reconnecting…';
+        chip.classList.add('is-reconnecting');
+    } else if (state === 'disconnected') {
+        chip.textContent = '✕ Offline';
+        chip.classList.add('is-disconnected');
+    } else {
+        chip.textContent = '● Online';
+        chip.classList.add('is-connected');
+    }
+}
+
 function ensureConnectionStateMonitoring() {
     if (connectionStateCleanup || !window.ShapeKeeperConvex?.onConnectionStateChange) {
         return;
@@ -193,7 +215,9 @@ function ensureConnectionStateMonitoring() {
 
     connectionStateCleanup = window.ShapeKeeperConvex.onConnectionStateChange(
         async (newState, oldState) => {
-            if (newState === oldState || !hasActiveMultiplayerSession()) {
+            const active = hasActiveMultiplayerSession();
+            updateConnectionChip(newState, Boolean(game?.isMultiplayer && active));
+            if (newState === oldState || !active) {
                 return;
             }
 
@@ -232,6 +256,7 @@ function refreshConnectionStateMonitoring() {
 
 function resetStartupState({ preserveLastRoomState = false } = {}) {
     multiplayerStartup.reset({ preserveLastRoomState });
+    updateConnectionChip('disconnected', false);
 
     setStartupState(STARTUP_STATES.IDLE, {
         visible: false,

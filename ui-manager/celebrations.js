@@ -92,9 +92,12 @@ export function triggerDoublePointsVisual(game, refreshUI) {
         turnIndicator.textContent = '✨ DOUBLE POINTS! ✨';
         turnIndicator.style.color = '#FFD700';
         announceStatus('Double points activated.');
-        setTimeout(() => {
+        const tid = setTimeout(() => {
+            if (game?.isDestroyed) return;
+            turnIndicator.style.color = '';
             refreshUI();
         }, 1500);
+        game?.disposables?.addTimeout?.(tid);
     }
 
     spawnDirectionalBurst(game, 30, () => {
@@ -146,15 +149,24 @@ export function triggerDoubleLineReminder(game, refreshUI) {
     }));
 }
 
-function buildWinnerScoreEntry(player, winner, isTie = false) {
+function formatWinnerRank(rankIndex, isWinner, isTie) {
+    if (isTie) {
+        return isWinner ? '🥇' : `#${rankIndex + 1}`;
+    }
+    if (rankIndex === 0) return '🥇';
+    if (rankIndex === 1) return '🥈';
+    if (rankIndex === 2) return '🥉';
+    return `#${rankIndex + 1}`;
+}
+
+function buildWinnerScoreEntry(player, winner, isTie = false, rankIndex = 0) {
     const entry = document.createElement('div');
     const isWinner = isTie || player.num === winner;
     entry.className = `final-score-entry ${isWinner ? 'winner' : ''}`.trim();
 
     const rank = document.createElement('span');
     rank.className = 'final-score-rank';
-    // A draw gives both players the gold: nobody lost, so nobody is second.
-    rank.textContent = isWinner ? '🥇' : '🥈';
+    rank.textContent = formatWinnerRank(rankIndex, isWinner, isTie);
 
     const color = document.createElement('div');
     color.className = 'final-score-color';
@@ -162,7 +174,7 @@ function buildWinnerScoreEntry(player, winner, isTie = false) {
 
     const name = document.createElement('span');
     name.className = 'final-score-name';
-    name.textContent = `Player ${player.num}`;
+    name.textContent = player.name || `Player ${player.num}`;
 
     const points = document.createElement('span');
     points.className = 'final-score-points';
@@ -618,6 +630,7 @@ export function showWinner(game) {
     }
 
     if (winnerText) {
+        winnerText.classList.remove('winner-loss-heading');
         if (game.isLevelsMode) {
             if (winner === 1 || isTie) {
                 const state = !game._levelResultRecorded
@@ -718,8 +731,11 @@ export function showWinner(game) {
     }
 
     if (finalScores) {
+        finalScores.classList.toggle('multi-player-scores', players.length > 2);
         finalScores.replaceChildren(
-            ...players.map((player) => buildWinnerScoreEntry(player, winner, isTie))
+            ...players.map((player, index) =>
+                buildWinnerScoreEntry(player, winner, isTie && player.score === topScore, index)
+            )
         );
     }
 

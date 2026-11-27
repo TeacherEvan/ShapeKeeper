@@ -229,29 +229,24 @@
     }
 }
 
-/* ── PLAYGROUND: tell players what the blank side pages are for ──────────── */
-#homePagerDots::before {
-    content: '✦ PLAYGROUND · drag the sprites, tap to ripple ✦';
+/* ── PLAYGROUND: discoverable side-page cue & sprite tally ───────────────── */
+.home-playground-hint {
     position: absolute;
-    bottom: 54px;
+    bottom: 72px;
     left: 50%;
     transform: translateX(-50%);
+    z-index: 10;
     width: max-content;
-    max-width: 88vw;
+    max-width: 90vw;
+    margin: 0;
+    text-align: center;
     white-space: nowrap;
-    font-family: var(--font-sans);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
     color: var(--text-tertiary);
-    opacity: 0;
     pointer-events: none;
-    transition: opacity 240ms var(--easing-smooth);
-}
-
-#homePagerDots:has(.pager-dot[data-page='-1'].active)::before,
-#homePagerDots:has(.pager-dot[data-page='1'].active)::before {
-    opacity: 1;
 }
 
 /* ── LEVELS: chapter rails and mission cards ─────────────────────────────── */
@@ -516,11 +511,12 @@
     }
 
     #mainMenuScreen .brand-plate-frame {
+        width: min(82vw, 312px);
         margin: 0 auto 10px;
     }
 
     #mainMenuScreen .brand-plate {
-        width: min(88%, 312px);
+        width: 100%;
     }
 
     #mainMenuScreen h1 {
@@ -592,10 +588,18 @@
     #mainMenuScreen .menu-tertiary-btn {
         margin-top: 8px;
     }
+
+    #mainMenuScreen .home-playground-hint {
+        bottom: 58px;
+        font-size: 0.64rem;
+    }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    #homePagerDots::before {
-        transition: none;
+@media (max-width: 520px) {
+    #mainMenuScreen .home-playground-hint {
+        bottom: 68px;
+        font-size: 0.64rem;
+        white-space: normal;
+        line-height: 1.3;
     }
 }

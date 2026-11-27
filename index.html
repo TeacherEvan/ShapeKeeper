@@ -141,6 +141,10 @@
                     ✦ Return to Menu ✦
                 </button>
 
+                <p id="homePlaygroundHint" class="home-playground-hint" aria-live="polite">
+                    ◀ Swipe for Sprite Playground ▶
+                </p>
+
                 <nav id="homePagerDots" class="home-pager-dots" aria-label="Home Screens">
                     <button class="pager-dot" data-page="-1" aria-label="Playground Left"></button>
                     <button class="pager-dot active" data-page="0" aria-label="Main Menu"></button>
@@ -168,6 +172,9 @@
                             <button class="grid-btn local-grid-btn" data-size="20">20x20</button>
                             <button class="grid-btn local-grid-btn" data-size="30">30x30</button>
                         </div>
+                        <span id="localGridDensityHint" class="setting-hint" hidden>
+                            Large grids have tight dot spacing on phones — 5x5 or 10x10 plays best on small screens.
+                        </span>
                     </div>
 
                     <div class="setup-section">
@@ -193,7 +200,14 @@
                     </div>
 
                     <div class="setup-section">
-                        <button type="button" id="colorblindPalette" class="start-btn secondary">Colour-blind-safe colours</button>
+                        <button
+                            type="button"
+                            id="colorblindPalette"
+                            class="start-btn secondary"
+                            aria-pressed="false"
+                        >
+                            Colour-blind-safe colours
+                        </button>
                     </div>
 
                     <div class="setup-section">
@@ -232,32 +246,29 @@
                             <option value="30000">30 seconds</option>
                             <option value="60000">60 seconds</option>
                         </select>
-                    </div>
-
-                    <div class="setup-section">
-                        <h2>Allowed Time</h2>
-                        <label class="field-label" for="localTurnDuration"
-                            >Seconds per turn (0 = no limit)</label
-                        >
-                        <input
-                            type="number"
-                            id="localTurnDuration"
-                            class="name-input turn-duration-input"
-                            data-testid="local-turn-duration"
-                            min="0"
-                            max="600"
-                            step="1"
-                            value="0"
-                            placeholder="0 (0 = no limit)"
-                            aria-describedby="localTurnDurationHint"
-                        />
+                        <div class="local-timer-custom">
+                            <label class="field-label" for="localTurnDuration"
+                                >Custom seconds (0 = no limit)</label
+                            >
+                            <input
+                                type="number"
+                                id="localTurnDuration"
+                                class="name-input turn-duration-input"
+                                data-testid="local-turn-duration"
+                                min="0"
+                                max="600"
+                                step="1"
+                                value="0"
+                                placeholder="0 (0 = no limit)"
+                                aria-describedby="localTurnDurationHint"
+                            />
+                        </div>
                         <span id="localTurnDurationHint" class="setting-hint">
-                            Lava-timer countdown per turn. Runs out &rarr; a random line is
-                            drawn. 0 = no limit.
+                            Lava-timer countdown per turn. Runs out &rarr; a random line is drawn.
                         </span>
                     </div>
 
-                    <div class="setup-section" id="localAIDifficultySection">
+                    <div class="setup-section" id="localAIDifficultySection" hidden>
                         <h2>AI Difficulty</h2>
                         <label class="field-label" for="localAIDifficulty"
                             >Choose AI difficulty</label
@@ -413,6 +424,7 @@
                             Start Game
                         </button>
                     </div>
+                    <p id="lobbyStartHint" class="setting-hint lobby-start-hint" aria-live="polite" hidden></p>
 
                     <button id="leaveLobby" class="leave-btn">Leave Room</button>
                 </div>
@@ -493,6 +505,14 @@
                         <span class="player-score" id="player1Score">0</span>
                     </div>
                     <button id="exitGame" class="exit-btn" aria-label="Exit game">Exit</button>
+                    <span
+                        id="connectionStatusChip"
+                        class="connection-status-chip"
+                        data-testid="connection-status-chip"
+                        role="status"
+                        aria-live="polite"
+                        hidden
+                    ></span>
                     <div class="player-info" id="player2Info">
                         <span class="player-name">Player 2</span>
                         <span class="player-score" id="player2Score">0</span>
@@ -811,6 +831,39 @@
                     </div>
                     <p class="donation-prompt-note">No unlocks, no perks — just a tip jar.</p>
                 </div>
+            </div>
+
+            <!-- Inline Private Lobby Passcode Modal -->
+            <div
+                id="passcodeModalOverlay"
+                class="passcode-modal-overlay"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="passcodeModalTitle"
+                hidden
+            >
+                <form id="passcodeModalForm" class="passcode-modal-card">
+                    <h2 id="passcodeModalTitle">Private Lobby</h2>
+                    <p id="passcodeModalHint" class="setting-hint">
+                        Enter the room passcode (two words, e.g. SillyRabbit).
+                    </p>
+                    <input
+                        type="text"
+                        id="passcodeModalInput"
+                        class="name-input"
+                        placeholder="Passcode"
+                        autocomplete="off"
+                        required
+                    />
+                    <div class="passcode-modal-actions">
+                        <button id="passcodeModalCancel" type="button" class="back-btn">
+                            Cancel
+                        </button>
+                        <button id="passcodeModalSubmit" type="submit" class="start-btn">
+                            Join Lobby
+                        </button>
+                    </div>
+                </form>
             </div>
         </main>
 

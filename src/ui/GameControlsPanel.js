@@ -86,26 +86,49 @@ export function createGameControlsPanel({ now = () => Date.now(), windowMs = 500
 export function bindGameControlsPanel(panel, toggleBtn, panelEl) {
     if (!panel || !toggleBtn || !panelEl) return () => {};
 
-    // Initial DOM sync.
-    toggleBtn.setAttribute('aria-expanded', String(panel.isOpen()));
-    panelEl.hidden = !panel.isOpen();
-    toggleBtn.classList.toggle('primed', panel.isPrimed());
+    const labelEl = toggleBtn.querySelector('.controls-toggle-label');
+    const defaultLabel = labelEl ? labelEl.textContent : 'Controls';
+    let primeTimer = null;
+
+    const clearPrimeTimer = () => {
+        if (primeTimer) {
+            clearTimeout(primeTimer);
+            primeTimer = null;
+        }
+    };
+
+    const syncDom = () => {
+        const isOpen = panel.isOpen();
+        const primed = panel.isPrimed();
+        toggleBtn.setAttribute('aria-expanded', String(isOpen));
+        panelEl.hidden = !isOpen;
+        toggleBtn.classList.toggle('primed', primed);
+        if (labelEl) {
+            labelEl.textContent = primed && !isOpen ? 'Tap again' : defaultLabel;
+        }
+    };
+
+    syncDom();
 
     const onTap = () => {
-        panel.tap();
-        toggleBtn.setAttribute('aria-expanded', String(panel.isOpen()));
-        panelEl.hidden = !panel.isOpen();
-        toggleBtn.classList.toggle('primed', panel.isPrimed());
+        clearPrimeTimer();
+        const result = panel.tap();
+        syncDom();
+        if (result?.action === 'prime') {
+            primeTimer = setTimeout(() => {
+                primeTimer = null;
+                if (!panel.isOpen()) {
+                    panel.close();
+                    syncDom();
+                }
+            }, panel.windowMs || 500);
+        }
     };
 
     toggleBtn.addEventListener('click', onTap);
 
-    // Also support keyboard: Enter/Space on the button. The button is already
-    // a real <button>, so native click handling covers this — the explicit
-    // keydown is here for clarity and to set `tabindex` correctly. The CSS
-    // `:focus-visible` outline is on `#gameCanvas` only, so we re-use the
-    // browser's default focus ring on the toggle.
     return () => {
+        clearPrimeTimer();
         toggleBtn.removeEventListener('click', onTap);
     };
 }

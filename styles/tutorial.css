@@ -1,14 +1,14 @@
 .tutorial-overlay {
-    position: absolute;
-    left: 16px;
-    bottom: 16px;
+    position: relative;
+    flex-shrink: 0;
     z-index: 3;
-    max-width: min(420px, calc(100% - 32px));
-    padding: 14px 16px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    background: color-mix(in srgb, var(--bg-secondary) 92%, #0f172a 8%);
-    box-shadow: var(--shadow-soft);
+    width: min(440px, 100%);
+    margin: 0 auto;
+    padding: 12px 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border-default);
+    background: var(--surface-layer-2);
+    box-shadow: var(--specular-top), var(--shadow-card);
 }
 
 .tutorial-overlay.hidden {
@@ -16,26 +16,33 @@
 }
 
 .tutorial-step-label {
-    margin: 0 0 6px;
-    font-size: 0.78rem;
+    margin: 0 0 4px;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
     font-weight: 700;
-    opacity: 0.85;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-primary);
 }
 
 .tutorial-title {
-    margin: 0 0 8px;
+    margin: 0 0 6px;
+    font-family: var(--font-display);
     font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
 }
 
 .tutorial-message {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     line-height: 1.35;
+    color: var(--text-secondary);
 }
 
 .tutorial-actions {
     display: flex;
     gap: 8px;
-    margin-top: 12px;
+    margin-top: 10px;
     flex-wrap: wrap;
 }

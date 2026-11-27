@@ -54,6 +54,57 @@ function setStoredPlayerName(name) {
     }
 }
 
+function promptRoomPasscode() {
+    const overlay = document.getElementById('passcodeModalOverlay');
+    const form = document.getElementById('passcodeModalForm');
+    const input = document.getElementById('passcodeModalInput');
+    const cancelBtn = document.getElementById('passcodeModalCancel');
+
+    if (!overlay || !form || !input || !cancelBtn) {
+        if (typeof window !== 'undefined' && typeof window.prompt === 'function') {
+            return Promise.resolve(
+                window.prompt('This lobby is private. Enter the room passcode:')
+            );
+        }
+        return Promise.resolve(null);
+    }
+
+    return new Promise((resolve) => {
+        const prevFocus = document.activeElement;
+        let done = false;
+
+        const finish = (val) => {
+            if (done) return;
+            done = true;
+            overlay.hidden = true;
+            form.removeEventListener('submit', onSubmit);
+            cancelBtn.removeEventListener('click', onCancel);
+            document.removeEventListener('keydown', onKeydown, true);
+            prevFocus?.focus?.();
+            resolve(val);
+        };
+
+        const onSubmit = (e) => {
+            e.preventDefault();
+            finish(input.value.trim() || null);
+        };
+        const onCancel = () => finish(null);
+        const onKeydown = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                finish(null);
+            }
+        };
+
+        input.value = '';
+        overlay.hidden = false;
+        form.addEventListener('submit', onSubmit);
+        cancelBtn.addEventListener('click', onCancel);
+        document.addEventListener('keydown', onKeydown, true);
+        input.focus();
+    });
+}
+
 function getBrowserPlayerName() {
     const input = document.getElementById('browserPlayerName');
     return input?.value.trim() || getStoredPlayerName() || 'Player';
@@ -212,11 +263,9 @@ export function bindLobbyEvents(deps) {
             if (
                 !passcode &&
                 typeof result.error === 'string' &&
-                result.error.toLowerCase().includes('passcode') &&
-                typeof window !== 'undefined' &&
-                typeof window.prompt === 'function'
+                result.error.toLowerCase().includes('passcode')
             ) {
-                const entered = window.prompt('This lobby is private. Enter the room passcode:');
+                const entered = await promptRoomPasscode();
                 if (entered && entered.trim()) {
                     return joinLobbyByCode(roomCode, effectiveName, entered.trim());
                 }
@@ -327,7 +376,7 @@ export function bindLobbyEvents(deps) {
             const inviteUrl = lobbyManager.buildInviteUrl
                 ? lobbyManager.buildInviteUrl()
                 : `${window.location.origin}/?join=${lobbyManager.roomCode}`;
-            if (navigator.clipboard) {
+            if (navigator.clipboard?.writeText) {
                 navigator.clipboard
                     .writeText(inviteUrl)
                     .then(() => {
@@ -338,8 +387,10 @@ export function bindLobbyEvents(deps) {
                         }, 2000);
                     })
                     .catch(() => {
-                        showToast('Could not copy invite link', 'error');
+                        showToast(`Share invite link: ${inviteUrl}`, 'info', 9000);
                     });
+            } else {
+                showToast(`Share invite link: ${inviteUrl}`, 'info', 9000);
             }
         });
     }

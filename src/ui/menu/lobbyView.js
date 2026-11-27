@@ -39,7 +39,26 @@ export function updateLobbyUI(lobbyManager) {
         playersList.appendChild(entry);
     });
 
-    document.getElementById('startMultiplayerGame').disabled = !lobbyManager.canStartGame();
+    const canStart = lobbyManager.canStartGame();
+    document.getElementById('startMultiplayerGame').disabled = !canStart;
+
+    const startHint = document.getElementById('lobbyStartHint');
+    if (startHint) {
+        if (canStart) {
+            startHint.hidden = true;
+            startHint.textContent = '';
+        } else {
+            const count = lobbyManager.players?.length || 0;
+            if (!lobbyManager.isHost) {
+                startHint.textContent = 'Waiting for the host to start the match.';
+            } else if (count < 2) {
+                startHint.textContent = 'Waiting for at least 2 players to join.';
+            } else {
+                startHint.textContent = 'Waiting for all players to mark Ready.';
+            }
+            startHint.hidden = false;
+        }
+    }
 
     document.querySelectorAll('.lobby-grid-btn').forEach((btn) => {
         btn.disabled = !lobbyManager.isHost;

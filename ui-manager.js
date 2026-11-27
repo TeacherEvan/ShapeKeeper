@@ -106,6 +106,23 @@ export class UIManager {
 
         const header = player2Info?.parentElement;
         if (header) {
+            header.classList.toggle('multi-player', playerCount > 2);
+
+            const connChip = document.getElementById('connectionStatusChip');
+            if (connChip) {
+                connChip.hidden = !this.game.isMultiplayer;
+                if (this.game.isMultiplayer && !connChip.textContent) {
+                    connChip.textContent = '● Online';
+                    connChip.classList.add('is-connected');
+                }
+            }
+
+            // Keep Player 1 & 2 names in sync with online/AI display names
+            const p1NameEl = player1Info?.querySelector('.player-name');
+            if (p1NameEl) p1NameEl.textContent = getPlayerName(this.game, 1);
+            const p2NameEl = player2Info?.querySelector('.player-name');
+            if (p2NameEl) p2NameEl.textContent = getPlayerName(this.game, 2);
+
             // Sync dynamic scorecards for players 3..N in online 3-6 player matches
             for (let pNum = 3; pNum <= 6; pNum += 1) {
                 let card = document.getElementById(`player${pNum}Info`);

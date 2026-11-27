@@ -287,23 +287,6 @@ input[type='color']:focus {
         padding: 6px 10px;
     }
 
-    .game-header.multi-player {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        justify-content: flex-start;
-        gap: 8px;
-        padding: 6px 10px;
-        scroll-snap-type: x proximity;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .game-header.multi-player .player-info {
-        flex: 0 0 auto;
-        min-width: 74px;
-        padding: 6px 10px;
-        scroll-snap-align: start;
-    }
-
     .game-header .exit-btn {
         margin-right: 0;
         flex: 0 0 auto;
